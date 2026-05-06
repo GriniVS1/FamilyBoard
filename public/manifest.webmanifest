@@ -1,0 +1,11 @@
+{
+  "name": "FamilyBoard",
+  "short_name": "FamilyBoard",
+  "description": "Your family's command center",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FAF7F2",
+  "theme_color": "#FAF7F2",
+  "orientation": "any",
+  "icons": []
+}

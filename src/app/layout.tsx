@@ -1,0 +1,46 @@
+import type { Metadata, Viewport } from "next";
+import { Inter, Geist } from "next/font/google";
+import { ThemeProvider } from "next-themes";
+import { QueryProvider } from "@/components/providers/query-provider";
+import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const geist = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "FamilyBoard",
+  description: "Your family's command center",
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAF7F2" },
+    { media: "(prefers-color-scheme: dark)", color: "#10131F" },
+  ],
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${geist.variable}`}>
+      <body className="min-h-dvh">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <QueryProvider>{children}</QueryProvider>
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}

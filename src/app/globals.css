@@ -1,0 +1,87 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg: 36 38% 96%;
+    --surface: 0 0% 100%;
+    --ink: 230 38% 17%;
+    --muted: 220 9% 46%;
+    --border: 230 20% 90%;
+
+    --accent-peach: 14 100% 72%;
+    --accent-mint: 156 47% 65%;
+    --accent-sun: 42 100% 70%;
+    --accent-sky: 204 81% 72%;
+    --accent-lilac: 256 53% 77%;
+    --accent-rose: 342 76% 78%;
+    --accent-teal: 178 50% 60%;
+    --accent-sand: 36 38% 75%;
+  }
+
+  .dark {
+    --bg: 230 32% 9%;
+    --surface: 230 27% 13%;
+    --ink: 36 25% 93%;
+    --muted: 220 9% 65%;
+    --border: 230 20% 20%;
+
+    --accent-peach: 14 75% 68%;
+    --accent-mint: 156 38% 60%;
+    --accent-sun: 42 80% 65%;
+    --accent-sky: 204 65% 68%;
+    --accent-lilac: 256 42% 72%;
+    --accent-rose: 342 60% 73%;
+    --accent-teal: 178 40% 55%;
+    --accent-sand: 36 30% 65%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    @apply antialiased;
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-bg text-ink font-sans;
+    font-feature-settings: "ss01", "cv01", "cv11";
+  }
+
+  button,
+  [role="button"] {
+    @apply select-none;
+    touch-action: manipulation;
+  }
+
+  input,
+  textarea,
+  select {
+    @apply outline-none;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-surface/70 backdrop-blur-md backdrop-saturate-150;
+  }
+
+  .card-soft {
+    @apply rounded-3xl bg-surface border border-border shadow-soft;
+  }
+
+  .tap-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
