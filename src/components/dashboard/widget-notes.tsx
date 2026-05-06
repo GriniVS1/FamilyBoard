@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery, type QueryKey } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { Pin, StickyNote } from "lucide-react";
 import { GlassCard } from "@/components/shared/glass-card";
 import { cn, isMemberColor, type MemberColor } from "@/lib/utils";
@@ -23,6 +24,7 @@ async function fetchNotes(): Promise<Note[]> {
 }
 
 export function WidgetNotes({ className }: WidgetNotesProps) {
+  const t = useTranslations("dashboard.widgets.notes");
   const { data: notes = [], isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchNotes,
@@ -41,31 +43,31 @@ export function WidgetNotes({ className }: WidgetNotesProps) {
   return (
     <GlassCard className={cn("p-6 flex flex-col gap-4", className)}>
       <WidgetHeader
-        title="Pinned notes"
+        title={t("title")}
         action={
           <span className="tabular text-xs text-muted">
-            {notes.filter((n) => n.pinned).length} pinned
+            {t("pinnedCount", { count: notes.filter((n) => n.pinned).length })}
           </span>
         }
       />
       <div
         className="flex-1"
-        aria-label="Pinned notes"
+        aria-label={t("title")}
       >
         {isLoading && (
           <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted">
-            Loading…
+            {t("empty")}
           </div>
         )}
         {!isLoading && error && (
           <div className="flex h-full items-center justify-center rounded-2xl border border-dashed border-accent-rose/40 px-4 py-10 text-center text-sm text-accent-rose">
-            Could not load notes.
+            {t("couldNotLoad")}
           </div>
         )}
         {!isLoading && !error && pinned.length === 0 && (
           <div className="flex h-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted">
             <StickyNote className="size-5" />
-            No notes pinned. Pin one in /notes.
+            {t("empty")}
           </div>
         )}
         {pinned.length > 0 && (
@@ -86,7 +88,7 @@ export function WidgetNotes({ className }: WidgetNotesProps) {
                   <div className="mb-1 flex items-center gap-1.5 text-ink/70">
                     <Pin className="size-3 fill-current" />
                     <span className="text-[10px] font-semibold uppercase tracking-wider">
-                      Pinned
+                      {t("pinned")}
                     </span>
                   </div>
                   <p className="line-clamp-4 whitespace-pre-wrap text-sm text-ink">

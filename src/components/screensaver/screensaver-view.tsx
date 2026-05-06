@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { endOfDay, format, startOfDay } from "date-fns";
+import { useTranslations } from "next-intl";
 import type { CalendarEvent } from "@/components/calendar/types";
 import type { Photo } from "@/components/photos/types";
 import { cn } from "@/lib/utils";
@@ -52,6 +53,8 @@ function randomOrigin(): Origin {
 }
 
 export function ScreensaverView() {
+  const t = useTranslations("screensaver");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const [now, setNow] = useState<Date | null>(null);
   const [index, setIndex] = useState(0);
@@ -89,10 +92,10 @@ export function ScreensaverView() {
 
   const nextEvent = useMemo(() => {
     if (!now) return null;
-    const t = now.getTime();
+    const nowTime = now.getTime();
     return (
       events
-        .filter((e) => new Date(e.endsAt).getTime() >= t)
+        .filter((e) => new Date(e.endsAt).getTime() >= nowTime)
         .sort(
           (a, b) =>
             new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
@@ -110,7 +113,7 @@ export function ScreensaverView() {
     <div
       role="button"
       tabIndex={0}
-      aria-label="Exit screensaver"
+      aria-label={t("exit")}
       onClick={handleExit}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
@@ -163,14 +166,14 @@ export function ScreensaverView() {
               )}
             >
               <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
-                Next up
+                {t("nextUp")}
               </div>
               <div className="mt-1 max-w-[260px] truncate text-base font-medium">
                 {nextEvent.title}
               </div>
               <div className="tabular text-xs text-white/80">
                 {nextEvent.allDay
-                  ? "All day"
+                  ? tCommon("allDay")
                   : `${format(new Date(nextEvent.startsAt), "HH:mm")} – ${format(
                       new Date(nextEvent.endsAt),
                       "HH:mm",
@@ -197,7 +200,7 @@ export function ScreensaverView() {
           </div>
           {photos.length === 0 && (
             <div className="text-right text-white/70">
-              <div className="text-xs">Tap anywhere to return</div>
+              <div className="text-xs">{t("tapToExit")}</div>
             </div>
           )}
         </div>

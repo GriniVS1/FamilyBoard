@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import { COLOR_BORDER, COLOR_TINT, type CalendarEvent, type CalendarMember } from "./types";
 
@@ -16,9 +17,10 @@ function resolveColor(event: CalendarEvent, member?: CalendarMember): MemberColo
 }
 
 export function EventPill({ event, member, onSelect, className }: EventPillProps) {
+  const t = useTranslations("calendar");
   const color = resolveColor(event, member);
   const time = event.allDay
-    ? "All day"
+    ? t("allDay")
     : new Date(event.startsAt).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -37,7 +39,7 @@ export function EventPill({ event, member, onSelect, className }: EventPillProps
         COLOR_BORDER[color],
         className,
       )}
-      aria-label={`${event.title} at ${time}`}
+      aria-label={`${event.title} — ${time}`}
     >
       <span className="font-medium text-ink truncate block">
         <span className="tabular text-muted mr-1">{!event.allDay ? time : ""}</span>

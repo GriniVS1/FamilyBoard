@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { endOfDay, format, startOfDay } from "date-fns";
 import { useMemo } from "react";
 import { GlassCard } from "@/components/shared/glass-card";
@@ -42,6 +43,8 @@ function dotColor(event: CalendarEvent, members: Map<string, MemberLite>): Membe
 }
 
 export function WidgetToday({ className, members = [] }: WidgetTodayProps) {
+  const t = useTranslations("dashboard.widgets.today");
+  const tCal = useTranslations("calendar");
   const { data: events, isLoading, error } = useQuery({
     queryKey: ["events-today"],
     queryFn: fetchTodayEvents,
@@ -69,10 +72,10 @@ export function WidgetToday({ className, members = [] }: WidgetTodayProps) {
 
   return (
     <GlassCard className={cn("p-6 flex flex-col gap-4", className)}>
-      <WidgetHeader title="Today" />
+      <WidgetHeader title={t("title")} />
       <div>
         <span className="font-display text-2xl text-ink">
-          {next ? next.title : "Nothing next"}
+          {next ? next.title : t("noEventsToday")}
         </span>
         <p className="mt-1 text-sm text-muted">
           {next
@@ -83,20 +86,20 @@ export function WidgetToday({ className, members = [] }: WidgetTodayProps) {
             : "—"}
         </p>
       </div>
-      <ul className="flex flex-1 flex-col gap-2" aria-label="Today's events">
+      <ul className="flex flex-1 flex-col gap-2" aria-label={t("title")}>
         {isLoading && (
           <li className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted">
-            Loading…
+            {t("empty")}
           </li>
         )}
         {!isLoading && error && (
           <li className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-accent-rose/40 px-4 py-8 text-center text-sm text-accent-rose">
-            Could not load events.
+            {t("couldNotLoad")}
           </li>
         )}
         {!isLoading && !error && upcoming.length === 0 && (
           <li className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted">
-            Nothing scheduled. Enjoy.
+            {t("empty")}
           </li>
         )}
         {upcoming.map((e) => {
@@ -108,7 +111,7 @@ export function WidgetToday({ className, members = [] }: WidgetTodayProps) {
               className="flex items-center gap-3 rounded-2xl border border-border bg-bg/30 px-3 py-2"
             >
               <span className="text-xs font-medium tabular text-muted w-12 shrink-0">
-                {e.allDay ? "All day" : format(new Date(e.startsAt), "HH:mm")}
+                {e.allDay ? tCal("allDay") : format(new Date(e.startsAt), "HH:mm")}
               </span>
               <span
                 aria-hidden

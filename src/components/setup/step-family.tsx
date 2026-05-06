@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import { Input } from "@/components/shared/input";
 import { postJson } from "./types";
@@ -14,6 +15,8 @@ type StepFamilyProps = {
 type FamilyResponse = { id: string; name: string };
 
 export function StepFamily({ initialName = "", onComplete, onBack }: StepFamilyProps) {
+  const t = useTranslations("setup.family");
+  const tCommon = useTranslations("common");
   const [name, setName] = useState(initialName);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +25,7 @@ export function StepFamily({ initialName = "", onComplete, onBack }: StepFamilyP
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) {
-      setError("Please enter a family name.");
+      setError(tCommon("areYouSure"));
       return;
     }
     setSubmitting(true);
@@ -33,7 +36,7 @@ export function StepFamily({ initialName = "", onComplete, onBack }: StepFamilyP
       });
       onComplete(family.name);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : tCommon("error"));
     } finally {
       setSubmitting(false);
     }
@@ -43,25 +46,25 @@ export function StepFamily({ initialName = "", onComplete, onBack }: StepFamilyP
     <form onSubmit={handleSubmit} className="flex flex-col gap-10">
       <div className="space-y-3">
         <p className="text-muted text-sm font-medium tracking-wide uppercase">
-          Step 1
+          {t("step")}
         </p>
         <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
-          Name your family
+          {t("title")}
         </h2>
         <p className="text-muted text-lg">
-          Used in greetings around the dashboard.
+          {t("hint")}
         </p>
       </div>
 
       <div className="space-y-2">
         <label htmlFor="family-name" className="sr-only">
-          Family name
+          {t("label")}
         </label>
         <Input
           id="family-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="The Smith Family"
+          placeholder={t("placeholder")}
           autoFocus
           maxLength={60}
         />
@@ -74,10 +77,10 @@ export function StepFamily({ initialName = "", onComplete, onBack }: StepFamilyP
 
       <div className="flex justify-between gap-3">
         <Button type="button" variant="ghost" size="lg" onClick={onBack}>
-          Back
+          {tCommon("back")}
         </Button>
         <Button type="submit" size="lg" disabled={submitting}>
-          {submitting ? "Saving…" : "Continue"}
+          {submitting ? tCommon("saving") : t("next")}
         </Button>
       </div>
     </form>

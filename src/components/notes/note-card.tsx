@@ -3,6 +3,7 @@
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { motion } from "framer-motion";
 import { MoreHorizontal, Pin, PinOff, Trash2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import type { Note, NoteMember } from "./types";
@@ -23,6 +24,8 @@ export function NoteCard({
   onTogglePin,
   onDelete,
 }: NoteCardProps) {
+  const t = useTranslations("notes");
+  const tCommon = useTranslations("common");
   const safeColor: MemberColor = isMemberColor(note.color) ? note.color : "sun";
 
   return (
@@ -44,11 +47,11 @@ export function NoteCard({
         className={cn(
           "block w-full text-left tap-target focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 rounded-2xl",
         )}
-        aria-label="Edit note"
+        aria-label={tCommon("edit")}
       >
         <p className="whitespace-pre-wrap text-base leading-relaxed text-ink">
           {note.body || (
-            <span className="italic text-muted">Empty note</span>
+            <span className="italic text-muted">{tCommon("none")}</span>
           )}
         </p>
       </button>
@@ -73,7 +76,7 @@ export function NoteCard({
           e.stopPropagation();
           onTogglePin(note);
         }}
-        aria-label={note.pinned ? "Unpin note" : "Pin note"}
+        aria-label={note.pinned ? t("pinned") : t("pinToTop")}
         aria-pressed={note.pinned}
         className={cn(
           "absolute right-14 top-2 size-12 tap-target inline-flex items-center justify-center rounded-full",
@@ -94,7 +97,7 @@ export function NoteCard({
         <DropdownMenu.Trigger asChild>
           <button
             type="button"
-            aria-label="Note actions"
+            aria-label={tCommon("edit")}
             onClick={(e) => e.stopPropagation()}
             className={cn(
               "absolute right-2 top-2 size-12 tap-target inline-flex items-center justify-center rounded-full",
@@ -124,12 +127,12 @@ export function NoteCard({
               {note.pinned ? (
                 <>
                   <PinOff className="size-4" />
-                  Unpin
+                  {t("pinned")}
                 </>
               ) : (
                 <>
                   <Pin className="size-4" />
-                  Pin
+                  {t("pinToTop")}
                 </>
               )}
             </DropdownMenu.Item>
@@ -141,7 +144,7 @@ export function NoteCard({
               )}
             >
               <Trash2 className="size-4" />
-              Delete
+              {tCommon("delete")}
             </DropdownMenu.Item>
           </DropdownMenu.Content>
         </DropdownMenu.Portal>

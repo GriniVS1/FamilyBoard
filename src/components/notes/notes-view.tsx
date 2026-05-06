@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { Plus, StickyNote } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { NoteCard } from "./note-card";
@@ -64,6 +65,7 @@ async function jsonRequest<T>(
 }
 
 export function NotesView({ initialMembers }: NotesViewProps) {
+  const t = useTranslations("notes");
   const queryClient = useQueryClient();
   const { data: notes = [], isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
@@ -106,7 +108,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
     onError: (err) => {
-      showToast(err instanceof Error ? err.message : "Could not create note.");
+      showToast(err instanceof Error ? err.message : t("dialog.couldNotSave"));
     },
   });
 
@@ -128,7 +130,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
     },
     onError: (err, _args, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : "Could not update note.");
+      showToast(err instanceof Error ? err.message : t("dialog.couldNotSave"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -149,7 +151,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
     },
     onError: (err, _id, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : "Could not delete note.");
+      showToast(err instanceof Error ? err.message : t("dialog.couldNotDelete"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -165,7 +167,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
     setDialogOpen(true);
   }
   function handleDelete(note: Note) {
-    if (!window.confirm("Delete this note?")) return;
+    if (!window.confirm(t("deleteConfirm"))) return;
     deleteMutation.mutate(note.id);
   }
   function handleTogglePin(note: Note) {
@@ -178,11 +180,11 @@ export function NotesView({ initialMembers }: NotesViewProps) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
-          Notes
+          {t("title")}
         </h2>
         <Button onClick={openNew}>
           <Plus className="size-5" />
-          New note
+          {t("addNote")}
         </Button>
       </div>
 
@@ -191,7 +193,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
           role="alert"
           className="rounded-2xl border border-accent-rose/40 bg-accent-rose/10 px-4 py-3 text-sm text-ink"
         >
-          {error instanceof Error ? error.message : "Could not load notes."}
+          {error instanceof Error ? error.message : t("couldNotLoad")}
         </div>
       )}
 
@@ -200,9 +202,9 @@ export function NotesView({ initialMembers }: NotesViewProps) {
       ) : (
         <div className="flex flex-col gap-6">
           {pinned.length > 0 && (
-            <section aria-label="Pinned notes" className="flex flex-col gap-2">
+            <section aria-label={t("pinned")} className="flex flex-col gap-2">
               <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-                Pinned
+                {t("pinned")}
               </h3>
               <div className="columns-1 gap-4 md:columns-2 xl:columns-3">
                 {pinned.map((n) => (
@@ -223,10 +225,10 @@ export function NotesView({ initialMembers }: NotesViewProps) {
             </section>
           )}
           {others.length > 0 && (
-            <section aria-label="Notes" className="flex flex-col gap-2">
+            <section aria-label={t("title")} className="flex flex-col gap-2">
               {pinned.length > 0 && (
                 <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-                  All notes
+                  {t("allNotes")}
                 </h3>
               )}
               <div className="columns-1 gap-4 md:columns-2 xl:columns-3">
@@ -280,6 +282,8 @@ export function NotesView({ initialMembers }: NotesViewProps) {
 }
 
 function EmptyState({ onCreate }: { onCreate: () => void }) {
+  const t = useTranslations("notes");
+
   return (
     <GlassCard className="mx-auto flex w-full max-w-md flex-col items-center gap-4 p-10 text-center">
       <span
@@ -289,14 +293,14 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
         <StickyNote className="size-9" />
       </span>
       <h3 className="font-display text-2xl tracking-tight text-ink">
-        No notes yet
+        {t("empty")}
       </h3>
       <p className="text-sm text-muted">
-        Reminders, lists, sweet messages — anything that should stay visible.
+        {t("emptyDesc")}
       </p>
       <Button onClick={onCreate}>
         <Plus className="size-5" />
-        Write a note
+        {t("writeFirst")}
       </Button>
     </GlassCard>
   );

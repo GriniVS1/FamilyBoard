@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Delete } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import {
   Dialog,
@@ -22,6 +23,7 @@ type PinChangeDialogProps = {
 };
 
 export function PinChangeDialog({ open, onOpenChange }: PinChangeDialogProps) {
+  const t = useTranslations("settings.pin");
   const [phase, setPhase] = useState<Phase>("current");
   const [currentPin, setCurrentPin] = useState("");
   const [newPin, setNewPin] = useState("");
@@ -58,7 +60,7 @@ export function PinChangeDialog({ open, onOpenChange }: PinChangeDialogProps) {
     }
     if (phase === "confirm") {
       if (pin !== newPin) {
-        setError("PINs don't match. Try a new PIN again.");
+        setError(t("mismatch"));
         setNewPin("");
         setPin("");
         setPhase("new");
@@ -76,7 +78,7 @@ export function PinChangeDialog({ open, onOpenChange }: PinChangeDialogProps) {
           window.setTimeout(() => onOpenChange(false), 800);
         })
         .catch((err) => {
-          setError(err instanceof Error ? err.message : "Could not change PIN.");
+          setError(err instanceof Error ? err.message : t("couldNotChange"));
           setPhase("current");
           setCurrentPin("");
           setNewPin("");
@@ -84,7 +86,7 @@ export function PinChangeDialog({ open, onOpenChange }: PinChangeDialogProps) {
         })
         .finally(() => setSubmitting(false));
     }
-  }, [pin, phase, currentPin, newPin, onOpenChange]);
+  }, [pin, phase, currentPin, newPin, onOpenChange, t]);
 
   function press(value: string) {
     if (submitting || success) return;
@@ -100,22 +102,23 @@ export function PinChangeDialog({ open, onOpenChange }: PinChangeDialogProps) {
 
   const heading =
     phase === "current"
-      ? "Enter current PIN"
+      ? t("current")
       : phase === "new"
-        ? "Set a new PIN"
-        : "Confirm new PIN";
+        ? t("new")
+        : t("confirm");
+
   const subheading =
     phase === "current"
-      ? "We'll verify before changing it."
+      ? t("currentSub")
       : phase === "new"
-        ? "Pick 4 digits you'll remember."
-        : "Re-enter the new PIN.";
+        ? t("newSub")
+        : t("confirmSub");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <div className="flex flex-col gap-5">
-          <DialogTitle>Change PIN</DialogTitle>
+          <DialogTitle>{t("changeTitle")}</DialogTitle>
           <div className="space-y-1 text-center">
             <p className="text-base font-medium text-ink">{heading}</p>
             <p className="text-xs text-muted">{subheading}</p>
@@ -150,7 +153,7 @@ export function PinChangeDialog({ open, onOpenChange }: PinChangeDialogProps) {
               role="status"
               className="text-center text-sm text-accent-mint"
             >
-              PIN updated.
+              {t("saved")}
             </p>
           )}
 
@@ -161,7 +164,7 @@ export function PinChangeDialog({ open, onOpenChange }: PinChangeDialogProps) {
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
-              Cancel
+              {t("cancel")}
             </Button>
           </div>
         </div>

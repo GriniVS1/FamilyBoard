@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import {
   Cloud,
   CloudFog,
@@ -75,7 +76,6 @@ async function fetchWeather(): Promise<WeatherPayload> {
 }
 
 function iconForCode(code: number, isDay: boolean): LucideIcon {
-  // WMO weather codes
   if (code === 0) return isDay ? Sun : Moon;
   if (code === 1 || code === 2) return isDay ? Sun : CloudMoon;
   if (code === 3) return Cloud;
@@ -93,12 +93,8 @@ function shortTime(iso: string): string {
   return `${String(d.getHours()).padStart(2, "0")}`;
 }
 
-function shortDay(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleDateString(undefined, { weekday: "short" });
-}
-
 export function WidgetWeather({ className, location }: WidgetWeatherProps) {
+  const t = useTranslations("dashboard.widgets.weather");
   const { data, isLoading, error } = useQuery({
     queryKey: ["weather"],
     queryFn: fetchWeather,
@@ -118,22 +114,22 @@ export function WidgetWeather({ className, location }: WidgetWeatherProps) {
         className,
       )}
     >
-      <WidgetHeader title="Weather" />
+      <WidgetHeader title={t("now")} />
       {isLoading ? (
         <div className="flex flex-1 items-center gap-3 text-muted">
           <Loader2 className="size-5 animate-spin" />
-          <span className="text-sm">Loading…</span>
+          <span className="text-sm">{t("now")}</span>
         </div>
       ) : notConfigured ? (
         <div className="flex flex-1 flex-col items-start justify-center gap-2">
           <p className="text-sm text-ink/80">
-            Set your location to see the forecast.
+            {t("notConfigured")}
           </p>
           <Link
             href="/settings"
             className="text-sm font-medium text-ink underline-offset-2 hover:underline"
           >
-            Open Settings
+            {t("openSettings")}
           </Link>
         </div>
       ) : error ? (
@@ -141,23 +137,29 @@ export function WidgetWeather({ className, location }: WidgetWeatherProps) {
           <p className="text-sm text-accent-rose">
             {error instanceof Error
               ? error.message
-              : "Could not load weather."}
+              : t("couldNotLoad")}
           </p>
         </div>
       ) : data ? (
         <WeatherContent data={data} />
       ) : null}
       <span className="text-xs text-muted">
-        {data?.label ?? location ?? "Set a location in Settings"}
+        {data?.label ?? location ?? t("setLocation")}
       </span>
     </GlassCard>
   );
 }
 
 function WeatherContent({ data }: { data: WeatherPayload }) {
+  const t = useTranslations("dashboard.widgets.weather");
   const NowIcon = iconForCode(data.now.code, data.now.isDay);
   const hourly = data.hourly.slice(0, 6);
   const daily = data.daily.slice(0, 3);
+
+  function shortDay(iso: string): string {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, { weekday: "short" });
+  }
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -173,7 +175,7 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
             {Math.round(data.now.tempC)}°
           </span>
           <span className="mt-1 tabular text-xs text-ink/70">
-            wind {Math.round(data.now.windKmh)} km/h
+            {t("wind", { speed: Math.round(data.now.windKmh) })}
           </span>
         </div>
       </div>
@@ -181,7 +183,7 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
       {hourly.length > 0 && (
         <ul
           className="flex items-end justify-between gap-1 pt-1"
-          aria-label="Next hours"
+          aria-label={t("now")}
         >
           {hourly.map((h) => {
             const Icon = iconForCode(h.code, h.isDay);
@@ -206,7 +208,7 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
       {daily.length > 0 && (
         <ul
           className="flex items-center justify-between gap-2 border-t border-border/50 pt-3"
-          aria-label="Next days"
+          aria-label={t("high")}
         >
           {daily.map((d) => {
             const Icon = iconForCode(d.code, true);

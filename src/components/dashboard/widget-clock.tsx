@@ -1,33 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
-
-const WEEKDAYS = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
-
-const MONTHS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 function formatTime(d: Date) {
   const hh = String(d.getHours()).padStart(2, "0");
@@ -35,15 +11,13 @@ function formatTime(d: Date) {
   return `${hh}:${mm}`;
 }
 
-function formatDate(d: Date) {
-  return `${WEEKDAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`;
-}
-
 type WidgetClockProps = {
   className?: string;
 };
 
 export function WidgetClock({ className }: WidgetClockProps) {
+  const locale = useLocale();
+  const t = useTranslations("dashboard.widgets.clock");
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -52,10 +26,18 @@ export function WidgetClock({ className }: WidgetClockProps) {
     return () => clearInterval(id);
   }, []);
 
+  const dateLabel = now
+    ? new Intl.DateTimeFormat(locale, {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+      }).format(now)
+    : "";
+
   return (
     <GlassCard className={cn("p-8 flex flex-col justify-between", className)}>
       <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-        Now
+        {t("now")}
       </span>
       <div className="flex flex-1 flex-col items-start justify-center py-4">
         <span
@@ -65,7 +47,7 @@ export function WidgetClock({ className }: WidgetClockProps) {
           {now ? formatTime(now) : "--:--"}
         </span>
         <span className="mt-3 text-base text-muted tabular" suppressHydrationWarning>
-          {now ? formatDate(now) : ""}
+          {dateLabel}
         </span>
       </div>
     </GlassCard>

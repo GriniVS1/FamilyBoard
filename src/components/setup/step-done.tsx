@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Sparkles } from "lucide-react";
 import { Button } from "@/components/shared/button";
 
 export function StepDone() {
+  const t = useTranslations("setup.done");
   const router = useRouter();
 
   return (
@@ -21,11 +23,10 @@ export function StepDone() {
 
       <div className="space-y-3 max-w-xl">
         <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
-          You&apos;re all set
+          {t("title")}
         </h2>
         <p className="text-muted text-lg">
-          Your FamilyBoard is ready. Pin it to a wall display or open it on any
-          device.
+          {t("description")}
         </p>
       </div>
 
@@ -36,7 +37,7 @@ export function StepDone() {
           router.refresh();
         }}
       >
-        Open Dashboard
+        {t("openDashboard")}
       </Button>
     </div>
   );

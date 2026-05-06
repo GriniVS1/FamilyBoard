@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Calendar,
   Home,
@@ -18,31 +19,31 @@ import { TopbarClock } from "./topbar-clock";
 
 type NavEntry = {
   href: string;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
 };
 
 const PRIMARY_NAV: NavEntry[] = [
-  { href: "/", label: "Dashboard", icon: Home },
-  { href: "/calendar", label: "Calendar", icon: Calendar },
-  { href: "/chores", label: "Chores", icon: Star },
-  { href: "/todos", label: "To-dos", icon: ListTodo },
-  { href: "/notes", label: "Notes", icon: StickyNote },
+  { href: "/", labelKey: "dashboard", icon: Home },
+  { href: "/calendar", labelKey: "calendar", icon: Calendar },
+  { href: "/chores", labelKey: "chores", icon: Star },
+  { href: "/todos", labelKey: "todos", icon: ListTodo },
+  { href: "/notes", labelKey: "notes", icon: StickyNote },
 ];
 
 const SECONDARY_NAV: NavEntry[] = [
-  { href: "/photos", label: "Photos", icon: ImageIcon },
-  { href: "/settings", label: "Settings", icon: Settings },
+  { href: "/photos", labelKey: "photos", icon: ImageIcon },
+  { href: "/settings", labelKey: "settings", icon: Settings },
 ];
 
-const PAGE_TITLES: Record<string, string> = {
-  "/": "Dashboard",
-  "/calendar": "Calendar",
-  "/chores": "Chores",
-  "/todos": "To-dos",
-  "/notes": "Notes",
-  "/photos": "Photos",
-  "/settings": "Settings",
+const PAGE_TITLE_KEYS: Record<string, string> = {
+  "/": "dashboard",
+  "/calendar": "calendar",
+  "/chores": "chores",
+  "/todos": "todos",
+  "/notes": "notes",
+  "/photos": "photos",
+  "/settings": "settings",
 };
 
 function isActive(pathname: string, href: string): boolean {
@@ -50,26 +51,29 @@ function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function pageTitleFor(pathname: string): string {
-  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname];
-  const segment = pathname.split("/").filter(Boolean)[0];
-  if (!segment) return "Dashboard";
-  const direct = PAGE_TITLES[`/${segment}`];
-  if (direct) return direct;
-  return segment.charAt(0).toUpperCase() + segment.slice(1);
-}
-
 type AppShellProps = {
   children: React.ReactNode;
 };
 
 export function AppShell({ children }: AppShellProps) {
+  const t = useTranslations("nav");
+  const tCommon = useTranslations("common");
   const pathname = usePathname() ?? "/";
   const hideChrome =
     pathname.startsWith("/setup") || pathname.startsWith("/screensaver");
 
   if (hideChrome) {
     return <>{children}</>;
+  }
+
+  function pageTitleFor(p: string): string {
+    const key = PAGE_TITLE_KEYS[p];
+    if (key) return t(key as Parameters<typeof t>[0]);
+    const segment = p.split("/").filter(Boolean)[0];
+    if (!segment) return t("dashboard");
+    const segKey = PAGE_TITLE_KEYS[`/${segment}`];
+    if (segKey) return t(segKey as Parameters<typeof t>[0]);
+    return segment.charAt(0).toUpperCase() + segment.slice(1);
   }
 
   const title = pageTitleFor(pathname);
@@ -90,7 +94,7 @@ export function AppShell({ children }: AppShellProps) {
             <NavItem
               key={item.href}
               href={item.href}
-              label={item.label}
+              label={t(item.labelKey as Parameters<typeof t>[0])}
               icon={item.icon}
               active={isActive(pathname, item.href)}
               variant="sidebar"
@@ -101,7 +105,7 @@ export function AppShell({ children }: AppShellProps) {
             <NavItem
               key={item.href}
               href={item.href}
-              label={item.label}
+              label={t(item.labelKey as Parameters<typeof t>[0])}
               icon={item.icon}
               active={isActive(pathname, item.href)}
               variant="sidebar"
@@ -109,7 +113,7 @@ export function AppShell({ children }: AppShellProps) {
           ))}
         </nav>
         <div className="mt-auto flex items-center justify-between gap-2 px-1 pt-4">
-          <span className="text-xs text-muted">Theme</span>
+          <span className="text-xs text-muted">{tCommon("theme")}</span>
           <ThemeToggle />
         </div>
       </aside>
@@ -149,7 +153,7 @@ export function AppShell({ children }: AppShellProps) {
           <NavItem
             key={item.href}
             href={item.href}
-            label={item.label}
+            label={t(item.labelKey as Parameters<typeof t>[0])}
             icon={item.icon}
             active={isActive(pathname, item.href)}
             variant="bottom"

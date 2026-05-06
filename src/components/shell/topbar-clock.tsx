@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 function formatTime(date: Date): string {
   const hh = String(date.getHours()).padStart(2, "0");
@@ -9,6 +10,7 @@ function formatTime(date: Date): string {
 }
 
 export function TopbarClock() {
+  const t = useTranslations("shell");
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -20,7 +22,7 @@ export function TopbarClock() {
   return (
     <span
       className="tabular text-sm font-medium text-ink"
-      aria-label="Current time"
+      aria-label={t("currentTime")}
       suppressHydrationWarning
     >
       {now ? formatTime(now) : "--:--"}

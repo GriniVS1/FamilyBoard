@@ -3,6 +3,7 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Calendar as CalendarIcon, Check, Plus, Users } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/shared/input";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,8 @@ function todayIso(): string {
 }
 
 export function TodoInput({ members, onSubmit }: TodoInputProps) {
+  const t = useTranslations("todos");
+  const tCommon = useTranslations("common");
   const [title, setTitle] = useState("");
   const [memberId, setMemberId] = useState<string | null>(null);
   const [dueDate, setDueDate] = useState<string | null>(null);
@@ -32,12 +35,12 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const t = title.trim();
-    if (!t || submitting) return;
+    const trimmed = title.trim();
+    if (!trimmed || submitting) return;
     setSubmitting(true);
     try {
       await onSubmit({
-        title: t,
+        title: trimmed,
         memberId: memberId,
         dueDate: dueDate,
       });
@@ -66,8 +69,8 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
         ref={inputRef}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        placeholder="Add a to-do…"
-        aria-label="New to-do title"
+        placeholder={t("addPlaceholder")}
+        aria-label={t("addPlaceholder")}
         className="flex-1 border-0 bg-transparent shadow-none focus:ring-0"
         disabled={submitting}
       />
@@ -76,7 +79,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
         <PopoverPrimitive.Trigger asChild>
           <button
             type="button"
-            aria-label="Set due date"
+            aria-label={t("dueDate")}
             className={cn(
               "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
               "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
@@ -99,7 +102,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
           >
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-                Due date
+                {t("dueDate")}
               </label>
               <input
                 type="date"
@@ -119,7 +122,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
                   }}
                   className="rounded-full px-3 py-1.5 text-xs text-ink hover:bg-bg"
                 >
-                  Today
+                  {tCommon("today")}
                 </button>
                 <button
                   type="button"
@@ -129,7 +132,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
                   }}
                   className="rounded-full px-3 py-1.5 text-xs text-muted hover:bg-bg"
                 >
-                  Clear
+                  {t("clearDate")}
                 </button>
               </div>
             </div>
@@ -141,7 +144,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
         <PopoverPrimitive.Trigger asChild>
           <button
             type="button"
-            aria-label="Assign member"
+            aria-label={t("assignMember")}
             className={cn(
               "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
               "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
@@ -188,7 +191,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
                   <span className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-bg text-ink">
                     <Users className="size-4" />
                   </span>
-                  <span className="flex-1 text-ink">Anyone</span>
+                  <span className="flex-1 text-ink">{tCommon("anyone")}</span>
                   {memberId === null && <Check className="size-4 text-ink" />}
                 </button>
               </li>
@@ -225,7 +228,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
       <button
         type="submit"
         disabled={!title.trim() || submitting}
-        aria-label="Add to-do"
+        aria-label={t("addPlaceholder")}
         className={cn(
           "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
           "bg-ink text-bg transition-opacity hover:opacity-90 disabled:opacity-40",

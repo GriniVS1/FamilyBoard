@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/shared/button";
@@ -44,6 +45,8 @@ function defaultMember(index: number): DraftMember {
 }
 
 export function StepMembers({ onComplete, onBack }: StepMembersProps) {
+  const t = useTranslations("setup.members");
+  const tCommon = useTranslations("common");
   const [members, setMembers] = useState<DraftMember[]>([defaultMember(0)]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +80,7 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
       .filter((m) => m.name.length > 0);
 
     if (cleaned.length === 0) {
-      setError("Add at least one member.");
+      setError(t("atLeastOne"));
       return;
     }
 
@@ -94,7 +97,7 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
       });
       onComplete();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : tCommon("error"));
     } finally {
       setSubmitting(false);
     }
@@ -104,13 +107,13 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
       <div className="space-y-3">
         <p className="text-muted text-sm font-medium tracking-wide uppercase">
-          Step 2
+          {t("step")}
         </p>
         <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
-          Add your family
+          {t("title")}
         </h2>
         <p className="text-muted text-lg">
-          Up to {MAX_MEMBERS} members. The first person is the admin.
+          {t("hint", { max: MAX_MEMBERS })}
         </p>
       </div>
 
@@ -141,13 +144,13 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
                       onChange={(e) =>
                         updateMember(member.id, { name: e.target.value })
                       }
-                      placeholder={`Member ${idx + 1}`}
+                      placeholder={t("namePlaceholder", { n: idx + 1 })}
                       maxLength={40}
-                      aria-label={`Name for member ${idx + 1}`}
+                      aria-label={t("namePlaceholder", { n: idx + 1 })}
                     />
                     {idx === 0 && (
                       <span className="inline-flex items-center mt-2 px-2.5 py-1 rounded-full text-xs font-medium bg-ink text-bg">
-                        Admin
+                        {tCommon("admin")}
                       </span>
                     )}
                   </div>
@@ -156,7 +159,7 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
                       type="button"
                       onClick={() => removeMember(member.id)}
                       className="size-12 tap-target rounded-full text-muted hover:text-ink hover:bg-bg flex items-center justify-center transition-colors"
-                      aria-label={`Remove member ${idx + 1}`}
+                      aria-label={t("remove", { n: idx + 1 })}
                     >
                       <X className="size-5" />
                     </button>
@@ -165,7 +168,7 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
 
                 <div className="space-y-3">
                   <p className="text-xs text-muted font-medium uppercase tracking-wide">
-                    Emoji
+                    {t("emoji")}
                   </p>
                   <div className="grid grid-cols-6 sm:grid-cols-12 gap-2">
                     {MEMBER_EMOJIS.map((emoji) => (
@@ -190,7 +193,7 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
 
                 <div className="space-y-3">
                   <p className="text-xs text-muted font-medium uppercase tracking-wide">
-                    Color
+                    {t("color")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {MEMBER_COLORS.map((color) => (
@@ -217,9 +220,9 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
           className="w-full"
         >
           <Plus className="size-5" />
-          Add member
+          {t("addMember")}
           {members.length >= MAX_MEMBERS && (
-            <span className="text-muted text-sm ml-1">(max {MAX_MEMBERS})</span>
+            <span className="text-muted text-sm ml-1">{t("maxReached", { max: MAX_MEMBERS })}</span>
           )}
         </Button>
       </div>
@@ -232,10 +235,10 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
 
       <div className="flex justify-between gap-3">
         <Button type="button" variant="ghost" size="lg" onClick={onBack}>
-          Back
+          {tCommon("back")}
         </Button>
         <Button type="submit" size="lg" disabled={submitting}>
-          {submitting ? "Saving…" : "Continue"}
+          {submitting ? tCommon("saving") : t("next")}
         </Button>
       </div>
     </form>

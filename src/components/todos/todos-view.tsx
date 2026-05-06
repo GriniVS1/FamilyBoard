@@ -9,6 +9,7 @@ import {
 import { ChevronDown, ListChecks } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
 import { TodoInput } from "./todo-input";
@@ -67,6 +68,7 @@ function compareTodos(a: Todo, b: Todo): number {
 }
 
 export function TodosView({ initialMembers }: TodosViewProps) {
+  const t = useTranslations("todos");
   const queryClient = useQueryClient();
   const { data: todos = [], isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
@@ -84,9 +86,9 @@ export function TodosView({ initialMembers }: TodosViewProps) {
   const { pending, completed } = useMemo(() => {
     const p: Todo[] = [];
     const c: Todo[] = [];
-    for (const t of todos) {
-      if (t.done) c.push(t);
-      else p.push(t);
+    for (const todo of todos) {
+      if (todo.done) c.push(todo);
+      else p.push(todo);
     }
     p.sort(compareTodos);
     c.sort(
@@ -123,7 +125,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
     },
     onError: (err, _input, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : "Could not add to-do.");
+      showToast(err instanceof Error ? err.message : t("couldNotAdd"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -138,21 +140,21 @@ export function TodosView({ initialMembers }: TodosViewProps) {
       const previous = queryClient.getQueryData<Todo[]>(QUERY_KEY) ?? [];
       queryClient.setQueryData<Todo[]>(
         QUERY_KEY,
-        previous.map((t) =>
-          t.id === args.id
+        previous.map((todoItem) =>
+          todoItem.id === args.id
             ? {
-                ...t,
+                ...todoItem,
                 ...args.patch,
                 updatedAt: new Date().toISOString(),
               }
-            : t,
+            : todoItem,
         ),
       );
       return { previous };
     },
     onError: (err, _args, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : "Could not update.");
+      showToast(err instanceof Error ? err.message : t("couldNotUpdate"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -167,13 +169,13 @@ export function TodosView({ initialMembers }: TodosViewProps) {
       const previous = queryClient.getQueryData<Todo[]>(QUERY_KEY) ?? [];
       queryClient.setQueryData<Todo[]>(
         QUERY_KEY,
-        previous.filter((t) => t.id !== id),
+        previous.filter((todoItem) => todoItem.id !== id),
       );
       return { previous };
     },
     onError: (err, _id, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : "Could not delete.");
+      showToast(err instanceof Error ? err.message : t("couldNotDelete"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -192,15 +194,18 @@ export function TodosView({ initialMembers }: TodosViewProps) {
 
   const isEmpty = !isLoading && todos.length === 0 && !error;
 
+  const countLabel = completed.length > 0
+    ? t("openAndDone", { open: pending.length, done: completed.length })
+    : t("open", { open: pending.length });
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
-          To-dos
+          {t("title")}
         </h2>
         <span className="tabular text-sm text-muted">
-          {pending.length} open
-          {completed.length > 0 ? ` · ${completed.length} done` : ""}
+          {countLabel}
         </span>
       </div>
 
@@ -211,7 +216,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
           role="alert"
           className="rounded-2xl border border-accent-rose/40 bg-accent-rose/10 px-4 py-3 text-sm text-ink"
         >
-          {error instanceof Error ? error.message : "Could not load to-dos."}
+          {error instanceof Error ? error.message : t("couldNotLoad")}
         </div>
       )}
 
@@ -219,11 +224,11 @@ export function TodosView({ initialMembers }: TodosViewProps) {
         <EmptyState />
       ) : (
         <div className="flex flex-col gap-3">
-          <ul className="flex flex-col gap-2" aria-label="Open to-dos">
+          <ul className="flex flex-col gap-2" aria-label={t("title")}>
             <AnimatePresence initial={false}>
-              {pending.map((t) => (
+              {pending.map((todo) => (
                 <motion.div
-                  key={t.id}
+                  key={todo.id}
                   layout
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -231,8 +236,8 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                   transition={{ duration: 0.18 }}
                 >
                   <TodoRow
-                    todo={t}
-                    member={t.memberId ? membersById.get(t.memberId) ?? null : null}
+                    todo={todo}
+                    member={todo.memberId ? membersById.get(todo.memberId) ?? null : null}
                     onToggle={handleToggle}
                     onDelete={handleDelete}
                   />
@@ -253,7 +258,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                 )}
               >
                 <span className="tabular">
-                  {completed.length} completed
+                  {t("completedSection", { count: completed.length })}
                 </span>
                 <ChevronDown
                   className={cn(
@@ -270,14 +275,14 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
                     className="flex flex-col gap-2 overflow-hidden"
-                    aria-label="Completed to-dos"
+                    aria-label={t("noCompleted")}
                   >
-                    {completed.map((t) => (
+                    {completed.map((todo) => (
                       <TodoRow
-                        key={t.id}
-                        todo={t}
+                        key={todo.id}
+                        todo={todo}
                         member={
-                          t.memberId ? membersById.get(t.memberId) ?? null : null
+                          todo.memberId ? membersById.get(todo.memberId) ?? null : null
                         }
                         onToggle={handleToggle}
                         onDelete={handleDelete}
@@ -305,6 +310,8 @@ export function TodosView({ initialMembers }: TodosViewProps) {
 }
 
 function EmptyState() {
+  const t = useTranslations("todos");
+
   return (
     <GlassCard className="mx-auto flex w-full max-w-md flex-col items-center gap-3 p-10 text-center">
       <span
@@ -314,10 +321,10 @@ function EmptyState() {
         <ListChecks className="size-8" />
       </span>
       <h3 className="font-display text-2xl tracking-tight text-ink">
-        Nothing on the list
+        {t("noActive")}
       </h3>
       <p className="text-sm text-muted">
-        Add the first to-do above. Quick wins keep the day flowing.
+        {t("noActiveDesc")}
       </p>
     </GlassCard>
   );

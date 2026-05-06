@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { CheckCircle2, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { GlassCard } from "@/components/shared/glass-card";
@@ -40,6 +41,8 @@ async function fetchChores(): Promise<ChoresPayload> {
 }
 
 export function WidgetChores({ className, members }: WidgetChoresProps) {
+  const t = useTranslations("dashboard.widgets.chores");
+  const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: ["chores"],
@@ -144,7 +147,7 @@ export function WidgetChores({ className, members }: WidgetChoresProps) {
   return (
     <GlassCard className={cn("p-6 flex flex-col gap-4", className)}>
       <WidgetHeader
-        title="Chores"
+        title={t("title")}
         action={
           <span className="tabular text-xs font-medium text-muted">
             <Star
@@ -152,18 +155,18 @@ export function WidgetChores({ className, members }: WidgetChoresProps) {
               strokeWidth={0}
               aria-hidden
             />
-            <span className="tabular">{isLoading ? "—" : totalWeekly}</span> this
-            week
+            <span className="tabular">{isLoading ? "—" : totalWeekly}</span>
+            {" "}{tCommon("thisWeek")}
           </span>
         }
       />
       {error ? (
         <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-accent-rose/40 px-4 py-8 text-center text-sm text-accent-rose">
-          Could not load chores.
+          {t("couldNotLoad")}
         </div>
       ) : members.length === 0 ? (
         <div className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-border px-4 py-8 text-center text-sm text-muted">
-          No chores yet — set them up in /chores.
+          {t("noChores")}
         </div>
       ) : (
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -190,7 +193,7 @@ export function WidgetChores({ className, members }: WidgetChoresProps) {
                     {m.name}
                   </span>
                   <span className="tabular text-xs text-muted">
-                    {earned}/{target} stars
+                    {earned}/{target} {t("stars")}
                   </span>
                 </div>
                 <button
@@ -201,7 +204,7 @@ export function WidgetChores({ className, members }: WidgetChoresProps) {
                     "bg-surface text-ink shadow-soft transition-colors hover:bg-bg",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
                   )}
-                  aria-label={`Mark a chore done for ${m.name}`}
+                  aria-label={t("markDoneFor", { name: m.name })}
                 >
                   <CheckCircle2 className="size-5" />
                 </button>
@@ -238,14 +241,15 @@ function PickChoreDialog({
   chores,
   onPick,
 }: PickChoreDialogProps) {
+  const t = useTranslations("dashboard.widgets.chores");
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <div className="flex flex-col gap-4">
-          <DialogTitle>Mark done</DialogTitle>
+          <DialogTitle>{t("markDone")}</DialogTitle>
           {chores.length === 0 ? (
             <p className="text-sm text-muted">
-              No chores to log yet. Add some in the Chores tab.
+              {t("noChoresInTab")}
             </p>
           ) : (
             <ul className="flex flex-col gap-2">

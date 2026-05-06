@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { Plus, Sparkles, Star, Users } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import {
   Dialog,
@@ -90,6 +91,7 @@ type PickerState = {
 type Toast = { id: number; message: string };
 
 export function ChoresView({ initialMembers }: ChoresViewProps) {
+  const t = useTranslations("chores");
   const queryClient = useQueryClient();
   const { data, isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
@@ -219,7 +221,7 @@ export function ChoresView({ initialMembers }: ChoresViewProps) {
       if (context?.previous) {
         queryClient.setQueryData(QUERY_KEY, context.previous);
       }
-      showToast(err instanceof Error ? err.message : "Could not log star.");
+      showToast(err instanceof Error ? err.message : t("couldNotLog"));
     },
     onSettled: () => {
       setPendingChoreId(null);
@@ -260,20 +262,20 @@ export function ChoresView({ initialMembers }: ChoresViewProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h2 className="font-display text-2xl sm:text-3xl tracking-tight text-ink">
-            Chores
+            {t("title")}
           </h2>
           <span
             className="inline-flex items-center gap-1.5 rounded-full bg-accent-sun/30 px-3 py-1 text-sm font-medium text-ink"
-            aria-label={`${totalWeekly} stars this week`}
+            aria-label={`${totalWeekly} ${t("stars")}`}
           >
             <Star className="size-4 fill-current text-accent-sun" strokeWidth={0} />
             <span className="tabular">{totalLabel}</span>
-            <span className="text-muted">this week</span>
+            <span className="text-muted">{t("thisWeek")}</span>
           </span>
         </div>
         <Button onClick={() => openCreate(null)}>
           <Plus className="size-5" />
-          <span>New chore</span>
+          <span>{t("addChore")}</span>
         </Button>
       </div>
 
@@ -282,7 +284,7 @@ export function ChoresView({ initialMembers }: ChoresViewProps) {
           role="alert"
           className="rounded-2xl border border-accent-rose/40 bg-accent-rose/10 px-4 py-3 text-sm text-ink"
         >
-          {error instanceof Error ? error.message : "Could not load chores."}
+          {error instanceof Error ? error.message : t("couldNotLoad")}
         </div>
       )}
 
@@ -387,6 +389,7 @@ function MemberSection({
   onEdit,
   onAdd,
 }: MemberSectionProps) {
+  const t = useTranslations("chores");
   const safeColor: MemberColor = isMemberColor(member.color) ? member.color : "sand";
 
   return (
@@ -405,7 +408,7 @@ function MemberSection({
           <span className="inline-flex items-center gap-1 text-xs text-ink/70">
             <Star className="size-3 fill-current text-accent-sun" strokeWidth={0} />
             <span className="tabular">{earned}</span>
-            <span>this week</span>
+            <span>{t("thisWeek")}</span>
           </span>
         </div>
         <button
@@ -416,7 +419,7 @@ function MemberSection({
             "bg-surface text-ink shadow-soft transition-colors hover:bg-bg",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
           )}
-          aria-label={`Add chore for ${member.name}`}
+          aria-label={t("addChoreFor", { name: member.name })}
         >
           <Plus className="size-5" />
         </button>
@@ -431,7 +434,7 @@ function MemberSection({
           className="flex items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface/40 px-4 py-6 text-sm text-muted transition-colors hover:bg-surface/70"
         >
           <Plus className="size-4" />
-          Add a chore
+          {t("addFirst")}
         </button>
       ) : (
         <ul className="flex flex-col gap-2">
@@ -469,6 +472,8 @@ function UnassignedSection({
   onEdit,
   onAdd,
 }: UnassignedSectionProps) {
+  const t = useTranslations("chores");
+
   return (
     <GlassCard className={cn("flex flex-col gap-4 p-5 lg:col-span-2 xl:col-span-3", TINT_BG_STRONG.sand)}>
       <div className="flex items-center gap-3">
@@ -480,10 +485,10 @@ function UnassignedSection({
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="font-display text-lg tracking-tight text-ink">
-            Anyone can do
+            {t("anyone")}
           </span>
           <span className="text-xs text-ink/70">
-            Tap to log — pick who gets the stars.
+            {t("anyoneSub")}
           </span>
         </div>
         <button
@@ -494,7 +499,7 @@ function UnassignedSection({
             "bg-surface text-ink shadow-soft transition-colors hover:bg-bg",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
           )}
-          aria-label="Add unassigned chore"
+          aria-label={t("addUnassigned")}
         >
           <Plus className="size-5" />
         </button>
@@ -522,6 +527,8 @@ type EmptyStateProps = {
 };
 
 function EmptyState({ onCreate }: EmptyStateProps) {
+  const t = useTranslations("chores");
+
   return (
     <GlassCard className="mx-auto flex w-full max-w-md flex-col items-center gap-4 p-10 text-center">
       <span
@@ -531,14 +538,14 @@ function EmptyState({ onCreate }: EmptyStateProps) {
         <Sparkles className="size-9" />
       </span>
       <h3 className="font-display text-2xl tracking-tight text-ink">
-        No chores yet
+        {t("emptyTitle")}
       </h3>
       <p className="text-sm text-muted">
-        Set a few simple wins for the week. Stars earn smiles.
+        {t("emptyDesc")}
       </p>
       <Button onClick={onCreate}>
         <Plus className="size-5" />
-        Create your first chore
+        {t("createFirst")}
       </Button>
     </GlassCard>
   );
@@ -559,14 +566,16 @@ function PickMemberDialog({
   chore,
   onPick,
 }: PickMemberDialogProps) {
+  const t = useTranslations("chores");
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <div className="flex flex-col gap-5">
-          <DialogTitle>Who did it?</DialogTitle>
+          <DialogTitle>{t("whoDidIt")}</DialogTitle>
           {chore && (
             <p className="text-sm text-muted">
-              {chore.title} — pick the family member who earned the stars.
+              {t("whoDidItDesc", { title: chore.title })}
             </p>
           )}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
