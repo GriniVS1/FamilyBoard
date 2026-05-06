@@ -1,0 +1,91 @@
+import {
+  addDays,
+  addMonths,
+  addWeeks,
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+} from "date-fns";
+import type { CalendarView } from "./types";
+
+const WEEK_OPTIONS = { weekStartsOn: 1 as const };
+
+export function rangeForView(view: CalendarView, anchor: Date): { from: Date; to: Date } {
+  if (view === "day") {
+    return { from: startOfDay(anchor), to: endOfDay(anchor) };
+  }
+  if (view === "week") {
+    return {
+      from: startOfWeek(anchor, WEEK_OPTIONS),
+      to: endOfWeek(anchor, WEEK_OPTIONS),
+    };
+  }
+  // month — always show 6-row grid (start of week containing 1st, +42 days)
+  const firstDay = startOfMonth(anchor);
+  const gridStart = startOfWeek(firstDay, WEEK_OPTIONS);
+  return {
+    from: gridStart,
+    to: endOfDay(addDays(gridStart, 41)),
+  };
+}
+
+export function viewLabel(view: CalendarView, anchor: Date): string {
+  if (view === "day") return format(anchor, "EEEE, MMMM d");
+  if (view === "week") {
+    const start = startOfWeek(anchor, WEEK_OPTIONS);
+    const end = endOfWeek(anchor, WEEK_OPTIONS);
+    if (isSameMonth(start, end)) {
+      return `${format(start, "MMMM d")} – ${format(end, "d, yyyy")}`;
+    }
+    return `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
+  }
+  return format(anchor, "MMMM yyyy");
+}
+
+export function shiftDate(view: CalendarView, anchor: Date, dir: -1 | 1): Date {
+  if (view === "day") return addDays(anchor, dir);
+  if (view === "week") return addWeeks(anchor, dir);
+  return addMonths(anchor, dir);
+}
+
+export function buildMonthGrid(anchor: Date): Date[] {
+  const firstDay = startOfMonth(anchor);
+  const gridStart = startOfWeek(firstDay, WEEK_OPTIONS);
+  return Array.from({ length: 42 }, (_, i) => addDays(gridStart, i));
+}
+
+export function weekDays(anchor: Date): Date[] {
+  const start = startOfWeek(anchor, WEEK_OPTIONS);
+  return Array.from({ length: 7 }, (_, i) => addDays(start, i));
+}
+
+export const HOUR_START = 6;
+export const HOUR_END = 23;
+
+export function hoursInRange(): number[] {
+  return Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, i) => HOUR_START + i);
+}
+
+export function isToday(d: Date): boolean {
+  return isSameDay(d, new Date());
+}
+
+export {
+  addDays,
+  addMonths,
+  endOfDay,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  startOfDay,
+  startOfMonth,
+  startOfWeek,
+};

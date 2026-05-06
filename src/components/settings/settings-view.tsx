@@ -1,0 +1,341 @@
+"use client";
+
+import {
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  CheckCircle2,
+  Lock,
+  Pencil,
+  RotateCcw,
+  ShieldCheck,
+  X,
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import type { CalendarMember } from "@/components/calendar/types";
+import { Button } from "@/components/shared/button";
+import { GlassCard } from "@/components/shared/glass-card";
+import { MemberAvatar } from "@/components/shared/member-avatar";
+import { FactoryResetDialog } from "./factory-reset-dialog";
+import { FamilyEditor } from "./family-editor";
+import { GoogleRow } from "./google-row";
+import { MemberEditorDialog } from "./member-editor-dialog";
+import { PinChangeDialog } from "./pin-change-dialog";
+import { GateOverlay, PinGate } from "./pin-gate";
+
+type FamilyData = {
+  id: string;
+  name: string;
+  weatherLat?: number | null;
+  weatherLon?: number | null;
+  weatherLabel: string | null;
+};
+
+type SettingsViewProps = {
+  family: FamilyData | null;
+  members: CalendarMember[];
+  oauthBanner: OauthBanner | null;
+};
+
+export type OauthBanner = {
+  kind: "success" | "error";
+  memberId?: string;
+  memberName?: string;
+  reason?: string;
+};
+
+async function jsonRequest<T>(
+  url: string,
+  method: string,
+  body?: unknown,
+): Promise<T> {
+  const res = await fetch(url, {
+    method,
+    headers: body ? { "Content-Type": "application/json" } : undefined,
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (!res.ok) {
+    let message = `Request failed (${res.status})`;
+    try {
+      const data = (await res.json()) as { error?: { message?: string } };
+      if (data?.error?.message) message = data.error.message;
+    } catch {
+      // ignore
+    }
+    throw new Error(message);
+  }
+  return (await res.json()) as T;
+}
+
+export function SettingsView({
+  family,
+  members,
+  oauthBanner,
+}: SettingsViewProps) {
+  const queryClient = useQueryClient();
+  const [unlocked, setUnlocked] = useState(false);
+  const [banner, setBanner] = useState<OauthBanner | null>(oauthBanner);
+  const [familyState, setFamilyState] = useState<FamilyData | null>(family);
+  const [memberList, setMemberList] = useState<CalendarMember[]>(members);
+  const [memberEditing, setMemberEditing] = useState<CalendarMember | null>(null);
+  const [memberDialogOpen, setMemberDialogOpen] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (!banner) return;
+    const t = window.setTimeout(() => setBanner(null), 6000);
+    return () => window.clearTimeout(t);
+  }, [banner]);
+
+  const familyMutation = useMutation({
+    mutationFn: (patch: {
+      name?: string;
+      weatherLat?: number | null;
+      weatherLon?: number | null;
+      weatherLabel?: string | null;
+    }) => jsonRequest<FamilyData>("/api/settings/family", "PATCH", patch),
+    onSuccess: (data) => {
+      setFamilyState(data);
+      void queryClient.invalidateQueries({ queryKey: ["weather"] });
+    },
+  });
+
+  const memberSaveMutation = useMutation({
+    mutationFn: (args: {
+      id: string;
+      patch: {
+        name?: string;
+        color?: string;
+        emoji?: string | null;
+        role?: string;
+      };
+    }) => jsonRequest<CalendarMember>(`/api/members/${args.id}`, "PATCH", args.patch),
+    onSuccess: (data) => {
+      setMemberList((prev) =>
+        prev.map((m) => (m.id === data.id ? data : m)),
+      );
+    },
+  });
+
+  const memberDeleteMutation = useMutation({
+    mutationFn: (id: string) =>
+      jsonRequest<{ ok: true }>(`/api/members/${id}`, "DELETE"),
+    onSuccess: (_data, id) => {
+      setMemberList((prev) => prev.filter((m) => m.id !== id));
+    },
+  });
+
+  function openMemberEdit(m: CalendarMember) {
+    setMemberEditing(m);
+    setMemberDialogOpen(true);
+  }
+
+  return (
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <AnimatePresence>
+        {banner && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            role="status"
+            className={
+              banner.kind === "success"
+                ? "rounded-2xl border border-accent-mint/40 bg-accent-mint/15 px-4 py-3 flex items-center gap-3"
+                : "rounded-2xl border border-accent-rose/40 bg-accent-rose/15 px-4 py-3 flex items-center gap-3"
+            }
+          >
+            {banner.kind === "success" ? (
+              <CheckCircle2 className="size-5 text-accent-mint" />
+            ) : (
+              <X className="size-5 text-accent-rose" />
+            )}
+            <div className="flex-1 text-sm text-ink">
+              {banner.kind === "success" ? (
+                <span>
+                  Connected to Google Calendar
+                  {banner.memberName ? ` for ${banner.memberName}` : ""}.
+                </span>
+              ) : (
+                <span>
+                  Could not connect to Google
+                  {banner.reason ? ` (${banner.reason})` : ""}.
+                </span>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setBanner(null)}
+              className="size-9 rounded-full text-muted hover:bg-bg/60 hover:text-ink inline-flex items-center justify-center"
+              aria-label="Dismiss"
+            >
+              <X className="size-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {!unlocked ? (
+        <PinGate onUnlock={() => setUnlocked(true)} />
+      ) : (
+        <span
+          role="status"
+          className="inline-flex w-fit items-center gap-2 rounded-full bg-accent-mint/30 px-3 py-1 text-xs font-medium text-ink"
+        >
+          <ShieldCheck className="size-4" />
+          Unlocked for this session
+        </span>
+      )}
+
+      <GateOverlay locked={!unlocked}>
+        <FamilyEditor
+          family={familyState}
+          disabled={!unlocked}
+          onUpdate={async (patch) => {
+            return await familyMutation.mutateAsync(patch);
+          }}
+        />
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <GlassCard className="flex flex-col gap-4 p-6">
+          <div className="space-y-1">
+            <h2 className="font-display text-xl text-ink">Members</h2>
+            <p className="text-sm text-muted">
+              Edit profiles, manage roles, and connect each member's Google
+              Calendar.
+            </p>
+          </div>
+
+          <ul className="flex flex-col gap-4">
+            {memberList.map((m) => (
+              <li
+                key={m.id}
+                className="rounded-3xl border border-border bg-surface p-4 flex flex-col gap-3"
+              >
+                <div className="flex items-center gap-3">
+                  <MemberAvatar
+                    name={m.name}
+                    color={m.color}
+                    emoji={m.emoji}
+                    className="size-12"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-base font-medium text-ink truncate">
+                      {m.name}
+                    </div>
+                    <span className="inline-flex mt-0.5 text-[11px] font-medium uppercase tracking-wider text-muted">
+                      {m.role === "ADMIN" ? "Admin" : "Member"}
+                    </span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => openMemberEdit(m)}
+                    disabled={!unlocked}
+                    aria-label={`Edit ${m.name}`}
+                  >
+                    <Pencil className="size-4" />
+                    <span className="hidden sm:inline">Edit</span>
+                  </Button>
+                </div>
+                <GoogleRow member={m} />
+              </li>
+            ))}
+            {memberList.length === 0 && (
+              <li className="text-sm text-muted">No members yet.</li>
+            )}
+          </ul>
+        </GlassCard>
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <GlassCard className="flex flex-col gap-4 p-6">
+          <div className="space-y-1">
+            <h2 className="font-display text-xl text-ink">Security</h2>
+            <p className="text-sm text-muted">
+              Protect admin actions and reset the dashboard if you need to
+              start over.
+            </p>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="inline-flex size-10 items-center justify-center rounded-full bg-accent-sun/30 text-ink"
+              >
+                <Lock className="size-4" />
+              </span>
+              <div>
+                <div className="text-sm font-medium text-ink">Admin PIN</div>
+                <div className="text-xs text-muted">
+                  Required for editing settings.
+                </div>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setPinDialogOpen(true)}
+              disabled={!unlocked}
+            >
+              Change PIN
+            </Button>
+          </div>
+
+          <div className="flex flex-col gap-3 rounded-2xl border border-accent-rose/30 bg-accent-rose/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="inline-flex size-10 items-center justify-center rounded-full bg-accent-rose/30 text-accent-rose"
+              >
+                <RotateCcw className="size-4" />
+              </span>
+              <div>
+                <div className="text-sm font-medium text-ink">Factory reset</div>
+                <div className="text-xs text-muted">
+                  Wipes everything and restarts the setup wizard.
+                </div>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setResetDialogOpen(true)}
+              disabled={!unlocked}
+              className="text-accent-rose hover:bg-accent-rose/20"
+            >
+              Reset…
+            </Button>
+          </div>
+        </GlassCard>
+      </GateOverlay>
+
+      <MemberEditorDialog
+        open={memberDialogOpen}
+        onOpenChange={(o) => {
+          setMemberDialogOpen(o);
+          if (!o) setMemberEditing(null);
+        }}
+        member={memberEditing}
+        onSave={async (id, patch) => {
+          await memberSaveMutation.mutateAsync({ id, patch });
+        }}
+        onDelete={async (id) => {
+          await memberDeleteMutation.mutateAsync(id);
+        }}
+      />
+
+      <PinChangeDialog open={pinDialogOpen} onOpenChange={setPinDialogOpen} />
+      <FactoryResetDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+      />
+    </div>
+  );
+}
