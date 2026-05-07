@@ -61,6 +61,15 @@ async function markNotified(dateKey: string, ids: string[]): Promise<void> {
 }
 
 export const POST = withErrorHandling(async () => {
+  await db.pairingCode.deleteMany({
+    where: {
+      OR: [
+        { expiresAt: { lt: new Date() } },
+        { consumedAt: { not: null } },
+      ],
+    },
+  });
+
   const family = await db.family.findFirst({ select: { id: true } });
   if (!family) return ok({ checked: 0, sent: 0 });
 
