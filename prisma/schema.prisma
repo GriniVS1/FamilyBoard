@@ -10,7 +10,7 @@ datasource db {
 
 /// LicenseStatus values: "UNLICENSED" | "TRIAL" | "ACTIVE" | "EXPIRED"
 /// MemberRole values:    "ADMIN" | "MEMBER"
-/// EventSource values:   "LOCAL" | "GOOGLE"
+/// EventSource values:   "LOCAL" | "GOOGLE" | "CALDAV"
 /// MealSlot values:      "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK"
 /// GroceryCategory:      "produce" | "dairy" | "pantry" | "frozen" | "bakery" | "meat" | "drinks" | "other"
 /// Enforced via TypeScript types in src/lib/enums.ts (SQLite has no native enums).
@@ -61,6 +61,14 @@ model Member {
   googleAccessExpiresAt DateTime?
   googleSyncToken       String?
   googleSyncEnabled     Boolean           @default(false)
+  caldavServerUrl       String?
+  caldavUsername        String?
+  caldavPasswordEnc     String?
+  caldavCalendarUrl     String?
+  caldavCalendarName    String?
+  caldavCtag            String?
+  caldavSyncEnabled     Boolean           @default(false)
+  caldavSyncedAt        DateTime?
   createdAt             DateTime          @default(now())
   events                Event[]
   chores                Chore[]
@@ -73,25 +81,30 @@ model Member {
 }
 
 model Event {
-  id               String   @id @default(cuid())
+  id               String    @id @default(cuid())
   familyId         String
-  family           Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  family           Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
   memberId         String
-  member           Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  member           Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
   title            String
   description      String?
   location         String?
   startsAt         DateTime
   endsAt           DateTime
-  allDay           Boolean  @default(false)
-  source           String   @default("LOCAL")
+  allDay           Boolean   @default(false)
+  source           String    @default("LOCAL")
   googleEventId    String?
   googleCalendarId String?
+  caldavUid        String?
+  caldavEtag       String?
+  caldavHref       String?
+  caldavSyncedAt   DateTime?
   color            String?
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@unique([memberId, googleEventId])
+  @@unique([memberId, caldavUid])
   @@index([familyId, startsAt])
   @@index([memberId, startsAt])
 }

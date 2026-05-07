@@ -4,12 +4,23 @@ export async function register() {
   const intervalMs = Number(process.env.SYNC_INTERVAL_MS ?? 5 * 60 * 1000);
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
-  const syncTick = async () => {
+  const googleSyncTick = async () => {
     try {
       await fetch(`${baseUrl}/api/sync/google`, { method: "POST" });
     } catch (err) {
       console.warn(
-        "[instrumentation] sync tick failed",
+        "[instrumentation] google sync tick failed",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  };
+
+  const caldavSyncTick = async () => {
+    try {
+      await fetch(`${baseUrl}/api/sync/caldav`, { method: "POST" });
+    } catch (err) {
+      console.warn(
+        "[instrumentation] caldav sync tick failed",
         err instanceof Error ? err.message : err,
       );
     }
@@ -26,8 +37,12 @@ export async function register() {
     }
   };
 
-  setTimeout(syncTick, 10_000);
-  setInterval(syncTick, intervalMs);
+  setTimeout(googleSyncTick, 10_000);
+  setInterval(googleSyncTick, intervalMs);
+
+  // Stagger CalDAV sync by 30 s so it doesn't overlap with Google on cold start.
+  setTimeout(caldavSyncTick, 40_000);
+  setInterval(caldavSyncTick, intervalMs);
 
   // Push scheduler runs every 60 s — checks upcoming events and daily digest.
   setTimeout(pushTick, 15_000);

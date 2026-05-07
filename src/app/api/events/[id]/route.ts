@@ -2,6 +2,7 @@ import { z } from "zod";
 import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { deleteRemoteEvent, pushLocalEvent } from "@/lib/sync";
+import { deleteRemoteCaldavEvent, pushLocalEventToCaldav } from "@/lib/caldav";
 
 export const runtime = "nodejs";
 
@@ -72,6 +73,14 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
         );
       }
     }
+    if (member?.caldavSyncEnabled && member.caldavPasswordEnc) {
+      void pushLocalEventToCaldav(updated.id).catch((err) => {
+        console.warn(
+          "[events] push update to CalDAV failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
   }
 
   const fresh = await db.event.findUnique({ where: { id } });
@@ -85,6 +94,9 @@ export const DELETE = withErrorHandling<Ctx>(async (_req, { params }) => {
 
   if (event.source === "LOCAL" && event.googleEventId) {
     await deleteRemoteEvent(id);
+  }
+  if (event.source === "LOCAL" && event.caldavHref) {
+    await deleteRemoteCaldavEvent(id);
   }
   await db.event.delete({ where: { id } });
   return ok({ ok: true });

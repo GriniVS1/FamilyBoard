@@ -23,6 +23,7 @@ import { LocalePicker } from "@/components/shared/locale-picker";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { FactoryResetDialog } from "./factory-reset-dialog";
 import { FamilyEditor } from "./family-editor";
+import { CaldavRow } from "./caldav-row";
 import { GoogleRow } from "./google-row";
 import { MemberEditorDialog } from "./member-editor-dialog";
 import { PinChangeDialog } from "./pin-change-dialog";
@@ -272,6 +273,7 @@ export function SettingsView({
                   </Button>
                 </div>
                 <GoogleRow member={m} />
+                <CaldavRow member={m} />
               </li>
             ))}
             {memberList.length === 0 && (
