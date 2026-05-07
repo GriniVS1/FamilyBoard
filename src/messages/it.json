@@ -54,6 +54,8 @@
       "subtitle": "Un centro di comando tranquillo e colorato per tutta la famiglia. Ci vogliono circa due minuti.",
       "language": "Lingua",
       "start": "Inizia",
+      "resumeBanner": "Sembra che tu abbia già iniziato la configurazione. Riprendi da dove avevi lasciato.",
+      "resumeButton": "Riprendi la configurazione",
       "bullet1Title": "La famiglia a colpo d'occhio",
       "bullet1Desc": "Ogni membro ha un colore e un emoji.",
       "bullet2Title": "Calendario condiviso",

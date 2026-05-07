@@ -1,16 +1,19 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Calendar, Users, CloudSun } from "lucide-react";
+import { Calendar, Users, CloudSun, RotateCcw } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { LocaleSelect } from "@/components/shared/locale-picker";
+import type { StepKey } from "./types";
 
 type StepWelcomeProps = {
   onNext: () => void;
+  isResume?: boolean;
+  resumeStep?: StepKey;
 };
 
-export function StepWelcome({ onNext }: StepWelcomeProps) {
+export function StepWelcome({ onNext, isResume = false, resumeStep }: StepWelcomeProps) {
   const t = useTranslations("setup.welcome");
 
   const bullets = [
@@ -65,9 +68,16 @@ export function StepWelcome({ onNext }: StepWelcomeProps) {
         ))}
       </div>
 
+      {isResume ? (
+        <GlassCard className="p-4 flex items-center gap-3 bg-accent-sky/20 border-accent-sky/40">
+          <RotateCcw className="size-5 text-ink shrink-0" strokeWidth={2} />
+          <div className="flex-1 text-sm text-ink">{t("resumeBanner")}</div>
+        </GlassCard>
+      ) : null}
+
       <div className="flex justify-end">
         <Button size="lg" onClick={onNext}>
-          {t("start")}
+          {isResume ? t("resumeButton") : t("start")}
         </Button>
       </div>
     </div>

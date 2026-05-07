@@ -54,6 +54,8 @@
       "subtitle": "Ein ruhiges, buntes Familiencenter für alle. Dauert etwa zwei Minuten.",
       "language": "Sprache",
       "start": "Loslegen",
+      "resumeBanner": "Sieht aus, als hättest du das Setup schon begonnen. Mach dort weiter, wo du aufgehört hast.",
+      "resumeButton": "Setup fortsetzen",
       "bullet1Title": "Familie auf einen Blick",
       "bullet1Desc": "Jedes Mitglied bekommt eine Farbe und ein Emoji.",
       "bullet2Title": "Gemeinsamer Kalender",

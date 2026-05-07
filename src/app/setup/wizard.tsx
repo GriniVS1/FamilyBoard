@@ -25,8 +25,8 @@ type WizardProps = {
   initialStatus: SetupStatus;
 };
 
-function pickInitialStep(status: SetupStatus): StepKey {
-  if (!status.familyCreated) return "welcome";
+function nextMissingStep(status: SetupStatus): StepKey {
+  if (!status.familyCreated) return "family";
   if (status.memberCount === 0) return "members";
   if (!status.pinSet) return "pin";
   if (!status.weatherSet) return "weather";
@@ -34,17 +34,30 @@ function pickInitialStep(status: SetupStatus): StepKey {
 }
 
 export function Wizard({ initialStatus }: WizardProps) {
-  const [step, setStep] = useState<StepKey>(() => pickInitialStep(initialStatus));
+  // Always start at the welcome screen so the wizard never drops the user into
+  // a step they don't have context for. From welcome we route to whatever step
+  // the persisted state implies — a fresh install jumps to "family", a partial
+  // setup resumes wherever it left off.
+  const [step, setStep] = useState<StepKey>("welcome");
 
   const stepIndex = STEP_ORDER.indexOf(step);
   const showProgress = step !== "welcome" && step !== "done";
+  const resumeStep = nextMissingStep(initialStatus);
+  const isPartialSetup =
+    resumeStep !== "family" && resumeStep !== "done";
 
   const goTo = (next: StepKey) => setStep(next);
 
   const content = useMemo(() => {
     switch (step) {
       case "welcome":
-        return <StepWelcome onNext={() => goTo("family")} />;
+        return (
+          <StepWelcome
+            onNext={() => goTo(resumeStep)}
+            isResume={isPartialSetup}
+            resumeStep={resumeStep}
+          />
+        );
       case "family":
         return (
           <StepFamily
