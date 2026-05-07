@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import type { CalendarMember } from "@/components/calendar/types";
 import { Button } from "@/components/shared/button";
@@ -25,6 +25,8 @@ import { FactoryResetDialog } from "./factory-reset-dialog";
 import { FamilyEditor } from "./family-editor";
 import { CaldavRow } from "./caldav-row";
 import { GoogleRow } from "./google-row";
+import { MicrosoftCallbackBanner } from "./microsoft-callback-banner";
+import { MicrosoftRow } from "./microsoft-row";
 import { MemberEditorDialog } from "./member-editor-dialog";
 import { PinChangeDialog } from "./pin-change-dialog";
 import { GateOverlay, PinGate } from "./pin-gate";
@@ -154,6 +156,10 @@ export function SettingsView({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+      <Suspense>
+        <MicrosoftCallbackBanner />
+      </Suspense>
+
       <AnimatePresence>
         {banner && (
           <motion.div
@@ -274,6 +280,7 @@ export function SettingsView({
                 </div>
                 <GoogleRow member={m} />
                 <CaldavRow member={m} />
+                <MicrosoftRow member={m} />
               </li>
             ))}
             {memberList.length === 0 && (

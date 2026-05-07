@@ -473,6 +473,33 @@
       "disconnectConfirm": "Diesen CalDAV-Kalender trennen?",
       "unsupportedYet": "CalDAV-Synchronisierung wird noch nicht unterstützt."
     },
+    "microsoft": {
+      "title": "Microsoft Outlook",
+      "description": "Verbinde dich mit deinem Outlook-Kalender (Microsoft 365).",
+      "connect": "Outlook verbinden",
+      "connecting": "Wird verbunden…",
+      "disconnect": "Trennen",
+      "syncNow": "Jetzt synchronisieren",
+      "syncing": "Wird synchronisiert…",
+      "notConfigured": "Microsoft-Synchronisierung nicht konfiguriert",
+      "notConfiguredHelp": "Die Microsoft-Synchronisierung ist auf diesem Server nicht konfiguriert. Setze MICROSOFT_CLIENT_ID und MICROSOFT_CLIENT_SECRET in der .env-Datei, um sie zu aktivieren.",
+      "providerConflict": "Bereits mit einem anderen Kalenderanbieter verknüpft. Trenne ihn zuerst.",
+      "connected": "Verbunden",
+      "email": "Konto",
+      "lastSynced": "Zuletzt synchronisiert",
+      "never": "nie",
+      "callback": {
+        "connected": "Outlook verbunden!",
+        "error": "Outlook konnte nicht verbunden werden. {reason}",
+        "retry": "Erneut versuchen"
+      },
+      "errorReasons": {
+        "authFailed": "Authentifizierung fehlgeschlagen.",
+        "expired": "Sitzung abgelaufen. Bitte erneut versuchen.",
+        "generic": "Ein unerwarteter Fehler ist aufgetreten.",
+        "denied": "Zugriff verweigert."
+      }
+    },
     "push": {
       "title": "Push-Benachrichtigungen",
       "description": "Erhalte Erinnerungen 1 h vor Terminen und eine Morgenübersicht",

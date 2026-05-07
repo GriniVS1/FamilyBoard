@@ -3,6 +3,7 @@ import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { deleteRemoteEvent, pushLocalEvent } from "@/lib/sync";
 import { deleteRemoteCaldavEvent, pushLocalEventToCaldav } from "@/lib/caldav";
+import { deleteRemoteMicrosoftEvent, pushLocalEventToMicrosoft } from "@/lib/microsoft";
 
 export const runtime = "nodejs";
 
@@ -27,6 +28,7 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
   if (!event) throw new AppError("Event not found", "EVENT_NOT_FOUND", 404);
 
   const isGoogle = event.source === "GOOGLE";
+  const isMicrosoft = event.source === "MICROSOFT";
   if (isGoogle) {
     const allowed = new Set(["memberId", "color"]);
     for (const key of Object.keys(body)) {
@@ -34,6 +36,17 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
         throw new AppError(
           "Google-sourced events: only memberId and color can be edited",
           "GOOGLE_EVENT_READ_ONLY",
+          400,
+        );
+      }
+    }
+  } else if (isMicrosoft) {
+    const allowed = new Set(["memberId", "color"]);
+    for (const key of Object.keys(body)) {
+      if (!allowed.has(key)) {
+        throw new AppError(
+          "Microsoft-sourced events: only memberId and color can be edited",
+          "MICROSOFT_EVENT_READ_ONLY",
           400,
         );
       }
@@ -61,7 +74,7 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
     },
   });
 
-  if (!isGoogle) {
+  if (!isGoogle && !isMicrosoft) {
     const member = await db.member.findUnique({ where: { id: updated.memberId } });
     if (member?.googleSyncEnabled && member.googleRefreshTokenEnc) {
       try {
@@ -77,6 +90,14 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
       void pushLocalEventToCaldav(updated.id).catch((err) => {
         console.warn(
           "[events] push update to CalDAV failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+    if (member?.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
+      void pushLocalEventToMicrosoft(updated.id).catch((err) => {
+        console.warn(
+          "[events] push update to Microsoft failed",
           err instanceof Error ? err.message : err,
         );
       });
@@ -97,6 +118,9 @@ export const DELETE = withErrorHandling<Ctx>(async (_req, { params }) => {
   }
   if (event.source === "LOCAL" && event.caldavHref) {
     await deleteRemoteCaldavEvent(id);
+  }
+  if (event.source === "LOCAL" && event.microsoftEventId) {
+    await deleteRemoteMicrosoftEvent(id);
   }
   await db.event.delete({ where: { id } });
   return ok({ ok: true });

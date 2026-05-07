@@ -23,6 +23,14 @@ export const POST = withErrorHandling<Ctx>(async (_req, { params }) => {
     );
   }
 
+  if (member.microsoftSyncEnabled) {
+    throw new AppError(
+      "Member is already linked to Microsoft. Disconnect Microsoft first or use a different member.",
+      "PROVIDER_CONFLICT",
+      400,
+    );
+  }
+
   const state = randomBytes(32).toString("hex");
   const payload = JSON.stringify({
     memberId: id,

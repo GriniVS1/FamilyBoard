@@ -10,7 +10,7 @@ datasource db {
 
 /// LicenseStatus values: "UNLICENSED" | "TRIAL" | "ACTIVE" | "EXPIRED"
 /// MemberRole values:    "ADMIN" | "MEMBER"
-/// EventSource values:   "LOCAL" | "GOOGLE" | "CALDAV"
+/// EventSource values:   "LOCAL" | "GOOGLE" | "CALDAV" | "MICROSOFT"
 /// MealSlot values:      "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK"
 /// GroceryCategory:      "produce" | "dairy" | "pantry" | "frozen" | "bakery" | "meat" | "drinks" | "other"
 /// Enforced via TypeScript types in src/lib/enums.ts (SQLite has no native enums).
@@ -67,9 +67,17 @@ model Member {
   caldavCalendarUrl     String?
   caldavCalendarName    String?
   caldavCtag            String?
-  caldavSyncEnabled     Boolean           @default(false)
-  caldavSyncedAt        DateTime?
-  createdAt             DateTime          @default(now())
+  caldavSyncEnabled          Boolean           @default(false)
+  caldavSyncedAt             DateTime?
+  microsoftEmail             String?
+  microsoftRefreshTokenEnc   String?
+  microsoftAccessToken       String?
+  microsoftAccessExpiresAt   DateTime?
+  microsoftCalendarId        String?
+  microsoftDeltaLink         String?
+  microsoftSyncEnabled       Boolean           @default(false)
+  microsoftSyncedAt          DateTime?
+  createdAt                  DateTime          @default(now())
   events                Event[]
   chores                Chore[]
   choreCompletions      ChoreCompletion[]
@@ -95,16 +103,21 @@ model Event {
   source           String    @default("LOCAL")
   googleEventId    String?
   googleCalendarId String?
-  caldavUid        String?
-  caldavEtag       String?
-  caldavHref       String?
-  caldavSyncedAt   DateTime?
-  color            String?
+  caldavUid           String?
+  caldavEtag          String?
+  caldavHref          String?
+  caldavSyncedAt      DateTime?
+  microsoftEventId    String?
+  microsoftCalendarId String?
+  microsoftEtag       String?
+  microsoftSyncedAt   DateTime?
+  color               String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
   @@unique([memberId, googleEventId])
   @@unique([memberId, caldavUid])
+  @@unique([memberId, microsoftEventId])
   @@index([familyId, startsAt])
   @@index([memberId, startsAt])
 }

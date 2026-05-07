@@ -26,6 +26,17 @@ export async function register() {
     }
   };
 
+  const microsoftSyncTick = async () => {
+    try {
+      await fetch(`${baseUrl}/api/sync/microsoft`, { method: "POST" });
+    } catch (err) {
+      console.warn(
+        "[instrumentation] microsoft sync tick failed",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  };
+
   const pushTick = async () => {
     try {
       await fetch(`${baseUrl}/api/push/tick`, { method: "POST" });
@@ -43,6 +54,10 @@ export async function register() {
   // Stagger CalDAV sync by 30 s so it doesn't overlap with Google on cold start.
   setTimeout(caldavSyncTick, 40_000);
   setInterval(caldavSyncTick, intervalMs);
+
+  // Stagger Microsoft sync by 60 s after CalDAV to avoid all three stacking at cold start.
+  setTimeout(microsoftSyncTick, 70_000);
+  setInterval(microsoftSyncTick, intervalMs);
 
   // Push scheduler runs every 60 s — checks upcoming events and daily digest.
   setTimeout(pushTick, 15_000);
