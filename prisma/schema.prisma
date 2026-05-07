@@ -45,6 +45,8 @@ model Family {
   mealPlans         MealPlan[]
   groceryItems      GroceryItem[]
   pushSubscriptions PushSubscription[]
+  mobileDevices     MobileDevice[]
+  pairingCodes      PairingCode[]
 }
 
 model Member {
@@ -84,6 +86,8 @@ model Member {
   todos                 Todo[]
   notesAuthored         Note[]            @relation("NoteAuthor")
   mealPlans             MealPlan[]
+  mobileDevices         MobileDevice[]
+  pairingCodes          PairingCode[]
 
   @@index([familyId])
 }
@@ -272,6 +276,39 @@ model PushSubscription {
   deviceLabel String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([familyId])
+}
+
+model MobileDevice {
+  id         String    @id @default(cuid())
+  familyId   String
+  family     Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  name       String
+  platform   String
+  tokenHash  String
+  fcmToken   String?
+  apnsToken  String?
+  lastSeenAt DateTime?
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@index([familyId])
+  @@index([memberId])
+}
+
+model PairingCode {
+  code       String    @id
+  familyId   String
+  family     Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  memberId   String
+  member     Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   @@index([familyId])
 }

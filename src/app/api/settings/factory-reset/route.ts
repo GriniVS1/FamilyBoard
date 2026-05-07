@@ -82,6 +82,8 @@ export const POST = withErrorHandling(async (req) => {
     await tx.mealPlan.deleteMany();
     await tx.recipe.deleteMany();
     await tx.pushSubscription.deleteMany();
+    await tx.mobileDevice.deleteMany();
+    await tx.pairingCode.deleteMany();
     await tx.member.deleteMany();
     await tx.family.deleteMany();
     // Deletes all settings including VAPID keys, notified-event caches, and

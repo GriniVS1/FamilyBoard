@@ -24,6 +24,7 @@ import { MemberAvatar } from "@/components/shared/member-avatar";
 import { FactoryResetDialog } from "./factory-reset-dialog";
 import { FamilyEditor } from "./family-editor";
 import { CaldavRow } from "./caldav-row";
+import { DevicesRow } from "./devices-row";
 import { GoogleRow } from "./google-row";
 import { MicrosoftCallbackBanner } from "./microsoft-callback-banner";
 import { MicrosoftRow } from "./microsoft-row";
@@ -225,6 +226,10 @@ export function SettingsView({
             <LocalePicker />
           </div>
         </GlassCard>
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <DevicesRow members={memberList} />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
