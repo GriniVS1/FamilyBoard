@@ -54,6 +54,8 @@
       "subtitle": "A calm, colorful command center for the whole family. Takes about two minutes.",
       "language": "Language",
       "start": "Get started",
+      "resumeBanner": "Looks like you started this setup earlier. Pick up where you left off.",
+      "resumeButton": "Resume setup",
       "bullet1Title": "Family at a glance",
       "bullet1Desc": "Each member gets a color and emoji.",
       "bullet2Title": "Shared calendar",
