@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Check, Trash2 } from "lucide-react";
 import { format, isToday, isTomorrow, isYesterday, parseISO } from "date-fns";
+import { useTranslations } from "next-intl";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { cn } from "@/lib/utils";
 import type { Todo, TodoMember } from "./types";
@@ -15,14 +16,6 @@ type TodoRowProps = {
   onDelete: (todo: Todo) => void;
 };
 
-function formatDuePill(iso: string): string {
-  const d = parseISO(iso);
-  if (isToday(d)) return "Today";
-  if (isTomorrow(d)) return "Tomorrow";
-  if (isYesterday(d)) return "Yesterday";
-  return format(d, "MMM d");
-}
-
 function isOverdue(iso: string): boolean {
   const d = parseISO(iso);
   const today = new Date();
@@ -31,6 +24,17 @@ function isOverdue(iso: string): boolean {
 }
 
 export function TodoRow({ todo, member, pending, onToggle, onDelete }: TodoRowProps) {
+  const tCommon = useTranslations("common");
+  const t = useTranslations("todos");
+
+  function formatDuePill(iso: string): string {
+    const d = parseISO(iso);
+    if (isToday(d)) return tCommon("today");
+    if (isTomorrow(d)) return tCommon("tomorrow");
+    if (isYesterday(d)) return tCommon("yesterday");
+    return format(d, "MMM d");
+  }
+
   const due = todo.dueDate ? formatDuePill(todo.dueDate) : null;
   const overdue = !todo.done && todo.dueDate ? isOverdue(todo.dueDate) : false;
 
@@ -47,7 +51,7 @@ export function TodoRow({ todo, member, pending, onToggle, onDelete }: TodoRowPr
         whileTap={{ scale: 0.9 }}
         transition={{ type: "spring", stiffness: 400, damping: 24 }}
         onClick={() => onToggle(todo)}
-        aria-label={todo.done ? `Mark ${todo.title} not done` : `Mark ${todo.title} done`}
+        aria-label={t("markDone", { title: todo.title })}
         aria-pressed={todo.done}
         className={cn(
           "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
@@ -102,7 +106,7 @@ export function TodoRow({ todo, member, pending, onToggle, onDelete }: TodoRowPr
       <button
         type="button"
         onClick={() => onDelete(todo)}
-        aria-label={`Delete ${todo.title}`}
+        aria-label={`${tCommon("delete")} ${todo.title}`}
         className={cn(
           "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full text-muted",
           "opacity-0 transition-opacity hover:bg-accent-rose/10 hover:text-accent-rose",

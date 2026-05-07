@@ -35,17 +35,30 @@ export function rangeForView(view: CalendarView, anchor: Date): { from: Date; to
   };
 }
 
-export function viewLabel(view: CalendarView, anchor: Date): string {
-  if (view === "day") return format(anchor, "EEEE, MMMM d");
+export function viewLabel(view: CalendarView, anchor: Date, locale: string = "en"): string {
+  if (view === "day") {
+    return new Intl.DateTimeFormat(locale, {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
+    }).format(anchor);
+  }
   if (view === "week") {
     const start = startOfWeek(anchor, WEEK_OPTIONS);
     const end = endOfWeek(anchor, WEEK_OPTIONS);
     if (isSameMonth(start, end)) {
-      return `${format(start, "MMMM d")} – ${format(end, "d, yyyy")}`;
+      const startFmt = new Intl.DateTimeFormat(locale, { month: "long", day: "numeric" });
+      const endFmt = new Intl.DateTimeFormat(locale, { day: "numeric", year: "numeric" });
+      return `${startFmt.format(start)} – ${endFmt.format(end)}`;
     }
-    return `${format(start, "MMM d")} – ${format(end, "MMM d, yyyy")}`;
+    const fmt = new Intl.DateTimeFormat(locale, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    return `${fmt.format(start)} – ${fmt.format(end)}`;
   }
-  return format(anchor, "MMMM yyyy");
+  return new Intl.DateTimeFormat(locale, { month: "long", year: "numeric" }).format(anchor);
 }
 
 export function shiftDate(view: CalendarView, anchor: Date, dir: -1 | 1): Date {

@@ -6,6 +6,7 @@ import {
   useQueryClient,
   type QueryKey,
 } from "@tanstack/react-query";
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Check, ListChecks } from "lucide-react";
 import { GlassCard } from "@/components/shared/glass-card";
@@ -38,6 +39,7 @@ async function patchTodo(id: string, patch: TodoPatchInput): Promise<Todo> {
 }
 
 export function WidgetTodos({ className }: WidgetTodosProps) {
+  const t = useTranslations("dashboard.widgets.todos");
   const queryClient = useQueryClient();
   const { data: todos = [], isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
@@ -82,54 +84,54 @@ export function WidgetTodos({ className }: WidgetTodosProps) {
   return (
     <GlassCard className={cn("p-6 flex flex-col gap-4", className)}>
       <WidgetHeader
-        title="To-dos"
+        title={t("title")}
         action={
           <span className="tabular text-xs text-muted">
-            {todos.filter((t) => !t.done).length} open
+            {t("open", { count: todos.filter((t) => !t.done).length })}
           </span>
         }
       />
-      <ul className="flex flex-1 flex-col gap-2" aria-label="Open to-dos">
+      <ul className="flex flex-1 flex-col gap-2" aria-label={t("title")}>
         {isLoading && (
           <li className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted">
-            Loading…
+            {t("empty")}
           </li>
         )}
         {!isLoading && error && (
           <li className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-accent-rose/40 px-4 py-10 text-center text-sm text-accent-rose">
-            Could not load to-dos.
+            {t("couldNotLoad")}
           </li>
         )}
         {!isLoading && !error && open.length === 0 && (
           <li className="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted">
             <ListChecks className="size-5" />
-            All caught up.
+            {t("empty")}
           </li>
         )}
-        {open.map((t) => (
+        {open.map((todo) => (
           <li
-            key={t.id}
+            key={todo.id}
             className="flex items-center gap-3 rounded-2xl border border-border bg-bg/30 px-3 py-2"
           >
             <motion.button
               type="button"
               whileTap={{ scale: 0.9 }}
               onClick={() =>
-                toggleMutation.mutate({ id: t.id, done: !t.done })
+                toggleMutation.mutate({ id: todo.id, done: !todo.done })
               }
-              aria-label={`Mark ${t.title} done`}
-              aria-pressed={t.done}
+              aria-label={`Mark ${todo.title} done`}
+              aria-pressed={todo.done}
               className={cn(
                 "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
                 "border-2 transition-colors",
-                t.done
+                todo.done
                   ? "border-ink bg-ink text-bg"
                   : "border-border bg-surface text-transparent hover:border-ink/40",
               )}
             >
               <Check className="size-5" strokeWidth={3} />
             </motion.button>
-            <span className="flex-1 truncate text-sm text-ink">{t.title}</span>
+            <span className="flex-1 truncate text-sm text-ink">{todo.title}</span>
           </li>
         ))}
       </ul>

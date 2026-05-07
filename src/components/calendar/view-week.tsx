@@ -1,6 +1,7 @@
 "use client";
 
 import { format, isSameDay } from "date-fns";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import { hoursInRange, isToday, weekDays } from "./date-utils";
 import { EventBlock } from "./event-block";
@@ -23,6 +24,10 @@ export function ViewWeek({
   onSelectEvent,
   onSelectSlot,
 }: ViewWeekProps) {
+  const locale = useLocale();
+  const t = useTranslations("calendar");
+  const weekdayShortFmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
+  const fullDateFmt = new Intl.DateTimeFormat(locale, { dateStyle: "full" });
   const days = weekDays(anchor);
   const hours = hoursInRange();
   const slotPx = slotHeightPx();
@@ -51,7 +56,7 @@ export function ViewWeek({
             )}
           >
             <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
-              {format(day, "EEE")}
+              {weekdayShortFmt.format(day)}
             </div>
             <div
               className={cn(
@@ -68,7 +73,7 @@ export function ViewWeek({
       {/* All-day row */}
       <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-border bg-bg/20">
         <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted text-right">
-          All day
+          {t("allDay")}
         </div>
         {dayLayouts.map(({ day, layout }) => (
           <div
@@ -123,7 +128,7 @@ export function ViewWeek({
                   onClick={() => onSelectSlot(day, h)}
                   className="absolute left-0 right-0 border-t border-border hover:bg-bg/30 transition-colors"
                   style={{ top: `${(h - hours[0]!) * slotPx}px`, height: `${slotPx}px` }}
-                  aria-label={`Create event at ${String(h).padStart(2, "0")}:00 on ${format(day, "PPPP")}`}
+                  aria-label={t("createEventAt", { time: `${String(h).padStart(2, "0")}:00` }) + " — " + fullDateFmt.format(day)}
                 />
               ))}
               {/* events */}

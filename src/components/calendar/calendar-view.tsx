@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { addHours, setHours, setMinutes, setSeconds, startOfDay } from "date-fns";
+import { useLocale } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarHeader } from "./calendar-header";
 import { rangeForView, shiftDate, viewLabel } from "./date-utils";
@@ -64,6 +65,7 @@ function detectDefaultView(): CalendarView {
 }
 
 export function CalendarView({ initialMembers }: CalendarViewProps) {
+  const locale = useLocale();
   const [view, setView] = useState<CalendarView>("week");
   const [anchor, setAnchor] = useState<Date>(() => new Date());
   const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>(() =>
@@ -177,7 +179,7 @@ export function CalendarView({ initialMembers }: CalendarViewProps) {
   return (
     <div className="flex flex-col gap-4">
       <CalendarHeader
-        title={viewLabel(view, anchor)}
+        title={viewLabel(view, anchor, locale)}
         view={view}
         onViewChange={setView}
         onPrev={handlePrev}

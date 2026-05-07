@@ -2,6 +2,7 @@
 
 import { Pin, Trash2, Users } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import {
   Dialog,
@@ -58,6 +59,9 @@ export function NoteDialog({
   onUpdate,
   onDelete,
 }: NoteDialogProps) {
+  const t = useTranslations("notes.dialog");
+  const tCommon = useTranslations("common");
+  const tNotes = useTranslations("notes");
   const [state, setState] = useState<FormState>(() => makeState(note));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +82,7 @@ export function NoteDialog({
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!state.body.trim()) {
-      setError("Write something first.");
+      setError(t("writeFirst"));
       return;
     }
     setSubmitting(true);
@@ -98,7 +102,7 @@ export function NoteDialog({
       }
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save.");
+      setError(err instanceof Error ? err.message : t("couldNotSave"));
     } finally {
       setSubmitting(false);
     }
@@ -106,14 +110,14 @@ export function NoteDialog({
 
   async function handleDelete() {
     if (!note) return;
-    if (!window.confirm("Delete this note?")) return;
+    if (!window.confirm(tNotes("deleteConfirm"))) return;
     setSubmitting(true);
     setError(null);
     try {
       await onDelete(note.id);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete.");
+      setError(err instanceof Error ? err.message : t("couldNotDelete"));
     } finally {
       setSubmitting(false);
     }
@@ -124,7 +128,7 @@ export function NoteDialog({
       <DialogContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex items-start justify-between gap-3 pr-10">
-            <DialogTitle>{isEdit ? "Edit note" : "New note"}</DialogTitle>
+            <DialogTitle>{isEdit ? t("editTitle") : t("newTitle")}</DialogTitle>
           </div>
 
           <div className="space-y-2">
@@ -132,13 +136,13 @@ export function NoteDialog({
               htmlFor="note-body"
               className="text-xs font-semibold uppercase tracking-wider text-muted"
             >
-              Note
+              {t("body")}
             </label>
             <textarea
               id="note-body"
               value={state.body}
               onChange={(e) => patch({ body: e.target.value })}
-              placeholder="Write a quick note for the family…"
+              placeholder={t("bodyPlaceholder")}
               autoFocus
               rows={6}
               className={cn(
@@ -151,7 +155,7 @@ export function NoteDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Color
+              {t("color")}
             </label>
             <div className="flex flex-wrap gap-2">
               {MEMBER_COLORS.map((c) => (
@@ -167,7 +171,7 @@ export function NoteDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Author
+              {t("author")}
             </label>
             <div className="flex flex-wrap gap-2">
               <button
@@ -184,7 +188,7 @@ export function NoteDialog({
                 <span className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-bg text-ink">
                   <Users className="size-4" />
                 </span>
-                <span className="text-sm text-ink">No author</span>
+                <span className="text-sm text-ink">{tCommon("noAuthor")}</span>
               </button>
               {members.map((m) => {
                 const selected = m.id === state.authorMemberId;
@@ -228,7 +232,7 @@ export function NoteDialog({
             <Pin
               className={cn("size-4", state.pinned && "fill-current")}
             />
-            {state.pinned ? "Pinned" : "Pin to top"}
+            {state.pinned ? tNotes("pinned2") : tNotes("pinToTop")}
           </button>
 
           {error && (
@@ -248,7 +252,7 @@ export function NoteDialog({
                   className="text-accent-rose hover:bg-accent-rose/10"
                 >
                   <Trash2 className="size-4" />
-                  Delete
+                  {t("delete")}
                 </Button>
               )}
             </div>
@@ -259,10 +263,10 @@ export function NoteDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Saving…" : "Save"}
+                {submitting ? tCommon("saving") : t("save")}
               </Button>
             </div>
           </div>

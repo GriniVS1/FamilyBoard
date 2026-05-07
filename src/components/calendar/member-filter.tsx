@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
 import { MemberAvatar } from "@/components/shared/member-avatar";
@@ -13,6 +14,7 @@ type MemberFilterProps = {
 };
 
 export function MemberFilter({ members, selectedIds, onChange }: MemberFilterProps) {
+  const t = useTranslations("calendar");
   const allSelected = selectedIds.length === members.length;
 
   function toggle(id: string) {
@@ -44,7 +46,7 @@ export function MemberFilter({ members, selectedIds, onChange }: MemberFilterPro
         aria-pressed={allSelected}
       >
         <Users className="size-4" />
-        All
+        {t("members")}
       </motion.button>
       {members.map((m) => {
         const selected = selectedIds.includes(m.id);

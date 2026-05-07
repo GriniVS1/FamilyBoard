@@ -2,6 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import {
   Dialog,
@@ -51,6 +52,8 @@ export function MemberEditorDialog({
   onSave,
   onDelete,
 }: MemberEditorDialogProps) {
+  const t = useTranslations("setup.members");
+  const tCommon = useTranslations("common");
   const [state, setState] = useState<FormState>(() => makeState(member));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,7 +73,7 @@ export function MemberEditorDialog({
     e.preventDefault();
     if (!member) return;
     if (!state.name.trim()) {
-      setError("Give them a name.");
+      setError(tCommon("error"));
       return;
     }
     setSubmitting(true);
@@ -84,7 +87,7 @@ export function MemberEditorDialog({
       });
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save.");
+      setError(err instanceof Error ? err.message : tCommon("error"));
     } finally {
       setSubmitting(false);
     }
@@ -94,7 +97,7 @@ export function MemberEditorDialog({
     if (!member) return;
     if (
       !window.confirm(
-        `Delete ${member.name}? Their events stay on the calendar but get re-assigned.`,
+        `${tCommon("areYouSure")}`,
       )
     )
       return;
@@ -104,7 +107,7 @@ export function MemberEditorDialog({
       await onDelete(member.id);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete.");
+      setError(err instanceof Error ? err.message : tCommon("error"));
     } finally {
       setSubmitting(false);
     }
@@ -115,12 +118,12 @@ export function MemberEditorDialog({
       <DialogContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex items-start justify-between gap-3 pr-10">
-            <DialogTitle>Edit member</DialogTitle>
+            <DialogTitle>{tCommon("edit")}</DialogTitle>
           </div>
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Name
+              {tCommon("member")}
             </label>
             <Input
               value={state.name}
@@ -133,7 +136,7 @@ export function MemberEditorDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Emoji
+              {t("emoji")}
             </label>
             <div className="grid grid-cols-6 gap-2 sm:grid-cols-12">
               {MEMBER_EMOJIS.map((emoji) => (
@@ -158,7 +161,7 @@ export function MemberEditorDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Color
+              {t("color")}
             </label>
             <div className="flex flex-wrap gap-2">
               {MEMBER_COLORS.map((c) => (
@@ -174,7 +177,7 @@ export function MemberEditorDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Role
+              {tCommon("admin")}
             </label>
             <div className="flex gap-2">
               {(["ADMIN", "MEMBER"] as const).map((r) => (
@@ -190,7 +193,7 @@ export function MemberEditorDialog({
                       : "border-border bg-surface text-ink hover:bg-bg",
                   )}
                 >
-                  {r === "ADMIN" ? "Admin" : "Member"}
+                  {r === "ADMIN" ? tCommon("admin") : tCommon("member")}
                 </button>
               ))}
             </div>
@@ -211,7 +214,7 @@ export function MemberEditorDialog({
               className="text-accent-rose hover:bg-accent-rose/10"
             >
               <Trash2 className="size-4" />
-              Delete
+              {tCommon("delete")}
             </Button>
             <div className="flex items-center gap-2">
               <Button
@@ -220,10 +223,10 @@ export function MemberEditorDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                Cancel
+                {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Saving…" : "Save"}
+                {submitting ? tCommon("saving") : tCommon("save")}
               </Button>
             </div>
           </div>

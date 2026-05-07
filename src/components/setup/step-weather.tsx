@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/shared/button";
@@ -22,6 +23,8 @@ type FamilyResponse = {
 };
 
 export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
+  const t = useTranslations("setup.weather");
+  const tCommon = useTranslations("common");
   const [label, setLabel] = useState("");
   const [showCoords, setShowCoords] = useState(false);
   const [latStr, setLatStr] = useState("");
@@ -36,7 +39,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
   function useMyLocation() {
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
       setGeoStatus("error");
-      setError("Geolocation isn't available in this browser.");
+      setError(t("geolocationUnavailable"));
       return;
     }
     setGeoStatus("loading");
@@ -52,15 +55,15 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
           setGeoStatus("error");
           setError(
             err.code === err.PERMISSION_DENIED
-              ? "Location permission denied. Enter coordinates manually."
-              : "Couldn't get your location. Enter coordinates manually.",
+              ? t("locationDenied")
+              : t("locationFailed"),
           );
         },
         { enableHighAccuracy: false, timeout: 8000 },
       );
     } catch {
       setGeoStatus("error");
-      setError("Couldn't request your location.");
+      setError(t("locationError"));
     }
   }
 
@@ -82,7 +85,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
         parsedLon < -180 ||
         parsedLon > 180
       ) {
-        setError("Enter valid coordinates (lat -90..90, lon -180..180).");
+        setError(t("invalidCoords"));
         return;
       }
       lat = parsedLat;
@@ -90,9 +93,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
     }
 
     if (lat == null || lon == null) {
-      setError(
-        'Use "Use my location" or enter coordinates manually to continue.',
-      );
+      setError(t("coordsRequired"));
       return;
     }
 
@@ -107,7 +108,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
       });
       onComplete();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(err instanceof Error ? err.message : tCommon("error"));
     } finally {
       setSubmitting(false);
     }
@@ -117,20 +118,20 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
     <form onSubmit={handleSubmit} className="flex flex-col gap-8">
       <div className="space-y-3">
         <p className="text-muted text-sm font-medium tracking-wide uppercase">
-          Step 4 (optional)
+          {t("step")}
         </p>
         <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
-          Weather for your dashboard
+          {t("title")}
         </h2>
         <p className="text-muted text-lg">
-          Pick a place so the forecast feels at home.
+          {t("description")}
         </p>
       </div>
 
       <div className="space-y-4">
         <div className="space-y-2">
           <label htmlFor="weather-label" className="text-sm font-medium text-ink">
-            City or place
+            {t("city")}
           </label>
           <Input
             id="weather-label"
@@ -151,10 +152,10 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
         >
           <MapPin className="size-5" />
           {geoStatus === "loading"
-            ? "Getting location…"
+            ? t("gettingLocation")
             : geoStatus === "ok" && coords
-              ? `Got it (${coords.lat.toFixed(2)}, ${coords.lon.toFixed(2)})`
-              : "Use my location"}
+              ? t("locationOk", { lat: coords.lat.toFixed(2), lon: coords.lon.toFixed(2) })
+              : t("useMyLocation")}
         </Button>
 
         <div>
@@ -170,7 +171,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
                 showCoords && "rotate-180",
               )}
             />
-            Enter coordinates manually
+            {t("enterManually")}
           </button>
 
           <AnimatePresence initial={false}>
@@ -185,7 +186,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
                 <div className="grid grid-cols-2 gap-3 pt-3">
                   <div className="space-y-1">
                     <label htmlFor="lat" className="text-xs text-muted">
-                      Latitude
+                      {t("latitude")}
                     </label>
                     <Input
                       id="lat"
@@ -197,7 +198,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
                   </div>
                   <div className="space-y-1">
                     <label htmlFor="lon" className="text-xs text-muted">
-                      Longitude
+                      {t("longitude")}
                     </label>
                     <Input
                       id="lon"
@@ -222,7 +223,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
 
       <div className="flex justify-between gap-3">
         <Button type="button" variant="ghost" size="lg" onClick={onBack}>
-          Back
+          {tCommon("back")}
         </Button>
         <div className="flex gap-3">
           <Button
@@ -232,10 +233,10 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
             onClick={onSkip}
             disabled={submitting}
           >
-            Skip for now
+            {t("skipForNow")}
           </Button>
           <Button type="submit" size="lg" disabled={submitting}>
-            {submitting ? "Saving…" : "Continue"}
+            {submitting ? tCommon("saving") : t("saveAndFinish")}
           </Button>
         </div>
       </div>

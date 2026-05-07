@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { cn } from "@/lib/utils";
@@ -15,12 +16,6 @@ type CalendarHeaderProps = {
   onCreate: () => void;
 };
 
-const TABS: { value: CalendarView; label: string }[] = [
-  { value: "day", label: "Day" },
-  { value: "week", label: "Week" },
-  { value: "month", label: "Month" },
-];
-
 export function CalendarHeader({
   title,
   view,
@@ -30,6 +25,14 @@ export function CalendarHeader({
   onToday,
   onCreate,
 }: CalendarHeaderProps) {
+  const t = useTranslations("calendar");
+
+  const tabs: { value: CalendarView; label: string }[] = [
+    { value: "day", label: t("views.day") },
+    { value: "week", label: t("views.week") },
+    { value: "month", label: t("views.month") },
+  ];
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div className="flex items-center gap-2">
@@ -37,7 +40,7 @@ export function CalendarHeader({
           type="button"
           onClick={onPrev}
           className="size-12 tap-target inline-flex items-center justify-center rounded-full border border-border bg-surface text-ink hover:bg-bg transition-colors"
-          aria-label="Previous"
+          aria-label={t("previous")}
         >
           <ChevronLeft className="size-5" />
         </button>
@@ -46,13 +49,13 @@ export function CalendarHeader({
           onClick={onToday}
           className="h-12 tap-target inline-flex items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-medium text-ink hover:bg-bg transition-colors"
         >
-          Today
+          {t("today")}
         </button>
         <button
           type="button"
           onClick={onNext}
           className="size-12 tap-target inline-flex items-center justify-center rounded-full border border-border bg-surface text-ink hover:bg-bg transition-colors"
-          aria-label="Next"
+          aria-label={t("next")}
         >
           <ChevronRight className="size-5" />
         </button>
@@ -64,10 +67,10 @@ export function CalendarHeader({
       <div className="flex items-center gap-2">
         <div
           role="tablist"
-          aria-label="View"
+          aria-label={t("views.week")}
           className="inline-flex rounded-full border border-border bg-surface p-1"
         >
-          {TABS.map((tab) => {
+          {tabs.map((tab) => {
             const active = tab.value === view;
             return (
               <button
@@ -90,7 +93,7 @@ export function CalendarHeader({
         </div>
         <Button onClick={onCreate} variant="primary" size="default">
           <Plus className="size-5" />
-          <span className="hidden sm:inline">New event</span>
+          <span className="hidden sm:inline">{t("newEvent")}</span>
         </Button>
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
 import { AnimatePresence, motion } from "framer-motion";
 import {
   CheckCircle2,
+  Globe,
   Lock,
   Pencil,
   RotateCcw,
@@ -14,9 +15,11 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { CalendarMember } from "@/components/calendar/types";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
+import { LocalePicker } from "@/components/shared/locale-picker";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { FactoryResetDialog } from "./factory-reset-dialog";
 import { FamilyEditor } from "./family-editor";
@@ -74,6 +77,8 @@ export function SettingsView({
   members,
   oauthBanner,
 }: SettingsViewProps) {
+  const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
   const [unlocked, setUnlocked] = useState(false);
   const [banner, setBanner] = useState<OauthBanner | null>(oauthBanner);
@@ -86,8 +91,8 @@ export function SettingsView({
 
   useEffect(() => {
     if (!banner) return;
-    const t = window.setTimeout(() => setBanner(null), 6000);
-    return () => window.clearTimeout(t);
+    const timer = window.setTimeout(() => setBanner(null), 6000);
+    return () => window.clearTimeout(timer);
   }, [banner]);
 
   const familyMutation = useMutation({
@@ -133,6 +138,18 @@ export function SettingsView({
     setMemberDialogOpen(true);
   }
 
+  function bannerMessage(): string {
+    if (!banner) return "";
+    if (banner.kind === "success") {
+      return banner.memberName
+        ? t("googleConnectedFor", { name: banner.memberName })
+        : t("googleConnected");
+    }
+    return banner.reason
+      ? t("googleFailed", { reason: banner.reason })
+      : t("googleFailedNoReason");
+  }
+
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <AnimatePresence>
@@ -155,23 +172,13 @@ export function SettingsView({
               <X className="size-5 text-accent-rose" />
             )}
             <div className="flex-1 text-sm text-ink">
-              {banner.kind === "success" ? (
-                <span>
-                  Connected to Google Calendar
-                  {banner.memberName ? ` for ${banner.memberName}` : ""}.
-                </span>
-              ) : (
-                <span>
-                  Could not connect to Google
-                  {banner.reason ? ` (${banner.reason})` : ""}.
-                </span>
-              )}
+              {bannerMessage()}
             </div>
             <button
               type="button"
               onClick={() => setBanner(null)}
               className="size-9 rounded-full text-muted hover:bg-bg/60 hover:text-ink inline-flex items-center justify-center"
-              aria-label="Dismiss"
+              aria-label={t("dismiss")}
             >
               <X className="size-4" />
             </button>
@@ -180,16 +187,33 @@ export function SettingsView({
       </AnimatePresence>
 
       {!unlocked ? (
-        <PinGate onUnlock={() => setUnlocked(true)} />
+        <PinGate
+          onUnlock={() => setUnlocked(true)}
+          title={t("enterPin")}
+          description={t("pinProtected")}
+        />
       ) : (
         <span
           role="status"
           className="inline-flex w-fit items-center gap-2 rounded-full bg-accent-mint/30 px-3 py-1 text-xs font-medium text-ink"
         >
           <ShieldCheck className="size-4" />
-          Unlocked for this session
+          {t("unlocked")}
         </span>
       )}
+
+      <GateOverlay locked={!unlocked}>
+        <GlassCard className="flex flex-col gap-4 p-6">
+          <div className="space-y-1">
+            <h2 className="font-display text-xl text-ink">{t("language")}</h2>
+            <p className="text-sm text-muted">{t("languageDescription")}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Globe className="size-4 text-muted" />
+            <LocalePicker />
+          </div>
+        </GlassCard>
+      </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
         <FamilyEditor
@@ -204,10 +228,9 @@ export function SettingsView({
       <GateOverlay locked={!unlocked}>
         <GlassCard className="flex flex-col gap-4 p-6">
           <div className="space-y-1">
-            <h2 className="font-display text-xl text-ink">Members</h2>
+            <h2 className="font-display text-xl text-ink">{t("members.title")}</h2>
             <p className="text-sm text-muted">
-              Edit profiles, manage roles, and connect each member's Google
-              Calendar.
+              {t("members.description")}
             </p>
           </div>
 
@@ -229,7 +252,7 @@ export function SettingsView({
                       {m.name}
                     </div>
                     <span className="inline-flex mt-0.5 text-[11px] font-medium uppercase tracking-wider text-muted">
-                      {m.role === "ADMIN" ? "Admin" : "Member"}
+                      {m.role === "ADMIN" ? tCommon("admin") : tCommon("member")}
                     </span>
                   </div>
                   <Button
@@ -237,17 +260,17 @@ export function SettingsView({
                     variant="ghost"
                     onClick={() => openMemberEdit(m)}
                     disabled={!unlocked}
-                    aria-label={`Edit ${m.name}`}
+                    aria-label={t("members.editMember", { name: m.name })}
                   >
                     <Pencil className="size-4" />
-                    <span className="hidden sm:inline">Edit</span>
+                    <span className="hidden sm:inline">{tCommon("edit")}</span>
                   </Button>
                 </div>
                 <GoogleRow member={m} />
               </li>
             ))}
             {memberList.length === 0 && (
-              <li className="text-sm text-muted">No members yet.</li>
+              <li className="text-sm text-muted">{t("members.noMembers")}</li>
             )}
           </ul>
         </GlassCard>
@@ -256,10 +279,9 @@ export function SettingsView({
       <GateOverlay locked={!unlocked}>
         <GlassCard className="flex flex-col gap-4 p-6">
           <div className="space-y-1">
-            <h2 className="font-display text-xl text-ink">Security</h2>
+            <h2 className="font-display text-xl text-ink">{t("pin.title")}</h2>
             <p className="text-sm text-muted">
-              Protect admin actions and reset the dashboard if you need to
-              start over.
+              {t("pin.description")}
             </p>
           </div>
 
@@ -272,9 +294,9 @@ export function SettingsView({
                 <Lock className="size-4" />
               </span>
               <div>
-                <div className="text-sm font-medium text-ink">Admin PIN</div>
+                <div className="text-sm font-medium text-ink">{t("pin.adminPin")}</div>
                 <div className="text-xs text-muted">
-                  Required for editing settings.
+                  {t("pin.adminPinDesc")}
                 </div>
               </div>
             </div>
@@ -284,7 +306,7 @@ export function SettingsView({
               onClick={() => setPinDialogOpen(true)}
               disabled={!unlocked}
             >
-              Change PIN
+              {t("pin.change")}
             </Button>
           </div>
 
@@ -297,9 +319,9 @@ export function SettingsView({
                 <RotateCcw className="size-4" />
               </span>
               <div>
-                <div className="text-sm font-medium text-ink">Factory reset</div>
+                <div className="text-sm font-medium text-ink">{t("factoryReset.title")}</div>
                 <div className="text-xs text-muted">
-                  Wipes everything and restarts the setup wizard.
+                  {t("factoryReset.description")}
                 </div>
               </div>
             </div>
@@ -310,7 +332,7 @@ export function SettingsView({
               disabled={!unlocked}
               className="text-accent-rose hover:bg-accent-rose/20"
             >
-              Reset…
+              {t("factoryReset.button")}
             </Button>
           </div>
         </GlassCard>

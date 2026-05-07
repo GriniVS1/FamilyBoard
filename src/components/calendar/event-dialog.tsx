@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { Link2, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -19,9 +20,7 @@ type EventDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   members: CalendarMember[];
-  /** Existing event to edit, or null for create */
   event: CalendarEvent | null;
-  /** Pre-fill values when creating a new event */
   initial?: {
     memberId?: string;
     startsAt?: string;
@@ -37,12 +36,12 @@ type FormState = {
   title: string;
   description: string;
   location: string;
-  date: string; // YYYY-MM-DD
-  endDate: string; // YYYY-MM-DD (used for all-day end inclusive)
-  startTime: string; // HH:mm
-  endTime: string; // HH:mm
+  date: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
   allDay: boolean;
-  color: string; // "" means use member color
+  color: string;
 };
 
 function toLocalDate(iso: string): string {
@@ -53,7 +52,6 @@ function toLocalTime(iso: string): string {
 }
 
 function buildIso(date: string, time: string): string {
-  // build local date from yyyy-MM-dd + HH:mm
   const [y, m, d] = date.split("-").map((s) => parseInt(s, 10));
   const [hh, mm] = time.split(":").map((s) => parseInt(s, 10));
   const dt = new Date(y!, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0, 0, 0);
@@ -115,6 +113,7 @@ export function EventDialog({
   onSave,
   onDelete,
 }: EventDialogProps) {
+  const t = useTranslations("calendar.dialog");
   const [state, setState] = useState<FormState>(() =>
     defaultState(members, event, initial),
   );
@@ -144,11 +143,11 @@ export function EventDialog({
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!state.memberId) {
-      setError("Pick a member.");
+      setError(t("memberRequired"));
       return;
     }
     if (!state.title.trim()) {
-      setError("Title is required.");
+      setError(t("titleRequired"));
       return;
     }
 
@@ -163,7 +162,7 @@ export function EventDialog({
     }
 
     if (new Date(endsAt) <= new Date(startsAt)) {
-      setError("End must be after start.");
+      setError(t("endAfterStart"));
       return;
     }
 
@@ -183,7 +182,7 @@ export function EventDialog({
       await onSave(input, event?.id ?? null);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save.");
+      setError(err instanceof Error ? err.message : t("failedToSave"));
     } finally {
       setSubmitting(false);
     }
@@ -191,14 +190,14 @@ export function EventDialog({
 
   async function handleDelete() {
     if (!event) return;
-    if (!window.confirm("Delete this event?")) return;
+    if (!window.confirm(t("deleteConfirm"))) return;
     setSubmitting(true);
     setError(null);
     try {
       await onDelete(event.id);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete.");
+      setError(err instanceof Error ? err.message : t("failedToDelete"));
     } finally {
       setSubmitting(false);
     }
@@ -208,7 +207,7 @@ export function EventDialog({
     {
       value: "",
       color: selectedMember && isMemberColor(selectedMember.color) ? selectedMember.color : null,
-      label: "Member color",
+      label: t("memberColor"),
     },
     ...MEMBER_COLORS.map((c) => ({ value: c, color: c, label: c })),
   ];
@@ -218,24 +217,24 @@ export function EventDialog({
       <DialogContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex items-start justify-between gap-3 pr-10">
-            <DialogTitle>{isEdit ? "Edit event" : "New event"}</DialogTitle>
+            <DialogTitle>{isEdit ? t("editTitle") : t("newTitle")}</DialogTitle>
           </div>
 
           {isGoogle && (
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
               <Link2 className="size-4 text-accent-sky" />
-              Synced from Google Calendar — only Member and Color can be changed.
+              {t("googleManaged")}
             </div>
           )}
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Title
+              {t("title")}
             </label>
             <Input
               value={state.title}
               onChange={(e) => patch({ title: e.target.value })}
-              placeholder="What's happening?"
+              placeholder={t("whatsHappening")}
               disabled={isGoogle}
               required
             />
@@ -243,7 +242,7 @@ export function EventDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Member
+              {t("member")}
             </label>
             <div className="flex flex-wrap gap-2">
               {members.map((m) => {
@@ -284,14 +283,14 @@ export function EventDialog({
               className="size-5 accent-ink"
             />
             <label htmlFor="allDay" className="text-sm text-ink">
-              All day
+              {t("allDay")}
             </label>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-                Start
+                {t("startsAt")}
               </label>
               <Input
                 type="date"
@@ -312,7 +311,7 @@ export function EventDialog({
             </div>
             <div className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-                End
+                {t("endsAt")}
               </label>
               <Input
                 type="date"
@@ -335,19 +334,19 @@ export function EventDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Location
+              {t("location")}
             </label>
             <Input
               value={state.location}
               onChange={(e) => patch({ location: e.target.value })}
-              placeholder="Optional"
+              placeholder={t("optional")}
               disabled={isGoogle}
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Notes
+              {t("description")}
             </label>
             <textarea
               value={state.description}
@@ -355,13 +354,13 @@ export function EventDialog({
               disabled={isGoogle}
               rows={3}
               className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-base text-ink placeholder:text-muted focus:ring-2 focus:ring-ink/20 disabled:opacity-50 disabled:pointer-events-none"
-              placeholder="Optional"
+              placeholder={t("optional")}
             />
           </div>
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Color
+              {t("color")}
             </label>
             <div className="flex flex-wrap gap-2">
               {colorChoices.map((c) => {
@@ -380,7 +379,7 @@ export function EventDialog({
                       )}
                       aria-pressed={selected}
                     >
-                      Member color
+                      {t("memberColor")}
                     </button>
                   );
                 }
@@ -413,11 +412,11 @@ export function EventDialog({
                   className="text-accent-rose hover:bg-accent-rose/10"
                 >
                   <Trash2 className="size-4" />
-                  Delete
+                  {t("deleteEvent")}
                 </Button>
               )}
               {isEdit && isGoogle && (
-                <span className="text-xs text-muted">Delete in Google Calendar</span>
+                <span className="text-xs text-muted">{t("deleteInGoogle")}</span>
               )}
             </div>
             <div className="flex items-center gap-2">
@@ -427,10 +426,10 @@ export function EventDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Saving…" : "Save"}
+                {submitting ? t("save") : t("save")}
               </Button>
             </div>
           </div>

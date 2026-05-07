@@ -2,6 +2,7 @@
 
 import { AlertTriangle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import {
   Dialog,
@@ -20,6 +21,7 @@ export function FactoryResetDialog({
   open,
   onOpenChange,
 }: FactoryResetDialogProps) {
+  const t = useTranslations("settings.factoryReset");
   const [pin, setPin] = useState("");
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -35,11 +37,11 @@ export function FactoryResetDialog({
 
   async function handleReset() {
     if (confirm !== "RESET") {
-      setError('Type RESET in capital letters to confirm.');
+      setError(t("typeResetError"));
       return;
     }
     if (pin.length < 4) {
-      setError("Enter your admin PIN.");
+      setError(t("pinRequired"));
       return;
     }
     setSubmitting(true);
@@ -49,10 +51,9 @@ export function FactoryResetDialog({
         pin,
         confirm: "RESET",
       });
-      // Hard redirect to setup
       window.location.href = "/setup";
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Reset failed.");
+      setError(err instanceof Error ? err.message : t("resetFailed"));
       setSubmitting(false);
     }
   }
@@ -69,10 +70,9 @@ export function FactoryResetDialog({
               <AlertTriangle className="size-6" />
             </span>
             <div>
-              <DialogTitle>Factory reset</DialogTitle>
+              <DialogTitle>{t("confirmTitle")}</DialogTitle>
               <p className="mt-1 text-sm text-muted">
-                Removes all family data — members, events, todos, notes, photos,
-                chores. The dashboard returns to the setup wizard.
+                {t("description")}
               </p>
             </div>
           </div>
@@ -82,7 +82,7 @@ export function FactoryResetDialog({
               htmlFor="reset-pin"
               className="text-xs font-semibold uppercase tracking-wider text-muted"
             >
-              Admin PIN
+              {t("adminPin")}
             </label>
             <Input
               id="reset-pin"
@@ -101,7 +101,7 @@ export function FactoryResetDialog({
               htmlFor="reset-confirm"
               className="text-xs font-semibold uppercase tracking-wider text-muted"
             >
-              Type RESET to confirm
+              {t("typeReset")}
             </label>
             <Input
               id="reset-confirm"
@@ -125,7 +125,7 @@ export function FactoryResetDialog({
               onClick={() => onOpenChange(false)}
               disabled={submitting}
             >
-              Cancel
+              {t("cancel")}
             </Button>
             <Button
               type="button"
@@ -133,7 +133,7 @@ export function FactoryResetDialog({
               disabled={submitting || confirm !== "RESET" || pin.length < 4}
               className="bg-accent-rose text-bg hover:bg-accent-rose/90"
             >
-              {submitting ? "Resetting…" : "Reset everything"}
+              {submitting ? t("resetting") : t("confirm")}
             </Button>
           </div>
         </div>

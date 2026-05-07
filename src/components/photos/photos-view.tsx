@@ -9,6 +9,7 @@ import {
 import { motion } from "framer-motion";
 import { ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState, type ChangeEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
@@ -68,6 +69,7 @@ async function deletePhoto(id: string): Promise<{ ok: true }> {
 }
 
 export function PhotosView(_: PhotosViewProps) {
+  const t = useTranslations("photos");
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -89,7 +91,7 @@ export function PhotosView(_: PhotosViewProps) {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
     onError: (err) => {
-      showToast(err instanceof Error ? err.message : "Upload failed.");
+      showToast(err instanceof Error ? err.message : t("uploadFailed"));
     },
   });
 
@@ -106,7 +108,7 @@ export function PhotosView(_: PhotosViewProps) {
     },
     onError: (err, _id, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : "Could not delete.");
+      showToast(err instanceof Error ? err.message : t("couldNotDelete"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -115,18 +117,18 @@ export function PhotosView(_: PhotosViewProps) {
 
   async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? []);
-    e.target.value = ""; // allow re-selecting same file
+    e.target.value = "";
     if (files.length === 0) return;
 
     setUploading(true);
     try {
       for (const file of files) {
         if (!file.type.startsWith("image/")) {
-          showToast(`${file.name} isn't an image.`);
+          showToast(t("notAnImage", { name: file.name }));
           continue;
         }
         if (file.size > PHOTO_MAX_BYTES) {
-          showToast(`${file.name} is over 8 MB.`);
+          showToast(t("tooLarge", { name: file.name }));
           continue;
         }
         try {
@@ -141,7 +143,7 @@ export function PhotosView(_: PhotosViewProps) {
   }
 
   function handleDelete(photo: Photo) {
-    if (!window.confirm("Delete this photo?")) return;
+    if (!window.confirm(t("deleteConfirm"))) return;
     deleteMutation.mutate(photo.id);
   }
 
@@ -155,18 +157,18 @@ export function PhotosView(_: PhotosViewProps) {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
-          Photos
+          {t("title")}
         </h2>
         <div className="flex items-center gap-2">
           {uploading && (
             <span className="inline-flex items-center gap-2 text-sm text-muted">
               <Loader2 className="size-4 animate-spin" />
-              Uploading…
+              {t("uploading")}
             </span>
           )}
           <Button onClick={pickFiles} disabled={uploading}>
             <Upload className="size-5" />
-            Upload photo
+            {t("upload")}
           </Button>
         </div>
       </div>
@@ -185,7 +187,7 @@ export function PhotosView(_: PhotosViewProps) {
           role="alert"
           className="rounded-2xl border border-accent-rose/40 bg-accent-rose/10 px-4 py-3 text-sm text-ink"
         >
-          {error instanceof Error ? error.message : "Could not load photos."}
+          {error instanceof Error ? error.message : t("couldNotLoad")}
         </div>
       )}
 
@@ -194,7 +196,7 @@ export function PhotosView(_: PhotosViewProps) {
       ) : (
         <ul
           className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"
-          aria-label="Photos"
+          aria-label={t("title")}
         >
           {photos.map((p) => (
             <PhotoTile key={p.id} photo={p} onDelete={handleDelete} />
@@ -221,6 +223,8 @@ type PhotoTileProps = {
 };
 
 function PhotoTile({ photo, onDelete }: PhotoTileProps) {
+  const t = useTranslations("photos");
+
   return (
     <li
       className={cn(
@@ -229,7 +233,7 @@ function PhotoTile({ photo, onDelete }: PhotoTileProps) {
     >
       <motion.img
         src={photo.path}
-        alt={photo.caption ?? "Family photo"}
+        alt={photo.caption ?? t("familyPhoto")}
         loading="lazy"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -252,7 +256,7 @@ function PhotoTile({ photo, onDelete }: PhotoTileProps) {
       <button
         type="button"
         onClick={() => onDelete(photo)}
-        aria-label="Delete photo"
+        aria-label={t("deletePhoto")}
         className={cn(
           "absolute right-2 top-2 size-12 tap-target inline-flex items-center justify-center rounded-full",
           "bg-surface/90 text-accent-rose shadow-soft backdrop-blur-sm",
@@ -267,6 +271,8 @@ function PhotoTile({ photo, onDelete }: PhotoTileProps) {
 }
 
 function EmptyState({ onUpload }: { onUpload: () => void }) {
+  const t = useTranslations("photos");
+
   return (
     <GlassCard className="mx-auto flex w-full max-w-md flex-col items-center gap-4 p-10 text-center">
       <span
@@ -276,14 +282,14 @@ function EmptyState({ onUpload }: { onUpload: () => void }) {
         <ImagePlus className="size-9" />
       </span>
       <h3 className="font-display text-2xl tracking-tight text-ink">
-        Add your first photo
+        {t("empty")}
       </h3>
       <p className="text-sm text-muted">
-        Photos appear in the screensaver and on the dashboard.
+        {t("emptyDesc")}
       </p>
       <Button onClick={onUpload}>
         <Upload className="size-5" />
-        Upload photo
+        {t("upload")}
       </Button>
     </GlassCard>
   );

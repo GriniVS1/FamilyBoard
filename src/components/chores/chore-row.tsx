@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Check, Pencil, Star } from "lucide-react";
 import { useRef, type MouseEvent, type PointerEvent } from "react";
+import { useTranslations } from "next-intl";
 import { cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import type { Chore } from "./types";
 import { TINT_BG, TINT_BG_STRONG } from "./types";
@@ -24,6 +25,8 @@ export function ChoreRow({
   onComplete,
   onEdit,
 }: ChoreRowProps) {
+  const t = useTranslations("chores");
+  const tCommon = useTranslations("common");
   const buttonRef = useRef<HTMLButtonElement>(null);
   const safeColor: MemberColor = isMemberColor(color) ? color : "sand";
 
@@ -83,7 +86,7 @@ export function ChoreRow({
           </span>
           {weeklyCompletions > 0 && (
             <span className="tabular text-xs text-muted">
-              {weeklyCompletions}× this week
+              {t("timesThisWeek", { count: weeklyCompletions })}
             </span>
           )}
         </div>
@@ -97,7 +100,7 @@ export function ChoreRow({
           "opacity-0 transition-opacity hover:bg-bg hover:text-ink group-hover:opacity-100 focus:opacity-100",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
         )}
-        aria-label={`Edit ${chore.title}`}
+        aria-label={`${tCommon("edit")} ${chore.title}`}
       >
         <Pencil className="size-4" />
       </button>
@@ -115,7 +118,7 @@ export function ChoreRow({
           "hover:bg-accent-sun/30 disabled:opacity-60",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30",
         )}
-        aria-label={`Mark ${chore.title} done`}
+        aria-label={`${tCommon("done")} ${chore.title}`}
       >
         <Check className="size-5" />
       </motion.button>

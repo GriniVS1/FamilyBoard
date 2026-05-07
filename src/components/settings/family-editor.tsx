@@ -3,6 +3,7 @@
 import { ChevronDown, Loader2, MapPin } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Input } from "@/components/shared/input";
@@ -28,6 +29,7 @@ type FamilyEditorProps = {
 };
 
 export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) {
+  const t = useTranslations("settings");
   const [name, setName] = useState(family?.name ?? "");
   const [label, setLabel] = useState(family?.weatherLabel ?? "");
   const [latStr, setLatStr] = useState(
@@ -57,7 +59,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
       setNameOk(true);
       window.setTimeout(() => setNameOk(false), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save.");
+      setError(err instanceof Error ? err.message : t("couldNotSave"));
     } finally {
       setSavingName(false);
     }
@@ -66,7 +68,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
   function useMyLocation() {
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
       setGeoStatus("error");
-      setError("Geolocation isn't available in this browser.");
+      setError(t("locationFailed"));
       return;
     }
     setGeoStatus("loading");
@@ -76,14 +78,14 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
         setLatStr(pos.coords.latitude.toFixed(4));
         setLonStr(pos.coords.longitude.toFixed(4));
         setGeoStatus("ok");
-        if (!label.trim()) setLabel("My Location");
+        if (!label.trim()) setLabel(t("myLocationLabel"));
       },
       (err) => {
         setGeoStatus("error");
         setError(
           err.code === err.PERMISSION_DENIED
-            ? "Location permission denied."
-            : "Couldn't get your location.",
+            ? t("locationDenied")
+            : t("locationFailed"),
         );
       },
       { enableHighAccuracy: false, timeout: 8000 },
@@ -105,11 +107,11 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
       lon < -180 ||
       lon > 180
     ) {
-      setError("Enter valid coordinates (lat -90..90, lon -180..180).");
+      setError(t("invalidCoords"));
       return;
     }
     if (!label.trim()) {
-      setError("Give the location a label.");
+      setError(t("labelRequired"));
       return;
     }
     setSavingWeather(true);
@@ -122,7 +124,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
       setWeatherOk(true);
       window.setTimeout(() => setWeatherOk(false), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save.");
+      setError(err instanceof Error ? err.message : t("couldNotSave"));
     } finally {
       setSavingWeather(false);
     }
@@ -131,8 +133,8 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
   return (
     <GlassCard className="flex flex-col gap-6 p-6">
       <div className="space-y-1">
-        <h2 className="font-display text-xl text-ink">Family</h2>
-        <p className="text-sm text-muted">Name and dashboard weather location.</p>
+        <h2 className="font-display text-xl text-ink">{t("family")}</h2>
+        <p className="text-sm text-muted">{t("familyDesc")}</p>
       </div>
 
       <form onSubmit={handleSaveName} className="flex flex-col gap-3">
@@ -140,7 +142,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
           htmlFor="family-name"
           className="text-xs font-semibold uppercase tracking-wider text-muted"
         >
-          Family name
+          {t("familyName")}
         </label>
         <div className="flex gap-2">
           <Input
@@ -157,11 +159,11 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
             variant="secondary"
             disabled={disabled || savingName || !name.trim()}
           >
-            {savingName ? <Loader2 className="size-4 animate-spin" /> : "Save"}
+            {savingName ? <Loader2 className="size-4 animate-spin" /> : t("save")}
           </Button>
         </div>
         {nameOk && (
-          <p className="text-xs text-accent-mint">Saved.</p>
+          <p className="text-xs text-accent-mint">{t("saved")}</p>
         )}
       </form>
 
@@ -169,7 +171,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
 
       <form onSubmit={handleSaveWeather} className="flex flex-col gap-3">
         <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-          Weather location
+          {t("weatherLocation")}
         </label>
         <Input
           value={label}
@@ -188,10 +190,10 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
         >
           <MapPin className="size-5" />
           {geoStatus === "loading"
-            ? "Getting location…"
+            ? t("gettingLocation")
             : geoStatus === "ok"
-              ? `Got it (${Number(latStr).toFixed(2)}, ${Number(lonStr).toFixed(2)})`
-              : "Use my location"}
+              ? t("locationOk", { lat: Number(latStr).toFixed(2), lon: Number(lonStr).toFixed(2) })
+              : t("useMyLocation")}
         </Button>
 
         <button
@@ -207,7 +209,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
               showCoords && "rotate-180",
             )}
           />
-          Enter coordinates manually
+          {t("enterManually")}
         </button>
 
         <AnimatePresence initial={false}>
@@ -222,7 +224,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
               <div className="grid grid-cols-2 gap-3 pt-2">
                 <div className="space-y-1">
                   <label htmlFor="lat" className="text-xs text-muted">
-                    Latitude
+                    {t("latitude")}
                   </label>
                   <Input
                     id="lat"
@@ -235,7 +237,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="lon" className="text-xs text-muted">
-                    Longitude
+                    {t("longitude")}
                   </label>
                   <Input
                     id="lon"
@@ -256,11 +258,11 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
             type="submit"
             disabled={disabled || savingWeather}
           >
-            {savingWeather ? <Loader2 className="size-4 animate-spin" /> : "Save weather"}
+            {savingWeather ? <Loader2 className="size-4 animate-spin" /> : t("saveWeather")}
           </Button>
         </div>
         {weatherOk && (
-          <p className="text-xs text-accent-mint">Saved.</p>
+          <p className="text-xs text-accent-mint">{t("saved")}</p>
         )}
       </form>
 

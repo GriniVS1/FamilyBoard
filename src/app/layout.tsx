@@ -1,7 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { getCurrentLocale } from "@/i18n/locale";
 import "./globals.css";
 
 const inter = Inter({
@@ -33,13 +36,18 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getCurrentLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en" suppressHydrationWarning className={`${inter.variable} ${geist.variable}`}>
+    <html lang={locale} suppressHydrationWarning className={`${inter.variable} ${geist.variable}`}>
       <body className="min-h-dvh">
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <QueryProvider>{children}</QueryProvider>
-        </ThemeProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <QueryProvider>{children}</QueryProvider>
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { Link2, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import type { CalendarMember } from "@/components/calendar/types";
 
@@ -29,6 +30,7 @@ async function fetchStatus(memberId: string): Promise<GoogleStatus> {
 }
 
 export function GoogleRow({ member }: GoogleRowProps) {
+  const t = useTranslations("settings.google");
   const [actionError, setActionError] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
@@ -59,7 +61,7 @@ export function GoogleRow({ member }: GoogleRowProps) {
       window.location.href = data.authorizeUrl;
     },
     onError: (err) => {
-      setActionError(err instanceof Error ? err.message : "Could not start OAuth.");
+      setActionError(err instanceof Error ? err.message : t("connectFailed"));
     },
   });
 
@@ -74,7 +76,7 @@ export function GoogleRow({ member }: GoogleRowProps) {
       void queryClient.invalidateQueries({ queryKey: ["google-status", member.id] });
     },
     onError: (err) => {
-      setActionError(err instanceof Error ? err.message : "Could not disconnect.");
+      setActionError(err instanceof Error ? err.message : t("disconnectFailed"));
     },
   });
 
@@ -96,13 +98,13 @@ export function GoogleRow({ member }: GoogleRowProps) {
       void queryClient.invalidateQueries({ queryKey: ["events"] });
     },
     onError: (err) => {
-      setActionError(err instanceof Error ? err.message : "Sync failed.");
+      setActionError(err instanceof Error ? err.message : t("syncFailed"));
     },
   });
 
   const lastSyncLabel = status?.lastSyncAt
     ? `${formatDistanceToNow(new Date(status.lastSyncAt))} ago`
-    : "never";
+    : t("never");
 
   return (
     <div className="rounded-2xl border border-border bg-bg/30 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -111,17 +113,17 @@ export function GoogleRow({ member }: GoogleRowProps) {
           <Link2 className="size-4 text-accent-sky" />
         </div>
         <div className="min-w-0">
-          <div className="text-sm font-medium text-ink">Google Calendar</div>
+          <div className="text-sm font-medium text-ink">{t("title")}</div>
           {isLoading ? (
-            <div className="text-xs text-muted">Checking…</div>
+            <div className="text-xs text-muted">{t("checking")}</div>
           ) : isError ? (
-            <div className="text-xs text-accent-rose">Could not load status.</div>
+            <div className="text-xs text-accent-rose">{t("statusFailed")}</div>
           ) : status?.connected ? (
             <div className="text-xs text-muted truncate">
-              {status.email ?? "Connected"} · last sync {lastSyncLabel}
+              {status.email ?? t("connected")} · {t("lastSync", { when: lastSyncLabel })}
             </div>
           ) : (
-            <div className="text-xs text-muted">Not connected</div>
+            <div className="text-xs text-muted">{t("notConnected")}</div>
           )}
         </div>
       </div>
@@ -140,7 +142,7 @@ export function GoogleRow({ member }: GoogleRowProps) {
               ) : (
                 <RefreshCw className="size-4" />
               )}
-              Sync now
+              {t("syncNow")}
             </Button>
             <Button
               type="button"
@@ -148,10 +150,10 @@ export function GoogleRow({ member }: GoogleRowProps) {
               onClick={() => disconnectMutation.mutate()}
               disabled={disconnectMutation.isPending}
               className="text-accent-rose hover:bg-accent-rose/10"
-              aria-label="Disconnect"
+              aria-label={t("disconnect")}
             >
               <Trash2 className="size-4" />
-              <span className="hidden sm:inline">Disconnect</span>
+              <span className="hidden sm:inline">{t("disconnect")}</span>
             </Button>
           </>
         ) : (
@@ -164,7 +166,7 @@ export function GoogleRow({ member }: GoogleRowProps) {
             {connectMutation.isPending && (
               <Loader2 className="size-4 animate-spin" />
             )}
-            Connect Google
+            {t("connect")}
           </Button>
         )}
       </div>

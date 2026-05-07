@@ -2,6 +2,7 @@
 
 import { Trash2, Users } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import {
   Dialog,
@@ -59,6 +60,8 @@ export function ChoreDialog({
   onSave,
   onDelete,
 }: ChoreDialogProps) {
+  const t = useTranslations("chores.dialog");
+  const tCommon = useTranslations("common");
   const [state, setState] = useState<FormState>(() => makeState(chore, initial));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -80,7 +83,7 @@ export function ChoreDialog({
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!state.title.trim()) {
-      setError("Give the chore a title.");
+      setError(t("titleRequired"));
       return;
     }
     setSubmitting(true);
@@ -96,7 +99,7 @@ export function ChoreDialog({
       await onSave(input, chore?.id ?? null);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save.");
+      setError(err instanceof Error ? err.message : t("couldNotSave"));
     } finally {
       setSubmitting(false);
     }
@@ -104,14 +107,14 @@ export function ChoreDialog({
 
   async function handleDelete() {
     if (!chore) return;
-    if (!window.confirm("Delete this chore? Past stars stay.")) return;
+    if (!window.confirm(t("deleteConfirm"))) return;
     setSubmitting(true);
     setError(null);
     try {
       await onDelete(chore.id);
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete.");
+      setError(err instanceof Error ? err.message : t("couldNotDelete"));
     } finally {
       setSubmitting(false);
     }
@@ -122,12 +125,12 @@ export function ChoreDialog({
       <DialogContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex items-start justify-between gap-3 pr-10">
-            <DialogTitle>{isEdit ? "Edit chore" : "New chore"}</DialogTitle>
+            <DialogTitle>{isEdit ? t("editTitle") : t("newTitle")}</DialogTitle>
           </div>
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Title
+              {t("name")}
             </label>
             <Input
               value={state.title}
@@ -140,7 +143,7 @@ export function ChoreDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Who
+              {t("member")}
             </label>
             <div className="flex flex-wrap gap-2">
               <button
@@ -157,7 +160,7 @@ export function ChoreDialog({
                 <span className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-bg text-ink">
                   <Users className="size-4" />
                 </span>
-                <span className="text-sm text-ink">Anyone</span>
+                <span className="text-sm text-ink">{tCommon("anyone")}</span>
               </button>
               {members.map((m) => {
                 const selected = m.id === state.memberId;
@@ -189,7 +192,7 @@ export function ChoreDialog({
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              Icon
+              {t("iconLabel")}
             </label>
             <div className="flex flex-wrap gap-2">
               <button
@@ -202,9 +205,9 @@ export function ChoreDialog({
                     : "bg-bg/60 hover:bg-bg text-muted",
                 )}
                 aria-pressed={state.icon === ""}
-                aria-label="No icon"
+                aria-label={t("noIcon")}
               >
-                None
+                {t("noIcon")}
               </button>
               {CHORE_ICONS.map((emoji) => (
                 <button
@@ -231,7 +234,7 @@ export function ChoreDialog({
               htmlFor="chore-points"
               className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted"
             >
-              <span>Stars</span>
+              <span>{t("points")}</span>
               <span className="tabular text-ink">⭐ {state.points}</span>
             </label>
             <input
@@ -267,7 +270,7 @@ export function ChoreDialog({
                   className="text-accent-rose hover:bg-accent-rose/10"
                 >
                   <Trash2 className="size-4" />
-                  Delete
+                  {t("delete")}
                 </Button>
               )}
             </div>
@@ -278,10 +281,10 @@ export function ChoreDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={submitting}
               >
-                Cancel
+                {t("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Saving…" : "Save"}
+                {submitting ? tCommon("saving") : t("save")}
               </Button>
             </div>
           </div>

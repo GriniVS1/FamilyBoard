@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Delete, Lock } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
@@ -18,12 +19,16 @@ type PinGateProps = {
 
 export function PinGate({
   onUnlock,
-  title = "Enter PIN to make changes",
-  description = "Admin actions are protected.",
+  title,
+  description,
 }: PinGateProps) {
+  const t = useTranslations("settings");
   const [pin, setPin] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const headingText = title ?? t("enterPin");
+  const descriptionText = description ?? t("pinProtected");
 
   function press(value: string) {
     if (submitting) return;
@@ -55,11 +60,11 @@ export function PinGate({
       if (res.ok) {
         onUnlock();
       } else {
-        setError("Wrong PIN. Try again.");
+        setError(t("wrongPin"));
         setPin("");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not verify PIN.");
+      setError(err instanceof Error ? err.message : t("couldNotVerify"));
       setPin("");
     } finally {
       setSubmitting(false);
@@ -76,8 +81,8 @@ export function PinGate({
       </span>
 
       <div className="space-y-1 text-center">
-        <h3 className="font-display text-xl tracking-tight text-ink">{title}</h3>
-        <p className="text-sm text-muted">{description}</p>
+        <h3 className="font-display text-xl tracking-tight text-ink">{headingText}</h3>
+        <p className="text-sm text-muted">{descriptionText}</p>
       </div>
 
       <div className="flex justify-center gap-3">
@@ -205,5 +210,4 @@ export function GateOverlay({ children, locked }: GateOverlayProps) {
   );
 }
 
-// Re-export Button so consumers don't need a second import for keypad styling
 export { Button };

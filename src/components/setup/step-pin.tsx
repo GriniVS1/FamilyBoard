@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { Delete } from "lucide-react";
 import { Button } from "@/components/shared/button";
@@ -18,6 +19,8 @@ type StepPinProps = {
 type Phase = "enter" | "confirm";
 
 export function StepPin({ onComplete, onBack }: StepPinProps) {
+  const t = useTranslations("setup.pin");
+  const tCommon = useTranslations("common");
   const [phase, setPhase] = useState<Phase>("enter");
   const [firstPin, setFirstPin] = useState("");
   const [pin, setPin] = useState("");
@@ -36,7 +39,7 @@ export function StepPin({ onComplete, onBack }: StepPinProps) {
 
     if (phase === "confirm") {
       if (pin !== firstPin) {
-        setError("PINs don't match. Try again.");
+        setError(t("mismatch"));
         setFirstPin("");
         setPin("");
         setPhase("enter");
@@ -49,7 +52,7 @@ export function StepPin({ onComplete, onBack }: StepPinProps) {
         .then(() => onComplete())
         .catch((err: unknown) => {
           setError(
-            err instanceof Error ? err.message : "Something went wrong.",
+            err instanceof Error ? err.message : tCommon("error"),
           );
           setFirstPin("");
           setPin("");
@@ -57,7 +60,7 @@ export function StepPin({ onComplete, onBack }: StepPinProps) {
         })
         .finally(() => setSubmitting(false));
     }
-  }, [pin, phase, firstPin, onComplete]);
+  }, [pin, phase, firstPin, onComplete, t, tCommon]);
 
   function press(value: string) {
     if (submitting) return;
@@ -71,17 +74,14 @@ export function StepPin({ onComplete, onBack }: StepPinProps) {
     setPin((prev) => prev.slice(0, -1));
   }
 
-  const heading = phase === "enter" ? "Set your admin PIN" : "Confirm your PIN";
-  const subheading =
-    phase === "enter"
-      ? "Used to unlock admin actions on the dashboard."
-      : "Enter the same 4 digits again.";
+  const heading = phase === "enter" ? t("title") : t("titleConfirm");
+  const subheading = phase === "enter" ? t("description") : t("hint");
 
   return (
     <div className="flex flex-col gap-8">
       <div className="space-y-3">
         <p className="text-muted text-sm font-medium tracking-wide uppercase">
-          Step 3
+          {t("step")}
         </p>
         <h2 className="font-display text-4xl sm:text-5xl tracking-tight leading-[1.05]">
           {heading}
@@ -126,7 +126,7 @@ export function StepPin({ onComplete, onBack }: StepPinProps) {
 
       <div className="flex justify-between gap-3">
         <Button type="button" variant="ghost" size="lg" onClick={onBack}>
-          Back
+          {tCommon("back")}
         </Button>
         {phase === "confirm" && (
           <Button
@@ -140,7 +140,7 @@ export function StepPin({ onComplete, onBack }: StepPinProps) {
               setError(null);
             }}
           >
-            Restart
+            {t("restart")}
           </Button>
         )}
       </div>
@@ -156,18 +156,10 @@ type KeypadProps = {
 
 function Keypad({ onPress, onBackspace, disabled }: KeypadProps) {
   const keys: (string | "backspace" | null)[] = [
-    "1",
-    "2",
-    "3",
-    "4",
-    "5",
-    "6",
-    "7",
-    "8",
-    "9",
-    null,
-    "0",
-    "backspace",
+    "1", "2", "3",
+    "4", "5", "6",
+    "7", "8", "9",
+    null, "0", "backspace",
   ];
 
   return (
