@@ -2,6 +2,7 @@ import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { MEAL_SLOTS } from "@/lib/enums";
+import { sendNotificationToFamily } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -110,6 +111,19 @@ export const POST = withErrorHandling(async (req) => {
       recipe: { select: { id: true, name: true, imageUrl: true } },
       member: { select: { id: true, name: true, color: true } },
     },
+  });
+
+  const mealName =
+    plan.recipe?.name ?? plan.customName ?? "A meal";
+
+  // Fire-and-forget — don't delay the response for push delivery.
+  void sendNotificationToFamily(family.id, {
+    title: "Meal planned",
+    body: mealName,
+    url: "/meals",
+    tag: `meal-plan-${plan.id}`,
+  }).catch(() => {
+    // Swallow silently — no subscriptions yet or push service unavailable.
   });
 
   return ok(plan);

@@ -438,6 +438,23 @@
       "resetting": "Resetting…",
       "cancel": "Cancel"
     },
+    "push": {
+      "title": "Push notifications",
+      "description": "Get reminders 1 hour before events and a morning digest",
+      "permission": {
+        "granted": "Allowed",
+        "denied": "Blocked",
+        "default": "Not set"
+      },
+      "enable": "Enable",
+      "disable": "Disable",
+      "enabling": "Enabling…",
+      "sending": "Sending…",
+      "sendTest": "Send test notification",
+      "testSent": "Sent {sent}, failed {failed}",
+      "denyHelp": "Notifications are blocked. Re-enable them in your browser or system settings.",
+      "deviceCount": "{count} devices"
+    },
     "unlocked": "Unlocked for this session",
     "enterPin": "Enter PIN to make changes",
     "pinProtected": "Admin actions are protected.",

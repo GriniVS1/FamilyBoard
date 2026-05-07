@@ -13,6 +13,9 @@ const schema = z.object({
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   SYNC_INTERVAL_MS: z.coerce.number().int().positive().default(5 * 60 * 1000),
+  // Optional VAPID key overrides — if set, DB-generated keys are ignored.
+  VAPID_PUBLIC_KEY: z.string().optional(),
+  VAPID_PRIVATE_KEY: z.string().optional(),
 });
 
 export const env = schema.parse(process.env);

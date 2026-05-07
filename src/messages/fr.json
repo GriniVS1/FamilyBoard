@@ -438,6 +438,23 @@
       "resetting": "Réinitialisation…",
       "cancel": "Annuler"
     },
+    "push": {
+      "title": "Notifications push",
+      "description": "Reçois des rappels 1 h avant les événements et un résumé du matin",
+      "permission": {
+        "granted": "Autorisé",
+        "denied": "Bloqué",
+        "default": "Non défini"
+      },
+      "enable": "Activer",
+      "disable": "Désactiver",
+      "enabling": "Activation…",
+      "sending": "Envoi…",
+      "sendTest": "Envoyer une notification test",
+      "testSent": "Envoyé {sent}, échoué {failed}",
+      "denyHelp": "Les notifications sont bloquées. Réactive-les dans les paramètres de ton navigateur ou système.",
+      "deviceCount": "{count} appareils"
+    },
     "unlocked": "Déverrouillé pour cette session",
     "enterPin": "Saisir le code PIN pour modifier",
     "pinProtected": "Les actions admin sont protégées.",

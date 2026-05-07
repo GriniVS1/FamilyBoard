@@ -16,153 +16,154 @@ datasource db {
 /// Enforced via TypeScript types in src/lib/enums.ts (SQLite has no native enums).
 
 model Installation {
-  id                  String     @id @default(cuid())
-  familyId            String?    @unique
-  family              Family?    @relation(fields: [familyId], references: [id], onDelete: SetNull)
-  licenseKey          String?
-  licenseStatus       String     @default("UNLICENSED")
-  licensePlan         String?
-  licenseValidUntil   DateTime?
-  lastLicenseCheckAt  DateTime?
-  createdAt           DateTime   @default(now())
+  id                 String    @id @default(cuid())
+  familyId           String?   @unique
+  family             Family?   @relation(fields: [familyId], references: [id], onDelete: SetNull)
+  licenseKey         String?
+  licenseStatus      String    @default("UNLICENSED")
+  licensePlan        String?
+  licenseValidUntil  DateTime?
+  lastLicenseCheckAt DateTime?
+  createdAt          DateTime  @default(now())
 }
 
 model Family {
-  id            String         @id @default(cuid())
-  name          String
-  weatherLat    Float?
-  weatherLon    Float?
-  weatherLabel  String?
-  createdAt     DateTime       @default(now())
-  members       Member[]
-  events        Event[]
-  chores        Chore[]
-  todos         Todo[]
-  notes         Note[]
-  photos        Photo[]
-  installation  Installation?
-  recipes       Recipe[]
-  mealPlans     MealPlan[]
-  groceryItems  GroceryItem[]
+  id                String             @id @default(cuid())
+  name              String
+  weatherLat        Float?
+  weatherLon        Float?
+  weatherLabel      String?
+  createdAt         DateTime           @default(now())
+  members           Member[]
+  events            Event[]
+  chores            Chore[]
+  todos             Todo[]
+  notes             Note[]
+  photos            Photo[]
+  installation      Installation?
+  recipes           Recipe[]
+  mealPlans         MealPlan[]
+  groceryItems      GroceryItem[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Member {
-  id                    String          @id @default(cuid())
+  id                    String            @id @default(cuid())
   familyId              String
-  family                Family          @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  family                Family            @relation(fields: [familyId], references: [id], onDelete: Cascade)
   name                  String
   color                 String
   emoji                 String?
-  role                  String          @default("MEMBER")
+  role                  String            @default("MEMBER")
   googleEmail           String?
   googleRefreshTokenEnc String?
   googleAccessToken     String?
   googleAccessExpiresAt DateTime?
   googleSyncToken       String?
-  googleSyncEnabled     Boolean         @default(false)
-  createdAt             DateTime        @default(now())
+  googleSyncEnabled     Boolean           @default(false)
+  createdAt             DateTime          @default(now())
   events                Event[]
   chores                Chore[]
   choreCompletions      ChoreCompletion[]
   todos                 Todo[]
-  notesAuthored         Note[]          @relation("NoteAuthor")
+  notesAuthored         Note[]            @relation("NoteAuthor")
   mealPlans             MealPlan[]
 
   @@index([familyId])
 }
 
 model Event {
-  id                String        @id @default(cuid())
-  familyId          String
-  family            Family        @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  memberId          String
-  member            Member        @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  title             String
-  description       String?
-  location          String?
-  startsAt          DateTime
-  endsAt            DateTime
-  allDay            Boolean       @default(false)
-  source            String        @default("LOCAL")
-  googleEventId     String?
-  googleCalendarId  String?
-  color             String?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  id               String   @id @default(cuid())
+  familyId         String
+  family           Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  memberId         String
+  member           Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  title            String
+  description      String?
+  location         String?
+  startsAt         DateTime
+  endsAt           DateTime
+  allDay           Boolean  @default(false)
+  source           String   @default("LOCAL")
+  googleEventId    String?
+  googleCalendarId String?
+  color            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
+  @@unique([memberId, googleEventId])
   @@index([familyId, startsAt])
   @@index([memberId, startsAt])
-  @@unique([memberId, googleEventId])
 }
 
 model Chore {
-  id          String              @id @default(cuid())
+  id          String            @id @default(cuid())
   familyId    String
-  family      Family              @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  family      Family            @relation(fields: [familyId], references: [id], onDelete: Cascade)
   memberId    String?
-  member      Member?             @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  member      Member?           @relation(fields: [memberId], references: [id], onDelete: SetNull)
   title       String
   icon        String?
-  points      Int                 @default(1)
+  points      Int               @default(1)
   rrule       String?
-  createdAt   DateTime            @default(now())
+  createdAt   DateTime          @default(now())
   completions ChoreCompletion[]
 
   @@index([familyId])
 }
 
 model ChoreCompletion {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   choreId     String
-  chore       Chore     @relation(fields: [choreId], references: [id], onDelete: Cascade)
+  chore       Chore    @relation(fields: [choreId], references: [id], onDelete: Cascade)
   memberId    String
-  member      Member    @relation(fields: [memberId], references: [id], onDelete: Cascade)
-  completedAt DateTime  @default(now())
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  completedAt DateTime @default(now())
 
   @@index([memberId, completedAt])
 }
 
 model Todo {
-  id          String      @id @default(cuid())
-  familyId    String
-  family      Family      @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  memberId    String?
-  member      Member?     @relation(fields: [memberId], references: [id], onDelete: SetNull)
-  title       String
-  done        Boolean     @default(false)
-  dueDate     DateTime?
-  createdAt   DateTime    @default(now())
+  id        String    @id @default(cuid())
+  familyId  String
+  family    Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  memberId  String?
+  member    Member?   @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  title     String
+  done      Boolean   @default(false)
+  dueDate   DateTime?
+  createdAt DateTime  @default(now())
 
   @@index([familyId, done])
 }
 
 model Note {
-  id              String    @id @default(cuid())
-  familyId        String
-  family          Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  authorMemberId  String?
-  author          Member?   @relation("NoteAuthor", fields: [authorMemberId], references: [id], onDelete: SetNull)
-  body            String
-  color           String    @default("sun")
-  pinned          Boolean   @default(false)
-  createdAt       DateTime  @default(now())
+  id             String   @id @default(cuid())
+  familyId       String
+  family         Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  authorMemberId String?
+  author         Member?  @relation("NoteAuthor", fields: [authorMemberId], references: [id], onDelete: SetNull)
+  body           String
+  color          String   @default("sun")
+  pinned         Boolean  @default(false)
+  createdAt      DateTime @default(now())
 
   @@index([familyId, pinned])
 }
 
 model Photo {
-  id          String    @id @default(cuid())
-  familyId    String
-  family      Family    @relation(fields: [familyId], references: [id], onDelete: Cascade)
-  path        String
-  caption     String?
-  uploadedAt  DateTime  @default(now())
+  id         String   @id @default(cuid())
+  familyId   String
+  family     Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  path       String
+  caption    String?
+  uploadedAt DateTime @default(now())
 
   @@index([familyId])
 }
 
 model Setting {
-  key   String  @id
+  key   String @id
   value String
 }
 
@@ -188,13 +189,13 @@ model Recipe {
 }
 
 model Ingredient {
-  id        String  @id @default(cuid())
-  recipeId  String
-  recipe    Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
-  name      String
-  quantity  String?
-  unit      String?
-  order     Int     @default(0)
+  id       String  @id @default(cuid())
+  recipeId String
+  recipe   Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  name     String
+  quantity String?
+  unit     String?
+  order    Int     @default(0)
 
   @@index([recipeId])
 }
@@ -233,4 +234,18 @@ model GroceryItem {
   updatedAt DateTime @updatedAt
 
   @@index([familyId, checked])
+}
+
+model PushSubscription {
+  id          String   @id @default(cuid())
+  familyId    String
+  family      Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  endpoint    String   @unique
+  p256dh      String
+  auth        String
+  deviceLabel String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([familyId])
 }

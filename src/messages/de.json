@@ -438,6 +438,23 @@
       "resetting": "Wird zurückgesetzt…",
       "cancel": "Abbrechen"
     },
+    "push": {
+      "title": "Push-Benachrichtigungen",
+      "description": "Erhalte Erinnerungen 1 h vor Terminen und eine Morgenübersicht",
+      "permission": {
+        "granted": "Erlaubt",
+        "denied": "Blockiert",
+        "default": "Nicht gesetzt"
+      },
+      "enable": "Aktivieren",
+      "disable": "Deaktivieren",
+      "enabling": "Wird aktiviert…",
+      "sending": "Wird gesendet…",
+      "sendTest": "Testbenachrichtigung senden",
+      "testSent": "Gesendet {sent}, fehlgeschlagen {failed}",
+      "denyHelp": "Benachrichtigungen sind blockiert. Aktiviere sie in deinen Browser- oder Systemeinstellungen.",
+      "deviceCount": "{count} Geräte"
+    },
     "unlocked": "Für diese Sitzung entsperrt",
     "enterPin": "PIN eingeben, um Änderungen vorzunehmen",
     "pinProtected": "Admin-Aktionen sind geschützt.",

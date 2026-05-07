@@ -4,7 +4,7 @@ export async function register() {
   const intervalMs = Number(process.env.SYNC_INTERVAL_MS ?? 5 * 60 * 1000);
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
 
-  const tick = async () => {
+  const syncTick = async () => {
     try {
       await fetch(`${baseUrl}/api/sync/google`, { method: "POST" });
     } catch (err) {
@@ -15,6 +15,21 @@ export async function register() {
     }
   };
 
-  setTimeout(tick, 10_000);
-  setInterval(tick, intervalMs);
+  const pushTick = async () => {
+    try {
+      await fetch(`${baseUrl}/api/push/tick`, { method: "POST" });
+    } catch (err) {
+      console.warn(
+        "[instrumentation] push tick failed",
+        err instanceof Error ? err.message : err,
+      );
+    }
+  };
+
+  setTimeout(syncTick, 10_000);
+  setInterval(syncTick, intervalMs);
+
+  // Push scheduler runs every 60 s — checks upcoming events and daily digest.
+  setTimeout(pushTick, 15_000);
+  setInterval(pushTick, 60_000);
 }
