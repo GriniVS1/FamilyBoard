@@ -38,6 +38,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "calendar": "Calendar",
+    "meals": "Meals",
     "chores": "Chores",
     "todos": "To-dos",
     "notes": "Notes",
@@ -449,6 +450,79 @@
     "dismiss": "Dismiss",
     "saved": "Saved.",
     "save": "Save"
+  },
+  "meals": {
+    "title": "Meals",
+    "tabs": {
+      "plan": "Plan",
+      "recipes": "Recipes",
+      "grocery": "Grocery"
+    },
+    "plan": {
+      "weeklyTitle": "Weekly meal plan",
+      "addMeal": "Add meal",
+      "edit": "Edit meal",
+      "customName": "Custom name",
+      "customNameHint": "e.g. Pasta night",
+      "recipe": "Recipe",
+      "member": "Who's cooking",
+      "notes": "Notes",
+      "slots": {
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "dinner": "Dinner",
+        "snack": "Snack"
+      },
+      "empty": "Add",
+      "previousWeek": "Previous week",
+      "nextWeek": "Next week"
+    },
+    "recipe": {
+      "new": "New recipe",
+      "edit": "Edit recipe",
+      "name": "Name",
+      "description": "Description",
+      "servings": "Servings",
+      "prepMinutes": "Prep (min)",
+      "cookMinutes": "Cook (min)",
+      "instructions": "Instructions",
+      "sourceUrl": "Source URL",
+      "imageUrl": "Image URL",
+      "tags": "Tags",
+      "ingredients": "Ingredients",
+      "addIngredient": "Add ingredient",
+      "ingredientName": "Ingredient",
+      "quantity": "Qty",
+      "unit": "Unit",
+      "delete": "Delete recipe",
+      "deleteConfirm": "Delete this recipe?",
+      "empty": "No recipes yet",
+      "search": "Search recipes…",
+      "filterByTag": "Add tag…",
+      "addToGrocery": "Add to grocery list",
+      "addedToGrocery": "Added to grocery list"
+    },
+    "grocery": {
+      "title": "Grocery list",
+      "addPlaceholder": "Add item…",
+      "clearChecked": "Clear checked",
+      "addFromRecipe": "Add from recipe…",
+      "addFromWeek": "Add this week's meals",
+      "addedFromWeek": "This week's ingredients added",
+      "addedFromRecipe": "Recipe ingredients added",
+      "empty": "Your list is empty",
+      "allChecked": "All items checked — well done!",
+      "categories": {
+        "produce": "Produce",
+        "dairy": "Dairy",
+        "pantry": "Pantry",
+        "frozen": "Frozen",
+        "bakery": "Bakery",
+        "meat": "Meat & Fish",
+        "drinks": "Drinks",
+        "other": "Other"
+      }
+    }
   },
   "screensaver": {
     "exit": "Exit screensaver",

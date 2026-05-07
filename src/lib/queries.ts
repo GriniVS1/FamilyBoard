@@ -128,6 +128,37 @@ export async function createFamilyIfMissing(name: string) {
   return family;
 }
 
+export async function getFamilyId(): Promise<string | null> {
+  const family = await db.family.findFirst({ select: { id: true } });
+  return family?.id ?? null;
+}
+
+export async function listRecipes(familyId: string) {
+  return db.recipe.findMany({
+    where: { familyId },
+    include: { ingredients: { orderBy: { order: "asc" } } },
+    orderBy: { name: "asc" },
+  });
+}
+
+export async function getMealPlansForWeek(familyId: string, from: Date, to: Date) {
+  return db.mealPlan.findMany({
+    where: { familyId, date: { gte: from, lt: to } },
+    include: {
+      recipe: { select: { id: true, name: true, imageUrl: true } },
+      member: { select: { id: true, name: true, color: true } },
+    },
+    orderBy: [{ date: "asc" }, { slot: "asc" }],
+  });
+}
+
+export async function listGroceryItems(familyId: string) {
+  return db.groceryItem.findMany({
+    where: { familyId },
+    orderBy: [{ category: "asc" }, { order: "asc" }, { createdAt: "asc" }],
+  });
+}
+
 export async function getSetupStatus() {
   const installation = await getOrCreateInstallation();
   const family = await db.family.findFirst();

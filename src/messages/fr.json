@@ -38,6 +38,7 @@
   "nav": {
     "dashboard": "Tableau de bord",
     "calendar": "Calendrier",
+    "meals": "Repas",
     "chores": "Tâches",
     "todos": "À faire",
     "notes": "Notes",
@@ -449,6 +450,79 @@
     "dismiss": "Fermer",
     "saved": "Enregistré.",
     "save": "Enregistrer"
+  },
+  "meals": {
+    "title": "Repas",
+    "tabs": {
+      "plan": "Plan de la semaine",
+      "recipes": "Recettes",
+      "grocery": "Liste de courses"
+    },
+    "plan": {
+      "weeklyTitle": "Plan de la semaine",
+      "addMeal": "Ajouter un repas",
+      "edit": "Modifier le repas",
+      "customName": "Nom personnalisé",
+      "customNameHint": "ex. : soirée pâtes",
+      "recipe": "Recette",
+      "member": "Qui cuisine",
+      "notes": "Notes",
+      "slots": {
+        "breakfast": "Petit-déjeuner",
+        "lunch": "Déjeuner",
+        "dinner": "Dîner",
+        "snack": "Collation"
+      },
+      "empty": "Ajouter",
+      "previousWeek": "Semaine précédente",
+      "nextWeek": "Semaine suivante"
+    },
+    "recipe": {
+      "new": "Nouvelle recette",
+      "edit": "Modifier la recette",
+      "name": "Nom",
+      "description": "Description",
+      "servings": "Portions",
+      "prepMinutes": "Préparation (min)",
+      "cookMinutes": "Cuisson (min)",
+      "instructions": "Instructions",
+      "sourceUrl": "URL source",
+      "imageUrl": "URL image",
+      "tags": "Tags",
+      "ingredients": "Ingrédients",
+      "addIngredient": "Ajouter un ingrédient",
+      "ingredientName": "Ingrédient",
+      "quantity": "Qté",
+      "unit": "Unité",
+      "delete": "Supprimer la recette",
+      "deleteConfirm": "Supprimer cette recette ?",
+      "empty": "Aucune recette",
+      "search": "Rechercher des recettes…",
+      "filterByTag": "Ajouter un tag…",
+      "addToGrocery": "Ajouter à la liste de courses",
+      "addedToGrocery": "Ajouté à la liste de courses"
+    },
+    "grocery": {
+      "title": "Liste de courses",
+      "addPlaceholder": "Ajouter un article…",
+      "clearChecked": "Supprimer les cochés",
+      "addFromRecipe": "Ajouter depuis une recette…",
+      "addFromWeek": "Ajouter les repas de la semaine",
+      "addedFromWeek": "Ingrédients de la semaine ajoutés",
+      "addedFromRecipe": "Ingrédients de la recette ajoutés",
+      "empty": "Ta liste est vide",
+      "allChecked": "Tout coché — bravo !",
+      "categories": {
+        "produce": "Fruits & légumes",
+        "dairy": "Produits laitiers",
+        "pantry": "Épicerie",
+        "frozen": "Surgelés",
+        "bakery": "Boulangerie",
+        "meat": "Viande & poisson",
+        "drinks": "Boissons",
+        "other": "Autre"
+      }
+    }
   },
   "screensaver": {
     "exit": "Quitter l'économiseur d'écran",

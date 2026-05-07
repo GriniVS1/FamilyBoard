@@ -76,6 +76,10 @@ export const POST = withErrorHandling(async (req) => {
     await tx.todo.deleteMany();
     await tx.note.deleteMany();
     await tx.photo.deleteMany();
+    await tx.groceryItem.deleteMany();
+    await tx.ingredient.deleteMany();
+    await tx.mealPlan.deleteMany();
+    await tx.recipe.deleteMany();
     await tx.member.deleteMany();
     await tx.family.deleteMany();
     await tx.setting.deleteMany();
