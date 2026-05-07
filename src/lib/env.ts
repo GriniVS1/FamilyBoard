@@ -12,6 +12,9 @@ const schema = z.object({
     .describe("64-char hex (32 bytes) for AES-256-GCM"),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  MICROSOFT_CLIENT_ID: z.string().optional(),
+  MICROSOFT_CLIENT_SECRET: z.string().optional(),
+  MICROSOFT_TENANT: z.string().optional().default("common"),
   SYNC_INTERVAL_MS: z.coerce.number().int().positive().default(5 * 60 * 1000),
   // Optional VAPID key overrides — if set, DB-generated keys are ignored.
   VAPID_PUBLIC_KEY: z.string().optional(),
@@ -21,3 +24,4 @@ const schema = z.object({
 export const env = schema.parse(process.env);
 
 export const googleConfigured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+export const microsoftConfigured = Boolean(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET);

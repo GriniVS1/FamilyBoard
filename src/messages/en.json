@@ -473,6 +473,33 @@
       "disconnectConfirm": "Disconnect this CalDAV calendar?",
       "unsupportedYet": "CalDAV sync is not yet supported."
     },
+    "microsoft": {
+      "title": "Microsoft Outlook",
+      "description": "Connect your Outlook calendar (Microsoft 365).",
+      "connect": "Connect Outlook",
+      "connecting": "Connecting…",
+      "disconnect": "Disconnect",
+      "syncNow": "Sync now",
+      "syncing": "Syncing…",
+      "notConfigured": "Microsoft sync not configured",
+      "notConfiguredHelp": "Microsoft sync isn't configured on this server. Set MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET in .env to enable.",
+      "providerConflict": "Already linked to another calendar provider. Disconnect it first.",
+      "connected": "Connected",
+      "email": "Account",
+      "lastSynced": "Last synced",
+      "never": "never",
+      "callback": {
+        "connected": "Outlook connected!",
+        "error": "Couldn't connect Outlook. {reason}",
+        "retry": "Try again"
+      },
+      "errorReasons": {
+        "authFailed": "Authentication failed.",
+        "expired": "Session expired. Please try again.",
+        "generic": "An unexpected error occurred.",
+        "denied": "Access was denied."
+      }
+    },
     "push": {
       "title": "Push notifications",
       "description": "Get reminders 1 hour before events and a morning digest",

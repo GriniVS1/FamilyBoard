@@ -473,6 +473,33 @@
       "disconnectConfirm": "Déconnecter ce calendrier CalDAV ?",
       "unsupportedYet": "La synchronisation CalDAV n'est pas encore prise en charge."
     },
+    "microsoft": {
+      "title": "Microsoft Outlook",
+      "description": "Connecte-toi à ton agenda Outlook (Microsoft 365).",
+      "connect": "Connecter Outlook",
+      "connecting": "Connexion…",
+      "disconnect": "Déconnecter",
+      "syncNow": "Synchroniser maintenant",
+      "syncing": "Synchronisation…",
+      "notConfigured": "Synchronisation Microsoft non configurée",
+      "notConfiguredHelp": "La synchronisation Microsoft n'est pas configurée sur ce serveur. Définis MICROSOFT_CLIENT_ID et MICROSOFT_CLIENT_SECRET dans le fichier .env pour l'activer.",
+      "providerConflict": "Déjà lié à un autre fournisseur de calendrier. Déconnecte-le d'abord.",
+      "connected": "Connecté",
+      "email": "Compte",
+      "lastSynced": "Dernière sync.",
+      "never": "jamais",
+      "callback": {
+        "connected": "Outlook connecté !",
+        "error": "Impossible de connecter Outlook. {reason}",
+        "retry": "Réessayer"
+      },
+      "errorReasons": {
+        "authFailed": "Authentification échouée.",
+        "expired": "Session expirée. Réessaie.",
+        "generic": "Une erreur inattendue s'est produite.",
+        "denied": "Accès refusé."
+      }
+    },
     "push": {
       "title": "Notifications push",
       "description": "Reçois des rappels 1 h avant les événements et un résumé du matin",

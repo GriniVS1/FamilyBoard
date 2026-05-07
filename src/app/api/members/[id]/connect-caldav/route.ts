@@ -31,6 +31,14 @@ export const POST = withErrorHandling<Ctx>(async (req, { params }) => {
     );
   }
 
+  if (member.microsoftSyncEnabled) {
+    throw new AppError(
+      "Member is already linked to Microsoft. Disconnect Microsoft first or use a different member.",
+      "PROVIDER_CONFLICT",
+      400,
+    );
+  }
+
   const body = bodySchema.parse(await req.json());
 
   // For presets with a fixed serverUrl, validate the provided URL matches or

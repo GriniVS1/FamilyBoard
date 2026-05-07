@@ -3,6 +3,7 @@ import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { pushLocalEvent } from "@/lib/sync";
 import { pushLocalEventToCaldav } from "@/lib/caldav";
+import { pushLocalEventToMicrosoft } from "@/lib/microsoft";
 import { sendNotificationToFamily } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -88,6 +89,15 @@ export const POST = withErrorHandling(async (req) => {
     void pushLocalEventToCaldav(event.id).catch((err) => {
       console.warn(
         "[events] push to CalDAV failed",
+        err instanceof Error ? err.message : err,
+      );
+    });
+  }
+
+  if (member.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
+    void pushLocalEventToMicrosoft(event.id).catch((err) => {
+      console.warn(
+        "[events] push to Microsoft failed",
         err instanceof Error ? err.message : err,
       );
     });
