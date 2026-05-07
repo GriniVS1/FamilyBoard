@@ -15,6 +15,14 @@ export const POST = withErrorHandling<Ctx>(async (_req, { params }) => {
   const member = await db.member.findUnique({ where: { id } });
   if (!member) throw new AppError("Member not found", "MEMBER_NOT_FOUND", 404);
 
+  if (member.caldavSyncEnabled) {
+    throw new AppError(
+      "Member is already linked to CalDAV. Disconnect CalDAV first or use a different member.",
+      "PROVIDER_CONFLICT",
+      400,
+    );
+  }
+
   const state = randomBytes(32).toString("hex");
   const payload = JSON.stringify({
     memberId: id,

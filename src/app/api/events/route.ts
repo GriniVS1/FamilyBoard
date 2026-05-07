@@ -2,6 +2,7 @@ import { z } from "zod";
 import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { pushLocalEvent } from "@/lib/sync";
+import { pushLocalEventToCaldav } from "@/lib/caldav";
 import { sendNotificationToFamily } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -81,6 +82,15 @@ export const POST = withErrorHandling(async (req) => {
         err instanceof Error ? err.message : err,
       );
     }
+  }
+
+  if (member.caldavSyncEnabled && member.caldavPasswordEnc) {
+    void pushLocalEventToCaldav(event.id).catch((err) => {
+      console.warn(
+        "[events] push to CalDAV failed",
+        err instanceof Error ? err.message : err,
+      );
+    });
   }
 
   // Fire-and-forget — don't delay the response for push delivery.
