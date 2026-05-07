@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import { getPhotosDir } from "@/lib/photos";
 import { verifyAdminPin } from "@/lib/pin";
 import { getClientIp, hitRateLimit } from "@/lib/rate-limit";
+import { invalidateVapidCache } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,10 +81,16 @@ export const POST = withErrorHandling(async (req) => {
     await tx.ingredient.deleteMany();
     await tx.mealPlan.deleteMany();
     await tx.recipe.deleteMany();
+    await tx.pushSubscription.deleteMany();
     await tx.member.deleteMany();
     await tx.family.deleteMany();
+    // Deletes all settings including VAPID keys, notified-event caches, and
+    // digest tracking. The cascade from family.delete handles subscriptions,
+    // but VAPID rows are bare Setting entries and must be cleared explicitly.
     await tx.setting.deleteMany();
   });
+
+  invalidateVapidCache();
 
   await clearPhotosDir();
 

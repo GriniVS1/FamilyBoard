@@ -438,6 +438,23 @@
       "resetting": "Ripristino…",
       "cancel": "Annulla"
     },
+    "push": {
+      "title": "Notifiche push",
+      "description": "Ricevi promemoria 1 ora prima degli eventi e un riepilogo mattutino",
+      "permission": {
+        "granted": "Consentito",
+        "denied": "Bloccato",
+        "default": "Non impostato"
+      },
+      "enable": "Abilita",
+      "disable": "Disabilita",
+      "enabling": "Abilitazione…",
+      "sending": "Invio…",
+      "sendTest": "Invia notifica di prova",
+      "testSent": "Inviato {sent}, fallito {failed}",
+      "denyHelp": "Le notifiche sono bloccate. Riattivale nelle impostazioni del browser o del sistema.",
+      "deviceCount": "{count} dispositivi"
+    },
     "unlocked": "Sbloccato per questa sessione",
     "enterPin": "Inserisci PIN per apportare modifiche",
     "pinProtected": "Le azioni admin sono protette.",

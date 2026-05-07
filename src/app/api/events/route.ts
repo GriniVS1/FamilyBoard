@@ -2,6 +2,7 @@ import { z } from "zod";
 import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { pushLocalEvent } from "@/lib/sync";
+import { sendNotificationToFamily } from "@/lib/notifications";
 
 export const runtime = "nodejs";
 
@@ -81,6 +82,16 @@ export const POST = withErrorHandling(async (req) => {
       );
     }
   }
+
+  // Fire-and-forget — don't delay the response for push delivery.
+  void sendNotificationToFamily(member.familyId, {
+    title: `New event: ${event.title}`,
+    body: `Added to the calendar`,
+    url: "/calendar",
+    tag: `new-event-${event.id}`,
+  }).catch(() => {
+    // Swallow silently — no subscriptions yet or push service unavailable.
+  });
 
   const fresh = await db.event.findUnique({ where: { id: event.id } });
   return ok(fresh);

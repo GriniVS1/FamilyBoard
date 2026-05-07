@@ -27,6 +27,7 @@ import { GoogleRow } from "./google-row";
 import { MemberEditorDialog } from "./member-editor-dialog";
 import { PinChangeDialog } from "./pin-change-dialog";
 import { GateOverlay, PinGate } from "./pin-gate";
+import { PushToggle } from "./push-toggle";
 
 type FamilyData = {
   id: string;
@@ -201,6 +202,10 @@ export function SettingsView({
           {t("unlocked")}
         </span>
       )}
+
+      <GateOverlay locked={!unlocked}>
+        <PushToggle />
+      </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
         <GlassCard className="flex flex-col gap-4 p-6">
