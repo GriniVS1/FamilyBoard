@@ -38,6 +38,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "calendar": "Kalender",
+    "meals": "Mahlzeiten",
     "chores": "Aufgaben",
     "todos": "To-dos",
     "notes": "Notizen",
@@ -449,6 +450,79 @@
     "dismiss": "Schließen",
     "saved": "Gespeichert.",
     "save": "Speichern"
+  },
+  "meals": {
+    "title": "Mahlzeiten",
+    "tabs": {
+      "plan": "Wochenplan",
+      "recipes": "Rezepte",
+      "grocery": "Einkaufsliste"
+    },
+    "plan": {
+      "weeklyTitle": "Wochenplan",
+      "addMeal": "Mahlzeit hinzufügen",
+      "edit": "Mahlzeit bearbeiten",
+      "customName": "Eigener Name",
+      "customNameHint": "z. B. Pasta-Abend",
+      "recipe": "Rezept",
+      "member": "Wer kocht",
+      "notes": "Notizen",
+      "slots": {
+        "breakfast": "Frühstück",
+        "lunch": "Mittagessen",
+        "dinner": "Abendessen",
+        "snack": "Snack"
+      },
+      "empty": "Hinzufügen",
+      "previousWeek": "Vorherige Woche",
+      "nextWeek": "Nächste Woche"
+    },
+    "recipe": {
+      "new": "Neues Rezept",
+      "edit": "Rezept bearbeiten",
+      "name": "Name",
+      "description": "Beschreibung",
+      "servings": "Portionen",
+      "prepMinutes": "Vorbereitung (Min.)",
+      "cookMinutes": "Kochzeit (Min.)",
+      "instructions": "Zubereitung",
+      "sourceUrl": "Quelle URL",
+      "imageUrl": "Bild URL",
+      "tags": "Tags",
+      "ingredients": "Zutaten",
+      "addIngredient": "Zutat hinzufügen",
+      "ingredientName": "Zutat",
+      "quantity": "Menge",
+      "unit": "Einheit",
+      "delete": "Rezept löschen",
+      "deleteConfirm": "Dieses Rezept löschen?",
+      "empty": "Noch keine Rezepte",
+      "search": "Rezepte suchen…",
+      "filterByTag": "Tag hinzufügen…",
+      "addToGrocery": "Zur Einkaufsliste",
+      "addedToGrocery": "Zur Einkaufsliste hinzugefügt"
+    },
+    "grocery": {
+      "title": "Einkaufsliste",
+      "addPlaceholder": "Artikel hinzufügen…",
+      "clearChecked": "Erledigte entfernen",
+      "addFromRecipe": "Aus Rezept hinzufügen…",
+      "addFromWeek": "Diese Woche hinzufügen",
+      "addedFromWeek": "Zutaten der Woche hinzugefügt",
+      "addedFromRecipe": "Rezeptzutaten hinzugefügt",
+      "empty": "Deine Liste ist leer",
+      "allChecked": "Alle Artikel erledigt — gut gemacht!",
+      "categories": {
+        "produce": "Obst & Gemüse",
+        "dairy": "Milchprodukte",
+        "pantry": "Vorrat",
+        "frozen": "Tiefkühl",
+        "bakery": "Backwaren",
+        "meat": "Fleisch & Fisch",
+        "drinks": "Getränke",
+        "other": "Sonstiges"
+      }
+    }
   },
   "screensaver": {
     "exit": "Bildschirmschoner beenden",

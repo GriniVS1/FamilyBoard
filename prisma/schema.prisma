@@ -11,6 +11,8 @@ datasource db {
 /// LicenseStatus values: "UNLICENSED" | "TRIAL" | "ACTIVE" | "EXPIRED"
 /// MemberRole values:    "ADMIN" | "MEMBER"
 /// EventSource values:   "LOCAL" | "GOOGLE"
+/// MealSlot values:      "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK"
+/// GroceryCategory:      "produce" | "dairy" | "pantry" | "frozen" | "bakery" | "meat" | "drinks" | "other"
 /// Enforced via TypeScript types in src/lib/enums.ts (SQLite has no native enums).
 
 model Installation {
@@ -39,6 +41,9 @@ model Family {
   notes         Note[]
   photos        Photo[]
   installation  Installation?
+  recipes       Recipe[]
+  mealPlans     MealPlan[]
+  groceryItems  GroceryItem[]
 }
 
 model Member {
@@ -61,6 +66,7 @@ model Member {
   choreCompletions      ChoreCompletion[]
   todos                 Todo[]
   notesAuthored         Note[]          @relation("NoteAuthor")
+  mealPlans             MealPlan[]
 
   @@index([familyId])
 }
@@ -158,4 +164,73 @@ model Photo {
 model Setting {
   key   String  @id
   value String
+}
+
+model Recipe {
+  id           String       @id @default(cuid())
+  familyId     String
+  family       Family       @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  servings     Int?
+  prepMinutes  Int?
+  cookMinutes  Int?
+  instructions String?
+  sourceUrl    String?
+  imageUrl     String?
+  tags         String       @default("")
+  ingredients  Ingredient[]
+  mealPlans    MealPlan[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([familyId])
+}
+
+model Ingredient {
+  id        String  @id @default(cuid())
+  recipeId  String
+  recipe    Recipe  @relation(fields: [recipeId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  String?
+  unit      String?
+  order     Int     @default(0)
+
+  @@index([recipeId])
+}
+
+model MealPlan {
+  id         String   @id @default(cuid())
+  familyId   String
+  family     Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  date       DateTime
+  slot       String
+  recipeId   String?
+  recipe     Recipe?  @relation(fields: [recipeId], references: [id], onDelete: SetNull)
+  customName String?
+  notes      String?
+  memberId   String?
+  member     Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([familyId, date, slot])
+  @@index([familyId, date])
+}
+
+model GroceryItem {
+  id        String   @id @default(cuid())
+  familyId  String
+  family    Family   @relation(fields: [familyId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  String?
+  unit      String?
+  category  String?
+  checked   Boolean  @default(false)
+  source    String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([familyId, checked])
 }

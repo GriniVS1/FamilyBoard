@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Calendar,
+  ChefHat,
   Home,
   Image as ImageIcon,
   ListTodo,
@@ -26,6 +27,7 @@ type NavEntry = {
 const PRIMARY_NAV: NavEntry[] = [
   { href: "/", labelKey: "dashboard", icon: Home },
   { href: "/calendar", labelKey: "calendar", icon: Calendar },
+  { href: "/meals", labelKey: "meals", icon: ChefHat },
   { href: "/chores", labelKey: "chores", icon: Star },
   { href: "/todos", labelKey: "todos", icon: ListTodo },
   { href: "/notes", labelKey: "notes", icon: StickyNote },
@@ -39,6 +41,7 @@ const SECONDARY_NAV: NavEntry[] = [
 const PAGE_TITLE_KEYS: Record<string, string> = {
   "/": "dashboard",
   "/calendar": "calendar",
+  "/meals": "meals",
   "/chores": "chores",
   "/todos": "todos",
   "/notes": "notes",

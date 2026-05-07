@@ -38,6 +38,7 @@
   "nav": {
     "dashboard": "Dashboard",
     "calendar": "Calendario",
+    "meals": "Pasti",
     "chores": "Faccende",
     "todos": "Da fare",
     "notes": "Note",
@@ -449,6 +450,79 @@
     "dismiss": "Chiudi",
     "saved": "Salvato.",
     "save": "Salva"
+  },
+  "meals": {
+    "title": "Pasti",
+    "tabs": {
+      "plan": "Pianificazione",
+      "recipes": "Ricette",
+      "grocery": "Lista della spesa"
+    },
+    "plan": {
+      "weeklyTitle": "Pianificazione settimanale",
+      "addMeal": "Aggiungi pasto",
+      "edit": "Modifica pasto",
+      "customName": "Nome personalizzato",
+      "customNameHint": "es. serata pasta",
+      "recipe": "Ricetta",
+      "member": "Chi cucina",
+      "notes": "Note",
+      "slots": {
+        "breakfast": "Colazione",
+        "lunch": "Pranzo",
+        "dinner": "Cena",
+        "snack": "Spuntino"
+      },
+      "empty": "Aggiungi",
+      "previousWeek": "Settimana precedente",
+      "nextWeek": "Settimana successiva"
+    },
+    "recipe": {
+      "new": "Nuova ricetta",
+      "edit": "Modifica ricetta",
+      "name": "Nome",
+      "description": "Descrizione",
+      "servings": "Porzioni",
+      "prepMinutes": "Preparazione (min)",
+      "cookMinutes": "Cottura (min)",
+      "instructions": "Istruzioni",
+      "sourceUrl": "URL fonte",
+      "imageUrl": "URL immagine",
+      "tags": "Tag",
+      "ingredients": "Ingredienti",
+      "addIngredient": "Aggiungi ingrediente",
+      "ingredientName": "Ingrediente",
+      "quantity": "Qtà",
+      "unit": "Unità",
+      "delete": "Elimina ricetta",
+      "deleteConfirm": "Eliminare questa ricetta?",
+      "empty": "Nessuna ricetta",
+      "search": "Cerca ricette…",
+      "filterByTag": "Aggiungi tag…",
+      "addToGrocery": "Aggiungi alla lista della spesa",
+      "addedToGrocery": "Aggiunto alla lista della spesa"
+    },
+    "grocery": {
+      "title": "Lista della spesa",
+      "addPlaceholder": "Aggiungi articolo…",
+      "clearChecked": "Rimuovi selezionati",
+      "addFromRecipe": "Aggiungi da ricetta…",
+      "addFromWeek": "Aggiungi pasti della settimana",
+      "addedFromWeek": "Ingredienti della settimana aggiunti",
+      "addedFromRecipe": "Ingredienti della ricetta aggiunti",
+      "empty": "La tua lista è vuota",
+      "allChecked": "Tutto spuntato — ottimo lavoro!",
+      "categories": {
+        "produce": "Frutta e verdura",
+        "dairy": "Latticini",
+        "pantry": "Dispensa",
+        "frozen": "Surgelati",
+        "bakery": "Panetteria",
+        "meat": "Carne e pesce",
+        "drinks": "Bevande",
+        "other": "Altro"
+      }
+    }
   },
   "screensaver": {
     "exit": "Esci dal salvaschermo",
