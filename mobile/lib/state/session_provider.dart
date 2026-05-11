@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/session.dart';
 import '../services/api_client.dart';
+import '../services/fcm_service.dart';
 import '../services/heartbeat_service.dart';
 import '../services/pair_service.dart';
 import '../services/secure_storage.dart';
@@ -20,6 +21,10 @@ final Provider<HeartbeatService> heartbeatServiceProvider =
     Provider<HeartbeatService>(
   (Ref ref) =>
       HeartbeatService(clientFactory: ref.watch(apiClientFactoryProvider)),
+);
+
+final Provider<FcmService> fcmServiceProvider = Provider<FcmService>(
+  (Ref ref) => FcmService(clientFactory: ref.watch(apiClientFactoryProvider)),
 );
 
 class SessionState {

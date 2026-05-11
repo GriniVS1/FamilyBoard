@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -7,20 +9,126 @@ import 'features/home/home_screen.dart';
 import 'features/pair/pair_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'l10n/generated/app_localizations.dart';
+import 'models/notification_payload.dart';
+import 'services/fcm_service.dart';
 import 'state/session_provider.dart';
 import 'theme.dart';
 
-class FamilyBoardApp extends ConsumerWidget {
+/// Global messenger key so foreground FCM callbacks can show snackbars
+/// from outside the widget tree.
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
+class FamilyBoardApp extends ConsumerStatefulWidget {
   const FamilyBoardApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final GoRouter router = ref.watch(_routerProvider);
+  ConsumerState<FamilyBoardApp> createState() => _FamilyBoardAppState();
+}
+
+class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = _buildRouter();
+    _bootstrapFcmListeners();
+  }
+
+  GoRouter _buildRouter() {
+    final _RouterRefresh refresh = _RouterRefresh(ref);
+    return GoRouter(
+      initialLocation: '/splash',
+      refreshListenable: refresh,
+      redirect: (BuildContext context, GoRouterState routerState) {
+        final SessionState sessionState = ref.read(sessionProvider);
+        final String location = routerState.matchedLocation;
+        if (!sessionState.loaded) {
+          return location == '/splash' ? null : '/splash';
+        }
+        if (sessionState.hasSession) {
+          if (location == '/splash' || location == '/pair') {
+            return '/home';
+          }
+          return null;
+        }
+        if (location == '/splash' || location == '/home') {
+          return '/pair';
+        }
+        return null;
+      },
+      routes: <RouteBase>[
+        GoRoute(
+          path: '/splash',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const SplashScreen(),
+        ),
+        GoRoute(
+          path: '/pair',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const PairScreen(),
+        ),
+        GoRoute(
+          path: '/home',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const HomeScreen(),
+        ),
+      ],
+    );
+  }
+
+  void _bootstrapFcmListeners() {
+    final FcmService fcm = ref.read(fcmServiceProvider);
+
+    // Cold-start: app was terminated and user tapped a notification.
+    unawaited(
+      fcm.getInitialMessage().then((NotificationPayload? payload) {
+        if (payload != null) {
+          _navigateFromPayload(payload);
+        }
+      }),
+    );
+
+    // Warm-start: app was in background and user tapped the notification.
+    fcm.subscribeToOpenedMessages(_navigateFromPayload);
+
+    // Foreground: FCM won't display a system notification, so show a snackbar.
+    fcm.subscribeToForegroundMessages((NotificationPayload payload) {
+      final String text = payload.title.isNotEmpty
+          ? '${payload.title}: ${payload.body}'
+          : payload.body;
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(text),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'Open',
+            onPressed: () => _navigateFromPayload(payload),
+          ),
+        ),
+      );
+    });
+  }
+
+  /// Routes the app to the path carried in [payload.url].
+  ///
+  /// "/calendar" is not yet implemented — falls back to /home. Any
+  /// unrecognised path also lands on /home. When the calendar screen
+  /// arrives in M3, replace this with a proper route table.
+  void _navigateFromPayload(NotificationPayload payload) {
+    // Only "/" is currently handled; everything else goes home.
+    _router.go('/home');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       onGenerateTitle: (BuildContext ctx) => AppL10n.of(ctx).appTitle,
       theme: FamilyBoardTheme.light(),
       darkTheme: FamilyBoardTheme.dark(),
       themeMode: ThemeMode.system,
+      scaffoldMessengerKey: scaffoldMessengerKey,
       localizationsDelegates: const <LocalizationsDelegate<Object>>[
         AppL10n.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -28,7 +136,7 @@ class FamilyBoardApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppL10n.supportedLocales,
-      routerConfig: router,
+      routerConfig: _router,
       debugShowCheckedModeBanner: false,
     );
   }
@@ -44,47 +152,5 @@ class _RouterRefresh extends ChangeNotifier {
     );
   }
 
-  final Ref _ref;
+  final WidgetRef _ref;
 }
-
-final Provider<GoRouter> _routerProvider = Provider<GoRouter>((Ref ref) {
-  final _RouterRefresh refresh = _RouterRefresh(ref);
-  return GoRouter(
-    initialLocation: '/splash',
-    refreshListenable: refresh,
-    redirect: (BuildContext context, GoRouterState state) {
-      final SessionState sessionState = ref.read(sessionProvider);
-      final String location = state.matchedLocation;
-      if (!sessionState.loaded) {
-        return location == '/splash' ? null : '/splash';
-      }
-      if (sessionState.hasSession) {
-        if (location == '/splash' || location == '/pair') {
-          return '/home';
-        }
-        return null;
-      }
-      if (location == '/splash' || location == '/home') {
-        return '/pair';
-      }
-      return null;
-    },
-    routes: <RouteBase>[
-      GoRoute(
-        path: '/splash',
-        builder: (BuildContext context, GoRouterState state) =>
-            const SplashScreen(),
-      ),
-      GoRoute(
-        path: '/pair',
-        builder: (BuildContext context, GoRouterState state) =>
-            const PairScreen(),
-      ),
-      GoRoute(
-        path: '/home',
-        builder: (BuildContext context, GoRouterState state) =>
-            const HomeScreen(),
-      ),
-    ],
-  );
-});

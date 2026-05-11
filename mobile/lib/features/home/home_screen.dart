@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/session.dart';
 import '../../models/today.dart';
+import '../../services/fcm_service.dart';
 import '../../services/heartbeat_service.dart';
 import '../../services/today_service.dart';
 import '../../state/session_provider.dart';
@@ -20,10 +21,53 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen>
+    with WidgetsBindingObserver {
   _HeartbeatStatus _status = _HeartbeatStatus.idle;
   DateTime? _lastSeenAt;
   String? _errorMessage;
+  bool _notificationsEnabled = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// When the user returns from system settings they may have toggled
+  /// notification permission. Re-check and register if newly granted.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkAndReenrollFcm();
+    }
+  }
+
+  Future<void> _checkAndReenrollFcm() async {
+    final FcmService fcm = ref.read(fcmServiceProvider);
+    final bool granted = await fcm.hasPermission();
+    if (!mounted) {
+      return;
+    }
+    setState(() => _notificationsEnabled = granted);
+    if (granted) {
+      final SessionState sessionState = ref.read(sessionProvider);
+      final Session? session = sessionState.session;
+      if (session == null) {
+        return;
+      }
+      final String? token = await fcm.getToken();
+      if (token != null) {
+        await fcm.registerWithWall(session, token);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,6 +111,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   family: session.family.name,
                   l10n: l10n,
                 ),
+                if (!_notificationsEnabled) ...<Widget>[
+                  const SizedBox(height: 12),
+                  _NotificationsDeniedHint(l10n: l10n),
+                ],
                 const SizedBox(height: 24),
                 todayAsync.when(
                   loading: () => const Center(
@@ -754,6 +802,39 @@ class _EmptyState extends StatelessWidget {
                   .withValues(alpha: 0.6),
             ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Notifications-disabled hint (subtle, below greeting)
+// ---------------------------------------------------------------------------
+
+class _NotificationsDeniedHint extends StatelessWidget {
+  const _NotificationsDeniedHint({required this.l10n});
+
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: <Widget>[
+        Icon(
+          Icons.notifications_off_outlined,
+          size: 16,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          l10n.pushPermissionDeniedHint,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.4),
+              ),
+        ),
+      ],
     );
   }
 }

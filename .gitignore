@@ -13,3 +13,8 @@ next-env.d.ts
 .vercel
 coverage
 .claude/settings.local.json
+
+# Service-account JSON, OAuth refresh tokens, anything sensitive
+secrets/
+*.private.json
+*-service-account*.json

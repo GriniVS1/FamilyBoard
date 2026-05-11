@@ -119,5 +119,11 @@
   "homeLoadError": "Impossibile caricare i dati di oggi.",
   "@homeLoadError": {},
   "homeSessionExpired": "La sessione è scaduta. Associa di nuovo il dispositivo.",
-  "@homeSessionExpired": {}
+  "@homeSessionExpired": {},
+  "pushPermissionAskTitle": "Resta aggiornato",
+  "@pushPermissionAskTitle": {},
+  "pushPermissionDeniedHint": "Notifiche disattivate",
+  "@pushPermissionDeniedHint": {},
+  "pushTestFailed": "Test notifica push non riuscito.",
+  "@pushTestFailed": {}
 }
