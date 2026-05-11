@@ -4,8 +4,11 @@ import 'package:intl/intl.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/session.dart';
+import '../../models/today.dart';
 import '../../services/heartbeat_service.dart';
+import '../../services/today_service.dart';
 import '../../state/session_provider.dart';
+import '../../state/today_provider.dart';
 import '../../theme.dart';
 
 enum _HeartbeatStatus { idle, sending, done }
@@ -34,50 +37,80 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     }
 
     final Color accent = AccentPalette.resolve(session.member.color);
+    final AsyncValue<TodayPayload> todayAsync = ref.watch(todayProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(l10n.appTitle),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[
-              _Greeting(
-                accent: accent,
-                emoji: session.member.emoji,
-                name: session.member.name,
-                family: session.family.name,
-                l10n: l10n,
-              ),
-              const SizedBox(height: 24),
-              _StubCard(title: l10n.homeTodayCard, message: l10n.homeComingSoon),
-              const SizedBox(height: 12),
-              _StubCard(title: l10n.homeChoresCard, message: l10n.homeComingSoon),
-              const SizedBox(height: 12),
-              _StubCard(title: l10n.homeTodosCard, message: l10n.homeComingSoon),
-              const SizedBox(height: 32),
-              _heartbeatStatusText(l10n),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                icon: const Icon(Icons.favorite_outline),
-                label: Text(
-                  _status == _HeartbeatStatus.sending
-                      ? l10n.homeHeartbeatPending
-                      : l10n.homeHeartbeat,
+        child: RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(todayProvider);
+            // Await the new value so the spinner stays visible until done.
+            try {
+              await ref.read(todayProvider.future);
+            } catch (_) {
+              // Error is displayed inline; no rethrow needed.
+            }
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: <Widget>[
+                _Greeting(
+                  accent: accent,
+                  emoji: session.member.emoji,
+                  name: session.member.name,
+                  family: session.family.name,
+                  l10n: l10n,
                 ),
-                onPressed:
-                    _status == _HeartbeatStatus.sending ? null : _sendHeartbeat,
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton.icon(
-                icon: const Icon(Icons.logout),
-                label: Text(l10n.homeDisconnect),
-                onPressed: _confirmDisconnect,
-              ),
-            ],
+                const SizedBox(height: 24),
+                todayAsync.when(
+                  loading: () => const Center(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(vertical: 48),
+                      child: CircularProgressIndicator(),
+                    ),
+                  ),
+                  error: (Object err, StackTrace _) => _ErrorBody(
+                      error: err,
+                      l10n: l10n,
+                      onRetry: () {
+                        ref.invalidate(todayProvider);
+                      },
+                      onSessionExpired: () async {
+                        await ref.read(sessionProvider.notifier).clear();
+                      }),
+                  data: (TodayPayload payload) => _TodayBody(
+                    payload: payload,
+                    l10n: l10n,
+                  ),
+                ),
+                const SizedBox(height: 32),
+                _heartbeatStatusText(l10n),
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  icon: const Icon(Icons.favorite_outline),
+                  label: Text(
+                    _status == _HeartbeatStatus.sending
+                        ? l10n.homeHeartbeatPending
+                        : l10n.homeHeartbeat,
+                  ),
+                  onPressed: _status == _HeartbeatStatus.sending
+                      ? null
+                      : _sendHeartbeat,
+                ),
+                const SizedBox(height: 12),
+                OutlinedButton.icon(
+                  icon: const Icon(Icons.logout),
+                  label: Text(l10n.homeDisconnect),
+                  onPressed: _confirmDisconnect,
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -175,6 +208,485 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Error state
+// ---------------------------------------------------------------------------
+
+class _ErrorBody extends StatelessWidget {
+  const _ErrorBody({
+    required this.error,
+    required this.l10n,
+    required this.onRetry,
+    required this.onSessionExpired,
+  });
+
+  final Object error;
+  final AppL10n l10n;
+  final VoidCallback onRetry;
+  final VoidCallback onSessionExpired;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isSessionError = error is TodaySessionRevokedException;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Text(
+              isSessionError ? l10n.homeSessionExpired : l10n.homeLoadError,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: isSessionError ? onSessionExpired : onRetry,
+              child: Text(l10n.homeRetry),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Data body — three real cards
+// ---------------------------------------------------------------------------
+
+class _TodayBody extends StatelessWidget {
+  const _TodayBody({required this.payload, required this.l10n});
+
+  final TodayPayload payload;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: <Widget>[
+        _EventsCard(payload: payload, l10n: l10n),
+        const SizedBox(height: 12),
+        _ChoresCard(payload: payload, l10n: l10n),
+        const SizedBox(height: 12),
+        _TodosCard(payload: payload, l10n: l10n),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Events card
+// ---------------------------------------------------------------------------
+
+class _EventsCard extends StatelessWidget {
+  const _EventsCard({required this.payload, required this.l10n});
+
+  final TodayPayload payload;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final String locale = Localizations.localeOf(context).toString();
+    final String formattedDate =
+        DateFormat.yMMMMEEEEd(locale).format(DateTime.parse(payload.todayIso));
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              l10n.homeTodayHeading(formattedDate),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            if (payload.events.isEmpty)
+              _EmptyState(message: l10n.homeNoEvents)
+            else
+              ...payload.events.map(
+                (TodayEvent event) => _EventRow(
+                  event: event,
+                  fallbackColor: payload.member.color,
+                  l10n: l10n,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EventRow extends StatelessWidget {
+  const _EventRow({
+    required this.event,
+    required this.fallbackColor,
+    required this.l10n,
+  });
+
+  final TodayEvent event;
+  final String fallbackColor;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final String locale = Localizations.localeOf(context).toString();
+    final Color accent = AccentPalette.resolve(event.color ?? fallbackColor);
+
+    String timeLabel;
+    if (event.allDay) {
+      timeLabel = l10n.homeAllDay;
+    } else {
+      final String start = event.startsAt != null
+          ? DateFormat.Hm(locale).format(event.startsAt!.toLocal())
+          : '';
+      final String end = event.endsAt != null
+          ? DateFormat.Hm(locale).format(event.endsAt!.toLocal())
+          : '';
+      timeLabel = '$start–$end';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border(
+            left: BorderSide(color: accent, width: 4),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: <Widget>[
+              Container(
+                constraints: const BoxConstraints(minWidth: 72),
+                child: Text(
+                  timeLabel,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontFeatures: const <FontFeature>[
+                      FontFeature.tabularFigures(),
+                    ],
+                    color: accent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      event.title,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    if (event.location != null && event.location!.isNotEmpty)
+                      Text(
+                        event.location!,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.6),
+                            ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Chores card
+// ---------------------------------------------------------------------------
+
+class _ChoresCard extends StatelessWidget {
+  const _ChoresCard({required this.payload, required this.l10n});
+
+  final TodayPayload payload;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final int done =
+        payload.chores.where((TodayChore c) => c.completedToday).length;
+    final int total = payload.chores.length;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              l10n.homeChoresHeading(done, total),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            if (payload.chores.isEmpty)
+              _EmptyState(message: l10n.homeNoChores)
+            else
+              ...payload.chores.map(
+                (TodayChore chore) => _ChoreRow(chore: chore, l10n: l10n),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChoreRow extends StatelessWidget {
+  const _ChoreRow({required this.chore, required this.l10n});
+
+  final TodayChore chore;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool done = chore.completedToday;
+    final Color mutedColor =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline,
+          ),
+        ),
+        child: Row(
+          children: <Widget>[
+            if (chore.icon != null && chore.icon!.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.only(right: 10),
+                child: Text(chore.icon!, style: const TextStyle(fontSize: 22)),
+              ),
+            Expanded(
+              child: Text(
+                chore.title,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: done ? mutedColor : null,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                      decorationColor: mutedColor,
+                    ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: done
+                    ? Theme.of(context)
+                        .colorScheme
+                        .outline
+                        .withValues(alpha: 0.3)
+                    : Theme.of(context).colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                l10n.homePointsLabel(chore.points),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: done
+                          ? mutedColor
+                          : Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Todos card
+// ---------------------------------------------------------------------------
+
+class _TodosCard extends StatelessWidget {
+  const _TodosCard({required this.payload, required this.l10n});
+
+  final TodayPayload payload;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final int open = payload.todos.where((TodayTodo t) => !t.done).length;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              l10n.homeTodosHeading(open),
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 12),
+            if (payload.todos.isEmpty)
+              _EmptyState(message: l10n.homeNoTodos)
+            else
+              ...payload.todos.map(
+                (TodayTodo todo) => _TodoRow(todo: todo, l10n: l10n),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TodoRow extends StatelessWidget {
+  const _TodoRow({required this.todo, required this.l10n});
+
+  final TodayTodo todo;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool done = todo.done;
+    final Color mutedColor =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
+    final String? duePill = _duePill(todo.dueDate, l10n);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 56),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.outline,
+          ),
+        ),
+        child: Row(
+          children: <Widget>[
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Icon(
+                done
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color:
+                    done ? mutedColor : Theme.of(context).colorScheme.primary,
+                size: 22,
+              ),
+            ),
+            Expanded(
+              child: Text(
+                todo.title,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: done ? mutedColor : null,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                      decorationColor: mutedColor,
+                    ),
+              ),
+            ),
+            if (duePill != null) ...<Widget>[
+              const SizedBox(width: 8),
+              _DuePill(label: duePill, overdue: _isOverdue(todo.dueDate)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  String? _duePill(DateTime? dueDate, AppL10n l10n) {
+    if (dueDate == null) {
+      return null;
+    }
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime due = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    final int diff = due.difference(today).inDays;
+    if (diff == 0) {
+      return l10n.homeDueToday;
+    }
+    if (diff == 1) {
+      return l10n.homeDueTomorrow;
+    }
+    if (diff < 0) {
+      return l10n.homeOverdue(
+        DateFormat('EEE d.M').format(dueDate.toLocal()),
+      );
+    }
+    return l10n.homeDueOn(DateFormat('EEE d.M').format(dueDate.toLocal()));
+  }
+
+  bool _isOverdue(DateTime? dueDate) {
+    if (dueDate == null) {
+      return false;
+    }
+    final DateTime now = DateTime.now();
+    final DateTime today = DateTime(now.year, now.month, now.day);
+    final DateTime due = DateTime(dueDate.year, dueDate.month, dueDate.day);
+    return due.isBefore(today);
+  }
+}
+
+class _DuePill extends StatelessWidget {
+  const _DuePill({required this.label, required this.overdue});
+
+  final String label;
+  final bool overdue;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg = overdue
+        ? Theme.of(context).colorScheme.errorContainer
+        : Theme.of(context).colorScheme.secondaryContainer;
+    final Color fg = overdue
+        ? Theme.of(context).colorScheme.onErrorContainer
+        : Theme.of(context).colorScheme.onSecondaryContainer;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: fg,
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Shared widgets
+// ---------------------------------------------------------------------------
+
 class _Greeting extends StatelessWidget {
   const _Greeting({
     required this.accent,
@@ -195,7 +707,7 @@ class _Greeting extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: accent.withOpacity(0.18),
+        color: accent.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(24),
         border: Border(
           left: BorderSide(color: accent, width: 4),
@@ -212,8 +724,10 @@ class _Greeting extends StatelessWidget {
           Text(
             l10n.homeFamily(family),
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color:
-                      Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.7),
                 ),
           ),
         ],
@@ -222,33 +736,23 @@ class _Greeting extends StatelessWidget {
   }
 }
 
-class _StubCard extends StatelessWidget {
-  const _StubCard({required this.title, required this.message});
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({required this.message});
 
-  final String title;
   final String message;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(title, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 6),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withOpacity(0.6),
-                  ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Text(
+        message,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.6),
             ),
-          ],
-        ),
       ),
     );
   }

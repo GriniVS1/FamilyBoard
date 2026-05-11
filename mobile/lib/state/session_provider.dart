@@ -33,9 +33,7 @@ class SessionState {
       : loaded = true,
         session = null;
 
-  const SessionState.signedIn(Session session)
-      : loaded = true,
-        session = session;
+  const SessionState.signedIn(this.session) : loaded = true;
 
   final bool loaded;
   final Session? session;

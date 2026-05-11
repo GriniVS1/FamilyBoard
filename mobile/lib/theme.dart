@@ -56,7 +56,8 @@ class FamilyBoardTheme {
       brightness: Brightness.dark,
       surface: _surfaceDark,
     ).copyWith(onSurface: _inkDark, outline: const Color(0xFF2A2E40));
-    return _base(scheme, background: _bgDark, mutedText: const Color(0xFF9CA3AF));
+    return _base(scheme,
+        background: _bgDark, mutedText: const Color(0xFF9CA3AF));
   }
 
   static ThemeData _base(
@@ -85,7 +86,7 @@ class FamilyBoardTheme {
         bodyColor: scheme.onSurface,
         displayColor: scheme.onSurface,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         color: scheme.surface,
         margin: EdgeInsets.zero,

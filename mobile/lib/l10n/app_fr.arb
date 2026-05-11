@@ -63,5 +63,61 @@
   },
   "homeDisconnect": "Déconnecter cet appareil",
   "@homeDisconnect": {},
-  "disconnectConfirm": "Déconnecter cet appareil ? Il te faudra un nouveau code pour le reconnecter."
+  "disconnectConfirm": "Déconnecter cet appareil ? Il te faudra un nouveau code pour le reconnecter.",
+  "@disconnectConfirm": {},
+  "homeTodayHeading": "Aujourd'hui, {date}",
+  "@homeTodayHeading": {
+    "placeholders": {
+      "date": { "type": "String", "example": "lundi 11 mai 2026" }
+    }
+  },
+  "homeNoEvents": "Rien de prévu aujourd'hui.",
+  "@homeNoEvents": {},
+  "homeAllDay": "Toute la journée",
+  "@homeAllDay": {},
+  "homeChoresHeading": "Tâches ({done}/{total} faites)",
+  "@homeChoresHeading": {
+    "placeholders": {
+      "done": { "type": "int", "example": "1" },
+      "total": { "type": "int", "example": "3" }
+    }
+  },
+  "homeNoChores": "Aucune tâche aujourd'hui.",
+  "@homeNoChores": {},
+  "homePointsLabel": "{n, plural, =1 {1 point} other {{n} points}}",
+  "@homePointsLabel": {
+    "placeholders": {
+      "n": { "type": "int", "example": "2" }
+    }
+  },
+  "homeTodosHeading": "À faire ({open} en cours)",
+  "@homeTodosHeading": {
+    "placeholders": {
+      "open": { "type": "int", "example": "2" }
+    }
+  },
+  "homeNoTodos": "Rien sur ta liste.",
+  "@homeNoTodos": {},
+  "homeDueToday": "À faire aujourd'hui",
+  "@homeDueToday": {},
+  "homeDueTomorrow": "À faire demain",
+  "@homeDueTomorrow": {},
+  "homeDueOn": "À faire le {date}",
+  "@homeDueOn": {
+    "placeholders": {
+      "date": { "type": "String", "example": "mer. 13.5" }
+    }
+  },
+  "homeOverdue": "En retard depuis le {date}",
+  "@homeOverdue": {
+    "placeholders": {
+      "date": { "type": "String", "example": "lun. 9.5" }
+    }
+  },
+  "homeRetry": "Réessayer",
+  "@homeRetry": {},
+  "homeLoadError": "Impossible de charger les données du jour.",
+  "@homeLoadError": {},
+  "homeSessionExpired": "Ta session a expiré. Veuillez associer l'appareil à nouveau.",
+  "@homeSessionExpired": {}
 }

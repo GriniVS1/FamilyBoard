@@ -159,6 +159,189 @@ export async function listGroceryItems(familyId: string) {
   });
 }
 
+export type TodayEvent = {
+  id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: string;
+  endsAt: string;
+  allDay: boolean;
+  color: string | null;
+};
+
+export type TodayChore = {
+  id: string;
+  title: string;
+  icon: string | null;
+  points: number;
+  completedToday: boolean;
+};
+
+export type TodayTodo = {
+  id: string;
+  title: string;
+  done: boolean;
+  dueDate: string | null;
+};
+
+export type TodayPayload = {
+  member: { id: string; name: string; color: string; emoji: string | null };
+  today: { iso: string };
+  events: TodayEvent[];
+  chores: TodayChore[];
+  todos: TodayTodo[];
+};
+
+/**
+ * Builds the "today" snapshot for a mobile device's bound member.
+ * Uses the server's local timezone for day boundaries — matches wall-side chore/event logic.
+ */
+export async function getTodayForMember(
+  familyId: string,
+  memberId: string,
+): Promise<TodayPayload> {
+  const member = await db.member.findUnique({
+    where: { id: memberId },
+    select: { id: true, name: true, color: true, emoji: true },
+  });
+
+  const iso = new Date().toISOString().slice(0, 10);
+
+  if (!member) {
+    return {
+      member: { id: memberId, name: "", color: "", emoji: null },
+      today: { iso },
+      events: [],
+      chores: [],
+      todos: [],
+    };
+  }
+
+  // Local-timezone day boundaries: midnight today → midnight tomorrow.
+  const now = new Date();
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    0,
+    0,
+    0,
+    0,
+  );
+  const endOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0,
+    0,
+    0,
+    0,
+  );
+
+  const [rawEvents, rawChores, rawTodos] = await Promise.all([
+    db.event.findMany({
+      where: {
+        familyId,
+        memberId,
+        startsAt: { lt: endOfToday },
+        endsAt: { gt: startOfToday },
+      },
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        location: true,
+        startsAt: true,
+        endsAt: true,
+        allDay: true,
+        color: true,
+      },
+      orderBy: { startsAt: "asc" },
+    }),
+
+    db.chore.findMany({
+      where: { familyId },
+      select: {
+        id: true,
+        title: true,
+        icon: true,
+        points: true,
+        completions: {
+          where: {
+            memberId,
+            completedAt: { gte: startOfToday, lt: endOfToday },
+          },
+          select: { id: true },
+          take: 1,
+        },
+      },
+    }),
+
+    db.todo.findMany({
+      where: {
+        familyId,
+        OR: [{ memberId }, { memberId: null }],
+      },
+      select: {
+        id: true,
+        title: true,
+        done: true,
+        dueDate: true,
+      },
+      orderBy: [{ done: "asc" }, { createdAt: "desc" }],
+      take: 50,
+    }),
+  ]);
+
+  const events: TodayEvent[] = rawEvents.map((e) => ({
+    id: e.id,
+    title: e.title,
+    description: e.description,
+    location: e.location,
+    startsAt: e.startsAt.toISOString(),
+    endsAt: e.endsAt.toISOString(),
+    allDay: e.allDay,
+    color: e.color,
+  }));
+
+  // Incomplete chores first, then completed; within each group alphabetical by title.
+  const chores: TodayChore[] = rawChores
+    .map((ch) => ({
+      id: ch.id,
+      title: ch.title,
+      icon: ch.icon,
+      points: ch.points,
+      completedToday: ch.completions.length > 0,
+    }))
+    .sort((a, b) => {
+      if (a.completedToday !== b.completedToday) {
+        return a.completedToday ? 1 : -1;
+      }
+      return a.title.localeCompare(b.title);
+    });
+
+  const todos: TodayTodo[] = rawTodos.map((t) => ({
+    id: t.id,
+    title: t.title,
+    done: t.done,
+    dueDate: t.dueDate ? t.dueDate.toISOString() : null,
+  }));
+
+  return {
+    member: {
+      id: member.id,
+      name: member.name,
+      color: member.color,
+      emoji: member.emoji,
+    },
+    today: { iso },
+    events,
+    chores,
+    todos,
+  };
+}
+
 export async function getSetupStatus() {
   const installation = await getOrCreateInstallation();
   const family = await db.family.findFirst();

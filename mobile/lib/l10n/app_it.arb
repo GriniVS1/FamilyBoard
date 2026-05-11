@@ -63,5 +63,61 @@
   },
   "homeDisconnect": "Scollega questo dispositivo",
   "@homeDisconnect": {},
-  "disconnectConfirm": "Scollegare questo dispositivo? Ti servirà un nuovo codice per ricollegarti."
+  "disconnectConfirm": "Scollegare questo dispositivo? Ti servirà un nuovo codice per ricollegarti.",
+  "@disconnectConfirm": {},
+  "homeTodayHeading": "Oggi, {date}",
+  "@homeTodayHeading": {
+    "placeholders": {
+      "date": { "type": "String", "example": "lunedì 11 maggio 2026" }
+    }
+  },
+  "homeNoEvents": "Niente in programma oggi.",
+  "@homeNoEvents": {},
+  "homeAllDay": "Tutto il giorno",
+  "@homeAllDay": {},
+  "homeChoresHeading": "Faccende ({done}/{total} fatte)",
+  "@homeChoresHeading": {
+    "placeholders": {
+      "done": { "type": "int", "example": "1" },
+      "total": { "type": "int", "example": "3" }
+    }
+  },
+  "homeNoChores": "Nessuna faccenda oggi.",
+  "@homeNoChores": {},
+  "homePointsLabel": "{n, plural, =1 {1 punto} other {{n} punti}}",
+  "@homePointsLabel": {
+    "placeholders": {
+      "n": { "type": "int", "example": "2" }
+    }
+  },
+  "homeTodosHeading": "Cose da fare ({open} aperte)",
+  "@homeTodosHeading": {
+    "placeholders": {
+      "open": { "type": "int", "example": "2" }
+    }
+  },
+  "homeNoTodos": "Niente nella tua lista.",
+  "@homeNoTodos": {},
+  "homeDueToday": "Scade oggi",
+  "@homeDueToday": {},
+  "homeDueTomorrow": "Scade domani",
+  "@homeDueTomorrow": {},
+  "homeDueOn": "Scade il {date}",
+  "@homeDueOn": {
+    "placeholders": {
+      "date": { "type": "String", "example": "mer 13.5" }
+    }
+  },
+  "homeOverdue": "In ritardo dal {date}",
+  "@homeOverdue": {
+    "placeholders": {
+      "date": { "type": "String", "example": "lun 9.5" }
+    }
+  },
+  "homeRetry": "Riprova",
+  "@homeRetry": {},
+  "homeLoadError": "Impossibile caricare i dati di oggi.",
+  "@homeLoadError": {},
+  "homeSessionExpired": "La sessione è scaduta. Associa di nuovo il dispositivo.",
+  "@homeSessionExpired": {}
 }

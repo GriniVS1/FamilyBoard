@@ -111,4 +111,3 @@ class _QrScannerViewState extends State<QrScannerView> {
     return ScannedPairPayload(serverUrl: url, code: code);
   }
 }
-

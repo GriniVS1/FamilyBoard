@@ -65,5 +65,61 @@
   },
   "homeDisconnect": "Disconnect this device",
   "@homeDisconnect": {},
-  "disconnectConfirm": "Disconnect this device? You'll need a new pairing code to connect again."
+  "disconnectConfirm": "Disconnect this device? You'll need a new pairing code to connect again.",
+  "@disconnectConfirm": {},
+  "homeTodayHeading": "Today, {date}",
+  "@homeTodayHeading": {
+    "placeholders": {
+      "date": { "type": "String", "example": "Monday, 11 May 2026" }
+    }
+  },
+  "homeNoEvents": "Nothing scheduled today.",
+  "@homeNoEvents": {},
+  "homeAllDay": "All day",
+  "@homeAllDay": {},
+  "homeChoresHeading": "Chores ({done}/{total} done)",
+  "@homeChoresHeading": {
+    "placeholders": {
+      "done": { "type": "int", "example": "1" },
+      "total": { "type": "int", "example": "3" }
+    }
+  },
+  "homeNoChores": "No chores assigned today.",
+  "@homeNoChores": {},
+  "homePointsLabel": "{n, plural, =1 {1 point} other {{n} points}}",
+  "@homePointsLabel": {
+    "placeholders": {
+      "n": { "type": "int", "example": "2" }
+    }
+  },
+  "homeTodosHeading": "To-dos ({open} open)",
+  "@homeTodosHeading": {
+    "placeholders": {
+      "open": { "type": "int", "example": "2" }
+    }
+  },
+  "homeNoTodos": "Nothing on your list.",
+  "@homeNoTodos": {},
+  "homeDueToday": "Due today",
+  "@homeDueToday": {},
+  "homeDueTomorrow": "Due tomorrow",
+  "@homeDueTomorrow": {},
+  "homeDueOn": "Due {date}",
+  "@homeDueOn": {
+    "placeholders": {
+      "date": { "type": "String", "example": "Wed 13.5" }
+    }
+  },
+  "homeOverdue": "Overdue {date}",
+  "@homeOverdue": {
+    "placeholders": {
+      "date": { "type": "String", "example": "Mon 9.5" }
+    }
+  },
+  "homeRetry": "Retry",
+  "@homeRetry": {},
+  "homeLoadError": "Could not load today's data.",
+  "@homeLoadError": {},
+  "homeSessionExpired": "Your session has expired. Please pair again.",
+  "@homeSessionExpired": {}
 }
