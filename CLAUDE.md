@@ -89,20 +89,27 @@ Each member has a `color` (one of the 8 accent names). Events and chore rows tin
 - All env vars validated through `src/lib/env.ts` (Zod).
 - All API routes: `export const runtime = "nodejs"`, wrapped in `withErrorHandling`, Zod-validated input.
 
+## Project layout
+
+- `src/**` — the wall (Next.js 15, the wall-mounted touchscreen app).
+- `prisma/**` — schema + migrations for the wall's SQLite store.
+- `mobile/**` — the Flutter companion app (iOS + Android). Hand-authored Dart sources; native project shells are not in git — developers run `flutter create --org com.familyboard --platforms=ios,android .` once per clone. See `mobile/README.md`.
+
 ## Multi-agent build workflow
 
-Three project-scoped subagents are defined in `.claude/agents/`:
+Project-scoped subagents are defined in `.claude/agents/`:
 
 - **`frontend-developer`** — owns `src/app/**` (UI), `src/components/**`, Tailwind, motion, accessibility, responsive behavior.
 - **`backend-developer`** — owns `prisma/**`, `src/app/api/**`, `src/lib/{db,auth,crypto,google,sync,license,pin,queries,env,enums,api}.ts`, `instrumentation.ts`, Docker.
+- **`mobile-developer`** — owns `mobile/**` (Flutter companion app). Cannot edit `src/**` or `prisma/**`.
 - **`app-tester`** — runs the app, exercises endpoints, and writes bug reports into `.claude/bug-reports/<UTC-ISO>-<slug>.md`. **Cannot edit source code** — that's the load-bearing constraint that keeps verification honest.
 
-For each feature slice the orchestrator (you) splits work across `frontend-developer` and `backend-developer` (run them in parallel via a single message with multiple Agent tool uses), then dispatches `app-tester`. Bug reports route via the `owner` frontmatter field. When a developer fixes a bug, they update `status: fixed` and append a `## Fix` section to the report. Re-run the tester for the slice; loop until clean.
+For each feature slice the orchestrator (you) splits work across the relevant developer agents (run them in parallel via a single message with multiple Agent tool uses), then dispatches `app-tester`. Bug reports route via the `owner` frontmatter field. When a developer fixes a bug, they update `status: fixed` and append a `## Fix` section to the report. Re-run the tester for the slice; loop until clean.
 
 If the agents aren't available in your session (they only load when you start Claude Code in this directory), fall back to invoking them inline via `general-purpose` agents and copy the relevant `.claude/agents/*.md` system prompt into your prompt.
 
 ## v1 / v2 / v3 roadmap
 
 - **v1 (current):** setup wizard, dashboard, calendar with Google 2-way sync, chores + stars, to-dos, notes, photos, weather, settings + PIN, dark mode, Docker (multi-arch).
-- **v2:** meal planning + recipes + grocery list, Apple/Outlook/CalDAV sync, smart-home hub, mobile companion app, push notifications, Google Photos.
+- **v2:** meal planning + recipes + grocery list, Apple/Outlook/CalDAV sync, smart-home hub, mobile companion app (Flutter, see `./mobile/`), push notifications, Google Photos.
 - **v3 (commercial):** license activation flow, remote license-server check-in (extend `src/lib/license.ts`), billing portal link, plan tiers, graceful degradation when expired, OTA updates. The `Installation` model is already in place.

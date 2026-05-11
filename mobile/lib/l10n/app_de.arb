@@ -1,0 +1,67 @@
+{
+  "@@locale": "de",
+  "appTitle": "FamilyBoard",
+  "@appTitle": {},
+  "splashLoading": "Laden…",
+  "@splashLoading": {},
+  "pairTitle": "Gerät verbinden",
+  "@pairTitle": {},
+  "pairSubtitle": "Verbinde dich mit deinem FamilyBoard und sieh, was bei deiner Familie los ist.",
+  "@pairSubtitle": {},
+  "pairScanButton": "QR-Code scannen",
+  "@pairScanButton": {},
+  "pairManualButton": "Code manuell eingeben",
+  "@pairManualButton": {},
+  "pairServerUrlLabel": "Server-Adresse",
+  "@pairServerUrlLabel": {},
+  "pairCodeLabel": "Kopplungscode",
+  "@pairCodeLabel": {},
+  "pairDeviceNameLabel": "Gerätename",
+  "@pairDeviceNameLabel": {},
+  "pairSubmit": "Gerät verbinden",
+  "@pairSubmit": {},
+  "pairScanInstruction": "Halte dein Telefon über den QR-Code auf dem FamilyBoard-Einstellungen-Bildschirm.",
+  "@pairScanInstruction": {},
+  "pairErrorInvalidCode": "Der Kopplungscode hat nicht funktioniert. Erstelle auf dem FamilyBoard einen neuen und versuche es erneut.",
+  "@pairErrorInvalidCode": {},
+  "pairErrorTooManyAttempts": "Zu viele Versuche. Bitte warte einige Minuten, bevor du es erneut versuchst.",
+  "@pairErrorTooManyAttempts": {},
+  "pairErrorNetwork": "Das FamilyBoard ist nicht erreichbar. Überprüfe dein WLAN und die Server-Adresse.",
+  "@pairErrorNetwork": {},
+  "pairErrorBadServer": "Die Server-Adresse sieht nicht richtig aus. Sie sollte mit http:// oder https:// beginnen.",
+  "@pairErrorBadServer": {},
+  "homeGreeting": "Hallo {emoji} {name}!",
+  "@homeGreeting": {
+    "placeholders": {
+      "emoji": { "type": "String", "example": "🦊" },
+      "name": { "type": "String", "example": "Mia" }
+    }
+  },
+  "homeFamily": "Familie {familyName}",
+  "@homeFamily": {
+    "placeholders": {
+      "familyName": { "type": "String", "example": "Müller" }
+    }
+  },
+  "homeTodayCard": "Heute",
+  "@homeTodayCard": {},
+  "homeChoresCard": "Ämtli",
+  "@homeChoresCard": {},
+  "homeTodosCard": "To-dos",
+  "@homeTodosCard": {},
+  "homeComingSoon": "Kommt in einem späteren Update.",
+  "@homeComingSoon": {},
+  "homeHeartbeat": "Lebenszeichen senden",
+  "@homeHeartbeat": {},
+  "homeHeartbeatPending": "Wird gesendet…",
+  "@homeHeartbeatPending": {},
+  "homeHeartbeatOk": "Zuletzt gesehen um {when}",
+  "@homeHeartbeatOk": {
+    "placeholders": {
+      "when": { "type": "String", "example": "12:42" }
+    }
+  },
+  "homeDisconnect": "Dieses Gerät trennen",
+  "@homeDisconnect": {},
+  "disconnectConfirm": "Dieses Gerät trennen? Du brauchst dann einen neuen Kopplungscode, um dich wieder zu verbinden."
+}

@@ -1,0 +1,52 @@
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+pubspec.lock
+
+# Generated localization
+lib/l10n/generated/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# iOS
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/App.framework
+ios/Flutter/ephemeral/
+ios/Runner/GeneratedPluginRegistrant.*
+ios/.generated/
+
+# Android
+android/.gradle/
+android/local.properties
+android/captures/
+android/.cxx/
+android/app/release/
+android/app/debug/
+android/app/profile/
+android/gradle/
+android/gradlew
+android/gradlew.bat
+android/key.properties
+android/**/GeneratedPluginRegistrant.java
+
+# macOS / Linux / Windows desktop targets (we only build iOS + Android)
+macos/
+linux/
+windows/
+
+# Misc
+*.log
+.DS_Store

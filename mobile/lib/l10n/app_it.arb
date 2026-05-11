@@ -1,0 +1,67 @@
+{
+  "@@locale": "it",
+  "appTitle": "FamilyBoard",
+  "@appTitle": {},
+  "splashLoading": "Caricamento…",
+  "@splashLoading": {},
+  "pairTitle": "Associa questo dispositivo",
+  "@pairTitle": {},
+  "pairSubtitle": "Collegati al tuo FamilyBoard per vedere cosa sta facendo la tua famiglia.",
+  "@pairSubtitle": {},
+  "pairScanButton": "Scansiona il QR code",
+  "@pairScanButton": {},
+  "pairManualButton": "Inserisci il codice manualmente",
+  "@pairManualButton": {},
+  "pairServerUrlLabel": "Indirizzo del server",
+  "@pairServerUrlLabel": {},
+  "pairCodeLabel": "Codice di abbinamento",
+  "@pairCodeLabel": {},
+  "pairDeviceNameLabel": "Nome del dispositivo",
+  "@pairDeviceNameLabel": {},
+  "pairSubmit": "Associa dispositivo",
+  "@pairSubmit": {},
+  "pairScanInstruction": "Punta il telefono verso il QR code nella schermata impostazioni del FamilyBoard.",
+  "@pairScanInstruction": {},
+  "pairErrorInvalidCode": "Il codice non ha funzionato. Generane uno nuovo sul FamilyBoard e riprova.",
+  "@pairErrorInvalidCode": {},
+  "pairErrorTooManyAttempts": "Troppi tentativi. Attendi qualche minuto prima di riprovare.",
+  "@pairErrorTooManyAttempts": {},
+  "pairErrorNetwork": "Impossibile raggiungere il FamilyBoard. Controlla il Wi-Fi e l'indirizzo del server.",
+  "@pairErrorNetwork": {},
+  "pairErrorBadServer": "L'indirizzo del server non sembra valido. Deve iniziare con http:// o https://.",
+  "@pairErrorBadServer": {},
+  "homeGreeting": "Ciao {emoji} {name}!",
+  "@homeGreeting": {
+    "placeholders": {
+      "emoji": { "type": "String", "example": "🦊" },
+      "name": { "type": "String", "example": "Mia" }
+    }
+  },
+  "homeFamily": "Famiglia {familyName}",
+  "@homeFamily": {
+    "placeholders": {
+      "familyName": { "type": "String", "example": "Müller" }
+    }
+  },
+  "homeTodayCard": "Oggi",
+  "@homeTodayCard": {},
+  "homeChoresCard": "Faccende",
+  "@homeChoresCard": {},
+  "homeTodosCard": "Cose da fare",
+  "@homeTodosCard": {},
+  "homeComingSoon": "Disponibile in un futuro aggiornamento.",
+  "@homeComingSoon": {},
+  "homeHeartbeat": "Invia segnale",
+  "@homeHeartbeat": {},
+  "homeHeartbeatPending": "Invio in corso…",
+  "@homeHeartbeatPending": {},
+  "homeHeartbeatOk": "Ultimo segnale alle {when}",
+  "@homeHeartbeatOk": {
+    "placeholders": {
+      "when": { "type": "String", "example": "12:42" }
+    }
+  },
+  "homeDisconnect": "Scollega questo dispositivo",
+  "@homeDisconnect": {},
+  "disconnectConfirm": "Scollegare questo dispositivo? Ti servirà un nuovo codice per ricollegarti."
+}
