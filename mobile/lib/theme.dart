@@ -85,7 +85,7 @@ class FamilyBoardTheme {
         bodyColor: scheme.onSurface,
         displayColor: scheme.onSurface,
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: 0,
         color: scheme.surface,
         margin: EdgeInsets.zero,
