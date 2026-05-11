@@ -42,8 +42,9 @@ class ApiClientFactory {
 
   String _normalize(String raw) {
     final String trimmed = raw.trim();
-    final String withoutTrailingSlash =
-        trimmed.endsWith('/') ? trimmed.substring(0, trimmed.length - 1) : trimmed;
+    final String withoutTrailingSlash = trimmed.endsWith('/')
+        ? trimmed.substring(0, trimmed.length - 1)
+        : trimmed;
     return withoutTrailingSlash;
   }
 }

@@ -63,5 +63,61 @@
   },
   "homeDisconnect": "Dieses Gerät trennen",
   "@homeDisconnect": {},
-  "disconnectConfirm": "Dieses Gerät trennen? Du brauchst dann einen neuen Kopplungscode, um dich wieder zu verbinden."
+  "disconnectConfirm": "Dieses Gerät trennen? Du brauchst dann einen neuen Kopplungscode, um dich wieder zu verbinden.",
+  "@disconnectConfirm": {},
+  "homeTodayHeading": "Heute, {date}",
+  "@homeTodayHeading": {
+    "placeholders": {
+      "date": { "type": "String", "example": "Montag, 11. Mai 2026" }
+    }
+  },
+  "homeNoEvents": "Heute nichts geplant.",
+  "@homeNoEvents": {},
+  "homeAllDay": "Ganztägig",
+  "@homeAllDay": {},
+  "homeChoresHeading": "Ämtli ({done}/{total} erledigt)",
+  "@homeChoresHeading": {
+    "placeholders": {
+      "done": { "type": "int", "example": "1" },
+      "total": { "type": "int", "example": "3" }
+    }
+  },
+  "homeNoChores": "Heute keine Ämtli.",
+  "@homeNoChores": {},
+  "homePointsLabel": "{n, plural, =1 {1 Punkt} other {{n} Punkte}}",
+  "@homePointsLabel": {
+    "placeholders": {
+      "n": { "type": "int", "example": "2" }
+    }
+  },
+  "homeTodosHeading": "To-dos ({open} offen)",
+  "@homeTodosHeading": {
+    "placeholders": {
+      "open": { "type": "int", "example": "2" }
+    }
+  },
+  "homeNoTodos": "Keine offenen Aufgaben.",
+  "@homeNoTodos": {},
+  "homeDueToday": "Fällig heute",
+  "@homeDueToday": {},
+  "homeDueTomorrow": "Fällig morgen",
+  "@homeDueTomorrow": {},
+  "homeDueOn": "Fällig am {date}",
+  "@homeDueOn": {
+    "placeholders": {
+      "date": { "type": "String", "example": "Mi. 13.5" }
+    }
+  },
+  "homeOverdue": "Überfällig {date}",
+  "@homeOverdue": {
+    "placeholders": {
+      "date": { "type": "String", "example": "Mo. 9.5" }
+    }
+  },
+  "homeRetry": "Erneut versuchen",
+  "@homeRetry": {},
+  "homeLoadError": "Heutige Daten konnten nicht geladen werden.",
+  "@homeLoadError": {},
+  "homeSessionExpired": "Deine Sitzung ist abgelaufen. Bitte erneut verbinden.",
+  "@homeSessionExpired": {}
 }
