@@ -1,0 +1,69 @@
+{
+  "@@locale": "en",
+  "appTitle": "FamilyBoard",
+  "@appTitle": {
+    "description": "Application title shown on the app bar and OS app switcher."
+  },
+  "splashLoading": "Loading…",
+  "@splashLoading": {},
+  "pairTitle": "Pair this device",
+  "@pairTitle": {},
+  "pairSubtitle": "Connect to your FamilyBoard so you can see what your family is up to.",
+  "@pairSubtitle": {},
+  "pairScanButton": "Scan QR code",
+  "@pairScanButton": {},
+  "pairManualButton": "Enter code manually",
+  "@pairManualButton": {},
+  "pairServerUrlLabel": "Server URL",
+  "@pairServerUrlLabel": {},
+  "pairCodeLabel": "Pairing code",
+  "@pairCodeLabel": {},
+  "pairDeviceNameLabel": "Device name",
+  "@pairDeviceNameLabel": {},
+  "pairSubmit": "Pair device",
+  "@pairSubmit": {},
+  "pairScanInstruction": "Hold your phone over the QR code on the FamilyBoard settings screen.",
+  "@pairScanInstruction": {},
+  "pairErrorInvalidCode": "That pairing code didn't work. Generate a new one on the FamilyBoard and try again.",
+  "@pairErrorInvalidCode": {},
+  "pairErrorTooManyAttempts": "Too many attempts. Please wait a few minutes before trying again.",
+  "@pairErrorTooManyAttempts": {},
+  "pairErrorNetwork": "Could not reach the FamilyBoard. Check your Wi-Fi and the server address.",
+  "@pairErrorNetwork": {},
+  "pairErrorBadServer": "That server URL doesn't look right. It should start with http:// or https://.",
+  "@pairErrorBadServer": {},
+  "homeGreeting": "Hi {emoji} {name}!",
+  "@homeGreeting": {
+    "placeholders": {
+      "emoji": { "type": "String", "example": "🦊" },
+      "name": { "type": "String", "example": "Mia" }
+    }
+  },
+  "homeFamily": "{familyName} family",
+  "@homeFamily": {
+    "placeholders": {
+      "familyName": { "type": "String", "example": "Müller" }
+    }
+  },
+  "homeTodayCard": "Today",
+  "@homeTodayCard": {},
+  "homeChoresCard": "Chores",
+  "@homeChoresCard": {},
+  "homeTodosCard": "To-dos",
+  "@homeTodosCard": {},
+  "homeComingSoon": "Coming in a future update.",
+  "@homeComingSoon": {},
+  "homeHeartbeat": "Send heartbeat",
+  "@homeHeartbeat": {},
+  "homeHeartbeatPending": "Sending…",
+  "@homeHeartbeatPending": {},
+  "homeHeartbeatOk": "Last seen at {when}",
+  "@homeHeartbeatOk": {
+    "placeholders": {
+      "when": { "type": "String", "example": "12:42" }
+    }
+  },
+  "homeDisconnect": "Disconnect this device",
+  "@homeDisconnect": {},
+  "disconnectConfirm": "Disconnect this device? You'll need a new pairing code to connect again."
+}

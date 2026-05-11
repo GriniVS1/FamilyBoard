@@ -1,0 +1,67 @@
+{
+  "@@locale": "fr",
+  "appTitle": "FamilyBoard",
+  "@appTitle": {},
+  "splashLoading": "Chargement…",
+  "@splashLoading": {},
+  "pairTitle": "Associer cet appareil",
+  "@pairTitle": {},
+  "pairSubtitle": "Connecte-toi à ton FamilyBoard pour suivre ce que fait ta famille.",
+  "@pairSubtitle": {},
+  "pairScanButton": "Scanner le QR code",
+  "@pairScanButton": {},
+  "pairManualButton": "Saisir le code à la main",
+  "@pairManualButton": {},
+  "pairServerUrlLabel": "Adresse du serveur",
+  "@pairServerUrlLabel": {},
+  "pairCodeLabel": "Code d'association",
+  "@pairCodeLabel": {},
+  "pairDeviceNameLabel": "Nom de l'appareil",
+  "@pairDeviceNameLabel": {},
+  "pairSubmit": "Associer l'appareil",
+  "@pairSubmit": {},
+  "pairScanInstruction": "Place ton téléphone devant le QR code affiché dans les réglages du FamilyBoard.",
+  "@pairScanInstruction": {},
+  "pairErrorInvalidCode": "Ce code d'association n'a pas fonctionné. Génères-en un nouveau sur le FamilyBoard puis réessaie.",
+  "@pairErrorInvalidCode": {},
+  "pairErrorTooManyAttempts": "Trop de tentatives. Patiente quelques minutes avant de réessayer.",
+  "@pairErrorTooManyAttempts": {},
+  "pairErrorNetwork": "Impossible de joindre le FamilyBoard. Vérifie ton Wi-Fi et l'adresse du serveur.",
+  "@pairErrorNetwork": {},
+  "pairErrorBadServer": "Cette adresse de serveur ne semble pas valide. Elle doit commencer par http:// ou https://.",
+  "@pairErrorBadServer": {},
+  "homeGreeting": "Salut {emoji} {name} !",
+  "@homeGreeting": {
+    "placeholders": {
+      "emoji": { "type": "String", "example": "🦊" },
+      "name": { "type": "String", "example": "Mia" }
+    }
+  },
+  "homeFamily": "Famille {familyName}",
+  "@homeFamily": {
+    "placeholders": {
+      "familyName": { "type": "String", "example": "Müller" }
+    }
+  },
+  "homeTodayCard": "Aujourd'hui",
+  "@homeTodayCard": {},
+  "homeChoresCard": "Tâches",
+  "@homeChoresCard": {},
+  "homeTodosCard": "À faire",
+  "@homeTodosCard": {},
+  "homeComingSoon": "Disponible dans une prochaine mise à jour.",
+  "@homeComingSoon": {},
+  "homeHeartbeat": "Envoyer un signal",
+  "@homeHeartbeat": {},
+  "homeHeartbeatPending": "Envoi en cours…",
+  "@homeHeartbeatPending": {},
+  "homeHeartbeatOk": "Dernier signal à {when}",
+  "@homeHeartbeatOk": {
+    "placeholders": {
+      "when": { "type": "String", "example": "12:42" }
+    }
+  },
+  "homeDisconnect": "Déconnecter cet appareil",
+  "@homeDisconnect": {},
+  "disconnectConfirm": "Déconnecter cet appareil ? Il te faudra un nouveau code pour le reconnecter."
+}
