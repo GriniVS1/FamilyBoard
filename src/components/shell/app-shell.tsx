@@ -14,6 +14,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { NavItem } from "./nav-item";
 import { TopbarClock } from "./topbar-clock";
@@ -88,9 +89,7 @@ export function AppShell({ children }: AppShellProps) {
         aria-label="Primary"
       >
         <div className="px-3 pb-6">
-          <span className="font-display text-2xl tracking-tight text-ink">
-            FamilyBoard
-          </span>
+          <Logo size={26} />
         </div>
         <nav className="flex flex-col gap-1" aria-label="Sidebar">
           {PRIMARY_NAV.map((item) => (
@@ -126,9 +125,7 @@ export function AppShell({ children }: AppShellProps) {
           "glass sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border px-4 md:pl-64 md:pr-6",
         )}
       >
-        <span className="font-display text-lg tracking-tight text-ink md:hidden">
-          FamilyBoard
-        </span>
+        <Logo size={20} className="md:hidden" />
         <h1
           className="hidden md:block flex-1 text-center font-display text-base font-medium text-ink"
           aria-live="polite"

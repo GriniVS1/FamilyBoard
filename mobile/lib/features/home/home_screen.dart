@@ -9,6 +9,7 @@ import '../../services/fcm_service.dart';
 import '../../services/heartbeat_service.dart';
 import '../../services/today_service.dart';
 import '../../state/session_provider.dart';
+import '../../widgets/familyboard_logo.dart';
 import '../../state/today_provider.dart';
 import '../../theme.dart';
 
@@ -85,7 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(l10n.appTitle),
+        title: const FamilyBoardLogo(fontSize: 18),
       ),
       body: SafeArea(
         child: RefreshIndicator(

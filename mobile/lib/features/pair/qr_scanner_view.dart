@@ -50,7 +50,6 @@ class _QrScannerViewState extends State<QrScannerView> {
               errorBuilder: (
                 BuildContext context,
                 MobileScannerException error,
-                Widget? child,
               ) {
                 return Container(
                   color: Theme.of(context).colorScheme.errorContainer,

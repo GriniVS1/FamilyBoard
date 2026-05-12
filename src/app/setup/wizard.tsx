@@ -9,6 +9,7 @@ import { StepMembers } from "@/components/setup/step-members";
 import { StepPin } from "@/components/setup/step-pin";
 import { StepWeather } from "@/components/setup/step-weather";
 import { StepDone } from "@/components/setup/step-done";
+import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import type { SetupStatus, StepKey } from "@/components/setup/types";
 
@@ -98,9 +99,7 @@ export function Wizard({ initialStatus }: WizardProps) {
     <div className="min-h-dvh flex flex-col">
       <header className="glass sticky top-0 z-20 border-b border-border">
         <div className="container flex items-center justify-between h-16">
-          <span className="font-display text-xl tracking-tight">
-            FamilyBoard
-          </span>
+          <Logo size={22} />
           <div className="flex items-center gap-3">
             {showProgress && (
               <ProgressDots total={STEP_ORDER.length - 1} current={stepIndex} />

@@ -18,6 +18,9 @@
     --accent-rose: 342 76% 78%;
     --accent-teal: 178 50% 60%;
     --accent-sand: 36 38% 75%;
+
+    /* Brand */
+    --brand-coral: 9 75% 62%;
   }
 
   .dark {
@@ -35,6 +38,8 @@
     --accent-rose: 342 60% 73%;
     --accent-teal: 178 40% 55%;
     --accent-sand: 36 30% 65%;
+
+    --brand-coral: 9 75% 62%;
   }
 
   * {

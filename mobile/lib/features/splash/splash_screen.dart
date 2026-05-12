@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../widgets/familyboard_logo.dart';
 
 class SplashScreen extends ConsumerWidget {
   const SplashScreen({super.key});
@@ -14,15 +15,19 @@ class SplashScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            const FamilyBoardLogo(fontSize: 36),
+            const SizedBox(height: 40),
             const SizedBox(
-              width: 48,
-              height: 48,
+              width: 36,
+              height: 36,
               child: CircularProgressIndicator(strokeWidth: 3),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 20),
             Text(
               l10n.splashLoading,
-              style: Theme.of(context).textTheme.bodyLarge,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                  ),
             ),
           ],
         ),
