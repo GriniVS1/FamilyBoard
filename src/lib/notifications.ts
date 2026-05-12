@@ -2,6 +2,7 @@ import "server-only";
 import webpush from "web-push";
 import { db } from "./db";
 import { env } from "./env";
+import { sendPushToFamilyDevices } from "./fcm";
 
 let cached: { publicKey: string; privateKey: string } | null = null;
 
@@ -60,6 +61,21 @@ export type NotificationPayload = {
 };
 
 export async function sendNotificationToFamily(
+  familyId: string,
+  payload: NotificationPayload,
+): Promise<{ sent: number; failed: number }> {
+  const [webResult, fcmResult] = await Promise.all([
+    sendWebPushToFamily(familyId, payload),
+    sendPushToFamilyDevices(familyId, payload),
+  ]);
+
+  return {
+    sent: webResult.sent + fcmResult.sent,
+    failed: webResult.failed + fcmResult.failed,
+  };
+}
+
+async function sendWebPushToFamily(
   familyId: string,
   payload: NotificationPayload,
 ): Promise<{ sent: number; failed: number }> {

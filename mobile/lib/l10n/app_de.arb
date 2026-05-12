@@ -119,5 +119,11 @@
   "homeLoadError": "Heutige Daten konnten nicht geladen werden.",
   "@homeLoadError": {},
   "homeSessionExpired": "Deine Sitzung ist abgelaufen. Bitte erneut verbinden.",
-  "@homeSessionExpired": {}
+  "@homeSessionExpired": {},
+  "pushPermissionAskTitle": "Immer auf dem Laufenden",
+  "@pushPermissionAskTitle": {},
+  "pushPermissionDeniedHint": "Benachrichtigungen deaktiviert",
+  "@pushPermissionDeniedHint": {},
+  "pushTestFailed": "Push-Benachrichtigungstest fehlgeschlagen.",
+  "@pushTestFailed": {}
 }

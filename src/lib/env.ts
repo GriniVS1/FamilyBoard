@@ -19,6 +19,9 @@ const schema = z.object({
   // Optional VAPID key overrides — if set, DB-generated keys are ignored.
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
+  // Firebase service-account JSON for mobile push (FCM). Optional — if absent,
+  // FCM silently no-ops and only web-push is used.
+  FIREBASE_SERVICE_ACCOUNT_PATH: z.string().optional(),
 });
 
 export const env = schema.parse(process.env);

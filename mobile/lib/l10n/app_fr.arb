@@ -119,5 +119,11 @@
   "homeLoadError": "Impossible de charger les données du jour.",
   "@homeLoadError": {},
   "homeSessionExpired": "Ta session a expiré. Veuillez associer l'appareil à nouveau.",
-  "@homeSessionExpired": {}
+  "@homeSessionExpired": {},
+  "pushPermissionAskTitle": "Reste informé",
+  "@pushPermissionAskTitle": {},
+  "pushPermissionDeniedHint": "Notifications désactivées",
+  "@pushPermissionDeniedHint": {},
+  "pushTestFailed": "Le test de notification push a échoué.",
+  "@pushTestFailed": {}
 }
