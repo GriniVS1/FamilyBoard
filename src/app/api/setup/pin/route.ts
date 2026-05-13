@@ -6,7 +6,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const bodySchema = z.object({
-  pin: z.string().regex(/^\d{4,6}$/, "PIN must be 4-6 digits"),
+  pin: z.string().regex(/^\d{6}$/, "PIN must be exactly 6 digits"),
 });
 
 export const POST = withErrorHandling(async (req) => {

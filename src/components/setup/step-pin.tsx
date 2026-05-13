@@ -9,7 +9,7 @@ import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
 import { postJson } from "./types";
 
-const PIN_LENGTH = 4;
+const PIN_LENGTH = 6;
 
 type StepPinProps = {
   onComplete: () => void;

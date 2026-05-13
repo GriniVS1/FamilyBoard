@@ -4,8 +4,8 @@ import { db } from "./db";
 const PIN_KEY = "admin_pin_hash";
 
 export async function setAdminPin(pin: string): Promise<void> {
-  if (!/^\d{4,6}$/.test(pin)) {
-    throw new Error("PIN must be 4-6 digits");
+  if (!/^\d{6}$/.test(pin)) {
+    throw new Error("PIN must be exactly 6 digits");
   }
   const hash = await bcrypt.hash(pin, 10);
   await db.setting.upsert({
