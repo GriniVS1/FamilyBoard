@@ -24,6 +24,27 @@ export const metadata: Metadata = {
   title: "FamilyBoard",
   description: "Your family's command center",
   manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [
+      { url: "/favicon.png", type: "image/png", sizes: "32x32" },
+      {
+        url: "/icon-192.png",
+        type: "image/png",
+        sizes: "192x192",
+        media: "(prefers-color-scheme: light)",
+      },
+      {
+        url: "/icon-192-dark.png",
+        type: "image/png",
+        sizes: "192x192",
+        media: "(prefers-color-scheme: dark)",
+      },
+    ],
+    apple: [
+      // iOS home-screen icon — light variant fits both light and dark wallpapers
+      { url: "/icon-512.png", sizes: "512x512" },
+    ],
+  },
 };
 
 export const viewport: Viewport = {
