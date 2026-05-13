@@ -125,5 +125,21 @@
   "pushPermissionDeniedHint": "Notifications désactivées",
   "@pushPermissionDeniedHint": {},
   "pushTestFailed": "Le test de notification push a échoué.",
-  "@pushTestFailed": {}
+  "@pushTestFailed": {},
+  "todosAddPlaceholder": "Ajouter une tâche…",
+  "@todosAddPlaceholder": {},
+  "todosAddButton": "Ajouter",
+  "@todosAddButton": {},
+  "todosDeleteConfirm": "Supprimer cette tâche ?",
+  "@todosDeleteConfirm": {},
+  "todosErrorTooMany": "Nombre maximum de tâches atteint.",
+  "@todosErrorTooMany": {},
+  "todosErrorGeneric": "Impossible de mettre à jour la tâche.",
+  "@todosErrorGeneric": {},
+  "choresUndoConfirm": "Annuler l'étoile d'aujourd'hui ?",
+  "@choresUndoConfirm": {},
+  "choresErrorGeneric": "Impossible de mettre à jour la tâche.",
+  "@choresErrorGeneric": {},
+  "mutationErrorRetry": "Réessayer",
+  "@mutationErrorRetry": {}
 }

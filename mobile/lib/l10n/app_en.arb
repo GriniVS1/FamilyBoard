@@ -133,5 +133,21 @@
   "pushTestFailed": "Push notification test failed.",
   "@pushTestFailed": {
     "description": "Shown when a push notification test delivery fails."
-  }
+  },
+  "todosAddPlaceholder": "Add a to-do…",
+  "@todosAddPlaceholder": {},
+  "todosAddButton": "Add",
+  "@todosAddButton": {},
+  "todosDeleteConfirm": "Delete this to-do?",
+  "@todosDeleteConfirm": {},
+  "todosErrorTooMany": "Maximum to-dos reached.",
+  "@todosErrorTooMany": {},
+  "todosErrorGeneric": "Couldn't update the to-do.",
+  "@todosErrorGeneric": {},
+  "choresUndoConfirm": "Undo today's star?",
+  "@choresUndoConfirm": {},
+  "choresErrorGeneric": "Couldn't update the chore.",
+  "@choresErrorGeneric": {},
+  "mutationErrorRetry": "Retry",
+  "@mutationErrorRetry": {}
 }

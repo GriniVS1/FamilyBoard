@@ -1,17 +1,21 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../app.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../models/mutations.dart';
 import '../../models/session.dart';
 import '../../models/today.dart';
 import '../../services/fcm_service.dart';
 import '../../services/heartbeat_service.dart';
 import '../../services/today_service.dart';
 import '../../state/session_provider.dart';
-import '../../widgets/familyboard_logo.dart';
 import '../../state/today_provider.dart';
 import '../../theme.dart';
+import '../../widgets/familyboard_logo.dart';
 
 enum _HeartbeatStatus { idle, sending, done }
 
@@ -41,8 +45,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     super.dispose();
   }
 
-  /// When the user returns from system settings they may have toggled
-  /// notification permission. Re-check and register if newly granted.
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -92,12 +94,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         child: RefreshIndicator(
           onRefresh: () async {
             ref.invalidate(todayProvider);
-            // Await the new value so the spinner stays visible until done.
             try {
               await ref.read(todayProvider.future);
-            } catch (_) {
-              // Error is displayed inline; no rethrow needed.
-            }
+            } catch (_) {}
           },
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -125,16 +124,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     ),
                   ),
                   error: (Object err, StackTrace _) => _ErrorBody(
-                      error: err,
-                      l10n: l10n,
-                      onRetry: () {
-                        ref.invalidate(todayProvider);
-                      },
-                      onSessionExpired: () async {
-                        await ref.read(sessionProvider.notifier).clear();
-                      }),
+                    error: err,
+                    l10n: l10n,
+                    onRetry: () => ref.invalidate(todayProvider),
+                    onSessionExpired: () async {
+                      await ref.read(sessionProvider.notifier).clear();
+                    },
+                  ),
                   data: (TodayPayload payload) => _TodayBody(
                     payload: payload,
+                    session: session,
                     l10n: l10n,
                   ),
                 ),
@@ -305,29 +304,34 @@ class _ErrorBody extends StatelessWidget {
 // Data body — three real cards
 // ---------------------------------------------------------------------------
 
-class _TodayBody extends StatelessWidget {
-  const _TodayBody({required this.payload, required this.l10n});
+class _TodayBody extends ConsumerWidget {
+  const _TodayBody({
+    required this.payload,
+    required this.session,
+    required this.l10n,
+  });
 
   final TodayPayload payload;
+  final Session session;
   final AppL10n l10n;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         _EventsCard(payload: payload, l10n: l10n),
         const SizedBox(height: 12),
-        _ChoresCard(payload: payload, l10n: l10n),
+        _ChoresCard(payload: payload, session: session, l10n: l10n),
         const SizedBox(height: 12),
-        _TodosCard(payload: payload, l10n: l10n),
+        _TodosCard(payload: payload, session: session, l10n: l10n),
       ],
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Events card
+// Events card (read-only — unchanged from M2.2a)
 // ---------------------------------------------------------------------------
 
 class _EventsCard extends StatelessWidget {
@@ -460,17 +464,22 @@ class _EventRow extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Chores card
+// Chores card — interactive
 // ---------------------------------------------------------------------------
 
-class _ChoresCard extends StatelessWidget {
-  const _ChoresCard({required this.payload, required this.l10n});
+class _ChoresCard extends ConsumerWidget {
+  const _ChoresCard({
+    required this.payload,
+    required this.session,
+    required this.l10n,
+  });
 
   final TodayPayload payload;
+  final Session session;
   final AppL10n l10n;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final int done =
         payload.chores.where((TodayChore c) => c.completedToday).length;
     final int total = payload.chores.length;
@@ -490,7 +499,11 @@ class _ChoresCard extends StatelessWidget {
               _EmptyState(message: l10n.homeNoChores)
             else
               ...payload.chores.map(
-                (TodayChore chore) => _ChoreRow(chore: chore, l10n: l10n),
+                (TodayChore chore) => _ChoreRow(
+                  chore: chore,
+                  session: session,
+                  l10n: l10n,
+                ),
               ),
           ],
         ),
@@ -499,71 +512,255 @@ class _ChoresCard extends StatelessWidget {
   }
 }
 
-class _ChoreRow extends StatelessWidget {
-  const _ChoreRow({required this.chore, required this.l10n});
+class _ChoreRow extends ConsumerStatefulWidget {
+  const _ChoreRow({
+    required this.chore,
+    required this.session,
+    required this.l10n,
+  });
 
   final TodayChore chore;
+  final Session session;
   final AppL10n l10n;
 
   @override
+  ConsumerState<_ChoreRow> createState() => _ChoreRowState();
+}
+
+class _ChoreRowState extends ConsumerState<_ChoreRow> {
+  bool _busy = false;
+  bool _optimisticDone = false;
+  bool _optimisticOverride = false;
+
+  bool get _isDone =>
+      _optimisticOverride ? _optimisticDone : widget.chore.completedToday;
+
+  Future<void> _handleTap(BuildContext context) async {
+    if (_busy) {
+      return;
+    }
+
+    if (_isDone) {
+      await _handleUndo(context);
+    } else {
+      await _handleComplete(context);
+    }
+  }
+
+  Future<void> _handleComplete(BuildContext context) async {
+    final RenderBox? box = context.findRenderObject() as RenderBox?;
+    final Offset center = box != null
+        ? box.localToGlobal(box.size.center(Offset.zero))
+        : Offset.zero;
+
+    setState(() {
+      _busy = true;
+      _optimisticDone = true;
+      _optimisticOverride = true;
+    });
+
+    StarBurstOverlay.show(context, center);
+
+    try {
+      await ref.read(mutationsServiceProvider).completeChore(
+            session: widget.session,
+            id: widget.chore.id,
+          );
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(todayProvider);
+    } on MutationSessionRevokedException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _optimisticOverride = false;
+        _busy = false;
+      });
+      await ref.read(sessionProvider.notifier).clear();
+    } on MutationNotFoundException {
+      if (!mounted) {
+        return;
+      }
+      // Silently drop — the chore was removed from the wall.
+      ref.invalidate(todayProvider);
+    } on MutationFetchException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _optimisticOverride = false;
+        _busy = false;
+      });
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(widget.l10n.choresErrorGeneric),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleUndo(BuildContext context) async {
+    final AppL10n l10n = widget.l10n;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          content: Text(l10n.choresUndoConfirm),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.mutationErrorRetry),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) {
+      return;
+    }
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _busy = true;
+      _optimisticDone = false;
+      _optimisticOverride = true;
+    });
+
+    try {
+      await ref.read(mutationsServiceProvider).undoChoreCompletion(
+            session: widget.session,
+            id: widget.chore.id,
+          );
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(todayProvider);
+    } on MutationSessionRevokedException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _optimisticOverride = false;
+        _busy = false;
+      });
+      await ref.read(sessionProvider.notifier).clear();
+    } on MutationNotFoundException {
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(todayProvider);
+    } on MutationFetchException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _optimisticOverride = false;
+        _busy = false;
+      });
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(widget.l10n.choresErrorGeneric),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final bool done = chore.completedToday;
+    final bool done = _isDone;
     final Color mutedColor =
         Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 56),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline,
+      child: InkWell(
+        onTap: _busy ? null : () => _handleTap(context),
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
-        ),
-        child: Row(
-          children: <Widget>[
-            if (chore.icon != null && chore.icon!.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: Text(chore.icon!, style: const TextStyle(fontSize: 22)),
+          child: Row(
+            children: <Widget>[
+              if (widget.chore.icon != null && widget.chore.icon!.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: Text(
+                    widget.chore.icon!,
+                    style: const TextStyle(fontSize: 22),
+                  ),
+                ),
+              Expanded(
+                child: Text(
+                  widget.chore.title,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: done ? mutedColor : null,
+                        decoration: done ? TextDecoration.lineThrough : null,
+                        decorationColor: mutedColor,
+                      ),
+                ),
               ),
-            Expanded(
-              child: Text(
-                chore.title,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: done ? mutedColor : null,
-                      decoration: done ? TextDecoration.lineThrough : null,
-                      decorationColor: mutedColor,
-                    ),
+              const SizedBox(width: 8),
+              if (_busy)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Text(
+                  done ? '★' : '☆',
+                  style: TextStyle(
+                    fontSize: 20,
+                    color: done
+                        ? const Color(0xFFFFD166)
+                        : Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.3),
+                  ),
+                ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: done
+                      ? Theme.of(context)
+                          .colorScheme
+                          .outline
+                          .withValues(alpha: 0.3)
+                      : Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  widget.l10n.homePointsLabel(widget.chore.points),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: done
+                            ? mutedColor
+                            : Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
+                ),
               ),
-            ),
-            const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: done
-                    ? Theme.of(context)
-                        .colorScheme
-                        .outline
-                        .withValues(alpha: 0.3)
-                    : Theme.of(context).colorScheme.primaryContainer,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                l10n.homePointsLabel(chore.points),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: done
-                          ? mutedColor
-                          : Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -571,18 +768,189 @@ class _ChoreRow extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Todos card
+// Star-burst overlay animation
 // ---------------------------------------------------------------------------
 
-class _TodosCard extends StatelessWidget {
-  const _TodosCard({required this.payload, required this.l10n});
+class StarBurstOverlay {
+  StarBurstOverlay._();
 
-  final TodayPayload payload;
-  final AppL10n l10n;
+  static void show(BuildContext context, Offset center) {
+    final OverlayState overlay = Overlay.of(context);
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (BuildContext ctx) => _StarBurstWidget(
+        center: center,
+        onDone: () => entry.remove(),
+      ),
+    );
+    overlay.insert(entry);
+  }
+}
+
+class _StarBurstWidget extends StatefulWidget {
+  const _StarBurstWidget({required this.center, required this.onDone});
+
+  final Offset center;
+  final VoidCallback onDone;
+
+  @override
+  State<_StarBurstWidget> createState() => _StarBurstWidgetState();
+}
+
+class _StarBurstWidgetState extends State<_StarBurstWidget>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  static const int _count = 8;
+  static const double _radius = 80;
+  static const List<String> _symbols = <String>[
+    '★',
+    '☆',
+    '★',
+    '★',
+    '☆',
+    '★',
+    '★',
+    '☆',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..forward().whenComplete(() {
+        if (mounted) {
+          widget.onDone();
+        }
+      });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final int open = payload.todos.where((TodayTodo t) => !t.done).length;
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (BuildContext ctx, Widget? child) {
+        final double t = _controller.value;
+        final double opacity = (1.0 - t).clamp(0.0, 1.0);
+        return Stack(
+          children: List<Widget>.generate(_count, (int i) {
+            final double angle = (2 * math.pi / _count) * i;
+            final double dx = math.cos(angle) * _radius * t;
+            final double dy = math.sin(angle) * _radius * t;
+            final double scale = (1.0 - t * 0.4).clamp(0.0, 1.0);
+            return Positioned(
+              left: widget.center.dx + dx - 12,
+              top: widget.center.dy + dy - 12,
+              child: Opacity(
+                opacity: opacity,
+                child: Transform.scale(
+                  scale: scale,
+                  child: Text(
+                    _symbols[i % _symbols.length],
+                    style: const TextStyle(
+                      fontSize: 20,
+                      color: Color(0xFFFFD166),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Todos card — interactive
+// ---------------------------------------------------------------------------
+
+class _TodosCard extends ConsumerStatefulWidget {
+  const _TodosCard({
+    required this.payload,
+    required this.session,
+    required this.l10n,
+  });
+
+  final TodayPayload payload;
+  final Session session;
+  final AppL10n l10n;
+
+  @override
+  ConsumerState<_TodosCard> createState() => _TodosCardState();
+}
+
+class _TodosCardState extends ConsumerState<_TodosCard> {
+  final TextEditingController _addController = TextEditingController();
+  bool _addBusy = false;
+
+  @override
+  void dispose() {
+    _addController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitNew() async {
+    final String title = _addController.text.trim();
+    if (title.isEmpty || _addBusy) {
+      return;
+    }
+    setState(() => _addBusy = true);
+
+    try {
+      await ref.read(mutationsServiceProvider).createTodo(
+            session: widget.session,
+            title: title,
+          );
+      if (!mounted) {
+        return;
+      }
+      _addController.clear();
+      ref.invalidate(todayProvider);
+    } on MutationSessionRevokedException {
+      if (!mounted) {
+        return;
+      }
+      await ref.read(sessionProvider.notifier).clear();
+    } on MutationCapReachedException {
+      if (!mounted) {
+        return;
+      }
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(widget.l10n.todosErrorTooMany),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on MutationFetchException {
+      if (!mounted) {
+        return;
+      }
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(widget.l10n.todosErrorGeneric),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _addBusy = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final int open =
+        widget.payload.todos.where((TodayTodo t) => !t.done).length;
 
     return Card(
       child: Padding(
@@ -591,16 +959,27 @@ class _TodosCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Text(
-              l10n.homeTodosHeading(open),
+              widget.l10n.homeTodosHeading(open),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            if (payload.todos.isEmpty)
-              _EmptyState(message: l10n.homeNoTodos)
+            if (widget.payload.todos.isEmpty)
+              _EmptyState(message: widget.l10n.homeNoTodos)
             else
-              ...payload.todos.map(
-                (TodayTodo todo) => _TodoRow(todo: todo, l10n: l10n),
+              ...widget.payload.todos.map(
+                (TodayTodo todo) => _TodoRow(
+                  todo: todo,
+                  session: widget.session,
+                  l10n: widget.l10n,
+                ),
               ),
+            const SizedBox(height: 8),
+            _AddTodoRow(
+              controller: _addController,
+              busy: _addBusy,
+              l10n: widget.l10n,
+              onSubmit: _submitNew,
+            ),
           ],
         ),
       ),
@@ -608,59 +987,264 @@ class _TodosCard extends StatelessWidget {
   }
 }
 
-class _TodoRow extends StatelessWidget {
-  const _TodoRow({required this.todo, required this.l10n});
+class _AddTodoRow extends StatelessWidget {
+  const _AddTodoRow({
+    required this.controller,
+    required this.busy,
+    required this.l10n,
+    required this.onSubmit,
+  });
 
-  final TodayTodo todo;
+  final TextEditingController controller;
+  final bool busy;
   final AppL10n l10n;
+  final VoidCallback onSubmit;
 
   @override
   Widget build(BuildContext context) {
-    final bool done = todo.done;
+    return Row(
+      children: <Widget>[
+        Expanded(
+          child: TextField(
+            controller: controller,
+            enabled: !busy,
+            textInputAction: TextInputAction.done,
+            onSubmitted: (_) => onSubmit(),
+            decoration: InputDecoration(
+              hintText: l10n.todosAddPlaceholder,
+              isDense: true,
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        SizedBox(
+          height: 48,
+          width: 48,
+          child: busy
+              ? const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : IconButton.filled(
+                  icon: const Icon(Icons.add),
+                  tooltip: l10n.todosAddButton,
+                  onPressed: onSubmit,
+                ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TodoRow extends ConsumerStatefulWidget {
+  const _TodoRow({
+    required this.todo,
+    required this.session,
+    required this.l10n,
+  });
+
+  final TodayTodo todo;
+  final Session session;
+  final AppL10n l10n;
+
+  @override
+  ConsumerState<_TodoRow> createState() => _TodoRowState();
+}
+
+class _TodoRowState extends ConsumerState<_TodoRow> {
+  bool _busy = false;
+  bool _optimisticDone = false;
+  bool _optimisticOverride = false;
+
+  bool get _isDone => _optimisticOverride ? _optimisticDone : widget.todo.done;
+
+  Future<void> _toggle() async {
+    if (_busy) {
+      return;
+    }
+    final bool newDone = !_isDone;
+    setState(() {
+      _busy = true;
+      _optimisticDone = newDone;
+      _optimisticOverride = true;
+    });
+
+    try {
+      await ref.read(mutationsServiceProvider).toggleTodo(
+            session: widget.session,
+            id: widget.todo.id,
+            done: newDone,
+          );
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(todayProvider);
+    } on MutationSessionRevokedException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _optimisticOverride = false;
+        _busy = false;
+      });
+      await ref.read(sessionProvider.notifier).clear();
+    } on MutationNotFoundException {
+      if (!mounted) {
+        return;
+      }
+      // Silently drop.
+      ref.invalidate(todayProvider);
+    } on MutationFetchException {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _optimisticDone = !newDone;
+        _optimisticOverride = true;
+        _busy = false;
+      });
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(widget.l10n.todosErrorGeneric),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _delete() async {
+    final AppL10n l10n = widget.l10n;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) {
+        return AlertDialog(
+          content: Text(l10n.todosDeleteConfirm),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(ctx).pop(true),
+              child: Text(l10n.todosDeleteConfirm),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    try {
+      await ref.read(mutationsServiceProvider).deleteTodo(
+            session: widget.session,
+            id: widget.todo.id,
+          );
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(todayProvider);
+    } on MutationSessionRevokedException {
+      if (!mounted) {
+        return;
+      }
+      await ref.read(sessionProvider.notifier).clear();
+    } on MutationNotFoundException {
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(todayProvider);
+    } on MutationFetchException {
+      if (!mounted) {
+        return;
+      }
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(widget.l10n.todosErrorGeneric),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bool done = _isDone;
     final Color mutedColor =
         Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
-    final String? duePill = _duePill(todo.dueDate, l10n);
+    final String? duePill = _duePill(widget.todo.dueDate, widget.l10n);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 56),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.outline,
+      child: InkWell(
+        onTap: _busy ? null : _toggle,
+        onLongPress: _busy ? null : _delete,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 56),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline,
+            ),
           ),
-        ),
-        child: Row(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: Icon(
-                done
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked_rounded,
-                color:
-                    done ? mutedColor : Theme.of(context).colorScheme.primary,
-                size: 22,
+          child: Row(
+            children: <Widget>[
+              GestureDetector(
+                onTap: _busy ? null : _toggle,
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 10),
+                  child: SizedBox(
+                    width: 32,
+                    height: 32,
+                    child: _busy
+                        ? const Center(
+                            child: SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : Icon(
+                            done
+                                ? Icons.check_circle_rounded
+                                : Icons.radio_button_unchecked_rounded,
+                            color: done
+                                ? mutedColor
+                                : Theme.of(context).colorScheme.primary,
+                            size: 24,
+                          ),
+                  ),
+                ),
               ),
-            ),
-            Expanded(
-              child: Text(
-                todo.title,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: done ? mutedColor : null,
-                      decoration: done ? TextDecoration.lineThrough : null,
-                      decorationColor: mutedColor,
-                    ),
+              Expanded(
+                child: Text(
+                  widget.todo.title,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        color: done ? mutedColor : null,
+                        decoration: done ? TextDecoration.lineThrough : null,
+                        decorationColor: mutedColor,
+                      ),
+                ),
               ),
-            ),
-            if (duePill != null) ...<Widget>[
-              const SizedBox(width: 8),
-              _DuePill(label: duePill, overdue: _isOverdue(todo.dueDate)),
+              if (duePill != null) ...<Widget>[
+                const SizedBox(width: 8),
+                _DuePill(
+                  label: duePill,
+                  overdue: _isOverdue(widget.todo.dueDate),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -806,10 +1390,6 @@ class _EmptyState extends StatelessWidget {
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Notifications-disabled hint (subtle, below greeting)
-// ---------------------------------------------------------------------------
 
 class _NotificationsDeniedHint extends StatelessWidget {
   const _NotificationsDeniedHint({required this.l10n});
