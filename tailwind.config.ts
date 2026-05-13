@@ -29,6 +29,9 @@ const config: Config = {
           teal: "hsl(var(--accent-teal) / <alpha-value>)",
           sand: "hsl(var(--accent-sand) / <alpha-value>)",
         },
+        brand: {
+          coral: "hsl(var(--brand-coral) / <alpha-value>)",
+        },
       },
       fontFamily: {
         sans: ["var(--font-inter)", "system-ui", "sans-serif"],

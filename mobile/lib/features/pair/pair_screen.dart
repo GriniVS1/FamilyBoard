@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/pair_controller.dart';
+import '../../widgets/familyboard_logo.dart';
 import 'manual_entry_view.dart';
 import 'qr_scanner_view.dart';
 
@@ -33,7 +34,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
                 icon: const Icon(Icons.arrow_back),
                 onPressed: _goBackToChooser,
               ),
-        title: Text(l10n.appTitle),
+        title: const FamilyBoardLogo(fontSize: 18),
       ),
       body: SafeArea(
         child: Padding(
