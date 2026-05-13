@@ -259,5 +259,25 @@
     "placeholders": {
       "date": { "type": "String", "example": "13. Mai 2026" }
     }
-  }
+  },
+  "mealPlanGenerateGrocery": "Zur Einkaufsliste",
+  "@mealPlanGenerateGrocery": {},
+  "mealPlanGenerateGroceryConfirmTitle": "Zutaten dieser Woche hinzufügen?",
+  "@mealPlanGenerateGroceryConfirmTitle": {},
+  "mealPlanGenerateGroceryConfirmBody": "Alle Zutaten aus den geplanten Rezepten dieser Woche werden deiner Einkaufsliste hinzugefügt.",
+  "@mealPlanGenerateGroceryConfirmBody": {},
+  "mealPlanGenerateGroceryConfirmAdd": "Hinzufügen",
+  "@mealPlanGenerateGroceryConfirmAdd": {},
+  "mealPlanGenerateGroceryToast": "{count, plural, =1{1 Artikel zur Einkaufsliste hinzugefügt} other{{count} Artikel zur Einkaufsliste hinzugefügt}}",
+  "@mealPlanGenerateGroceryToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+  "mealPlanGenerateGroceryToastZero": "Keine Artikel hinzugefügt",
+  "@mealPlanGenerateGroceryToastZero": {},
+  "mealPlanGenerateGroceryErrorCap": "Einkaufsliste ist voll (max. 500 Artikel).",
+  "@mealPlanGenerateGroceryErrorCap": {},
+  "mealPlanGenerateGroceryErrorGeneric": "Artikel konnten nicht hinzugefügt werden. Erneut versuchen.",
+  "@mealPlanGenerateGroceryErrorGeneric": {}
 }

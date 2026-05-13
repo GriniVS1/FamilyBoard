@@ -14,6 +14,10 @@ class MealPlanFetchException implements Exception {
   final String message;
 }
 
+class MealPlanGroceryCapReachedException implements Exception {
+  const MealPlanGroceryCapReachedException();
+}
+
 class MealPlanService {
   MealPlanService({required ApiClientFactory clientFactory})
       : _clientFactory = clientFactory;
@@ -58,5 +62,51 @@ class MealPlanService {
         .map((Map<Object?, Object?> m) =>
             MealPlan.fromJson(m.cast<String, Object?>()))
         .toList();
+  }
+
+  Future<int> generateGroceryFromWeek(
+    Session session, {
+    required DateTime startDate,
+  }) async {
+    final String dateStr =
+        '${startDate.year.toString().padLeft(4, '0')}-${startDate.month.toString().padLeft(2, '0')}-${startDate.day.toString().padLeft(2, '0')}';
+    final Dio dio = _clientFactory.authenticated(session);
+    final Response<Object?> response;
+    try {
+      response = await dio.post<Object?>(
+        '/api/mobile/grocery/from-week',
+        data: <String, Object?>{'startDate': dateStr},
+      );
+    } on DioException catch (e) {
+      throw MealPlanFetchException('Network error: ${e.message}');
+    }
+    final int status = response.statusCode ?? 0;
+    if (status == 401) {
+      throw const MealPlanSessionRevokedException();
+    }
+    if (status == 400) {
+      final Object? data = response.data;
+      if (data is Map) {
+        final Object? error = (data as Map<Object?, Object?>)['error'];
+        if (error is Map) {
+          final Object? code = (error as Map<Object?, Object?>)['code'];
+          if (code == 'TOO_MANY_ITEMS') {
+            throw const MealPlanGroceryCapReachedException();
+          }
+        }
+      }
+      throw const MealPlanFetchException('400 error');
+    }
+    if (status != 200) {
+      throw MealPlanFetchException('Unexpected status $status');
+    }
+    final Object? data = response.data;
+    if (data is! Map) {
+      throw const MealPlanFetchException('Unexpected response format');
+    }
+    final Map<String, Object?> body =
+        (data as Map<Object?, Object?>).cast<String, Object?>();
+    final Object? count = body['count'];
+    return count is int ? count : 0;
   }
 }

@@ -267,5 +267,25 @@
     "placeholders": {
       "date": { "type": "String", "example": "13 May 2026" }
     }
-  }
+  },
+  "mealPlanGenerateGrocery": "Add to grocery",
+  "@mealPlanGenerateGrocery": {},
+  "mealPlanGenerateGroceryConfirmTitle": "Add this week's ingredients?",
+  "@mealPlanGenerateGroceryConfirmTitle": {},
+  "mealPlanGenerateGroceryConfirmBody": "All ingredients from this week's planned recipes will be added to your grocery list.",
+  "@mealPlanGenerateGroceryConfirmBody": {},
+  "mealPlanGenerateGroceryConfirmAdd": "Add",
+  "@mealPlanGenerateGroceryConfirmAdd": {},
+  "mealPlanGenerateGroceryToast": "{count, plural, =1{1 item added to grocery} other{{count} items added to grocery}}",
+  "@mealPlanGenerateGroceryToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+  "mealPlanGenerateGroceryToastZero": "No items added",
+  "@mealPlanGenerateGroceryToastZero": {},
+  "mealPlanGenerateGroceryErrorCap": "Grocery list is full (500 items max).",
+  "@mealPlanGenerateGroceryErrorCap": {},
+  "mealPlanGenerateGroceryErrorGeneric": "Couldn't add items. Try again.",
+  "@mealPlanGenerateGroceryErrorGeneric": {}
 }
