@@ -647,6 +647,19 @@
     "nextUp": "Next up",
     "allDay": "All day"
   },
+  "notifications": {
+    "eventReminder": {
+      "body": "Starts at {time}"
+    },
+    "digest": {
+      "title": "Today's plan",
+      "empty": "Nothing planned today",
+      "dinnerFallback": "Dinner planned",
+      "events": "{count, plural, =1 {1 event} other {# events}}",
+      "chores": "{count, plural, =1 {1 chore} other {# chores}}",
+      "separator": " · "
+    }
+  },
   "errors": {
     "generic": "Something went wrong.",
     "network": "Network error. Check your connection.",

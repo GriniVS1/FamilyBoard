@@ -647,6 +647,19 @@
     "nextUp": "Als Nächstes",
     "allDay": "Ganztägig"
   },
+  "notifications": {
+    "eventReminder": {
+      "body": "Beginnt um {time}"
+    },
+    "digest": {
+      "title": "Heutiger Plan",
+      "empty": "Heute nichts geplant",
+      "dinnerFallback": "Abendessen geplant",
+      "events": "{count, plural, =1 {1 Termin} other {# Termine}}",
+      "chores": "{count, plural, =1 {1 Aufgabe} other {# Aufgaben}}",
+      "separator": " · "
+    }
+  },
   "errors": {
     "generic": "Etwas ist schiefgelaufen.",
     "network": "Netzwerkfehler. Überprüfe deine Verbindung.",
