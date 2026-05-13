@@ -5,6 +5,7 @@ import '../services/api_client.dart';
 import '../services/fcm_service.dart';
 import '../services/heartbeat_service.dart';
 import '../services/mutations_service.dart';
+import '../services/notes_service.dart';
 import '../services/pair_service.dart';
 import '../services/secure_storage.dart';
 
@@ -31,6 +32,12 @@ final Provider<FcmService> fcmServiceProvider = Provider<FcmService>(
 final Provider<MutationsService> mutationsServiceProvider =
     Provider<MutationsService>(
   (Ref ref) => MutationsService(
+    clientFactory: ref.watch(apiClientFactoryProvider),
+  ),
+);
+
+final Provider<NotesService> notesServiceProvider = Provider<NotesService>(
+  (Ref ref) => NotesService(
     clientFactory: ref.watch(apiClientFactoryProvider),
   ),
 );
