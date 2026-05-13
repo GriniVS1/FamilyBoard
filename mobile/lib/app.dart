@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/grocery/grocery_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/pair/pair_screen.dart';
 import 'features/splash/splash_screen.dart';
@@ -53,7 +54,9 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           }
           return null;
         }
-        if (location == '/splash' || location == '/home') {
+        if (location == '/splash' ||
+            location == '/home' ||
+            location == '/grocery') {
           return '/pair';
         }
         return null;
@@ -73,6 +76,11 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           path: '/home',
           builder: (BuildContext context, GoRouterState routerState) =>
               const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/grocery',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const GroceryScreen(),
         ),
       ],
     );
