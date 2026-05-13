@@ -26,7 +26,10 @@ class SplashScreen extends ConsumerWidget {
             Text(
               l10n.splashLoading,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.6),
                   ),
             ),
           ],

@@ -4,6 +4,7 @@ import '../models/session.dart';
 import '../services/api_client.dart';
 import '../services/fcm_service.dart';
 import '../services/heartbeat_service.dart';
+import '../services/mutations_service.dart';
 import '../services/pair_service.dart';
 import '../services/secure_storage.dart';
 
@@ -25,6 +26,13 @@ final Provider<HeartbeatService> heartbeatServiceProvider =
 
 final Provider<FcmService> fcmServiceProvider = Provider<FcmService>(
   (Ref ref) => FcmService(clientFactory: ref.watch(apiClientFactoryProvider)),
+);
+
+final Provider<MutationsService> mutationsServiceProvider =
+    Provider<MutationsService>(
+  (Ref ref) => MutationsService(
+    clientFactory: ref.watch(apiClientFactoryProvider),
+  ),
 );
 
 class SessionState {

@@ -47,6 +47,11 @@ macos/
 linux/
 windows/
 
+# Firebase configs — operator-specific, brought in per-machine
+# (technically public API keys but each install is a separate Firebase project)
+**/GoogleService-Info.plist
+**/google-services.json
+
 # Misc
 *.log
 .DS_Store

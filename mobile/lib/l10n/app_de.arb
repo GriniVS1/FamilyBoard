@@ -125,5 +125,21 @@
   "pushPermissionDeniedHint": "Benachrichtigungen deaktiviert",
   "@pushPermissionDeniedHint": {},
   "pushTestFailed": "Push-Benachrichtigungstest fehlgeschlagen.",
-  "@pushTestFailed": {}
+  "@pushTestFailed": {},
+  "todosAddPlaceholder": "Aufgabe hinzufügen…",
+  "@todosAddPlaceholder": {},
+  "todosAddButton": "Hinzufügen",
+  "@todosAddButton": {},
+  "todosDeleteConfirm": "Diese Aufgabe löschen?",
+  "@todosDeleteConfirm": {},
+  "todosErrorTooMany": "Maximale Anzahl Aufgaben erreicht.",
+  "@todosErrorTooMany": {},
+  "todosErrorGeneric": "Aufgabe konnte nicht aktualisiert werden.",
+  "@todosErrorGeneric": {},
+  "choresUndoConfirm": "Den heutigen Stern rückgängig machen?",
+  "@choresUndoConfirm": {},
+  "choresErrorGeneric": "Ämtli konnte nicht aktualisiert werden.",
+  "@choresErrorGeneric": {},
+  "mutationErrorRetry": "Erneut versuchen",
+  "@mutationErrorRetry": {}
 }

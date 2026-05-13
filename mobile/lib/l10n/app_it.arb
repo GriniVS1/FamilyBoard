@@ -125,5 +125,21 @@
   "pushPermissionDeniedHint": "Notifiche disattivate",
   "@pushPermissionDeniedHint": {},
   "pushTestFailed": "Test notifica push non riuscito.",
-  "@pushTestFailed": {}
+  "@pushTestFailed": {},
+  "todosAddPlaceholder": "Aggiungi una cosa da fare…",
+  "@todosAddPlaceholder": {},
+  "todosAddButton": "Aggiungi",
+  "@todosAddButton": {},
+  "todosDeleteConfirm": "Eliminare questa cosa da fare?",
+  "@todosDeleteConfirm": {},
+  "todosErrorTooMany": "Numero massimo di cose da fare raggiunto.",
+  "@todosErrorTooMany": {},
+  "todosErrorGeneric": "Impossibile aggiornare la cosa da fare.",
+  "@todosErrorGeneric": {},
+  "choresUndoConfirm": "Annullare la stella di oggi?",
+  "@choresUndoConfirm": {},
+  "choresErrorGeneric": "Impossibile aggiornare la faccenda.",
+  "@choresErrorGeneric": {},
+  "mutationErrorRetry": "Riprova",
+  "@mutationErrorRetry": {}
 }
