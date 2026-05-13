@@ -161,7 +161,7 @@
   "calendarErrorGeneric": "Impossibile caricare gli eventi.",
   "@calendarErrorGeneric": {},
   "calendarErrorRetry": "Riprova",
-  "@calendarErrorRetry": {}
+  "@calendarErrorRetry": {},
   "groceryTitle": "Spesa",
   "@groceryTitle": {},
   "groceryOpenAria": "Apri la lista della spesa",
@@ -235,6 +235,29 @@
     "placeholders": {
       "name": { "type": "String", "example": "Mia" }
     }
+  },
+  "mealPlanTitle": "Piano pasti",
+  "@mealPlanTitle": {},
+  "mealPlanOpenAria": "Apri il piano pasti",
+  "@mealPlanOpenAria": {},
+  "mealPlanEmpty": "Nessun pasto pianificato questa settimana.",
+  "@mealPlanEmpty": {},
+  "mealPlanEmptySubtitle": "Aggiungi pasti sul FamilyBoard.",
+  "@mealPlanEmptySubtitle": {},
+  "mealPlanSlotBreakfast": "Colazione",
+  "@mealPlanSlotBreakfast": {},
+  "mealPlanSlotLunch": "Pranzo",
+  "@mealPlanSlotLunch": {},
+  "mealPlanSlotDinner": "Cena",
+  "@mealPlanSlotDinner": {},
+  "mealPlanSlotSnack": "Spuntino",
+  "@mealPlanSlotSnack": {},
+  "mealPlanLoadError": "Impossibile caricare il piano pasti.",
+  "@mealPlanLoadError": {},
+  "mealPlanWeekOf": "Settimana del {date}",
+  "@mealPlanWeekOf": {
+    "placeholders": {
+      "date": { "type": "String", "example": "13 maggio 2026" }
+    }
   }
-  "@groceryCategoryUncategorized": {}
 }

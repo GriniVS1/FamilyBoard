@@ -161,7 +161,7 @@
   "calendarErrorGeneric": "Impossible de charger les événements.",
   "@calendarErrorGeneric": {},
   "calendarErrorRetry": "Réessayer",
-  "@calendarErrorRetry": {}
+  "@calendarErrorRetry": {},
   "groceryTitle": "Courses",
   "@groceryTitle": {},
   "groceryOpenAria": "Ouvrir la liste de courses",
@@ -235,6 +235,29 @@
     "placeholders": {
       "name": { "type": "String", "example": "Mia" }
     }
+  },
+  "mealPlanTitle": "Plan de repas",
+  "@mealPlanTitle": {},
+  "mealPlanOpenAria": "Ouvrir le plan de repas",
+  "@mealPlanOpenAria": {},
+  "mealPlanEmpty": "Aucun repas planifié cette semaine.",
+  "@mealPlanEmpty": {},
+  "mealPlanEmptySubtitle": "Ajoute des repas sur le FamilyBoard.",
+  "@mealPlanEmptySubtitle": {},
+  "mealPlanSlotBreakfast": "Petit-déjeuner",
+  "@mealPlanSlotBreakfast": {},
+  "mealPlanSlotLunch": "Déjeuner",
+  "@mealPlanSlotLunch": {},
+  "mealPlanSlotDinner": "Dîner",
+  "@mealPlanSlotDinner": {},
+  "mealPlanSlotSnack": "Collation",
+  "@mealPlanSlotSnack": {},
+  "mealPlanLoadError": "Impossible de charger le plan de repas.",
+  "@mealPlanLoadError": {},
+  "mealPlanWeekOf": "Semaine du {date}",
+  "@mealPlanWeekOf": {
+    "placeholders": {
+      "date": { "type": "String", "example": "13 mai 2026" }
+    }
   }
-  "@groceryCategoryUncategorized": {}
 }
