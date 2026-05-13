@@ -9,7 +9,7 @@ import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
 import { postJson } from "@/components/setup/types";
 
-const PIN_LENGTH = 4;
+const PIN_LENGTH = 6;
 
 type PinGateProps = {
   onUnlock: () => void;
