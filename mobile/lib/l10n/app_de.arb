@@ -185,35 +185,5 @@
   "groceryCategoryOther": "Sonstiges",
   "@groceryCategoryOther": {},
   "groceryCategoryUncategorized": "Ohne Kategorie",
-  "@groceryCategoryUncategorized": {},
-  "notesTitle": "Notizen",
-  "@notesTitle": {},
-  "notesOpenAria": "Notizen öffnen",
-  "@notesOpenAria": {},
-  "notesEmpty": "Noch keine Notizen.",
-  "@notesEmpty": {},
-  "notesEmptySubtitle": "Tippe auf +, um eine für deine Familie zu hinterlassen.",
-  "@notesEmptySubtitle": {},
-  "notesCreate": "Neue Notiz",
-  "@notesCreate": {},
-  "notesEdit": "Notiz bearbeiten",
-  "@notesEdit": {},
-  "notesBodyPlaceholder": "Was beschäftigt dich?",
-  "@notesBodyPlaceholder": {},
-  "notesColor": "Farbe",
-  "@notesColor": {},
-  "notesPinned": "Ans Dashboard angeheftet",
-  "@notesPinned": {},
-  "notesDeleteConfirm": "Diese Notiz löschen?",
-  "@notesDeleteConfirm": {},
-  "notesErrorTooMany": "Maximale Anzahl Notizen erreicht.",
-  "@notesErrorTooMany": {},
-  "notesErrorGeneric": "Notiz konnte nicht aktualisiert werden.",
-  "@notesErrorGeneric": {},
-  "notesByAuthor": "{name, select, other {von {name}}}",
-  "@notesByAuthor": {
-    "placeholders": {
-      "name": { "type": "String", "example": "Mia" }
-    }
-  }
+  "@groceryCategoryUncategorized": {}
 }

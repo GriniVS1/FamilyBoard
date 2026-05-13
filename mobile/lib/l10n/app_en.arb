@@ -224,4 +224,5 @@
       "name": { "type": "String", "example": "Mia" }
     }
   }
+  "@groceryCategoryUncategorized": {}
 }
