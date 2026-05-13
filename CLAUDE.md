@@ -110,6 +110,39 @@ If the agents aren't available in your session (they only load when you start Cl
 
 ## v1 / v2 / v3 roadmap
 
-- **v1 (current):** setup wizard, dashboard, calendar with Google 2-way sync, chores + stars, to-dos, notes, photos, weather, settings + PIN, dark mode, Docker (multi-arch).
-- **v2:** meal planning + recipes + grocery list, Apple/Outlook/CalDAV sync, smart-home hub, mobile companion app (Flutter, see `./mobile/`), push notifications, Google Photos.
-- **v3 (commercial):** license activation flow, remote license-server check-in (extend `src/lib/license.ts`), billing portal link, plan tiers, graceful degradation when expired, OTA updates. The `Installation` model is already in place.
+- **v1 — shipped.** setup wizard, dashboard, calendar with Google 2-way sync, chores + stars, to-dos, notes, photos, weather, settings + PIN (6-digit), dark mode, Docker (multi-arch), i18n (en/de/fr/it).
+- **v2 — mostly shipped.** Done: meal planning + recipes + grocery (#3), PWA push notifications (#4), CalDAV sync (#5), Outlook / Microsoft Graph sync (#6), Flutter mobile app with pairing + FCM native push + Today/Todos/Chores/Grocery/Notes/Calendar-agenda screens (#8–11, #17–20). Still open: Apple Photos / Google Photos import, smart-home hub, offline drift cache + write-queue on mobile.
+- **v3 (commercial) — not started.** license activation flow, remote license-server check-in (extend `src/lib/license.ts`), billing portal link, plan tiers, graceful degradation when expired, OTA updates. The `Installation` model is already in place.
+
+### Mobile app status (`./mobile/`)
+
+Per-screen feature parity with the wall:
+
+| Screen | Read | Write |
+|---|---|---|
+| Today / Dashboard | ✓ (M2.2a) | ✓ (M2.2b) |
+| Calendar (agenda) | ✓ (M3.3) | — (M3.4) |
+| Todos | ✓ | ✓ (M2.2b) |
+| Chores | ✓ | ✓ (M2.2b) |
+| Grocery | ✓ (M3.1) | ✓ (M3.1) |
+| Notes | ✓ (M3.2) | ✓ (M3.2) |
+| Meal plan | — (M3.4) | — |
+| Settings / member admin / OAuth | wall only | wall only |
+
+Bearer-auth API surface lives under `src/app/api/mobile/**`, all routes go through `requireMobileAuth` from `src/lib/mobile-auth.ts`. Mutations follow the optimistic-flag + `ref.invalidate(<provider>)` pattern; 401 clears the session and lets `go_router` redirect to `/pair`.
+
+### Known gaps / next slices
+
+- **M3.4** — mobile meal-plan read + tick grocery items from this week's plan. Same pattern as Grocery: 1 read endpoint + screen.
+- **M3.5** — offline drift cache. Local SQLite, write-queue replays on reconnect. Big architectural slice.
+- **iOS launcher icon** — skipped because `mobile/ios/Runner/Assets.xcassets` doesn't exist in this checkout. Once `flutter create -t app .` is rerun cleanly on iOS, extend `scripts/generate-app-icons.mjs` with an `ios` section.
+- **Daily-digest push body i18n** — currently English-only. Needs the family's locale in the tick endpoint.
+- **RRULE expansion** for recurring events on all sync providers. Single-occurrence only across Google / CalDAV / Microsoft.
+
+### Useful files for a fresh agent landing on this codebase
+
+- `scripts/generate-app-icons.mjs` — re-renders PWA + Android icons from inline SVG via `sharp`. Brand tokens at the top.
+- `src/lib/mobile-auth.ts` — bearer-auth pattern used by all `/api/mobile/*` routes.
+- `src/lib/notifications.ts` + `src/lib/fcm.ts` — fan-out web push + FCM in parallel.
+- `mobile/lib/widgets/familyboard_logo.dart` + `src/components/shared/logo.tsx` — keep CORAL / INK / CREAM in sync if rebranding.
+- `mobile/tool/sync_messages.dart` — verifies ARB parity across en/de/fr/it.
