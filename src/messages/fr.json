@@ -387,6 +387,8 @@
       "title": "Membres",
       "description": "Modifier les profils, gérer les rôles et connecter le calendrier Google de chaque membre.",
       "add": "Ajouter un membre",
+      "addMember": "Ajouter un membre",
+      "maxReachedHint": "Maximum de {max} membres atteint.",
       "remove": "Supprimer le membre",
       "noMembers": "Aucun membre pour l'instant.",
       "editMember": "Modifier {name}"

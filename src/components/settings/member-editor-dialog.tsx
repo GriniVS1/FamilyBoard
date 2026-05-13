@@ -15,14 +15,31 @@ import { MEMBER_EMOJIS } from "@/components/setup/types";
 import { MEMBER_COLORS, cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import type { CalendarMember } from "@/components/calendar/types";
 
+type MemberPatch = {
+  name?: string;
+  color?: string;
+  emoji?: string | null;
+  role?: string;
+};
+
+type MemberCreateInput = {
+  name: string;
+  color: MemberColor;
+  emoji?: string | null;
+  role?: string;
+};
+
 type MemberEditorDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /**
+   * Member being edited. `null` puts the dialog into create-mode: title +
+   * primary button copy change, delete button is hidden, submission calls
+   * `onCreate` instead of `onSave`.
+   */
   member: CalendarMember | null;
-  onSave: (
-    id: string,
-    patch: { name?: string; color?: string; emoji?: string | null; role?: string },
-  ) => Promise<void>;
+  onSave: (id: string, patch: MemberPatch) => Promise<void>;
+  onCreate: (input: MemberCreateInput) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
 };
 
@@ -50,10 +67,13 @@ export function MemberEditorDialog({
   onOpenChange,
   member,
   onSave,
+  onCreate,
   onDelete,
 }: MemberEditorDialogProps) {
   const t = useTranslations("setup.members");
+  const tSettings = useTranslations("settings");
   const tCommon = useTranslations("common");
+  const isCreate = member === null;
   const [state, setState] = useState<FormState>(() => makeState(member));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +91,6 @@ export function MemberEditorDialog({
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!member) return;
     if (!state.name.trim()) {
       setError(tCommon("error"));
       return;
@@ -79,12 +98,21 @@ export function MemberEditorDialog({
     setSubmitting(true);
     setError(null);
     try {
-      await onSave(member.id, {
-        name: state.name.trim(),
-        color: state.color,
-        emoji: state.emoji,
-        role: state.role,
-      });
+      if (member) {
+        await onSave(member.id, {
+          name: state.name.trim(),
+          color: state.color,
+          emoji: state.emoji,
+          role: state.role,
+        });
+      } else {
+        await onCreate({
+          name: state.name.trim(),
+          color: state.color,
+          emoji: state.emoji,
+          role: state.role,
+        });
+      }
       onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : tCommon("error"));
@@ -118,7 +146,9 @@ export function MemberEditorDialog({
       <DialogContent>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           <div className="flex items-start justify-between gap-3 pr-10">
-            <DialogTitle>{tCommon("edit")}</DialogTitle>
+            <DialogTitle>
+              {isCreate ? tSettings("members.addMember") : tCommon("edit")}
+            </DialogTitle>
           </div>
 
           <div className="space-y-2">
@@ -206,16 +236,20 @@ export function MemberEditorDialog({
           )}
 
           <div className="flex items-center justify-between gap-3 pt-2">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={handleDelete}
-              disabled={submitting}
-              className="text-accent-rose hover:bg-accent-rose/10"
-            >
-              <Trash2 className="size-4" />
-              {tCommon("delete")}
-            </Button>
+            {isCreate ? (
+              <span />
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleDelete}
+                disabled={submitting}
+                className="text-accent-rose hover:bg-accent-rose/10"
+              >
+                <Trash2 className="size-4" />
+                {tCommon("delete")}
+              </Button>
+            )}
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -226,7 +260,11 @@ export function MemberEditorDialog({
                 {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? tCommon("saving") : tCommon("save")}
+                {submitting
+                  ? tCommon("saving")
+                  : isCreate
+                    ? tSettings("members.addMember")
+                    : tCommon("save")}
               </Button>
             </div>
           </div>
