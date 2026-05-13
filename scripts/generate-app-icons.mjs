@@ -28,7 +28,8 @@
  */
 
 import sharp from "sharp";
-import { mkdir } from "node:fs/promises";
+import { access, mkdir } from "node:fs/promises";
+import { constants as fsConstants } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -71,15 +72,38 @@ ${bullseye({ ring })}
 </svg>`;
 }
 
+function squareWithBg({ bg, ring }) {
+  // iOS icons MUST be solid squares (no rounded corners, no alpha). The system
+  // applies the corner mask itself. Same bullseye geometry as the rounded
+  // variant, just on a flat rect.
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${ICON_SIZE}" height="${ICON_SIZE}" viewBox="0 0 ${ICON_SIZE} ${ICON_SIZE}">
+  <rect width="${ICON_SIZE}" height="${ICON_SIZE}" fill="${bg}"/>
+${bullseye({ ring })}
+</svg>`;
+}
+
 const SVG = {
   light: withBg({ bg: CREAM, ring: INK }),
   dark: withBg({ bg: INK, ring: CREAM }),
   fg: transparent({ ring: INK }),
+  iosLight: squareWithBg({ bg: CREAM, ring: INK }),
 };
 
 async function writePng(svg, outPath, size) {
   await mkdir(dirname(outPath), { recursive: true });
   await sharp(Buffer.from(svg)).resize(size, size).png().toFile(outPath);
+  console.log(`  ✓ ${outPath.replace(ROOT + "/", "")} (${size}×${size})`);
+}
+
+async function writeIosPng(svg, outPath, size) {
+  // iOS icons reject any alpha channel. Flatten against cream so the cream
+  // background fills the full square edge-to-edge (no transparency leaks).
+  await mkdir(dirname(outPath), { recursive: true });
+  await sharp(Buffer.from(svg))
+    .resize(size, size)
+    .flatten({ background: CREAM })
+    .png({ compressionLevel: 9 })
+    .toFile(outPath);
   console.log(`  ✓ ${outPath.replace(ROOT + "/", "")} (${size}×${size})`);
 }
 
@@ -100,6 +124,28 @@ const ANDROID_FOREGROUND = [
   { density: "xhdpi", size: 216 },
   { density: "xxhdpi", size: 324 },
   { density: "xxxhdpi", size: 432 },
+];
+
+// iOS AppIcon.appiconset — 15 sizes covering iPhone + iPad + App Store
+// marketing. Filenames match the default Flutter `flutter create` output
+// and are referenced from Contents.json. Don't rename without also
+// editing that file.
+const IOS_APPICON = [
+  { name: "Icon-App-20x20@1x.png", size: 20 },
+  { name: "Icon-App-20x20@2x.png", size: 40 },
+  { name: "Icon-App-20x20@3x.png", size: 60 },
+  { name: "Icon-App-29x29@1x.png", size: 29 },
+  { name: "Icon-App-29x29@2x.png", size: 58 },
+  { name: "Icon-App-29x29@3x.png", size: 87 },
+  { name: "Icon-App-40x40@1x.png", size: 40 },
+  { name: "Icon-App-40x40@2x.png", size: 80 },
+  { name: "Icon-App-40x40@3x.png", size: 120 },
+  { name: "Icon-App-60x60@2x.png", size: 120 },
+  { name: "Icon-App-60x60@3x.png", size: 180 },
+  { name: "Icon-App-76x76@1x.png", size: 76 },
+  { name: "Icon-App-76x76@2x.png", size: 152 },
+  { name: "Icon-App-83.5x83.5@2x.png", size: 167 },
+  { name: "Icon-App-1024x1024@1x.png", size: 1024 },
 ];
 
 async function main() {
@@ -133,11 +179,26 @@ async function main() {
     );
   }
 
+  // iOS — AppIcon.appiconset (15 sizes, all light variant, no alpha).
+  // Skip silently if the asset catalog doesn't exist yet — keeps the script
+  // safe to run on checkouts where `flutter create -t app .` hasn't been run.
+  const iosDir = resolve(
+    ROOT,
+    "mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset",
+  );
+  try {
+    await access(iosDir, fsConstants.F_OK);
+    for (const { name, size } of IOS_APPICON) {
+      await writeIosPng(SVG.iosLight, resolve(iosDir, name), size);
+    }
+  } catch {
+    console.log("");
+    console.log("⚠  iOS AppIcon.appiconset not found — skipping iOS icons.");
+    console.log("   Run `cd mobile && flutter create -t app --platforms=ios .`");
+    console.log("   to scaffold it, then re-run this script.");
+  }
+
   console.log("\nDone.");
-  console.log("");
-  console.log("iOS app icon is NOT generated — Runner/Assets.xcassets is missing in this checkout.");
-  console.log("If you need iOS icons, run `flutter create -t app .` once in mobile/ to scaffold the");
-  console.log("native iOS shell, then re-run this script after extending it with an `ios` section.");
 }
 
 main().catch((err) => {
