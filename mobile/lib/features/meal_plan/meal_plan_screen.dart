@@ -2,26 +2,144 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../app.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/meal_plan.dart';
+import '../../models/session.dart';
 import '../../services/meal_plan_service.dart';
+import '../../state/grocery_provider.dart';
 import '../../state/meal_plan_provider.dart';
 import '../../state/session_provider.dart';
 import '../../theme.dart';
 import '../../widgets/familyboard_logo.dart';
 
-class MealPlanScreen extends ConsumerWidget {
+class MealPlanScreen extends ConsumerStatefulWidget {
   const MealPlanScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MealPlanScreen> createState() => _MealPlanScreenState();
+}
+
+class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
+  bool _generateBusy = false;
+
+  Future<void> _onGenerateGrocery(
+    List<MealPlan> plans,
+    AppL10n l10n,
+  ) async {
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: Text(l10n.mealPlanGenerateGroceryConfirmTitle),
+        content: Text(l10n.mealPlanGenerateGroceryConfirmBody),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.mealPlanGenerateGroceryConfirmAdd),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    final SessionState sessionState = ref.read(sessionProvider);
+    final Session? session = sessionState.session;
+    if (session == null) {
+      return;
+    }
+
+    final DateTime now = DateTime.now();
+    final DateTime weekStart =
+        DateTime(now.year, now.month, now.day - (now.weekday - 1));
+
+    setState(() => _generateBusy = true);
+    try {
+      final int count = await ref
+          .read(mealPlanServiceProvider)
+          .generateGroceryFromWeek(session, startDate: weekStart);
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(groceryProvider);
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(
+            count == 0
+                ? l10n.mealPlanGenerateGroceryToastZero
+                : l10n.mealPlanGenerateGroceryToast(count),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on MealPlanGroceryCapReachedException {
+      if (!mounted) {
+        return;
+      }
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.mealPlanGenerateGroceryErrorCap),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on MealPlanSessionRevokedException {
+      if (!mounted) {
+        return;
+      }
+      await ref.read(sessionProvider.notifier).clear();
+    } on MealPlanFetchException {
+      if (!mounted) {
+        return;
+      }
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.mealPlanGenerateGroceryErrorGeneric),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _generateBusy = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
     final AsyncValue<List<MealPlan>> mealPlanAsync =
         ref.watch(mealPlanProvider);
 
+    final List<MealPlan>? plans = mealPlanAsync.valueOrNull;
+    final bool hasPlans = plans != null && plans.isNotEmpty;
+
     return Scaffold(
       appBar: AppBar(
         title: const FamilyBoardLogo(fontSize: 18),
+        actions: hasPlans
+            ? <Widget>[
+                if (_generateBusy)
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                else
+                  IconButton(
+                    icon: const Icon(Icons.shopping_basket_outlined),
+                    tooltip: l10n.mealPlanGenerateGrocery,
+                    onPressed: () => _onGenerateGrocery(plans, l10n),
+                  ),
+              ]
+            : null,
       ),
       body: SafeArea(
         child: RefreshIndicator(
@@ -41,7 +159,7 @@ class MealPlanScreen extends ConsumerWidget {
                 await ref.read(sessionProvider.notifier).clear();
               },
             ),
-            data: (List<MealPlan> plans) => plans.isEmpty
+            data: (List<MealPlan> planList) => planList.isEmpty
                 ? ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: <Widget>[
@@ -51,7 +169,7 @@ class MealPlanScreen extends ConsumerWidget {
                       ),
                     ],
                   )
-                : _WeekBody(plans: plans, l10n: l10n),
+                : _WeekBody(plans: planList, l10n: l10n),
           ),
         ),
       ),
