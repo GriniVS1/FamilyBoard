@@ -92,6 +92,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         title: const FamilyBoardLogo(fontSize: 18),
         actions: <Widget>[
           IconButton(
+            icon: const Icon(Icons.event_outlined),
+            tooltip: l10n.calendarOpenAria,
+            onPressed: () => context.go('/calendar'),
             icon: const Icon(Icons.sticky_note_2_outlined),
             tooltip: l10n.notesOpenAria,
             onPressed: () => context.go('/notes'),
