@@ -193,5 +193,36 @@
   "groceryCategoryOther": "Other",
   "@groceryCategoryOther": {},
   "groceryCategoryUncategorized": "Uncategorized",
+  "@groceryCategoryUncategorized": {},
+  "notesTitle": "Notes",
+  "@notesTitle": {},
+  "notesOpenAria": "Open notes",
+  "@notesOpenAria": {},
+  "notesEmpty": "No notes yet.",
+  "@notesEmpty": {},
+  "notesEmptySubtitle": "Tap + to leave one for your family.",
+  "@notesEmptySubtitle": {},
+  "notesCreate": "New note",
+  "@notesCreate": {},
+  "notesEdit": "Edit note",
+  "@notesEdit": {},
+  "notesBodyPlaceholder": "What's on your mind?",
+  "@notesBodyPlaceholder": {},
+  "notesColor": "Color",
+  "@notesColor": {},
+  "notesPinned": "Pinned to dashboard",
+  "@notesPinned": {},
+  "notesDeleteConfirm": "Delete this note?",
+  "@notesDeleteConfirm": {},
+  "notesErrorTooMany": "Maximum notes reached.",
+  "@notesErrorTooMany": {},
+  "notesErrorGeneric": "Couldn't update the note.",
+  "@notesErrorGeneric": {},
+  "notesByAuthor": "{name, select, other {by {name}}}",
+  "@notesByAuthor": {
+    "placeholders": {
+      "name": { "type": "String", "example": "Mia" }
+    }
+  }
   "@groceryCategoryUncategorized": {}
 }

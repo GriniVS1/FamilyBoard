@@ -185,5 +185,36 @@
   "groceryCategoryOther": "Altro",
   "@groceryCategoryOther": {},
   "groceryCategoryUncategorized": "Senza categoria",
+  "@groceryCategoryUncategorized": {},
+  "notesTitle": "Note",
+  "@notesTitle": {},
+  "notesOpenAria": "Apri le note",
+  "@notesOpenAria": {},
+  "notesEmpty": "Nessuna nota ancora.",
+  "@notesEmpty": {},
+  "notesEmptySubtitle": "Tocca + per lasciarne una alla tua famiglia.",
+  "@notesEmptySubtitle": {},
+  "notesCreate": "Nuova nota",
+  "@notesCreate": {},
+  "notesEdit": "Modifica nota",
+  "@notesEdit": {},
+  "notesBodyPlaceholder": "Cosa hai in mente?",
+  "@notesBodyPlaceholder": {},
+  "notesColor": "Colore",
+  "@notesColor": {},
+  "notesPinned": "Fissato alla dashboard",
+  "@notesPinned": {},
+  "notesDeleteConfirm": "Eliminare questa nota?",
+  "@notesDeleteConfirm": {},
+  "notesErrorTooMany": "Numero massimo di note raggiunto.",
+  "@notesErrorTooMany": {},
+  "notesErrorGeneric": "Impossibile aggiornare la nota.",
+  "@notesErrorGeneric": {},
+  "notesByAuthor": "{name, select, other {di {name}}}",
+  "@notesByAuthor": {
+    "placeholders": {
+      "name": { "type": "String", "example": "Mia" }
+    }
+  }
   "@groceryCategoryUncategorized": {}
 }
