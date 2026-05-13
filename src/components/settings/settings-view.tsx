@@ -10,6 +10,7 @@ import {
   Globe,
   Lock,
   Pencil,
+  Plus,
   RotateCcw,
   ShieldCheck,
   X,
@@ -138,10 +139,30 @@ export function SettingsView({
     },
   });
 
+  const memberAddMutation = useMutation({
+    mutationFn: (input: {
+      name: string;
+      color: string;
+      emoji?: string | null;
+      role?: string;
+    }) => jsonRequest<CalendarMember>("/api/members", "POST", input),
+    onSuccess: (data) => {
+      setMemberList((prev) => [...prev, data]);
+    },
+  });
+
   function openMemberEdit(m: CalendarMember) {
     setMemberEditing(m);
     setMemberDialogOpen(true);
   }
+
+  function openMemberAdd() {
+    setMemberEditing(null);
+    setMemberDialogOpen(true);
+  }
+
+  const MAX_MEMBERS = 8;
+  const canAddMember = memberList.length < MAX_MEMBERS;
 
   function bannerMessage(): string {
     if (!banner) return "";
@@ -244,12 +265,27 @@ export function SettingsView({
 
       <GateOverlay locked={!unlocked}>
         <GlassCard className="flex flex-col gap-4 p-6">
-          <div className="space-y-1">
-            <h2 className="font-display text-xl text-ink">{t("members.title")}</h2>
-            <p className="text-sm text-muted">
-              {t("members.description")}
-            </p>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="space-y-1">
+              <h2 className="font-display text-xl text-ink">{t("members.title")}</h2>
+              <p className="text-sm text-muted">{t("members.description")}</p>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={openMemberAdd}
+              disabled={!unlocked || !canAddMember}
+              aria-label={t("members.addMember")}
+            >
+              <Plus className="size-4" />
+              <span className="hidden sm:inline">{t("members.addMember")}</span>
+            </Button>
           </div>
+          {!canAddMember && (
+            <p className="text-xs text-muted">
+              {t("members.maxReachedHint", { max: MAX_MEMBERS })}
+            </p>
+          )}
 
           <ul className="flex flex-col gap-4">
             {memberList.map((m) => (
@@ -366,6 +402,9 @@ export function SettingsView({
         member={memberEditing}
         onSave={async (id, patch) => {
           await memberSaveMutation.mutateAsync({ id, patch });
+        }}
+        onCreate={async (input) => {
+          await memberAddMutation.mutateAsync(input);
         }}
         onDelete={async (id) => {
           await memberDeleteMutation.mutateAsync(id);

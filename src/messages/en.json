@@ -387,6 +387,8 @@
       "title": "Members",
       "description": "Edit profiles, manage roles, and connect each member's Google Calendar.",
       "add": "Add member",
+      "addMember": "Add member",
+      "maxReachedHint": "Maximum of {max} members reached.",
       "remove": "Remove member",
       "noMembers": "No members yet.",
       "editMember": "Edit {name}"

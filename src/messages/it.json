@@ -387,6 +387,8 @@
       "title": "Membri",
       "description": "Modifica profili, gestisci ruoli e connetti il Google Calendar di ogni membro.",
       "add": "Aggiungi membro",
+      "addMember": "Aggiungi membro",
+      "maxReachedHint": "Raggiunto il massimo di {max} membri.",
       "remove": "Rimuovi membro",
       "noMembers": "Nessun membro ancora.",
       "editMember": "Modifica {name}"

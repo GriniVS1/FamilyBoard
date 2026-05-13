@@ -387,6 +387,8 @@
       "title": "Mitglieder",
       "description": "Profile bearbeiten, Rollen verwalten und Google Kalender verbinden.",
       "add": "Mitglied hinzufügen",
+      "addMember": "Mitglied hinzufügen",
+      "maxReachedHint": "Maximum von {max} Mitgliedern erreicht.",
       "remove": "Mitglied entfernen",
       "noMembers": "Noch keine Mitglieder.",
       "editMember": "{name} bearbeiten"
