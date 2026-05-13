@@ -5,6 +5,7 @@ import { pushLocalEvent } from "@/lib/sync";
 import { pushLocalEventToCaldav } from "@/lib/caldav";
 import { pushLocalEventToMicrosoft } from "@/lib/microsoft";
 import { sendNotificationToFamily } from "@/lib/notifications";
+import { getNotificationTranslator } from "@/lib/notification-i18n";
 
 export const runtime = "nodejs";
 
@@ -104,12 +105,15 @@ export const POST = withErrorHandling(async (req) => {
   }
 
   // Fire-and-forget — don't delay the response for push delivery.
-  void sendNotificationToFamily(member.familyId, {
-    title: `New event: ${event.title}`,
-    body: `Added to the calendar`,
-    url: "/calendar",
-    tag: `new-event-${event.id}`,
-  }).catch(() => {
+  void (async () => {
+    const { t } = await getNotificationTranslator();
+    await sendNotificationToFamily(member.familyId, {
+      title: t("notifications.eventCreate.title", { title: event.title }),
+      body: t("notifications.eventCreate.body"),
+      url: "/calendar",
+      tag: `new-event-${event.id}`,
+    });
+  })().catch(() => {
     // Swallow silently — no subscriptions yet or push service unavailable.
   });
 

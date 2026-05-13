@@ -651,6 +651,14 @@
     "eventReminder": {
       "body": "Beginnt um {time}"
     },
+    "eventCreate": {
+      "title": "Neuer Termin: {title}",
+      "body": "Im Kalender eingetragen"
+    },
+    "mealCreate": {
+      "title": "Mahlzeit geplant",
+      "fallback": "Eine Mahlzeit"
+    },
     "digest": {
       "title": "Heutiger Plan",
       "empty": "Heute nichts geplant",

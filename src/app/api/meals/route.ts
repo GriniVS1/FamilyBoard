@@ -3,6 +3,7 @@ import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { MEAL_SLOTS } from "@/lib/enums";
 import { sendNotificationToFamily } from "@/lib/notifications";
+import { getNotificationTranslator } from "@/lib/notification-i18n";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -113,16 +114,20 @@ export const POST = withErrorHandling(async (req) => {
     },
   });
 
-  const mealName =
-    plan.recipe?.name ?? plan.customName ?? "A meal";
-
   // Fire-and-forget — don't delay the response for push delivery.
-  void sendNotificationToFamily(family.id, {
-    title: "Meal planned",
-    body: mealName,
-    url: "/meals",
-    tag: `meal-plan-${plan.id}`,
-  }).catch(() => {
+  void (async () => {
+    const { t } = await getNotificationTranslator();
+    const mealName =
+      plan.recipe?.name ??
+      plan.customName ??
+      t("notifications.mealCreate.fallback");
+    await sendNotificationToFamily(family.id, {
+      title: t("notifications.mealCreate.title"),
+      body: mealName,
+      url: "/meals",
+      tag: `meal-plan-${plan.id}`,
+    });
+  })().catch(() => {
     // Swallow silently — no subscriptions yet or push service unavailable.
   });
 
