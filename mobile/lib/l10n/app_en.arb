@@ -169,7 +169,7 @@
   "calendarErrorGeneric": "Couldn't load events.",
   "@calendarErrorGeneric": {},
   "calendarErrorRetry": "Retry",
-  "@calendarErrorRetry": {}
+  "@calendarErrorRetry": {},
   "groceryTitle": "Grocery",
   "@groceryTitle": {},
   "groceryOpenAria": "Open grocery list",
@@ -243,6 +243,29 @@
     "placeholders": {
       "name": { "type": "String", "example": "Mia" }
     }
+  },
+  "mealPlanTitle": "Meal Plan",
+  "@mealPlanTitle": {},
+  "mealPlanOpenAria": "Open meal plan",
+  "@mealPlanOpenAria": {},
+  "mealPlanEmpty": "No meals planned this week.",
+  "@mealPlanEmpty": {},
+  "mealPlanEmptySubtitle": "Add meals on the FamilyBoard.",
+  "@mealPlanEmptySubtitle": {},
+  "mealPlanSlotBreakfast": "Breakfast",
+  "@mealPlanSlotBreakfast": {},
+  "mealPlanSlotLunch": "Lunch",
+  "@mealPlanSlotLunch": {},
+  "mealPlanSlotDinner": "Dinner",
+  "@mealPlanSlotDinner": {},
+  "mealPlanSlotSnack": "Snack",
+  "@mealPlanSlotSnack": {},
+  "mealPlanLoadError": "Couldn't load meal plan.",
+  "@mealPlanLoadError": {},
+  "mealPlanWeekOf": "Week of {date}",
+  "@mealPlanWeekOf": {
+    "placeholders": {
+      "date": { "type": "String", "example": "13 May 2026" }
+    }
   }
-  "@groceryCategoryUncategorized": {}
 }

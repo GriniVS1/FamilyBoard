@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'features/calendar/calendar_screen.dart';
 import 'features/grocery/grocery_screen.dart';
 import 'features/home/home_screen.dart';
+import 'features/meal_plan/meal_plan_screen.dart';
 import 'features/notes/notes_screen.dart';
 import 'features/pair/pair_screen.dart';
 import 'features/splash/splash_screen.dart';
@@ -58,9 +59,10 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
         }
         if (location == '/splash' ||
             location == '/home' ||
-            location == '/calendar') {
-            location == '/notes') {
-            location == '/grocery') {
+            location == '/calendar' ||
+            location == '/notes' ||
+            location == '/grocery' ||
+            location == '/meal-plan') {
           return '/pair';
         }
         return null;
@@ -85,12 +87,21 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           path: '/calendar',
           builder: (BuildContext context, GoRouterState routerState) =>
               const CalendarScreen(),
+        ),
+        GoRoute(
           path: '/notes',
           builder: (BuildContext context, GoRouterState routerState) =>
               const NotesScreen(),
+        ),
+        GoRoute(
           path: '/grocery',
           builder: (BuildContext context, GoRouterState routerState) =>
               const GroceryScreen(),
+        ),
+        GoRoute(
+          path: '/meal-plan',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const MealPlanScreen(),
         ),
       ],
     );

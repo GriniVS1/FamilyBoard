@@ -6,6 +6,7 @@ import '../services/events_service.dart';
 import '../services/fcm_service.dart';
 import '../services/grocery_service.dart';
 import '../services/heartbeat_service.dart';
+import '../services/meal_plan_service.dart';
 import '../services/mutations_service.dart';
 import '../services/notes_service.dart';
 import '../services/pair_service.dart';
@@ -42,14 +43,24 @@ final Provider<EventsService> eventsServiceProvider = Provider<EventsService>(
   (Ref ref) => EventsService(
     clientFactory: ref.watch(apiClientFactoryProvider),
   ),
+);
+
 final Provider<NotesService> notesServiceProvider = Provider<NotesService>(
   (Ref ref) => NotesService(
     clientFactory: ref.watch(apiClientFactoryProvider),
   ),
+);
+
 final Provider<GroceryService> groceryServiceProvider =
     Provider<GroceryService>(
   (Ref ref) =>
       GroceryService(clientFactory: ref.watch(apiClientFactoryProvider)),
+);
+
+final Provider<MealPlanService> mealPlanServiceProvider =
+    Provider<MealPlanService>(
+  (Ref ref) =>
+      MealPlanService(clientFactory: ref.watch(apiClientFactoryProvider)),
 );
 
 class SessionState {
