@@ -1,5 +1,6 @@
 import { ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
+import { getNotificationTranslator } from "@/lib/notification-i18n";
 import { sendNotificationToFamily } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -73,6 +74,8 @@ export const POST = withErrorHandling(async () => {
   const family = await db.family.findFirst({ select: { id: true } });
   if (!family) return ok({ checked: 0, sent: 0 });
 
+  const { t } = await getNotificationTranslator();
+
   const now = new Date();
   const horizon = new Date(now.getTime() + 75 * 60 * 1000);
   const todayKey = toLocalDateString();
@@ -100,7 +103,7 @@ export const POST = withErrorHandling(async () => {
       toNotify.map(async (event) => {
         const result = await sendNotificationToFamily(family.id, {
           title: event.title,
-          body: `Starts at ${formatHHMM(event.startsAt)}`,
+          body: t("notifications.eventReminder.body", { time: formatHHMM(event.startsAt) }),
           url: "/calendar",
           tag: `event-reminder-${event.id}`,
         });
@@ -116,7 +119,7 @@ export const POST = withErrorHandling(async () => {
   if (hour === 8) {
     const lastDigest = await db.setting.findUnique({ where: { key: DIGEST_KEY } });
     if (lastDigest?.value !== todayKey) {
-      const digestResult = await buildAndSendDigest(family.id, now);
+      const digestResult = await buildAndSendDigest(family.id, now, t);
       totalSent += digestResult;
       await db.setting.upsert({
         where: { key: DIGEST_KEY },
@@ -129,9 +132,12 @@ export const POST = withErrorHandling(async () => {
   return ok({ checked, sent: totalSent });
 });
 
+type Translator = Awaited<ReturnType<typeof getNotificationTranslator>>["t"];
+
 async function buildAndSendDigest(
   familyId: string,
   now: Date,
+  t: Translator,
 ): Promise<number> {
   const dayStart = new Date(now);
   dayStart.setHours(0, 0, 0, 0);
@@ -162,26 +168,25 @@ async function buildAndSendDigest(
 
   const parts: string[] = [];
   if (events.length > 0) {
-    parts.push(
-      events.length === 1 ? "1 event" : `${events.length} events`,
-    );
+    parts.push(t("notifications.digest.events", { count: events.length }));
   }
   if (dinnerPlan) {
     const name =
-      dinnerPlan.recipe?.name ?? dinnerPlan.customName ?? "Dinner planned";
+      dinnerPlan.recipe?.name ??
+      dinnerPlan.customName ??
+      t("notifications.digest.dinnerFallback");
     parts.push(name);
   }
   if (chores.length > 0) {
-    parts.push(
-      chores.length === 1 ? "1 chore" : `${chores.length} chores`,
-    );
+    parts.push(t("notifications.digest.chores", { count: chores.length }));
   }
 
+  const separator = t("notifications.digest.separator");
   const body =
-    parts.length > 0 ? parts.join(" · ") : "Nothing planned today";
+    parts.length > 0 ? parts.join(separator) : t("notifications.digest.empty");
 
   const result = await sendNotificationToFamily(familyId, {
-    title: "Today's plan",
+    title: t("notifications.digest.title"),
     body,
     url: "/",
     tag: "daily-digest",

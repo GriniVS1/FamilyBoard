@@ -647,6 +647,19 @@
     "nextUp": "In arrivo",
     "allDay": "Tutto il giorno"
   },
+  "notifications": {
+    "eventReminder": {
+      "body": "Inizia alle {time}"
+    },
+    "digest": {
+      "title": "Programma di oggi",
+      "empty": "Niente in programma oggi",
+      "dinnerFallback": "Cena pianificata",
+      "events": "{count, plural, =1 {1 evento} other {# eventi}}",
+      "chores": "{count, plural, =1 {1 faccenda} other {# faccende}}",
+      "separator": " · "
+    }
+  },
   "errors": {
     "generic": "Qualcosa è andato storto.",
     "network": "Errore di rete. Controlla la connessione.",
