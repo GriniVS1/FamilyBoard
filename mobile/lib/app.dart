@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import 'features/calendar/calendar_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/pair/pair_screen.dart';
 import 'features/splash/splash_screen.dart';
@@ -53,7 +54,9 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           }
           return null;
         }
-        if (location == '/splash' || location == '/home') {
+        if (location == '/splash' ||
+            location == '/home' ||
+            location == '/calendar') {
           return '/pair';
         }
         return null;
@@ -73,6 +76,11 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           path: '/home',
           builder: (BuildContext context, GoRouterState routerState) =>
               const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/calendar',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const CalendarScreen(),
         ),
       ],
     );
@@ -113,12 +121,12 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
 
   /// Routes the app to the path carried in [payload.url].
   ///
-  /// "/calendar" is not yet implemented — falls back to /home. Any
-  /// unrecognised path also lands on /home. When the calendar screen
-  /// arrives in M3, replace this with a proper route table.
+  /// Recognised paths: /home, /calendar. Anything else falls back to /home.
   void _navigateFromPayload(NotificationPayload payload) {
-    // Only "/" is currently handled; everything else goes home.
-    _router.go('/home');
+    const Set<String> knownRoutes = <String>{'/home', '/calendar'};
+    final String target =
+        knownRoutes.contains(payload.url) ? payload.url : '/home';
+    _router.go(target);
   }
 
   @override

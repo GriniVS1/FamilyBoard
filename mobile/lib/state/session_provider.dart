@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/session.dart';
 import '../services/api_client.dart';
+import '../services/events_service.dart';
 import '../services/fcm_service.dart';
 import '../services/heartbeat_service.dart';
 import '../services/mutations_service.dart';
@@ -31,6 +32,12 @@ final Provider<FcmService> fcmServiceProvider = Provider<FcmService>(
 final Provider<MutationsService> mutationsServiceProvider =
     Provider<MutationsService>(
   (Ref ref) => MutationsService(
+    clientFactory: ref.watch(apiClientFactoryProvider),
+  ),
+);
+
+final Provider<EventsService> eventsServiceProvider = Provider<EventsService>(
+  (Ref ref) => EventsService(
     clientFactory: ref.watch(apiClientFactoryProvider),
   ),
 );

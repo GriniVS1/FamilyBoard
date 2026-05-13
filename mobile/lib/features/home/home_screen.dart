@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../app.dart';
@@ -89,6 +90,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     return Scaffold(
       appBar: AppBar(
         title: const FamilyBoardLogo(fontSize: 18),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.event_outlined),
+            tooltip: l10n.calendarOpenAria,
+            onPressed: () => context.go('/calendar'),
+          ),
+        ],
       ),
       body: SafeArea(
         child: RefreshIndicator(
