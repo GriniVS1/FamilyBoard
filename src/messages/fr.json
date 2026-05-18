@@ -263,7 +263,17 @@
       "whatsHappening": "Qu'est-ce qui se passe ?",
       "optional": "Facultatif",
       "failedToSave": "Échec de l'enregistrement.",
-      "failedToDelete": "Échec de la suppression."
+      "failedToDelete": "Échec de la suppression.",
+      "recurrence": "Répéter",
+      "recurrenceNever": "Jamais",
+      "recurrenceDaily": "Tous les jours",
+      "recurrenceWeekly": "Toutes les semaines",
+      "recurrenceMonthly": "Tous les mois",
+      "recurrenceEnds": "Se termine le",
+      "recurrenceForever": "Sans fin",
+      "recurringStayLocal": "Les événements récurrents restent sur cet appareil. Ils ne se synchronisent pas avec Google, Apple ni Outlook.",
+      "editingSeries": "Modifie toutes les occurrences de cette série.",
+      "customRecurrence": "Récurrence personnalisée — modifiez chez le fournisseur distant."
     },
     "members": "Membres",
     "previous": "Précédent",

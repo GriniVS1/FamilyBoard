@@ -263,7 +263,17 @@
       "whatsHappening": "Was ist geplant?",
       "optional": "Optional",
       "failedToSave": "Speichern fehlgeschlagen.",
-      "failedToDelete": "Löschen fehlgeschlagen."
+      "failedToDelete": "Löschen fehlgeschlagen.",
+      "recurrence": "Wiederholen",
+      "recurrenceNever": "Nie",
+      "recurrenceDaily": "Täglich",
+      "recurrenceWeekly": "Wöchentlich",
+      "recurrenceMonthly": "Monatlich",
+      "recurrenceEnds": "Endet am",
+      "recurrenceForever": "Endet nicht",
+      "recurringStayLocal": "Wiederkehrende Termine bleiben auf diesem Gerät. Sie werden nicht mit Google, Apple oder Outlook synchronisiert.",
+      "editingSeries": "Bearbeitet alle Termine dieser Serie.",
+      "customRecurrence": "Eigene Wiederholung — auf dem externen Anbieter bearbeiten."
     },
     "members": "Mitglieder",
     "previous": "Zurück",

@@ -1,6 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
+import { Repeat } from "lucide-react";
 import { cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import { COLOR_BORDER, COLOR_TINT, type CalendarEvent, type CalendarMember } from "./types";
 
@@ -55,7 +56,12 @@ export function EventBlock({
         width: `calc(${widthPct}% - 4px)`,
       }}
     >
-      <div className="font-semibold text-xs text-ink truncate">{event.title}</div>
+      <div className="font-semibold text-xs text-ink truncate flex items-center gap-1">
+        <span className="truncate">{event.title}</span>
+        {event.isRecurring && (
+          <Repeat className="size-3 shrink-0 text-muted" aria-hidden="true" />
+        )}
+      </div>
       <div className="tabular text-[10px] text-muted truncate">
         {format(start, "HH:mm")} – {format(end, "HH:mm")}
       </div>

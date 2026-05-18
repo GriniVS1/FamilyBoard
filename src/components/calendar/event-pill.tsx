@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { Repeat } from "lucide-react";
 import { cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import { COLOR_BORDER, COLOR_TINT, type CalendarEvent, type CalendarMember } from "./types";
 
@@ -41,9 +42,12 @@ export function EventPill({ event, member, onSelect, className }: EventPillProps
       )}
       aria-label={`${event.title} — ${time}`}
     >
-      <span className="font-medium text-ink truncate block">
+      <span className="font-medium text-ink truncate flex items-center gap-1">
         <span className="tabular text-muted mr-1">{!event.allDay ? time : ""}</span>
-        {event.title}
+        <span className="truncate">{event.title}</span>
+        {event.isRecurring && (
+          <Repeat className="size-3 shrink-0 text-muted" aria-hidden="true" />
+        )}
       </span>
     </button>
   );
