@@ -651,6 +651,14 @@
     "eventReminder": {
       "body": "Inizia alle {time}"
     },
+    "eventCreate": {
+      "title": "Nuovo evento: {title}",
+      "body": "Aggiunto al calendario"
+    },
+    "mealCreate": {
+      "title": "Pasto pianificato",
+      "fallback": "Un pasto"
+    },
     "digest": {
       "title": "Programma di oggi",
       "empty": "Niente in programma oggi",

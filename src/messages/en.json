@@ -651,6 +651,14 @@
     "eventReminder": {
       "body": "Starts at {time}"
     },
+    "eventCreate": {
+      "title": "New event: {title}",
+      "body": "Added to the calendar"
+    },
+    "mealCreate": {
+      "title": "Meal planned",
+      "fallback": "A meal"
+    },
     "digest": {
       "title": "Today's plan",
       "empty": "Nothing planned today",
