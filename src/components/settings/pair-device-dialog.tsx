@@ -89,7 +89,7 @@ export function PairDeviceDialog({
   }, [expiresAt]);
 
   async function handleGenerate() {
-    if (!selectedMemberId || pin.length < 4) return;
+    if (!selectedMemberId || pin.length !== 6) return;
     setGenerating(true);
     setError(null);
     try {
@@ -258,7 +258,7 @@ export function PairDeviceDialog({
                     variant="primary"
                     onClick={handleGenerate}
                     disabled={
-                      generating || !selectedMemberId || pin.length < 4
+                      generating || !selectedMemberId || pin.length !== 6
                     }
                   >
                     {generating && <Loader2 className="size-4 animate-spin" />}
