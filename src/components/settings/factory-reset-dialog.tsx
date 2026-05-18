@@ -40,7 +40,7 @@ export function FactoryResetDialog({
       setError(t("typeResetError"));
       return;
     }
-    if (pin.length < 4) {
+    if (pin.length !== 6) {
       setError(t("pinRequired"));
       return;
     }
@@ -130,7 +130,7 @@ export function FactoryResetDialog({
             <Button
               type="button"
               onClick={handleReset}
-              disabled={submitting || confirm !== "RESET" || pin.length < 4}
+              disabled={submitting || confirm !== "RESET" || pin.length !== 6}
               className="bg-accent-rose text-bg hover:bg-accent-rose/90"
             >
               {submitting ? t("resetting") : t("confirm")}
