@@ -33,6 +33,7 @@ import { MemberEditorDialog } from "./member-editor-dialog";
 import { PinChangeDialog } from "./pin-change-dialog";
 import { GateOverlay, PinGate } from "./pin-gate";
 import { PushToggle } from "./push-toggle";
+import { ScreensaverIdlePicker } from "./screensaver-idle-picker";
 
 type FamilyData = {
   id: string;
@@ -247,6 +248,10 @@ export function SettingsView({
             <LocalePicker />
           </div>
         </GlassCard>
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <ScreensaverIdlePicker />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>

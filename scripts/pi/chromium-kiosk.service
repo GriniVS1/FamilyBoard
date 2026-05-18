@@ -1,0 +1,26 @@
+[Unit]
+Description=Chromium kiosk for FamilyBoard
+After=graphical-session.target
+
+[Service]
+Type=simple
+# Hide the cursor before launching the browser — unclutter watches the X root window.
+ExecStartPre=/usr/bin/unclutter -idle 0 -root -b
+ExecStartPre=/bin/bash -c 'until curl -fsS http://localhost:3000/api/health > /dev/null; do sleep 2; done'
+ExecStart=/usr/bin/chromium-browser \
+  --kiosk \
+  --noerrdialogs \
+  --disable-infobars \
+  --disable-session-crashed-bubble \
+  --disable-translate \
+  --no-first-run \
+  --start-fullscreen \
+  --check-for-update-interval=31536000 \
+  --autoplay-policy=no-user-gesture-required \
+  --overscroll-history-navigation=0 \
+  http://localhost:3000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=default.target

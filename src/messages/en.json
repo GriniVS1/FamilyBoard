@@ -474,7 +474,18 @@
       "never": "Never seen",
       "seenJustNow": "Just now",
       "expiresIn": "Expires in {seconds}s",
-      "expiresAt": "Expires {when}"
+      "expiresAt": "Expires {when}",
+      "revokeConfirmTitle": "Revoke this device?",
+      "revokeConfirmBody": "{name} will be signed out immediately and will need a new pairing code.",
+      "revokePinTitle": "Enter admin PIN to revoke"
+    },
+    "screensaver": {
+      "title": "Screensaver",
+      "idle": "Idle timeout",
+      "idleHint": "Show photo slideshow when no one has touched the wall for a while.",
+      "minutes": "{n} minutes",
+      "minute": "1 minute",
+      "never": "Never"
     },
     "caldav": {
       "title": "Apple / CalDAV",
