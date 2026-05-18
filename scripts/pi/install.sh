@@ -60,7 +60,10 @@ sudo apt-get install -y --no-install-recommends \
   log2ram \
   git \
   curl \
-  jq
+  jq \
+  network-manager
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # ---------------------------------------------------------------------------
 # Step 4: Docker group membership
@@ -75,10 +78,45 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# Step 4b: familyboard group + sudoers for nmcli (WiFi onboarding)
+# ---------------------------------------------------------------------------
+step "Creating familyboard group and granting nmcli sudo access"
+
+if ! getent group familyboard > /dev/null 2>&1; then
+  sudo groupadd --system familyboard
+  echo "  Created group: familyboard"
+else
+  echo "  Group familyboard already exists."
+fi
+
+if ! groups "$USER" | grep -qw familyboard; then
+  sudo usermod -aG familyboard "$USER"
+  echo "  Added $USER to group familyboard."
+else
+  echo "  $USER is already in group familyboard."
+fi
+
+SUDOERS_SRC="$SCRIPT_DIR/sudoers.d/familyboard-network"
+SUDOERS_DST="/etc/sudoers.d/familyboard-network"
+
+if [[ ! -f "$SUDOERS_SRC" ]]; then
+  die "sudoers file not found at $SUDOERS_SRC"
+fi
+
+sudo cp "$SUDOERS_SRC" "$SUDOERS_DST"
+sudo chmod 440 "$SUDOERS_DST"
+sudo chown root:root "$SUDOERS_DST"
+
+if ! sudo visudo -c -f "$SUDOERS_DST" > /dev/null 2>&1; then
+  sudo rm -f "$SUDOERS_DST"
+  die "visudo validation failed — sudoers file removed for safety"
+fi
+
+echo "  sudoers rule installed and validated: $SUDOERS_DST"
+
+# ---------------------------------------------------------------------------
 # Step 5: Sub-scripts
 # ---------------------------------------------------------------------------
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
 step "Configuring log2ram"
 bash "$SCRIPT_DIR/setup-log2ram.sh"
 

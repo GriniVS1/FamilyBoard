@@ -1,0 +1,4 @@
+# Allow members of the familyboard group to run nmcli as root without a password.
+# Installed to /etc/sudoers.d/familyboard-network by scripts/pi/install.sh.
+# Validated with `visudo -c` before activation.
+%familyboard ALL=(root) NOPASSWD: /usr/bin/nmcli

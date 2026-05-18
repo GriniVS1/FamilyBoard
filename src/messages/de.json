@@ -118,6 +118,27 @@
       "invalidCoords": "Gültige Koordinaten eingeben (Breite -90..90, Länge -180..180).",
       "coordsRequired": "\"Meinen Standort verwenden\" wählen oder Koordinaten manuell eingeben."
     },
+    "network": {
+      "title": "Mit WLAN verbinden",
+      "subtitle": "Wähle dein Netzwerk und gib das Passwort ein.",
+      "scanning": "Netzwerke werden gesucht…",
+      "rescan": "Erneut suchen",
+      "empty": "Keine Netzwerke gefunden. Stelle sicher, dass WLAN eingeschaltet ist.",
+      "passwordFor": "Passwort für {ssid}",
+      "passwordPlaceholder": "Netzwerkpasswort",
+      "showPassword": "Passwort anzeigen",
+      "connect": "Verbinden",
+      "connecting": "Verbinde mit {ssid}…",
+      "connected": "Verbunden!",
+      "connectFailed": "Verbindung fehlgeschlagen. Überprüfe das Passwort.",
+      "timeout": "Zeitüberschreitung. Versuche es erneut oder wähle ein anderes Netzwerk.",
+      "usePhone": "Mein Handy verwenden",
+      "phoneStep1": "Verbinde dein Handy mit diesem WLAN",
+      "phoneStep2": "Öffne dann diesen Link auf dem Handy",
+      "phoneStep3": "Warte auf die Verbindung deines Handys…",
+      "backToKeyboard": "Diesen Bildschirm verwenden",
+      "skipForNow": "Jetzt überspringen"
+    },
     "done": {
       "title": "Alles bereit",
       "description": "Dein FamilyBoard ist fertig. Fixiere es an einem Wanddisplay oder öffne es auf einem Gerät.",
@@ -478,6 +499,14 @@
       "revokeConfirmTitle": "Dieses Gerät widerrufen?",
       "revokeConfirmBody": "{name} wird sofort abgemeldet und benötigt einen neuen Kopplungscode.",
       "revokePinTitle": "Admin-PIN zum Widerrufen eingeben"
+    },
+    "network": {
+      "title": "Netzwerk",
+      "currentSsid": "Verbunden mit {ssid}",
+      "notConnected": "Nicht verbunden",
+      "changeWifi": "WLAN ändern",
+      "forgetWifi": "Netzwerk vergessen",
+      "forgetConfirm": "Von {ssid} trennen?"
     },
     "screensaver": {
       "title": "Bildschirmschoner",

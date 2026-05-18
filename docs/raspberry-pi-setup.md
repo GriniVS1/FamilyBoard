@@ -4,6 +4,77 @@ From a fresh Raspberry Pi 5 to a live, wall-mounted family dashboard in under 30
 
 ---
 
+## Commercial hardware bundles (vendor workflow)
+
+This section is for the vendor (you) producing pre-flashed SD cards for the
+FamilyBoard hardware bundle. Skip to "Manual setup" if you are an open-source
+self-hoster bringing your own hardware.
+
+### Build a flashable image
+
+On your Mac or Linux build server (requires Docker, ~30 GB free):
+
+```bash
+./scripts/pi/build-image.sh v1.2.0
+# Output: ./dist/familyboard-v1.2.0.img.gz
+```
+
+The script:
+1. Clones `pi-gen` at the pinned Bookworm tag.
+2. Injects the `scripts/pi/pi-gen-stage/stage3/00-familyboard-install/` overlay.
+3. Produces a minimal Bookworm image with Docker, NetworkManager, the FamilyBoard
+   repo at `/opt/familyboard`, unique secrets, and the sudoers rule for `nmcli`.
+4. WiFi is **not** pre-configured — the buyer sets it at first boot.
+
+Build takes ~20 minutes. Re-run for each release tag.
+
+### Flash the SD card
+
+```bash
+# With Raspberry Pi Imager (recommended)
+# Open Imager → "Use custom" → select familyboard-v1.2.0.img.gz
+# No advanced options needed — secrets are already in the image.
+# The default user is "familyboard" with a random password; SSH is enabled.
+
+# Or with dd (Linux/macOS):
+gunzip -c ./dist/familyboard-v1.2.0.img.gz | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+If you want to give the buyer SSH access, use Raspberry Pi Imager's "Edit settings"
+to set a known password before flashing, or document the random password generated
+during the build.
+
+### First boot expected behavior
+
+1. Pi boots Raspberry Pi OS (Bookworm, 64-bit).
+2. `familyboard.service` starts Docker Compose which builds and starts the container
+   (~60–90 s on first boot while the image is built).
+3. `chromium-kiosk.service` opens Chromium in fullscreen kiosk mode once the app
+   is healthy.
+4. The buyer sees the WiFi-onboarding step at `/setup/network`. They pick their
+   home network via the touchscreen (on-screen keyboard) or scan the QR code to
+   join the temporary `FamilyBoard-Setup` hotspot from their phone and configure
+   WiFi there.
+5. Once connected, the normal setup wizard continues (`/setup`).
+
+### Technical notes
+
+- The container runs with `network_mode: host` and `cap_add: NET_ADMIN`.
+- `/usr/bin/nmcli` and `/var/run/dbus` are bind-mounted from the host so the
+  app can call `sudo nmcli` to manage WiFi without installing NetworkManager inside
+  the Docker image.
+- The `%familyboard` group has passwordless `sudo /usr/bin/nmcli` via
+  `/etc/sudoers.d/familyboard-network`.
+
+---
+
+## Manual setup on an existing Pi
+
+> For open-source self-hosters who bring their own hardware and want to run the
+> install script on a Pi they have already set up.
+
+---
+
 ## 1. What you need
 
 **Hardware**

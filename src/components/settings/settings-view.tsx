@@ -30,6 +30,7 @@ import { GoogleRow } from "./google-row";
 import { MicrosoftCallbackBanner } from "./microsoft-callback-banner";
 import { MicrosoftRow } from "./microsoft-row";
 import { MemberEditorDialog } from "./member-editor-dialog";
+import { NetworkSection } from "./network-section";
 import { PinChangeDialog } from "./pin-change-dialog";
 import { GateOverlay, PinGate } from "./pin-gate";
 import { PushToggle } from "./push-toggle";
@@ -88,6 +89,7 @@ export function SettingsView({
   const tCommon = useTranslations("common");
   const queryClient = useQueryClient();
   const [unlocked, setUnlocked] = useState(false);
+  const [verifiedPin, setVerifiedPin] = useState("");
   const [banner, setBanner] = useState<OauthBanner | null>(oauthBanner);
   const [familyState, setFamilyState] = useState<FamilyData | null>(family);
   const [memberList, setMemberList] = useState<CalendarMember[]>(members);
@@ -220,6 +222,7 @@ export function SettingsView({
       {!unlocked ? (
         <PinGate
           onUnlock={() => setUnlocked(true)}
+          onUnlockWithPin={(pin) => setVerifiedPin(pin)}
           title={t("enterPin")}
           description={t("pinProtected")}
         />
@@ -334,6 +337,10 @@ export function SettingsView({
             )}
           </ul>
         </GlassCard>
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <NetworkSection adminPin={verifiedPin} unlocked={unlocked} />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
