@@ -18,6 +18,10 @@ class MealPlanGroceryCapReachedException implements Exception {
   const MealPlanGroceryCapReachedException();
 }
 
+class MealPlanNotFoundException implements Exception {
+  const MealPlanNotFoundException();
+}
+
 class MealPlanService {
   MealPlanService({required ApiClientFactory clientFactory})
       : _clientFactory = clientFactory;
@@ -62,6 +66,109 @@ class MealPlanService {
         .map((Map<Object?, Object?> m) =>
             MealPlan.fromJson(m.cast<String, Object?>()))
         .toList();
+  }
+
+  Future<MealPlan> upsert(
+    Session session, {
+    required DateTime date,
+    required MealSlot slot,
+    required String customName,
+    String? notes,
+    String? memberId,
+  }) async {
+    final String dateStr =
+        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    final Map<String, Object?> payload = <String, Object?>{
+      'date': dateStr,
+      'slot': slot.name.toUpperCase(),
+      'customName': customName,
+      if (notes != null) 'notes': notes,
+      if (memberId != null) 'memberId': memberId,
+    };
+    final Dio dio = _clientFactory.authenticated(session);
+    final Response<Object?> response;
+    try {
+      response = await dio.post<Object?>('/api/mobile/meals', data: payload);
+    } on DioException catch (e) {
+      throw MealPlanFetchException('Network error: ${e.message}');
+    }
+    final int status = response.statusCode ?? 0;
+    if (status == 401) {
+      throw const MealPlanSessionRevokedException();
+    }
+    if (status != 200) {
+      throw MealPlanFetchException('Unexpected status $status');
+    }
+    return _parseMealPlan(response);
+  }
+
+  Future<MealPlan> patch(
+    Session session, {
+    required String id,
+    DateTime? date,
+    MealSlot? slot,
+    String? customName,
+    String? notes,
+    String? memberId,
+  }) async {
+    final Map<String, Object?> payload = <String, Object?>{
+      if (date != null)
+        'date':
+            '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
+      if (slot != null) 'slot': slot.name.toUpperCase(),
+      if (customName != null) 'customName': customName,
+      if (notes != null) 'notes': notes,
+      if (memberId != null) 'memberId': memberId,
+    };
+    final Dio dio = _clientFactory.authenticated(session);
+    final Response<Object?> response;
+    try {
+      response =
+          await dio.patch<Object?>('/api/mobile/meals/$id', data: payload);
+    } on DioException catch (e) {
+      throw MealPlanFetchException('Network error: ${e.message}');
+    }
+    final int status = response.statusCode ?? 0;
+    if (status == 401) {
+      throw const MealPlanSessionRevokedException();
+    }
+    if (status == 404) {
+      throw const MealPlanNotFoundException();
+    }
+    if (status != 200) {
+      throw MealPlanFetchException('Unexpected status $status');
+    }
+    return _parseMealPlan(response);
+  }
+
+  Future<void> delete(Session session, {required String id}) async {
+    final Dio dio = _clientFactory.authenticated(session);
+    final Response<Object?> response;
+    try {
+      response = await dio.delete<Object?>('/api/mobile/meals/$id');
+    } on DioException catch (e) {
+      throw MealPlanFetchException('Network error: ${e.message}');
+    }
+    final int status = response.statusCode ?? 0;
+    if (status == 401) {
+      throw const MealPlanSessionRevokedException();
+    }
+    if (status == 404) {
+      throw const MealPlanNotFoundException();
+    }
+    if (status != 200) {
+      throw MealPlanFetchException('Unexpected status $status');
+    }
+  }
+
+  MealPlan _parseMealPlan(Response<Object?> response) {
+    final Object? data = response.data;
+    if (data is! Map) {
+      throw const MealPlanFetchException('Unexpected response format');
+    }
+    final Map<String, Object?> body =
+        (data as Map<Object?, Object?>).cast<String, Object?>();
+    return MealPlan.fromJson(body);
   }
 
   Future<int> generateGroceryFromWeek(

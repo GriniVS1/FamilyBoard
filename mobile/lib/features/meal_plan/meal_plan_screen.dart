@@ -12,6 +12,7 @@ import '../../state/meal_plan_provider.dart';
 import '../../state/session_provider.dart';
 import '../../theme.dart';
 import '../../widgets/familyboard_logo.dart';
+import 'meal_plan_edit_sheet.dart';
 
 class MealPlanScreen extends ConsumerStatefulWidget {
   const MealPlanScreen({super.key});
@@ -141,6 +142,23 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
               ]
             : null,
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          final List<MealSlot> todayTaken = plans
+                  ?.where((MealPlan p) {
+                    final DateTime now = DateTime.now();
+                    return p.date.year == now.year &&
+                        p.date.month == now.month &&
+                        p.date.day == now.day;
+                  })
+                  .map((MealPlan p) => p.slot)
+                  .toList() ??
+              <MealSlot>[];
+          showMealPlanEditSheet(context, takenSlots: todayTaken);
+        },
+        icon: const Icon(Icons.add),
+        label: Text(l10n.mealPlanNew),
+      ),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: () async {
@@ -219,7 +237,7 @@ class _WeekBody extends StatelessWidget {
             slotOrder.indexOf(a.slot.index) - slotOrder.indexOf(b.slot.index));
 
       for (final MealPlan plan in sorted) {
-        rows.add(_SlotRow(plan: plan, l10n: l10n));
+        rows.add(_SlotRow(plan: plan, l10n: l10n, dayPlans: sorted));
       }
     }
 
@@ -266,57 +284,158 @@ class _DayHeader extends StatelessWidget {
 // Slot row
 // ---------------------------------------------------------------------------
 
-class _SlotRow extends StatelessWidget {
-  const _SlotRow({required this.plan, required this.l10n});
+class _SlotRow extends ConsumerStatefulWidget {
+  const _SlotRow({
+    required this.plan,
+    required this.l10n,
+    required this.dayPlans,
+  });
 
   final MealPlan plan;
   final AppL10n l10n;
+  final List<MealPlan> dayPlans;
+
+  @override
+  ConsumerState<_SlotRow> createState() => _SlotRowState();
+}
+
+class _SlotRowState extends ConsumerState<_SlotRow> {
+  bool _busy = false;
+
+  Future<void> _handleTap() async {
+    final List<MealSlot> taken = widget.dayPlans
+        .where((MealPlan p) => p.id != widget.plan.id)
+        .map((MealPlan p) => p.slot)
+        .toList();
+    await showMealPlanEditSheet(
+      context,
+      plan: widget.plan,
+      takenSlots: taken,
+    );
+  }
+
+  Future<void> _handleLongPress() async {
+    final AppL10n l10n = widget.l10n;
+    final bool? confirmed = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext ctx) => AlertDialog(
+        title: Text(l10n.mealPlanDeleteConfirmTitle),
+        content: Text(l10n.mealPlanDeleteConfirmBody),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(l10n.mealPlanDeleteConfirmAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) {
+      return;
+    }
+
+    final SessionState sessionState = ref.read(sessionProvider);
+    final Session? session = sessionState.session;
+    if (session == null) {
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      await ref
+          .read(mealPlanServiceProvider)
+          .delete(session, id: widget.plan.id);
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(mealPlanProvider);
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.mealPlanDeleteToast),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } on MealPlanSessionRevokedException {
+      if (!mounted) {
+        return;
+      }
+      await ref.read(sessionProvider.notifier).clear();
+    } on MealPlanNotFoundException {
+      if (!mounted) {
+        return;
+      }
+      ref.invalidate(mealPlanProvider);
+    } on MealPlanFetchException {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _busy = false);
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text(l10n.mealPlanDeleteError),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final ColorScheme colorScheme = Theme.of(context).colorScheme;
+    final MealPlan plan = widget.plan;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 52),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.outline),
-        ),
-        child: Row(
-          children: <Widget>[
-            SizedBox(
-              width: 80,
-              child: Text(
-                _slotLabel(plan.slot, l10n),
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontSize: 12,
-                    ),
-              ),
+      child: AnimatedOpacity(
+        opacity: _busy ? 0.5 : 1.0,
+        duration: const Duration(milliseconds: 150),
+        child: GestureDetector(
+          onTap: _busy ? null : _handleTap,
+          onLongPress: _busy ? null : _handleLongPress,
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: colorScheme.outline),
             ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                plan.displayName,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            ),
-            if (plan.member != null) ...<Widget>[
-              const SizedBox(width: 8),
-              Container(
-                width: 10,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: AccentPalette.resolve(plan.member!.color),
-                  shape: BoxShape.circle,
+            child: Row(
+              children: <Widget>[
+                SizedBox(
+                  width: 80,
+                  child: Text(
+                    _slotLabel(plan.slot, widget.l10n),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                          fontSize: 12,
+                        ),
+                  ),
                 ),
-              ),
-            ],
-          ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    plan.displayName,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                ),
+                if (plan.member != null) ...<Widget>[
+                  const SizedBox(width: 8),
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: AccentPalette.resolve(plan.member!.color),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
       ),
     );
