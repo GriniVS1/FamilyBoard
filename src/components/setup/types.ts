@@ -23,6 +23,7 @@ export type DraftMember = {
 };
 
 export type StepKey =
+  | "network"
   | "welcome"
   | "family"
   | "members"

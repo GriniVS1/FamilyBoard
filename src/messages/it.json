@@ -118,6 +118,27 @@
       "invalidCoords": "Inserisci coordinate valide (lat -90..90, lon -180..180).",
       "coordsRequired": "Usa «Usa la mia posizione» o inserisci le coordinate manualmente."
     },
+    "network": {
+      "title": "Connetti al WiFi",
+      "subtitle": "Scegli la rete e inserisci la password.",
+      "scanning": "Ricerca reti…",
+      "rescan": "Nuova ricerca",
+      "empty": "Nessuna rete trovata. Assicurati che il WiFi sia attivo.",
+      "passwordFor": "Password per {ssid}",
+      "passwordPlaceholder": "Password di rete",
+      "showPassword": "Mostra password",
+      "connect": "Connetti",
+      "connecting": "Connessione a {ssid}…",
+      "connected": "Connesso!",
+      "connectFailed": "Impossibile connettersi. Controlla la password.",
+      "timeout": "Timeout di connessione. Riprova o scegli un'altra rete.",
+      "usePhone": "Usa il mio telefono",
+      "phoneStep1": "Connetti il telefono a questo WiFi",
+      "phoneStep2": "Poi apri questo link sul telefono",
+      "phoneStep3": "In attesa della connessione del telefono…",
+      "backToKeyboard": "Usa questo schermo",
+      "skipForNow": "Salta per ora"
+    },
     "done": {
       "title": "Tutto pronto",
       "description": "Il tuo FamilyBoard è pronto. Fissalo a un display a parete o aprilo su qualsiasi dispositivo.",
@@ -478,6 +499,14 @@
       "revokeConfirmTitle": "Revocare questo dispositivo?",
       "revokeConfirmBody": "{name} verrà disconnesso immediatamente e avrà bisogno di un nuovo codice di associazione.",
       "revokePinTitle": "Inserisci il PIN admin per revocare"
+    },
+    "network": {
+      "title": "Rete",
+      "currentSsid": "Connesso a {ssid}",
+      "notConnected": "Non connesso",
+      "changeWifi": "Cambia WiFi",
+      "forgetWifi": "Dimentica rete",
+      "forgetConfirm": "Disconnettere da {ssid}?"
     },
     "screensaver": {
       "title": "Salvaschermo",

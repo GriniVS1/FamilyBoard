@@ -118,6 +118,27 @@
       "invalidCoords": "Enter valid coordinates (lat -90..90, lon -180..180).",
       "coordsRequired": "Use \"Use my location\" or enter coordinates manually to continue."
     },
+    "network": {
+      "title": "Connect to WiFi",
+      "subtitle": "Pick your network and enter the password.",
+      "scanning": "Scanning networks…",
+      "rescan": "Rescan",
+      "empty": "No networks found. Make sure WiFi is on.",
+      "passwordFor": "Password for {ssid}",
+      "passwordPlaceholder": "Network password",
+      "showPassword": "Show password",
+      "connect": "Connect",
+      "connecting": "Connecting to {ssid}…",
+      "connected": "Connected!",
+      "connectFailed": "Couldn’t connect. Check the password and try again.",
+      "timeout": "Connection timed out. Try again or pick a different network.",
+      "usePhone": "Use my phone instead",
+      "phoneStep1": "On your phone, connect to this WiFi",
+      "phoneStep2": "Then open this link on your phone",
+      "phoneStep3": "Waiting for your phone to connect…",
+      "backToKeyboard": "Use this screen instead",
+      "skipForNow": "Skip for now"
+    },
     "done": {
       "title": "You're all set",
       "description": "Your FamilyBoard is ready. Pin it to a wall display or open it on any device.",
@@ -478,6 +499,14 @@
       "revokeConfirmTitle": "Revoke this device?",
       "revokeConfirmBody": "{name} will be signed out immediately and will need a new pairing code.",
       "revokePinTitle": "Enter admin PIN to revoke"
+    },
+    "network": {
+      "title": "Network",
+      "currentSsid": "Currently connected to {ssid}",
+      "notConnected": "Not connected",
+      "changeWifi": "Change WiFi",
+      "forgetWifi": "Forget current network",
+      "forgetConfirm": "Disconnect from {ssid}?"
     },
     "screensaver": {
       "title": "Screensaver",

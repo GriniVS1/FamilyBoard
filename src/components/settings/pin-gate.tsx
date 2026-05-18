@@ -13,12 +13,14 @@ const PIN_LENGTH = 6;
 
 type PinGateProps = {
   onUnlock: () => void;
+  onUnlockWithPin?: (pin: string) => void;
   title?: string;
   description?: string;
 };
 
 export function PinGate({
   onUnlock,
+  onUnlockWithPin,
   title,
   description,
 }: PinGateProps) {
@@ -58,6 +60,7 @@ export function PinGate({
         { pin: candidate },
       );
       if (res.ok) {
+        onUnlockWithPin?.(candidate);
         onUnlock();
       } else {
         setError(t("wrongPin"));

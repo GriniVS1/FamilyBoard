@@ -5,12 +5,22 @@ services:
       dockerfile: Dockerfile
     image: familyboard:latest
     container_name: familyboard
-    ports:
-      - "3000:3000"
+    # host networking is required for WiFi onboarding: the app calls sudo nmcli
+    # which talks to the host NetworkManager over its DBus socket. With bridge
+    # networking nmcli would target a different network namespace. host mode also
+    # means port 3000 is exposed automatically — the ports: stanza is kept as
+    # documentation but has no effect in host mode.
+    network_mode: host
+    cap_add:
+      - NET_ADMIN
     env_file:
       - .env
     volumes:
       - ./data:/app/data
+      # Bind-mount nmcli and the DBus socket so the container can control the
+      # host NetworkManager without installing network-manager inside the image.
+      - /usr/bin/nmcli:/usr/bin/nmcli:ro
+      - /var/run/dbus:/var/run/dbus:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]

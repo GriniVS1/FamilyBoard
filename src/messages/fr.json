@@ -118,6 +118,27 @@
       "invalidCoords": "Saisis des coordonnées valides (lat -90..90, lon -180..180).",
       "coordsRequired": "Utilise « Utiliser ma position » ou saisis les coordonnées manuellement."
     },
+    "network": {
+      "title": "Connexion au WiFi",
+      "subtitle": "Choisis ton réseau et entre le mot de passe.",
+      "scanning": "Recherche des réseaux…",
+      "rescan": "Rescanner",
+      "empty": "Aucun réseau trouvé. Vérifie que le WiFi est activé.",
+      "passwordFor": "Mot de passe pour {ssid}",
+      "passwordPlaceholder": "Mot de passe réseau",
+      "showPassword": "Afficher le mot de passe",
+      "connect": "Connecter",
+      "connecting": "Connexion à {ssid}…",
+      "connected": "Connecté !",
+      "connectFailed": "Impossible de se connecter. Vérifie le mot de passe.",
+      "timeout": "Délai dépassé. Réessaie ou choisis un autre réseau.",
+      "usePhone": "Utiliser mon téléphone",
+      "phoneStep1": "Connecte ton téléphone à ce WiFi",
+      "phoneStep2": "Puis ouvre ce lien sur ton téléphone",
+      "phoneStep3": "En attente de la connexion de ton téléphone…",
+      "backToKeyboard": "Utiliser cet écran",
+      "skipForNow": "Passer pour l'instant"
+    },
     "done": {
       "title": "Tout est prêt",
       "description": "Ton FamilyBoard est prêt. Fixe-le sur un écran mural ou ouvre-le sur n'importe quel appareil.",
@@ -478,6 +499,14 @@
       "revokeConfirmTitle": "Révoquer cet appareil ?",
       "revokeConfirmBody": "{name} sera déconnecté immédiatement et devra utiliser un nouveau code d'association.",
       "revokePinTitle": "Saisis le code PIN admin pour révoquer"
+    },
+    "network": {
+      "title": "Réseau",
+      "currentSsid": "Connecté à {ssid}",
+      "notConnected": "Non connecté",
+      "changeWifi": "Changer le WiFi",
+      "forgetWifi": "Oublier le réseau",
+      "forgetConfirm": "Déconnecter de {ssid} ?"
     },
     "screensaver": {
       "title": "Économiseur d'écran",
