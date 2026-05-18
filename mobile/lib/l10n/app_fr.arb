@@ -162,6 +162,8 @@
   "@calendarErrorGeneric": {},
   "calendarErrorRetry": "Réessayer",
   "@calendarErrorRetry": {},
+  "calendarFilterAll": "Tous",
+  "@calendarFilterAll": {},
   "groceryTitle": "Courses",
   "@groceryTitle": {},
   "groceryOpenAria": "Ouvrir la liste de courses",

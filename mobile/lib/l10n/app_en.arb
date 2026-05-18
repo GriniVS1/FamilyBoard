@@ -170,6 +170,8 @@
   "@calendarErrorGeneric": {},
   "calendarErrorRetry": "Retry",
   "@calendarErrorRetry": {},
+  "calendarFilterAll": "All",
+  "@calendarFilterAll": {},
   "groceryTitle": "Grocery",
   "@groceryTitle": {},
   "groceryOpenAria": "Open grocery list",

@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -26,6 +28,9 @@ class CalendarScreen extends ConsumerStatefulWidget {
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _from;
   late DateTime _to;
+
+  /// null means "All" (no filter applied).
+  String? _selectedMemberId;
 
   @override
   void initState() {
@@ -69,6 +74,18 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     } catch (_) {}
   }
 
+  /// Builds the ordered set of distinct members from loaded events.
+  /// Uses [LinkedHashMap] so chip order is stable (insertion order == event order).
+  LinkedHashMap<String, EventMember> _distinctMembers(
+      List<MobileEvent> events) {
+    final LinkedHashMap<String, EventMember> map =
+        LinkedHashMap<String, EventMember>();
+    for (final MobileEvent e in events) {
+      map.putIfAbsent(e.member.id, () => e.member);
+    }
+    return map;
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
@@ -81,11 +98,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         title: const FamilyBoardLogo(fontSize: 18),
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refresh,
-          child: eventsAsync.when(
-            loading: () => const _LoadingBody(),
-            error: (Object err, StackTrace _) => _ErrorBody(
+        child: eventsAsync.when(
+          loading: () => const Column(
+            children: <Widget>[
+              SizedBox(height: 0),
+              Expanded(child: _LoadingBody()),
+            ],
+          ),
+          error: (Object err, StackTrace _) => RefreshIndicator(
+            onRefresh: _refresh,
+            child: _ErrorBody(
               error: err,
               l10n: l10n,
               onRetry: () {
@@ -96,14 +118,172 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 await ref.read(sessionProvider.notifier).clear();
               },
             ),
-            data: (List<MobileEvent> events) => _AgendaBody(
-              events: events,
-              from: _from,
-              to: _to,
-              l10n: l10n,
-              canLoadMore: _canLoadMore,
-              onLoadMore: _loadMore,
+          ),
+          data: (List<MobileEvent> events) {
+            final LinkedHashMap<String, EventMember> members =
+                _distinctMembers(events);
+
+            // Snap back to "All" if the selected member no longer appears.
+            final String? effectiveMemberId = (_selectedMemberId != null &&
+                    members.containsKey(_selectedMemberId))
+                ? _selectedMemberId
+                : null;
+
+            final List<MobileEvent> filtered = effectiveMemberId == null
+                ? events
+                : events
+                    .where((MobileEvent e) => e.member.id == effectiveMemberId)
+                    .toList();
+
+            return Column(
+              children: <Widget>[
+                _MemberFilterRow(
+                  members: members,
+                  selectedMemberId: effectiveMemberId,
+                  l10n: l10n,
+                  onSelected: (String? memberId) {
+                    setState(() {
+                      _selectedMemberId =
+                          (memberId == _selectedMemberId) ? null : memberId;
+                    });
+                  },
+                ),
+                Expanded(
+                  child: RefreshIndicator(
+                    onRefresh: _refresh,
+                    child: _AgendaBody(
+                      events: filtered,
+                      from: _from,
+                      to: _to,
+                      l10n: l10n,
+                      canLoadMore: _canLoadMore,
+                      onLoadMore: _loadMore,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Member filter chip row
+// ---------------------------------------------------------------------------
+
+class _MemberFilterRow extends StatelessWidget {
+  const _MemberFilterRow({
+    required this.members,
+    required this.selectedMemberId,
+    required this.l10n,
+    required this.onSelected,
+  });
+
+  final LinkedHashMap<String, EventMember> members;
+  final String? selectedMemberId;
+  final AppL10n l10n;
+
+  /// Called with the tapped member id, or null for "All".
+  final ValueChanged<String?> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final bool allSelected = selectedMemberId == null;
+    final ColorScheme cs = Theme.of(context).colorScheme;
+
+    return SizedBox(
+      height: 56,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        children: <Widget>[
+          // "All" chip
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: _FilterChip(
+              label: l10n.calendarFilterAll,
+              selected: allSelected,
+              selectedColor: cs.primary,
+              unselectedColor: cs.surfaceContainerHighest,
+              selectedTextColor: cs.onPrimary,
+              unselectedTextColor: cs.onSurface,
+              borderColor: allSelected ? cs.primary : cs.outline,
+              onTap: () => onSelected(null),
             ),
+          ),
+          // One chip per member
+          ...members.values.map((EventMember member) {
+            final bool selected = selectedMemberId == member.id;
+            final Color accent = AccentPalette.resolve(member.color);
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _FilterChip(
+                label: '${member.emoji} ${member.name}'.trim(),
+                selected: selected,
+                selectedColor: accent,
+                unselectedColor: accent.withValues(alpha: 0.12),
+                selectedTextColor: Colors.white,
+                unselectedTextColor: accent,
+                borderColor: selected ? accent : accent.withValues(alpha: 0.5),
+                onTap: () => onSelected(member.id),
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+}
+
+/// A single pill-shaped chip used in the filter row.
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.selectedColor,
+    required this.unselectedColor,
+    required this.selectedTextColor,
+    required this.unselectedTextColor,
+    required this.borderColor,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final Color selectedColor;
+  final Color unselectedColor;
+  final Color selectedTextColor;
+  final Color unselectedTextColor;
+  final Color borderColor;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color bg = selected ? selectedColor : unselectedColor;
+    final Color textColor = selected ? selectedTextColor : unselectedTextColor;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        constraints: const BoxConstraints(minHeight: 44),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: borderColor),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: textColor,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                  height: 1.2,
+                ),
           ),
         ),
       ),

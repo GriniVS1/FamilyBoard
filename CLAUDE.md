@@ -136,7 +136,6 @@ Bearer-auth API surface lives under `src/app/api/mobile/**`, all routes go throu
 - **M3.4** — mobile meal-plan read + tick grocery items from this week's plan. Same pattern as Grocery: 1 read endpoint + screen.
 - **M3.5** — offline drift cache. Local SQLite, write-queue replays on reconnect. Big architectural slice.
 - **iOS launcher icon** — skipped because `mobile/ios/Runner/Assets.xcassets` doesn't exist in this checkout. Once `flutter create -t app .` is rerun cleanly on iOS, extend `scripts/generate-app-icons.mjs` with an `ios` section.
-- **Daily-digest push body i18n** — currently English-only. Needs the family's locale in the tick endpoint.
 - **Recurring event push** — local FamilyBoard-created events can't be made recurring yet. *Pull* expansion is fully wired: Google uses `singleEvents: true`, Microsoft uses `calendarView/delta`, and CalDAV expands via `ICAL.Event.iterator()` with EXDATE + RECURRENCE-ID overrides resolved automatically (see `expandRecurring` in `src/lib/caldav.ts`).
 - **Pi install: done.** Bootstrap script at `scripts/pi/install.sh`; full walkthrough at `docs/raspberry-pi-setup.md`. One-liner: `bash <(curl -fsSL https://raw.githubusercontent.com/GriniVS1/FamilyBoard/main/scripts/pi/install.sh)`.
 

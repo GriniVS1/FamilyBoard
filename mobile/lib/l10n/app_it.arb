@@ -162,6 +162,8 @@
   "@calendarErrorGeneric": {},
   "calendarErrorRetry": "Riprova",
   "@calendarErrorRetry": {},
+  "calendarFilterAll": "Tutti",
+  "@calendarFilterAll": {},
   "groceryTitle": "Spesa",
   "@groceryTitle": {},
   "groceryOpenAria": "Apri la lista della spesa",
