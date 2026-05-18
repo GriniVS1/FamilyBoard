@@ -41,7 +41,7 @@ export function WidgetClock({ className }: WidgetClockProps) {
       </span>
       <div className="flex flex-1 flex-col items-start justify-center py-4">
         <span
-          className="font-display text-7xl xl:text-8xl tabular leading-none tracking-tight text-ink"
+          className="font-display text-7xl xl:text-8xl 2xl:text-9xl tabular leading-none tracking-tight text-ink"
           suppressHydrationWarning
         >
           {now ? formatTime(now) : "--:--"}

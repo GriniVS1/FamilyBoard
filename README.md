@@ -37,7 +37,13 @@ npm run dev
 
 ## Raspberry Pi (ARM64)
 
-The image is built for both `linux/amd64` and `linux/arm64`. On a Pi 4/5 running 64-bit OS, the same `docker compose up --build` works unchanged. Persistent data lives in `./data` (SQLite database + uploaded photos) and is bind-mounted into the container.
+The image is built for both `linux/amd64` and `linux/arm64`. For the full one-line install on a Raspberry Pi 5 with a 21"+ touchscreen — including kiosk mode, screen-blanking tweaks, and mDNS setup — see [`docs/raspberry-pi-setup.md`](docs/raspberry-pi-setup.md).
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/GriniVS1/FamilyBoard/main/scripts/pi/install.sh)
+```
+
+Persistent data lives in `./data` (SQLite database + uploaded photos) and is bind-mounted into the container.
 
 ## Architecture
 

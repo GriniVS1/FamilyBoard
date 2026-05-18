@@ -138,6 +138,7 @@ Bearer-auth API surface lives under `src/app/api/mobile/**`, all routes go throu
 - **iOS launcher icon** — skipped because `mobile/ios/Runner/Assets.xcassets` doesn't exist in this checkout. Once `flutter create -t app .` is rerun cleanly on iOS, extend `scripts/generate-app-icons.mjs` with an `ios` section.
 - **Daily-digest push body i18n** — currently English-only. Needs the family's locale in the tick endpoint.
 - **RRULE expansion** for recurring events on all sync providers. Single-occurrence only across Google / CalDAV / Microsoft.
+- **Pi install: done.** Bootstrap script at `scripts/pi/install.sh`; full walkthrough at `docs/raspberry-pi-setup.md`. One-liner: `bash <(curl -fsSL https://raw.githubusercontent.com/GriniVS1/FamilyBoard/main/scripts/pi/install.sh)`.
 
 ### Useful files for a fresh agent landing on this codebase
 

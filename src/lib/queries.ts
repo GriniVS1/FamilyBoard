@@ -342,6 +342,17 @@ export async function getTodayForMember(
   };
 }
 
+export async function getScreensaverIdleMinutes(): Promise<number> {
+  try {
+    const row = await db.setting.findUnique({ where: { key: "screensaver_idle_minutes" } });
+    if (!row) return 3;
+    const n = Number(row.value);
+    return Number.isFinite(n) && n >= 0 ? n : 3;
+  } catch {
+    return 3;
+  }
+}
+
 export async function getSetupStatus() {
   const installation = await getOrCreateInstallation();
   const family = await db.family.findFirst();

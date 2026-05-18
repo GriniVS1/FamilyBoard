@@ -5,7 +5,9 @@ import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ServiceWorkerRegister } from "@/components/providers/sw-register";
+import { IdleScreensaver } from "@/components/shell/idle-screensaver";
 import { getCurrentLocale } from "@/i18n/locale";
+import { getScreensaverIdleMinutes } from "@/lib/queries";
 import "./globals.css";
 
 const inter = Inter({
@@ -59,8 +61,11 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const locale = await getCurrentLocale();
-  const messages = await getMessages();
+  const [locale, messages, idleMinutes] = await Promise.all([
+    getCurrentLocale(),
+    getMessages(),
+    getScreensaverIdleMinutes(),
+  ]);
 
   return (
     <html lang={locale} suppressHydrationWarning className={`${inter.variable} ${geist.variable}`}>
@@ -69,6 +74,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <QueryProvider>
               <ServiceWorkerRegister />
+              <IdleScreensaver minutes={idleMinutes} />
               {children}
             </QueryProvider>
           </ThemeProvider>

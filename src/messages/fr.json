@@ -474,7 +474,18 @@
       "never": "Jamais vu",
       "seenJustNow": "À l'instant",
       "expiresIn": "Expire dans {seconds}s",
-      "expiresAt": "Expire {when}"
+      "expiresAt": "Expire {when}",
+      "revokeConfirmTitle": "Révoquer cet appareil ?",
+      "revokeConfirmBody": "{name} sera déconnecté immédiatement et devra utiliser un nouveau code d'association.",
+      "revokePinTitle": "Saisis le code PIN admin pour révoquer"
+    },
+    "screensaver": {
+      "title": "Économiseur d'écran",
+      "idle": "Délai d'inactivité",
+      "idleHint": "Affiche un diaporama de photos quand personne n'a touché l'écran depuis un moment.",
+      "minutes": "{n} minutes",
+      "minute": "1 minute",
+      "never": "Jamais"
     },
     "caldav": {
       "title": "Apple / CalDAV",

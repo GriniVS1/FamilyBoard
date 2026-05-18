@@ -2,12 +2,19 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, Smartphone, Trash2 } from "lucide-react";
+import { Delete, Loader2, Lock, Smartphone, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { MemberAvatar } from "@/components/shared/member-avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/shared/dialog";
 import { cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import { PairDeviceDialog } from "./pair-device-dialog";
 import type { CalendarMember } from "@/components/calendar/types";
@@ -40,6 +47,8 @@ const ACCENT_TINT: Record<MemberColor, string> = {
   sand: "bg-accent-sand/30",
 };
 
+const PIN_LENGTH = 6;
+
 type DevicesRowProps = {
   members: CalendarMember[];
 };
@@ -67,33 +76,30 @@ async function revokeDevice(id: string, pin: string): Promise<void> {
   }
 }
 
+type RevokeStep = "confirm" | "pin";
+
 export function DevicesRow({ members }: DevicesRowProps) {
   const t = useTranslations("settings.devices");
   const queryClient = useQueryClient();
   const [pairOpen, setPairOpen] = useState(false);
-  const [revokingId, setRevokingId] = useState<string | null>(null);
+  const [revokeTarget, setRevokeTarget] = useState<PairedDevice | null>(null);
+  const [revokeStep, setRevokeStep] = useState<RevokeStep>("confirm");
+  const [revokeError, setRevokeError] = useState<string | null>(null);
 
-  const {
-    data,
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data, isLoading, isError } = useQuery({
     queryKey: ["devices"],
     queryFn: fetchDevices,
   });
-
-  const [revokeError, setRevokeError] = useState<string | null>(null);
 
   const revokeMutation = useMutation({
     mutationFn: ({ id, pin }: { id: string; pin: string }) =>
       revokeDevice(id, pin),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["devices"] });
-      setRevokingId(null);
+      setRevokeTarget(null);
       setRevokeError(null);
     },
     onError: (err) => {
-      setRevokingId(null);
       const code = err instanceof Error ? err.message : "";
       setRevokeError(
         code === "INVALID_PIN" || code === "UNAUTHORIZED"
@@ -103,17 +109,27 @@ export function DevicesRow({ members }: DevicesRowProps) {
     },
   });
 
-  function handleRevoke(device: PairedDevice) {
-    if (!window.confirm(t("revokeConfirm", { name: device.name }))) return;
-    const pin = window.prompt(t("adminPinPrompt"));
-    if (pin === null) return;
-    if (pin.trim().length < 4) {
-      setRevokeError(t("wrongPin"));
-      return;
-    }
+  function openRevokeConfirm(device: PairedDevice) {
+    setRevokeTarget(device);
+    setRevokeStep("confirm");
     setRevokeError(null);
-    setRevokingId(device.id);
-    revokeMutation.mutate({ id: device.id, pin: pin.trim() });
+  }
+
+  function closeRevokeDialog() {
+    if (revokeMutation.isPending) return;
+    setRevokeTarget(null);
+    setRevokeError(null);
+  }
+
+  function handleConfirmProceed() {
+    setRevokeStep("pin");
+    setRevokeError(null);
+  }
+
+  function handlePinSubmit(pin: string) {
+    if (!revokeTarget) return;
+    setRevokeError(null);
+    revokeMutation.mutate({ id: revokeTarget.id, pin });
   }
 
   function handlePairClose(open: boolean) {
@@ -157,12 +173,6 @@ export function DevicesRow({ members }: DevicesRowProps) {
           </p>
         )}
 
-        {revokeError && (
-          <p className="text-sm text-accent-rose" role="alert">
-            {revokeError}
-          </p>
-        )}
-
         {!isLoading && !isError && activeDevices.length === 0 && (
           <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-border py-8 text-center">
             <Smartphone className="size-8 text-muted" aria-hidden />
@@ -183,8 +193,8 @@ export function DevicesRow({ members }: DevicesRowProps) {
               <DeviceCard
                 key={device.id}
                 device={device}
-                revoking={revokingId === device.id}
-                onRevoke={() => handleRevoke(device)}
+                revoking={revokeMutation.isPending && revokeTarget?.id === device.id}
+                onRevoke={() => openRevokeConfirm(device)}
               />
             ))}
           </ul>
@@ -196,7 +206,192 @@ export function DevicesRow({ members }: DevicesRowProps) {
         onOpenChange={handlePairClose}
         members={members}
       />
+
+      <Dialog
+        open={revokeTarget !== null}
+        onOpenChange={(open) => { if (!open) closeRevokeDialog(); }}
+      >
+        <DialogContent showClose={!revokeMutation.isPending}>
+          {revokeStep === "confirm" && revokeTarget && (
+            <ConfirmStep
+              device={revokeTarget}
+              onConfirm={handleConfirmProceed}
+              onCancel={closeRevokeDialog}
+            />
+          )}
+          {revokeStep === "pin" && (
+            <PinStep
+              onSubmit={handlePinSubmit}
+              isPending={revokeMutation.isPending}
+              error={revokeError}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </>
+  );
+}
+
+type ConfirmStepProps = {
+  device: PairedDevice;
+  onConfirm: () => void;
+  onCancel: () => void;
+};
+
+function ConfirmStep({ device, onConfirm, onCancel }: ConfirmStepProps) {
+  const t = useTranslations("settings.devices");
+  const tCommon = useTranslations("common");
+
+  return (
+    <div className="flex flex-col gap-6">
+      <div className="space-y-1 pr-8">
+        <DialogTitle>{t("revokeConfirmTitle")}</DialogTitle>
+        <DialogDescription>
+          {t("revokeConfirmBody", { name: device.name })}
+        </DialogDescription>
+      </div>
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+        <Button type="button" variant="secondary" onClick={onCancel}>
+          {tCommon("cancel")}
+        </Button>
+        <Button
+          type="button"
+          variant="primary"
+          onClick={onConfirm}
+          className="bg-accent-rose text-bg hover:bg-accent-rose/90"
+        >
+          {t("revoke")}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+type PinStepProps = {
+  onSubmit: (pin: string) => void;
+  isPending: boolean;
+  error: string | null;
+};
+
+function PinStep({ onSubmit, isPending, error }: PinStepProps) {
+  const t = useTranslations("settings.devices");
+  const [pin, setPin] = useState("");
+
+  const keys: (string | "backspace" | null)[] = [
+    "1", "2", "3",
+    "4", "5", "6",
+    "7", "8", "9",
+    null, "0", "backspace",
+  ];
+
+  function press(value: string) {
+    if (isPending) return;
+    setPin((prev) => {
+      if (prev.length >= PIN_LENGTH) return prev;
+      const next = prev + value;
+      if (next.length === PIN_LENGTH) {
+        onSubmit(next);
+      }
+      return next;
+    });
+  }
+
+  function backspace() {
+    if (isPending) return;
+    setPin((prev) => prev.slice(0, -1));
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-6">
+      <span
+        aria-hidden
+        className="inline-flex size-14 items-center justify-center rounded-full bg-accent-sun/30 text-ink"
+      >
+        <Lock className="size-6" />
+      </span>
+
+      <div className="space-y-1 text-center">
+        <DialogTitle>{t("revokePinTitle")}</DialogTitle>
+      </div>
+
+      <div className="flex justify-center gap-3">
+        {Array.from({ length: PIN_LENGTH }).map((_, idx) => {
+          const filled = idx < pin.length;
+          return (
+            <motion.div
+              key={idx}
+              animate={{ scale: filled ? 1 : 0.85 }}
+              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+              className={cn(
+                "size-4 rounded-full transition-colors",
+                filled ? "bg-ink" : "bg-border",
+              )}
+            />
+          );
+        })}
+      </div>
+
+      <div className="grid w-full max-w-xs grid-cols-3 gap-3">
+        {keys.map((key, idx) => {
+          if (key === null) {
+            return <div key={`empty-${idx}`} aria-hidden />;
+          }
+          if (key === "backspace") {
+            return (
+              <motion.button
+                key="backspace"
+                type="button"
+                whileTap={{ scale: 0.94 }}
+                onClick={backspace}
+                disabled={isPending}
+                aria-label="Delete"
+                className={cn(
+                  "tap-target h-14 rounded-2xl bg-bg hover:bg-border/60 text-ink",
+                  "flex items-center justify-center transition-colors",
+                  "disabled:opacity-50",
+                )}
+              >
+                <Delete className="size-5" />
+              </motion.button>
+            );
+          }
+          return (
+            <motion.button
+              key={key}
+              type="button"
+              whileTap={{ scale: 0.94 }}
+              onClick={() => press(key)}
+              disabled={isPending}
+              className={cn(
+                "tap-target h-14 rounded-2xl bg-bg hover:bg-border/60 text-ink",
+                "font-display text-2xl tabular",
+                "transition-colors disabled:opacity-50",
+              )}
+            >
+              {key}
+            </motion.button>
+          );
+        })}
+      </div>
+
+      <AnimatePresence>
+        {error && (
+          <motion.p
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="text-center text-sm text-accent-rose"
+            role="alert"
+          >
+            {error}
+          </motion.p>
+        )}
+      </AnimatePresence>
+
+      {isPending && (
+        <Loader2 className="size-5 animate-spin text-muted" />
+      )}
+    </div>
   );
 }
 

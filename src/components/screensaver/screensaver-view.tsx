@@ -168,7 +168,7 @@ export function ScreensaverView() {
               <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-white/70">
                 {t("nextUp")}
               </div>
-              <div className="mt-1 max-w-[260px] truncate text-base font-medium">
+              <div className="mt-1 max-w-md truncate text-base font-medium">
                 {nextEvent.title}
               </div>
               <div className="tabular text-xs text-white/80">

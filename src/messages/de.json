@@ -474,7 +474,18 @@
       "never": "Noch nie gesehen",
       "seenJustNow": "Gerade eben",
       "expiresIn": "Läuft in {seconds}s ab",
-      "expiresAt": "Läuft ab {when}"
+      "expiresAt": "Läuft ab {when}",
+      "revokeConfirmTitle": "Dieses Gerät widerrufen?",
+      "revokeConfirmBody": "{name} wird sofort abgemeldet und benötigt einen neuen Kopplungscode.",
+      "revokePinTitle": "Admin-PIN zum Widerrufen eingeben"
+    },
+    "screensaver": {
+      "title": "Bildschirmschoner",
+      "idle": "Wartezeit",
+      "idleHint": "Zeigt eine Fotoshow, wenn niemand den Bildschirm berührt hat.",
+      "minutes": "{n} Minuten",
+      "minute": "1 Minute",
+      "never": "Nie"
     },
     "caldav": {
       "title": "Apple / CalDAV",
