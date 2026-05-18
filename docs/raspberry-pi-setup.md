@@ -253,8 +253,14 @@ journalctl --user -u chromium-kiosk.service -f
 ```bash
 cd /opt/familyboard
 git pull
-docker compose up -d --build
+docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d --build
 ```
+
+> The Pi compose flag set is required: `docker-compose.pi.yml` enables host
+> networking + bind-mounts `/usr/bin/nmcli` + `/var/run/dbus` so the in-app
+> WiFi onboarding flow can drive the host NetworkManager. The plain `docker
+> compose up` form is for local-dev machines (macOS / Windows / Linux dev
+> boxes) — it uses bridge networking and skips the WiFi mounts.
 
 The `--build` flag rebuilds the image to pick up dependency updates. Running containers are replaced with zero manual steps. The SQLite database and uploaded photos in `./data/` are preserved (bind-mounted volume).
 
