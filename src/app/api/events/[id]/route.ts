@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { deleteRemoteEvent, pushLocalEvent } from "@/lib/sync";
 import { deleteRemoteCaldavEvent, pushLocalEventToCaldav } from "@/lib/caldav";
 import { deleteRemoteMicrosoftEvent, pushLocalEventToMicrosoft } from "@/lib/microsoft";
+import { rruleSchema } from "@/lib/rrule";
 
 export const runtime = "nodejs";
 
@@ -16,19 +17,31 @@ const patchSchema = z.object({
   endsAt: z.coerce.date().optional(),
   allDay: z.boolean().optional(),
   color: z.string().max(20).nullable().optional(),
+  rrule: rruleSchema.nullable().optional(),
 });
+
+// Synthetic occurrence IDs look like "<masterId>__<isoTimestamp>".
+// Returns the master DB id by stripping the suffix.
+function resolveMasterId(rawId: string): string {
+  const sep = rawId.indexOf("__");
+  return sep === -1 ? rawId : rawId.slice(0, sep);
+}
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
-  const { id } = await params;
+  const { id: rawId } = await params;
   const body = patchSchema.parse(await req.json());
+
+  // Occurrence edits resolve to the master row (whole-series for Stage 1).
+  const id = resolveMasterId(rawId);
 
   const event = await db.event.findUnique({ where: { id } });
   if (!event) throw new AppError("Event not found", "EVENT_NOT_FOUND", 404);
 
   const isGoogle = event.source === "GOOGLE";
   const isMicrosoft = event.source === "MICROSOFT";
+
   if (isGoogle) {
     const allowed = new Set(["memberId", "color"]);
     for (const key of Object.keys(body)) {
@@ -71,10 +84,14 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
       endsAt: body.endsAt,
       allDay: body.allDay,
       color: body.color,
+      rrule: body.rrule,
     },
   });
 
-  if (!isGoogle && !isMicrosoft) {
+  // Skip remote push when rrule is set (Stage 1: recurring stays LOCAL-only).
+  // Also skip for Google/Microsoft-sourced events (their pushes would be no-ops anyway).
+  const rruleActive = updated.rrule != null;
+  if (!isGoogle && !isMicrosoft && !rruleActive) {
     const member = await db.member.findUnique({ where: { id: updated.memberId } });
     if (member?.googleSyncEnabled && member.googleRefreshTokenEnc) {
       try {
@@ -109,7 +126,11 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
 });
 
 export const DELETE = withErrorHandling<Ctx>(async (_req, { params }) => {
-  const { id } = await params;
+  const { id: rawId } = await params;
+
+  // Synthetic occurrence IDs → resolve to master row for whole-series delete (Stage 1).
+  const id = resolveMasterId(rawId);
+
   const event = await db.event.findUnique({ where: { id } });
   if (!event) throw new AppError("Event not found", "EVENT_NOT_FOUND", 404);
 

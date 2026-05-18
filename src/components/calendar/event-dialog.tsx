@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
-import { Link2, Trash2 } from "lucide-react";
+import { Link2, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/shared/button";
 import {
@@ -15,6 +15,8 @@ import { MemberAvatar } from "@/components/shared/member-avatar";
 import { MemberColorSwatch } from "@/components/shared/member-color-swatch";
 import { cn, MEMBER_COLORS, isMemberColor, type MemberColor } from "@/lib/utils";
 import type { CalendarEvent, CalendarMember, EventCreateInput } from "./types";
+
+type RecurrenceFreq = "none" | "daily" | "weekly" | "monthly";
 
 type EventDialogProps = {
   open: boolean;
@@ -42,6 +44,8 @@ type FormState = {
   endTime: string;
   allDay: boolean;
   color: string;
+  recurrence: RecurrenceFreq;
+  recurrenceEnd: string;
 };
 
 function toLocalDate(iso: string): string {
@@ -66,12 +70,55 @@ function buildAllDayIso(date: string, endOfDay: boolean): string {
   return dt.toISOString();
 }
 
+function parseRrule(rrule: string): { freq: RecurrenceFreq; endDate: string; isCustom: boolean } {
+  const upper = rrule.toUpperCase();
+  const freqMatch = upper.match(/FREQ=([A-Z]+)/);
+  const untilMatch = upper.match(/UNTIL=(\d{8})/);
+
+  let freq: RecurrenceFreq = "none";
+  if (freqMatch) {
+    if (freqMatch[1] === "DAILY") freq = "daily";
+    else if (freqMatch[1] === "WEEKLY") freq = "weekly";
+    else if (freqMatch[1] === "MONTHLY") freq = "monthly";
+  }
+
+  let endDate = "";
+  if (untilMatch) {
+    const raw = untilMatch[1]!;
+    endDate = `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+  }
+
+  const knownParts = /^FREQ=[A-Z]+(;UNTIL=\d{8}T\d{6}Z)?(;UNTIL=\d{8})?$/;
+  const isCustom = !knownParts.test(upper.replace(/\s/g, ""));
+
+  return { freq, endDate, isCustom };
+}
+
+function buildRrule(freq: RecurrenceFreq, recurrenceEnd: string): string | null {
+  if (freq === "none") return null;
+  const freqMap: Record<Exclude<RecurrenceFreq, "none">, string> = {
+    daily: "DAILY",
+    weekly: "WEEKLY",
+    monthly: "MONTHLY",
+  };
+  let rule = `FREQ=${freqMap[freq]}`;
+  if (recurrenceEnd) {
+    const d = new Date(recurrenceEnd);
+    d.setUTCHours(0, 0, 0, 0);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const until = `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T000000Z`;
+    rule += `;UNTIL=${until}`;
+  }
+  return rule;
+}
+
 function defaultState(
   members: CalendarMember[],
   event: CalendarEvent | null,
   initial?: EventDialogProps["initial"],
 ): FormState {
   if (event) {
+    const parsed = event.rrule ? parseRrule(event.rrule) : null;
     return {
       memberId: event.memberId,
       title: event.title,
@@ -83,6 +130,8 @@ function defaultState(
       endTime: toLocalTime(event.endsAt),
       allDay: event.allDay,
       color: event.color ?? "",
+      recurrence: parsed?.freq ?? "none",
+      recurrenceEnd: parsed?.endDate ?? "",
     };
   }
   const today = new Date();
@@ -101,8 +150,12 @@ function defaultState(
     endTime: format(end, "HH:mm"),
     allDay: initial?.allDay ?? false,
     color: "",
+    recurrence: "none",
+    recurrenceEnd: "",
   };
 }
+
+const RECURRENCE_OPTIONS: RecurrenceFreq[] = ["none", "daily", "weekly", "monthly"];
 
 export function EventDialog({
   open,
@@ -130,6 +183,14 @@ export function EventDialog({
 
   const isGoogle = event?.source === "GOOGLE";
   const isEdit = Boolean(event);
+  const isOccurrence = Boolean(event?.seriesId && event.seriesId !== event.id);
+
+  const customRrule = useMemo(() => {
+    if (!event?.rrule) return false;
+    return parseRrule(event.rrule).isCustom;
+  }, [event?.rrule]);
+
+  const masterEventId = event?.seriesId ?? event?.id ?? null;
 
   const selectedMember = useMemo(
     () => members.find((m) => m.id === state.memberId),
@@ -178,8 +239,9 @@ export function EventDialog({
         endsAt,
         allDay: state.allDay,
         color: state.color || null,
+        rrule: buildRrule(state.recurrence, state.recurrenceEnd),
       };
-      await onSave(input, event?.id ?? null);
+      await onSave(input, masterEventId);
       onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("failedToSave"));
@@ -194,7 +256,7 @@ export function EventDialog({
     setSubmitting(true);
     setError(null);
     try {
-      await onDelete(event.id);
+      await onDelete(masterEventId ?? event.id);
       onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("failedToDelete"));
@@ -212,6 +274,13 @@ export function EventDialog({
     ...MEMBER_COLORS.map((c) => ({ value: c, color: c, label: c })),
   ];
 
+  const recurrenceLabelKey: Record<RecurrenceFreq, string> = {
+    none: "recurrenceNever",
+    daily: "recurrenceDaily",
+    weekly: "recurrenceWeekly",
+    monthly: "recurrenceMonthly",
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -224,6 +293,13 @@ export function EventDialog({
             <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
               <Link2 className="size-4 text-accent-sky" />
               {t("googleManaged")}
+            </div>
+          )}
+
+          {isOccurrence && (
+            <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
+              <RotateCcw className="size-4 text-accent-lilac shrink-0" />
+              {t("editingSeries")}
             </div>
           )}
 
@@ -331,6 +407,62 @@ export function EventDialog({
               )}
             </div>
           </div>
+
+          {/* Recurrence picker — only for local events */}
+          {!isGoogle && (
+            <div className="space-y-3">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                {t("recurrence")}
+              </label>
+
+              {customRrule ? (
+                <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
+                  <RotateCcw className="size-4 shrink-0" />
+                  {t("customRecurrence")}
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-wrap gap-2">
+                    {RECURRENCE_OPTIONS.map((freq) => (
+                      <button
+                        key={freq}
+                        type="button"
+                        onClick={() => patch({ recurrence: freq })}
+                        className={cn(
+                          "min-h-[44px] rounded-full border px-4 text-sm font-medium transition-colors",
+                          state.recurrence === freq
+                            ? "border-ink bg-ink text-bg"
+                            : "border-border bg-surface text-ink hover:bg-bg",
+                        )}
+                        aria-pressed={state.recurrence === freq}
+                      >
+                        {t(recurrenceLabelKey[freq] as Parameters<typeof t>[0])}
+                      </button>
+                    ))}
+                  </div>
+
+                  {state.recurrence !== "none" && (
+                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-bg/30 px-4 py-3">
+                      <label
+                        htmlFor="recurrenceEnd"
+                        className="text-sm text-ink shrink-0"
+                      >
+                        {t("recurrenceEnds")}
+                      </label>
+                      <Input
+                        id="recurrenceEnd"
+                        type="date"
+                        value={state.recurrenceEnd}
+                        onChange={(e) => patch({ recurrenceEnd: e.target.value })}
+                        placeholder={t("recurrenceForever")}
+                        className="text-base flex-1"
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
 
           <div className="space-y-2">
             <label className="text-xs font-semibold uppercase tracking-wider text-muted">

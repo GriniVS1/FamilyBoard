@@ -116,6 +116,7 @@ model Event {
   microsoftEtag       String?
   microsoftSyncedAt   DateTime?
   color               String?
+  rrule               String?
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 

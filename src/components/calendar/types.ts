@@ -16,6 +16,9 @@ export type CalendarEvent = {
   color: string | null;
   createdAt: string;
   updatedAt: string;
+  rrule?: string | null;
+  seriesId?: string | null;
+  isRecurring?: boolean;
 };
 
 export type CalendarMember = {
@@ -37,6 +40,7 @@ export type EventCreateInput = {
   endsAt: string;
   allDay?: boolean;
   color?: string | null;
+  rrule?: string | null;
 };
 
 export type EventUpdateInput = Partial<EventCreateInput>;

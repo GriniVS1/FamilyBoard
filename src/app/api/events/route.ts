@@ -6,6 +6,8 @@ import { pushLocalEventToCaldav } from "@/lib/caldav";
 import { pushLocalEventToMicrosoft } from "@/lib/microsoft";
 import { sendNotificationToFamily } from "@/lib/notifications";
 import { getNotificationTranslator } from "@/lib/notification-i18n";
+import { expandEventsInRange } from "@/lib/event-expansion";
+import { rruleSchema } from "@/lib/rrule";
 
 export const runtime = "nodejs";
 
@@ -18,6 +20,7 @@ const createSchema = z.object({
   endsAt: z.coerce.date(),
   allDay: z.boolean().optional().default(false),
   color: z.string().max(20).optional().nullable(),
+  rrule: rruleSchema.optional().nullable(),
 });
 
 export const GET = withErrorHandling(async (req) => {
@@ -39,16 +42,38 @@ export const GET = withErrorHandling(async (req) => {
     ? memberIdsStr.split(",").map((s) => s.trim()).filter(Boolean)
     : null;
 
-  const events = await db.event.findMany({
+  // Fetch non-recurring events that fall within the window, plus any
+  // recurring events whose series starts at or before the window end
+  // (they may still produce occurrences within the window).
+  const rows = await db.event.findMany({
     where: {
       ...(memberIds ? { memberId: { in: memberIds } } : {}),
-      startsAt: { lt: to },
-      endsAt: { gte: from },
+      OR: [
+        // Normal events overlapping [from, to)
+        {
+          rrule: null,
+          startsAt: { lt: to },
+          endsAt: { gte: from },
+        },
+        // Recurring series that could still have occurrences inside the window
+        {
+          rrule: { not: null },
+          startsAt: { lte: to },
+        },
+      ],
     },
-    orderBy: { startsAt: "asc" },
   });
 
-  return ok(events);
+  const expanded = expandEventsInRange(rows, from, to);
+
+  // Post-expansion filter: keep only occurrences that actually overlap [from, to).
+  const filtered = expanded.filter(
+    (e) => e.endsAt >= from && e.startsAt < to,
+  );
+
+  filtered.sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime());
+
+  return ok(filtered);
 });
 
 export const POST = withErrorHandling(async (req) => {
@@ -72,36 +97,40 @@ export const POST = withErrorHandling(async (req) => {
       allDay: body.allDay,
       source: "LOCAL",
       color: body.color ?? null,
+      rrule: body.rrule ?? null,
     },
   });
 
-  if (member.googleSyncEnabled && member.googleRefreshTokenEnc) {
-    try {
-      await pushLocalEvent(event.id);
-    } catch (err) {
-      console.warn(
-        "[events] push to Google failed",
-        err instanceof Error ? err.message : err,
-      );
+  // Recurring events stay LOCAL-only in Stage 1 — skip all remote pushes.
+  if (!event.rrule) {
+    if (member.googleSyncEnabled && member.googleRefreshTokenEnc) {
+      try {
+        await pushLocalEvent(event.id);
+      } catch (err) {
+        console.warn(
+          "[events] push to Google failed",
+          err instanceof Error ? err.message : err,
+        );
+      }
     }
-  }
 
-  if (member.caldavSyncEnabled && member.caldavPasswordEnc) {
-    void pushLocalEventToCaldav(event.id).catch((err) => {
-      console.warn(
-        "[events] push to CalDAV failed",
-        err instanceof Error ? err.message : err,
-      );
-    });
-  }
+    if (member.caldavSyncEnabled && member.caldavPasswordEnc) {
+      void pushLocalEventToCaldav(event.id).catch((err) => {
+        console.warn(
+          "[events] push to CalDAV failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
 
-  if (member.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
-    void pushLocalEventToMicrosoft(event.id).catch((err) => {
-      console.warn(
-        "[events] push to Microsoft failed",
-        err instanceof Error ? err.message : err,
-      );
-    });
+    if (member.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
+      void pushLocalEventToMicrosoft(event.id).catch((err) => {
+        console.warn(
+          "[events] push to Microsoft failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
   }
 
   // Fire-and-forget — don't delay the response for push delivery.

@@ -263,7 +263,17 @@
       "whatsHappening": "What's happening?",
       "optional": "Optional",
       "failedToSave": "Failed to save.",
-      "failedToDelete": "Failed to delete."
+      "failedToDelete": "Failed to delete.",
+      "recurrence": "Repeat",
+      "recurrenceNever": "Never",
+      "recurrenceDaily": "Daily",
+      "recurrenceWeekly": "Weekly",
+      "recurrenceMonthly": "Monthly",
+      "recurrenceEnds": "Ends",
+      "recurrenceForever": "Never ends",
+      "recurringStayLocal": "Recurring events stay on this device. They won't sync to Google, Apple, or Outlook.",
+      "editingSeries": "Editing all occurrences in this series.",
+      "customRecurrence": "Custom recurrence — edit on the remote provider."
     },
     "members": "Members",
     "previous": "Previous",
