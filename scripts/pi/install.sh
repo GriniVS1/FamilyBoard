@@ -228,14 +228,14 @@ echo "  Kiosk service : chromium-kiosk.service  (user service, opens browser)"
 echo "  LAN address   : http://familyboard.local:3000  (after reboot)"
 echo ""
 echo "  To start now (without rebooting):"
-echo "    cd $INSTALL_DIR && docker compose up -d --build"
+echo "    cd $INSTALL_DIR && docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d --build"
 echo ""
 
 if groups "$USER" | grep -qw docker; then
   echo "  Docker group: active."
 else
   echo "  IMPORTANT: Log out and back in for Docker group membership to take effect,"
-  echo "  then run: cd $INSTALL_DIR && docker compose up -d --build"
+  echo "  then run: cd $INSTALL_DIR && docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d --build"
 fi
 
 echo ""
