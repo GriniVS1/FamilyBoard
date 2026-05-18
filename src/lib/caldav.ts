@@ -162,6 +162,84 @@ function parseCaldavDateTime(
   return { date: time.toJSDate(), allDay: time.isDate };
 }
 
+// Normalise allDay DTEND: RFC 5545 makes it exclusive, our model stores inclusive.
+function normalizeEnd(endsAt: Date, startsAt: Date, allDay: boolean): Date {
+  return allDay && endsAt > startsAt
+    ? new Date(endsAt.getTime() - 24 * 60 * 60 * 1000)
+    : endsAt;
+}
+
+type OccurrenceRow = {
+  caldavUid: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  startsAt: Date;
+  endsAt: Date;
+  allDay: boolean;
+};
+
+// Expand a recurring VEVENT into occurrence rows within [rangeStart, rangeEnd].
+// Exception VEVENTs (RECURRENCE-ID) in the same VCALENDAR are wired in so that
+// getOccurrenceDetails resolves overrides and EXDATE skips automatically.
+function expandRecurring(
+  masterVevent: ICAL.Component,
+  exceptionVevents: ICAL.Component[],
+  masterUid: string,
+  rangeStart: ICAL.Time,
+  rangeEnd: ICAL.Time,
+): OccurrenceRow[] {
+  const masterEvent = new ICAL.Event(masterVevent);
+
+  for (const ex of exceptionVevents) {
+    masterEvent.relateException(ex);
+  }
+
+  // Fast-forward iteration to rangeStart so long-running series (e.g. a daily
+  // standup recurring since 2010) don't burn through the safety counter before
+  // reaching the sync window. ICAL's iterator only treats this as a reference
+  // dtstart, so the first next() returns the next valid occurrence ≥ rangeStart.
+  const iterStart = masterEvent.startDate.compare(rangeStart) < 0
+    ? rangeStart
+    : masterEvent.startDate;
+  const iter = masterEvent.iterator(iterStart);
+  const rows: OccurrenceRow[] = [];
+  // Guard against pathological infinite RRULEs (e.g. FREQ=SECONDLY with no COUNT/UNTIL).
+  const MAX_OCCURRENCES = 5000;
+  let safety = 0;
+  let next: ICAL.Time | null;
+
+  while ((next = iter.next()) && safety < MAX_OCCURRENCES) {
+    safety++;
+
+    if (next.compare(rangeEnd) > 0) break;
+    if (next.compare(rangeStart) < 0) continue;
+
+    const details = masterEvent.getOccurrenceDetails(next);
+    const item = details.item;
+
+    const { date: startsAt, allDay } = parseCaldavDateTime(details.startDate);
+    const { date: endsAt } = parseCaldavDateTime(details.endDate);
+
+    // Use the occurrence's ICAL string representation as the suffix so UIDs
+    // are stable across syncs regardless of timezone formatting differences.
+    const occurrenceKey = details.recurrenceId.toString();
+    const occurrenceUid = `${masterUid}_${occurrenceKey}`;
+
+    rows.push({
+      caldavUid: occurrenceUid,
+      title: item.summary || "(no title)",
+      description: item.description || null,
+      location: item.location || null,
+      startsAt,
+      endsAt: normalizeEnd(endsAt, startsAt, allDay),
+      allDay,
+    });
+  }
+
+  return rows;
+}
+
 export async function pullCaldavForMember(memberId: string): Promise<SyncCounts> {
   const member = await db.member.findUnique({ where: { id: memberId } });
   if (
@@ -191,17 +269,26 @@ export async function pullCaldavForMember(memberId: string): Promise<SyncCounts>
     return { pulled: 0, pushed: 0, deleted: 0, skipped: 0 };
   }
 
+  const rangeStart = ICAL.Time.fromJSDate(
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+    true,
+  );
+  const rangeEnd = ICAL.Time.fromJSDate(
+    new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+    true,
+  );
+
   const objects = await client.fetchCalendarObjects({
     calendar: { url: member.caldavCalendarUrl },
-    // Restrict to 30-day window for initial/large syncs.
     timeRange: {
-      start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      end: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+      start: rangeStart.toJSDate().toISOString(),
+      end: rangeEnd.toJSDate().toISOString(),
     },
   });
 
   let pulled = 0;
   let skipped = 0;
+  let deleted = 0;
 
   for (const obj of objects) {
     if (!obj.data || typeof obj.data !== "string") {
@@ -218,68 +305,149 @@ export async function pullCaldavForMember(memberId: string): Promise<SyncCounts>
     }
 
     const vcal = new ICAL.Component(jcal as ICAL.Component["jCal"]);
-    const vevent = vcal.getFirstSubcomponent("vevent");
-    if (!vevent) {
+    const allVevents = vcal.getAllSubcomponents("vevent");
+
+    if (allVevents.length === 0) {
       skipped++;
       continue;
     }
 
-    const icalEvent = new ICAL.Event(vevent);
-    const uid = icalEvent.uid;
+    // Partition: master has no RECURRENCE-ID; overrides do.
+    const masterVevent = allVevents.find(
+      (v) => !v.getFirstPropertyValue("recurrence-id"),
+    );
+    const exceptionVevents = allVevents.filter(
+      (v) => !!v.getFirstPropertyValue("recurrence-id"),
+    );
+
+    if (!masterVevent) {
+      // Detached exception with no master in this object — skip.
+      skipped++;
+      continue;
+    }
+
+    const masterEvent = new ICAL.Event(masterVevent);
+    const uid = masterEvent.uid;
     if (!uid) {
       skipped++;
       continue;
     }
 
-    const start = icalEvent.startDate;
-    const end = icalEvent.endDate;
-    if (!start || !end) {
-      skipped++;
-      continue;
+    if (masterEvent.isRecurring()) {
+      // Expand all occurrences within the sync window.
+      const occurrences = expandRecurring(
+        masterVevent,
+        exceptionVevents,
+        uid,
+        rangeStart,
+        rangeEnd,
+      );
+
+      const writtenUids = new Set<string>();
+
+      for (const occ of occurrences) {
+        await db.event.upsert({
+          where: { memberId_caldavUid: { memberId, caldavUid: occ.caldavUid } },
+          update: {
+            title: occ.title,
+            description: occ.description,
+            location: occ.location,
+            startsAt: occ.startsAt,
+            endsAt: occ.endsAt,
+            allDay: occ.allDay,
+            source: "CALDAV",
+            caldavEtag: obj.etag ?? null,
+            caldavHref: obj.url,
+            caldavSyncedAt: new Date(),
+          },
+          create: {
+            familyId: member.familyId,
+            memberId,
+            title: occ.title,
+            description: occ.description,
+            location: occ.location,
+            startsAt: occ.startsAt,
+            endsAt: occ.endsAt,
+            allDay: occ.allDay,
+            source: "CALDAV",
+            caldavUid: occ.caldavUid,
+            caldavEtag: obj.etag ?? null,
+            caldavHref: obj.url,
+            caldavSyncedAt: new Date(),
+          },
+        });
+        writtenUids.add(occ.caldavUid);
+        pulled++;
+      }
+
+      // Remove stale occurrence rows: occurrences that were in DB but are no
+      // longer produced by the current RRULE (UNTIL shrunk, EXDATE added, etc.)
+      // Also handles the case where RRULE was removed — master writes single
+      // row under `uid`, then this cleanup wipes all `${uid}_*` rows.
+      const stale = await db.event.deleteMany({
+        where: {
+          memberId,
+          caldavUid: {
+            startsWith: `${uid}_`,
+            notIn: [...writtenUids],
+          },
+        },
+      });
+      deleted += stale.count;
+    } else {
+      // Non-recurring: upsert single row under the master UID.
+      const start = masterEvent.startDate;
+      const end = masterEvent.endDate;
+      if (!start || !end) {
+        skipped++;
+        continue;
+      }
+
+      const { date: startsAt, allDay } = parseCaldavDateTime(start);
+      const { date: endsAt } = parseCaldavDateTime(end);
+
+      await db.event.upsert({
+        where: { memberId_caldavUid: { memberId, caldavUid: uid } },
+        update: {
+          title: masterEvent.summary || "(no title)",
+          description: masterEvent.description || null,
+          location: masterEvent.location || null,
+          startsAt,
+          endsAt: normalizeEnd(endsAt, startsAt, allDay),
+          allDay,
+          source: "CALDAV",
+          caldavEtag: obj.etag ?? null,
+          caldavHref: obj.url,
+          caldavSyncedAt: new Date(),
+        },
+        create: {
+          familyId: member.familyId,
+          memberId,
+          title: masterEvent.summary || "(no title)",
+          description: masterEvent.description || null,
+          location: masterEvent.location || null,
+          startsAt,
+          endsAt: normalizeEnd(endsAt, startsAt, allDay),
+          allDay,
+          source: "CALDAV",
+          caldavUid: uid,
+          caldavEtag: obj.etag ?? null,
+          caldavHref: obj.url,
+          caldavSyncedAt: new Date(),
+        },
+      });
+      pulled++;
+
+      // If this UID previously had occurrence rows (was once recurring),
+      // wipe them now that the RRULE is gone.
+      const stale = await db.event.deleteMany({
+        where: {
+          memberId,
+          caldavUid: { startsWith: `${uid}_` },
+        },
+      });
+      deleted += stale.count;
     }
-
-    const { date: startsAt, allDay } = parseCaldavDateTime(start);
-    const { date: endsAt } = parseCaldavDateTime(end);
-
-    // For all-day events DTEND is exclusive (RFC 5545) but our model stores
-    // the same-day end. Subtract one day so a one-day event doesn't show as
-    // spanning into the next day.
-    const normalizedEndsAt =
-      allDay && endsAt > startsAt
-        ? new Date(endsAt.getTime() - 24 * 60 * 60 * 1000)
-        : endsAt;
-
-    await db.event.upsert({
-      where: { memberId_caldavUid: { memberId, caldavUid: uid } },
-      update: {
-        title: icalEvent.summary || "(no title)",
-        description: icalEvent.description || null,
-        location: icalEvent.location || null,
-        startsAt,
-        endsAt: normalizedEndsAt,
-        allDay,
-        source: "CALDAV",
-        caldavEtag: obj.etag ?? null,
-        caldavHref: obj.url,
-        caldavSyncedAt: new Date(),
-      },
-      create: {
-        familyId: member.familyId,
-        memberId,
-        title: icalEvent.summary || "(no title)",
-        description: icalEvent.description || null,
-        location: icalEvent.location || null,
-        startsAt,
-        endsAt: normalizedEndsAt,
-        allDay,
-        source: "CALDAV",
-        caldavUid: uid,
-        caldavEtag: obj.etag ?? null,
-        caldavHref: obj.url,
-        caldavSyncedAt: new Date(),
-      },
-    });
-    pulled++;
   }
 
   await db.member.update({
@@ -290,7 +458,7 @@ export async function pullCaldavForMember(memberId: string): Promise<SyncCounts>
     },
   });
 
-  return { pulled, pushed: 0, deleted: 0, skipped };
+  return { pulled, pushed: 0, deleted, skipped };
 }
 
 // ---------------------------------------------------------------------------
