@@ -101,19 +101,20 @@ export const POST = withErrorHandling(async (req) => {
     },
   });
 
-  // Recurring events stay LOCAL-only in Stage 1 — skip all remote pushes.
-  if (!event.rrule) {
-    if (member.googleSyncEnabled && member.googleRefreshTokenEnc) {
-      try {
-        await pushLocalEvent(event.id);
-      } catch (err) {
-        console.warn(
-          "[events] push to Google failed",
-          err instanceof Error ? err.message : err,
-        );
-      }
+  // Google supports recurring events — push regardless of rrule.
+  if (member.googleSyncEnabled && member.googleRefreshTokenEnc) {
+    try {
+      await pushLocalEvent(event.id);
+    } catch (err) {
+      console.warn(
+        "[events] push to Google failed",
+        err instanceof Error ? err.message : err,
+      );
     }
+  }
 
+  // CalDAV + Microsoft recurrence push is out of scope for this slice.
+  if (!event.rrule) {
     if (member.caldavSyncEnabled && member.caldavPasswordEnc) {
       void pushLocalEventToCaldav(event.id).catch((err) => {
         console.warn(
