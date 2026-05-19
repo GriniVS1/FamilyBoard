@@ -7,6 +7,7 @@ import { randomUUID } from "node:crypto";
 import { AppError } from "./api";
 import { db } from "./db";
 import { decryptToken, encryptToken } from "./crypto";
+import { normalizeRruleForUntilDateOnly } from "./rrule";
 import type { SyncCounts } from "./sync";
 
 // ---------------------------------------------------------------------------
@@ -334,6 +335,23 @@ export async function pullCaldavForMember(memberId: string): Promise<SyncCounts>
     }
 
     if (masterEvent.isRecurring()) {
+      // If we own this series locally (LOCAL master with rrule + matching
+      // caldavUid), server-side expandEventsInRange already handles display.
+      // Skip pull-side expansion to prevent double-writing occurrence rows.
+      const localMaster = await db.event.findFirst({
+        where: {
+          memberId,
+          caldavUid: uid,
+          rrule: { not: null },
+          source: "LOCAL",
+        },
+        select: { id: true },
+      });
+      if (localMaster) {
+        skipped++;
+        continue;
+      }
+
       // Expand all occurrences within the sync window.
       const occurrences = expandRecurring(
         masterVevent,
@@ -473,6 +491,7 @@ function buildVEventString(event: {
   startsAt: Date;
   endsAt: Date;
   allDay: boolean;
+  rrule: string | null;
 }): { icalString: string; uid: string } {
   const uid = event.caldavUid ?? randomUUID();
 
@@ -518,6 +537,12 @@ function buildVEventString(event: {
     vevent.updatePropertyWithValue("location", event.location);
   }
 
+  if (event.rrule) {
+    const normalized = normalizeRruleForUntilDateOnly(event.rrule, event.allDay);
+    const recur = ICAL.Recur.fromString(normalized);
+    vevent.updatePropertyWithValue("rrule", recur);
+  }
+
   vcal.addSubcomponent(vevent);
   return { icalString: vcal.toString(), uid };
 }
@@ -547,6 +572,7 @@ export async function pushLocalEventToCaldav(
     startsAt: event.startsAt,
     endsAt: event.endsAt,
     allDay: event.allDay,
+    rrule: event.rrule,
   });
 
   const password = decryptToken(member.caldavPasswordEnc);

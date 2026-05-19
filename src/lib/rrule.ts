@@ -111,3 +111,13 @@ export const rruleSchema = z
   .string()
   .min(1)
   .transform((val) => parseRRule(val));
+
+// iCal grammar requires UNTIL to be DATE-only (no time component) when the
+// event is all-day. The DB always stores the datetime form, so strip here.
+export function normalizeRruleForUntilDateOnly(
+  rrule: string,
+  allDay: boolean,
+): string {
+  if (!allDay) return rrule;
+  return rrule.replace(/UNTIL=(\d{8})T\d{6}Z/, "UNTIL=$1");
+}
