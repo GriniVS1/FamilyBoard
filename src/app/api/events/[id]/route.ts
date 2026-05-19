@@ -88,10 +88,10 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
     },
   });
 
-  // Skip remote push when rrule is set (Stage 1: recurring stays LOCAL-only).
-  // Also skip for Google/Microsoft-sourced events (their pushes would be no-ops anyway).
+  // Google supports recurring events — push for all LOCAL events regardless of rrule.
+  // CalDAV + Microsoft recurrence push is out of scope; skip when rrule is set.
   const rruleActive = updated.rrule != null;
-  if (!isGoogle && !isMicrosoft && !rruleActive) {
+  if (!isGoogle && !isMicrosoft) {
     const member = await db.member.findUnique({ where: { id: updated.memberId } });
     if (member?.googleSyncEnabled && member.googleRefreshTokenEnc) {
       try {
@@ -103,21 +103,23 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
         );
       }
     }
-    if (member?.caldavSyncEnabled && member.caldavPasswordEnc) {
-      void pushLocalEventToCaldav(updated.id).catch((err) => {
-        console.warn(
-          "[events] push update to CalDAV failed",
-          err instanceof Error ? err.message : err,
-        );
-      });
-    }
-    if (member?.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
-      void pushLocalEventToMicrosoft(updated.id).catch((err) => {
-        console.warn(
-          "[events] push update to Microsoft failed",
-          err instanceof Error ? err.message : err,
-        );
-      });
+    if (!rruleActive) {
+      if (member?.caldavSyncEnabled && member.caldavPasswordEnc) {
+        void pushLocalEventToCaldav(updated.id).catch((err) => {
+          console.warn(
+            "[events] push update to CalDAV failed",
+            err instanceof Error ? err.message : err,
+          );
+        });
+      }
+      if (member?.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
+        void pushLocalEventToMicrosoft(updated.id).catch((err) => {
+          console.warn(
+            "[events] push update to Microsoft failed",
+            err instanceof Error ? err.message : err,
+          );
+        });
+      }
     }
   }
 

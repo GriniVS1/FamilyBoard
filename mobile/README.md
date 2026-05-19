@@ -22,6 +22,24 @@ flutter gen-l10n
 existing `lib/main.dart` (the one you cloned) takes precedence — Flutter will
 overwrite it. Restore it with `git checkout lib/main.dart`.
 
+### Brand the launcher icons (one extra step)
+
+`flutter create` ships a default Flutter logo on both platforms. To replace
+it with the FamilyBoard bullseye, run the icon generator from the repo
+root after the native shells exist:
+
+```bash
+cd ..    # back to repo root
+node scripts/generate-app-icons.mjs
+```
+
+This regenerates the PWA favicons, Android adaptive launcher icons (5
+density buckets), and the full iOS `AppIcon.appiconset` (15 sizes,
+alpha-stripped per App Store rules). The iOS write step is gated on
+`mobile/ios/Runner/Assets.xcassets/AppIcon.appiconset` existing — if you
+haven't run `flutter create` yet, the iOS section silently skips. Brand
+tokens (CREAM, INK, CORAL) live at the top of the script.
+
 ## Running the app
 
 ```bash
