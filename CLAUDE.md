@@ -135,8 +135,7 @@ Bearer-auth API surface lives under `src/app/api/mobile/**`, all routes go throu
 
 - **M3.4** — mobile meal-plan read + tick grocery items from this week's plan. Same pattern as Grocery: 1 read endpoint + screen.
 - **M3.5** — offline drift cache. Local SQLite, write-queue replays on reconnect. Big architectural slice.
-- **iOS launcher icon** — skipped because `mobile/ios/Runner/Assets.xcassets` doesn't exist in this checkout. Once `flutter create -t app .` is rerun cleanly on iOS, extend `scripts/generate-app-icons.mjs` with an `ios` section.
-- **Recurring event push** — local FamilyBoard-created events can't be made recurring yet. *Pull* expansion is fully wired: Google uses `singleEvents: true`, Microsoft uses `calendarView/delta`, and CalDAV expands via `ICAL.Event.iterator()` with EXDATE + RECURRENCE-ID overrides resolved automatically (see `expandRecurring` in `src/lib/caldav.ts`).
+- **Recurring event push (CalDAV + Microsoft)** — Stage 1 (LOCAL-only) and Stage 2 (Google push + pull-dedup) shipped. CalDAV recurrence push needs the `RRULE` property on the master VEVENT in `buildVEventString`; Microsoft needs Graph's structured `recurrence` object. *Pull* expansion is fully wired across all three providers (Google `singleEvents: true`, Microsoft `calendarView/delta`, CalDAV `ICAL.Event.iterator()` with EXDATE + RECURRENCE-ID overrides — see `expandRecurring` in `src/lib/caldav.ts`).
 - **Pi install: done.** Bootstrap script at `scripts/pi/install.sh`; full walkthrough at `docs/raspberry-pi-setup.md`. One-liner: `bash <(curl -fsSL https://raw.githubusercontent.com/GriniVS1/FamilyBoard/main/scripts/pi/install.sh)`.
 
 ### Useful files for a fresh agent landing on this codebase
