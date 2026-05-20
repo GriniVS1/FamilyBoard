@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 
+import '../db/cache_db.dart';
 import '../models/meal_plan.dart';
 import '../models/session.dart';
 import 'api_client.dart';
+import 'cache_service.dart';
 
 class MealPlanSessionRevokedException implements Exception {
   const MealPlanSessionRevokedException();
@@ -22,36 +24,50 @@ class MealPlanNotFoundException implements Exception {
   const MealPlanNotFoundException();
 }
 
+/// Result of [MealPlanService.fetchWeek].
+class MealPlanResult {
+  const MealPlanResult({required this.plans, this.staleAt});
+
+  final List<MealPlan> plans;
+
+  /// Non-null when this result was served from the disk cache.
+  final DateTime? staleAt;
+}
+
 class MealPlanService {
-  MealPlanService({required ApiClientFactory clientFactory})
-      : _clientFactory = clientFactory;
+  MealPlanService({
+    required ApiClientFactory clientFactory,
+    required CacheDb cacheDb,
+  })  : _clientFactory = clientFactory,
+        _cached = CachedGet(cacheDb);
 
   final ApiClientFactory _clientFactory;
+  final CachedGet _cached;
 
-  Future<List<MealPlan>> fetchWeek(Session session, {DateTime? week}) async {
+  Future<MealPlanResult> fetchWeek(Session session, {DateTime? week}) async {
     final Map<String, Object?> queryParams = <String, Object?>{};
     if (week != null) {
       queryParams['week'] =
           '${week.year.toString().padLeft(4, '0')}-${week.month.toString().padLeft(2, '0')}-${week.day.toString().padLeft(2, '0')}';
     }
-    final Dio dio = _clientFactory.authenticated(session);
-    final Response<Object?> response;
+    final CachedGetResult result;
     try {
-      response = await dio.get<Object?>(
-        '/api/mobile/meals',
+      result = await _cached.get(
+        dio: _clientFactory.authenticated(session),
+        path: '/api/mobile/meals',
+        memberId: session.member.id,
         queryParameters: queryParams.isEmpty ? null : queryParams,
       );
     } on DioException catch (e) {
       throw MealPlanFetchException('Network error: ${e.message}');
     }
-    final int status = response.statusCode ?? 0;
-    if (status == 401) {
+    if (result.statusCode == 401) {
       throw const MealPlanSessionRevokedException();
     }
-    if (status != 200) {
-      throw MealPlanFetchException('Unexpected status $status');
+    if (result.statusCode != 200) {
+      throw MealPlanFetchException('Unexpected status ${result.statusCode}');
     }
-    final Object? data = response.data;
+    final Object? data = result.data;
     if (data is! Map) {
       throw const MealPlanFetchException('Unexpected response format');
     }
@@ -61,11 +77,12 @@ class MealPlanService {
     if (rawItems is! List) {
       throw const MealPlanFetchException('Unexpected response format');
     }
-    return rawItems
+    final List<MealPlan> plans = rawItems
         .whereType<Map<Object?, Object?>>()
         .map((Map<Object?, Object?> m) =>
             MealPlan.fromJson(m.cast<String, Object?>()))
         .toList();
+    return MealPlanResult(plans: plans, staleAt: result.cachedAt);
   }
 
   Future<MealPlan> upsert(

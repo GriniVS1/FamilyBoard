@@ -143,11 +143,11 @@ class _GroceryScreenState extends ConsumerState<GroceryScreen> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final AsyncValue<List<GroceryItem>> groceryAsync =
-        ref.watch(groceryProvider);
+    final AsyncValue<GroceryResult> groceryAsync = ref.watch(groceryProvider);
 
     final bool hasChecked =
-        groceryAsync.valueOrNull?.any((GroceryItem i) => i.checked) ?? false;
+        groceryAsync.valueOrNull?.items.any((GroceryItem i) => i.checked) ??
+            false;
 
     return Scaffold(
       appBar: AppBar(
@@ -180,8 +180,8 @@ class _GroceryScreenState extends ConsumerState<GroceryScreen> {
                     await ref.read(sessionProvider.notifier).clear();
                   },
                 ),
-                data: (List<GroceryItem> items) => _GroceryBody(
-                  items: items,
+                data: (GroceryResult result) => _GroceryBody(
+                  items: result.items,
                   l10n: l10n,
                   onRefresh: () async {
                     ref.invalidate(groceryProvider);

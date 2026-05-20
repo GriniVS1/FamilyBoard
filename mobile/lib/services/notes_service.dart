@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 
+import '../db/cache_db.dart';
 import '../models/note.dart';
 import '../models/session.dart';
 import 'api_client.dart';
+import 'cache_service.dart';
 
 /// Thrown when the server returns 401 (session revoked).
 class NoteSessionRevokedException implements Exception {
@@ -26,30 +28,51 @@ class NoteFetchException implements Exception {
   final String message;
 }
 
+/// Result of [NotesService.fetchNotes].
+class NotesResult {
+  const NotesResult({required this.notes, this.staleAt});
+
+  final List<Note> notes;
+
+  /// Non-null when this result was served from the disk cache.
+  final DateTime? staleAt;
+}
+
 /// CRUD service for the `/api/mobile/notes` endpoints.
 class NotesService {
-  NotesService({required ApiClientFactory clientFactory})
-      : _clientFactory = clientFactory;
+  NotesService({
+    required ApiClientFactory clientFactory,
+    required CacheDb cacheDb,
+  })  : _clientFactory = clientFactory,
+        _cached = CachedGet(cacheDb);
 
   final ApiClientFactory _clientFactory;
+  final CachedGet _cached;
 
-  Future<List<Note>> fetchNotes(Session session) async {
-    final Response<Object?> response = await _send(
-      session: session,
-      request: (Dio dio) => dio.get<Object?>('/api/mobile/notes'),
-    );
-    _guardStatus(response, expected: 200);
-    final Map<String, Object?> data = _extractMap(response);
+  Future<NotesResult> fetchNotes(Session session) async {
+    final CachedGetResult result;
+    try {
+      result = await _cached.get(
+        dio: _clientFactory.authenticated(session),
+        path: '/api/mobile/notes',
+        memberId: session.member.id,
+      );
+    } on DioException catch (e) {
+      throw NoteFetchException('Network error: ${e.message}');
+    }
+    _guardCode(result.statusCode, expected: 200);
+    final Map<String, Object?> data = _extractMapFromData(result.data);
     final Object? notesRaw = data['notes'];
     if (notesRaw is! List) {
       throw const NoteFetchException('Unexpected response format');
     }
-    return notesRaw
+    final List<Note> notes = notesRaw
         .cast<Object?>()
         .map((Object? e) => Note.fromJson(
               (e as Map<Object?, Object?>).cast<String, Object?>(),
             ))
         .toList();
+    return NotesResult(notes: notes, staleAt: result.cachedAt);
   }
 
   Future<Note> createNote({
@@ -120,6 +143,7 @@ class NotesService {
     }
   }
 
+  /// Used by mutation paths operating on a raw [Response].
   void _guardStatus(Response<Object?> response, {required int expected}) {
     final int status = response.statusCode ?? 0;
     if (status == 401) {
@@ -129,7 +153,7 @@ class NotesService {
       throw const NoteNotFoundException();
     }
     if (status == 400) {
-      final String code = _errorCode(response);
+      final String code = _errorCodeFromResponse(response);
       if (code == 'TOO_MANY_NOTES') {
         throw const NoteCapReachedException();
       }
@@ -146,7 +170,23 @@ class NotesService {
     }
   }
 
-  String _errorCode(Response<Object?> response) {
+  /// Used by [fetchNotes] which goes through [CachedGet].
+  void _guardCode(int status, {required int expected}) {
+    if (status == 401) {
+      throw const NoteSessionRevokedException();
+    }
+    if (status == 404) {
+      throw const NoteNotFoundException();
+    }
+    if (status >= 500) {
+      throw NoteFetchException('Server error $status');
+    }
+    if (status != expected) {
+      throw NoteFetchException('Unexpected status $status');
+    }
+  }
+
+  String _errorCodeFromResponse(Response<Object?> response) {
     final Object? data = response.data;
     if (data is Map) {
       final Object? error = (data as Map<Object?, Object?>)['error'];
@@ -161,7 +201,10 @@ class NotesService {
   }
 
   Map<String, Object?> _extractMap(Response<Object?> response) {
-    final Object? data = response.data;
+    return _extractMapFromData(response.data);
+  }
+
+  Map<String, Object?> _extractMapFromData(Object? data) {
     if (data is! Map) {
       throw const NoteFetchException('Unexpected response format');
     }

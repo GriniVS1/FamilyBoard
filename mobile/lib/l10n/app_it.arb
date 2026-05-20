@@ -313,5 +313,13 @@
   "mealPlanDeleteToast": "Pasto eliminato",
   "@mealPlanDeleteToast": {},
   "mealPlanDeleteError": "Impossibile eliminare. Riprova.",
-  "@mealPlanDeleteError": {}
+  "@mealPlanDeleteError": {},
+  "offlineBanner": "Offline — dati nella cache",
+  "@offlineBanner": {},
+  "staleData": "Aggiornato alle {time}",
+  "@staleData": {
+    "placeholders": {
+      "time": { "type": "String", "example": "14:32" }
+    }
+  }
 }
