@@ -4,12 +4,6 @@ import '../models/today.dart';
 import '../services/today_service.dart';
 import 'session_provider.dart';
 
-final Provider<TodayService> todayServiceProvider = Provider<TodayService>(
-  (Ref ref) => TodayService(
-    clientFactory: ref.watch(apiClientFactoryProvider),
-  ),
-);
-
 /// Fetches today's data for the current session member.
 ///
 /// Auto-rebuilds when the session changes. Callers can trigger a manual

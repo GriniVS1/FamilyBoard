@@ -113,10 +113,10 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final AsyncValue<List<MealPlan>> mealPlanAsync =
+    final AsyncValue<MealPlanResult> mealPlanAsync =
         ref.watch(mealPlanProvider);
 
-    final List<MealPlan>? plans = mealPlanAsync.valueOrNull;
+    final List<MealPlan>? plans = mealPlanAsync.valueOrNull?.plans;
     final bool hasPlans = plans != null && plans.isNotEmpty;
 
     return Scaffold(
@@ -177,7 +177,7 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
                 await ref.read(sessionProvider.notifier).clear();
               },
             ),
-            data: (List<MealPlan> planList) => planList.isEmpty
+            data: (MealPlanResult result) => result.plans.isEmpty
                 ? ListView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: <Widget>[
@@ -187,7 +187,7 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
                       ),
                     ],
                   )
-                : _WeekBody(plans: planList, l10n: l10n),
+                : _WeekBody(plans: result.plans, l10n: l10n),
           ),
         ),
       ),

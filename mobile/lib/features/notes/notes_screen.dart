@@ -18,7 +18,7 @@ class NotesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppL10n l10n = AppL10n.of(context);
-    final AsyncValue<List<Note>> notesAsync = ref.watch(notesProvider);
+    final AsyncValue<NotesResult> notesAsync = ref.watch(notesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -59,7 +59,8 @@ class NotesScreen extends ConsumerWidget {
                 await ref.read(sessionProvider.notifier).clear();
               },
             ),
-            data: (List<Note> notes) => _NotesList(notes: notes, l10n: l10n),
+            data: (NotesResult result) =>
+                _NotesList(notes: result.notes, l10n: l10n),
           ),
         ),
       ),

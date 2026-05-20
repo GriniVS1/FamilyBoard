@@ -123,9 +123,13 @@ class TodayPayload {
     required this.events,
     required this.chores,
     required this.todos,
+    this.staleAt,
   });
 
-  factory TodayPayload.fromJson(Map<String, Object?> json) {
+  factory TodayPayload.fromJson(
+    Map<String, Object?> json, {
+    DateTime? staleAt,
+  }) {
     final Map<String, Object?> memberJson =
         (json['member']! as Map<Object?, Object?>).cast<String, Object?>();
 
@@ -157,6 +161,7 @@ class TodayPayload {
           .map((Map<Object?, Object?> t) =>
               TodayTodo.fromJson(t.cast<String, Object?>()))
           .toList(),
+      staleAt: staleAt,
     );
   }
 
@@ -167,4 +172,8 @@ class TodayPayload {
   final List<TodayEvent> events;
   final List<TodayChore> chores;
   final List<TodayTodo> todos;
+
+  /// Non-null when this payload was served from the disk cache rather than a
+  /// live network response. Phase B can surface this in the UI.
+  final DateTime? staleAt;
 }

@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/event.dart';
 import '../services/events_service.dart';
 import 'session_provider.dart';
 
@@ -27,10 +26,12 @@ class EventsRange {
 ///
 /// Watches the current session so it rebuilds when the session changes.
 /// Callers can trigger a manual refresh via `ref.invalidate(eventsProvider(range))`.
-final AutoDisposeFutureProviderFamily<List<MobileEvent>, EventsRange>
+///
+/// Returns an [EventsResult] whose [EventsResult.staleAt] is non-null when the
+/// data was served from the disk cache (offline scenario).
+final AutoDisposeFutureProviderFamily<EventsResult, EventsRange>
     eventsProvider = FutureProvider.autoDispose
-        .family<List<MobileEvent>, EventsRange>(
-            (Ref ref, EventsRange range) async {
+        .family<EventsResult, EventsRange>((Ref ref, EventsRange range) async {
   final SessionState sessionState = ref.watch(sessionProvider);
   final session = sessionState.session;
   if (session == null) {

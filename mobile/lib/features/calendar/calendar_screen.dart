@@ -90,7 +90,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
     final EventsRange range = EventsRange(from: _from, to: _to);
-    final AsyncValue<List<MobileEvent>> eventsAsync =
+    final AsyncValue<EventsResult> eventsAsync =
         ref.watch(eventsProvider(range));
 
     return Scaffold(
@@ -119,7 +119,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               },
             ),
           ),
-          data: (List<MobileEvent> events) {
+          data: (EventsResult result) {
+            final List<MobileEvent> events = result.events;
             final LinkedHashMap<String, EventMember> members =
                 _distinctMembers(events);
 

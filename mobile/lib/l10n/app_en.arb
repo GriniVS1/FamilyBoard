@@ -321,5 +321,16 @@
   "mealPlanDeleteToast": "Meal deleted",
   "@mealPlanDeleteToast": {},
   "mealPlanDeleteError": "Couldn't delete. Try again.",
-  "@mealPlanDeleteError": {}
+  "@mealPlanDeleteError": {},
+  "offlineBanner": "Offline — showing cached data",
+  "@offlineBanner": {
+    "description": "Shown in the slim banner at the top when the device has no network."
+  },
+  "staleData": "Cached at {time}",
+  "@staleData": {
+    "description": "Badge shown when data was loaded from the local disk cache.",
+    "placeholders": {
+      "time": { "type": "String", "example": "14:32" }
+    }
+  }
 }

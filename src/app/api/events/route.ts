@@ -113,9 +113,7 @@ export const POST = withErrorHandling(async (req) => {
     }
   }
 
-  // CalDAV supports recurring events — push regardless of rrule.
-  // Microsoft recurrence push is out of scope (Graph uses a structured object,
-  // not an iCal string — different slice).
+  // CalDAV + Microsoft both support recurring events — push regardless of rrule.
   if (member.caldavSyncEnabled && member.caldavPasswordEnc) {
     void pushLocalEventToCaldav(event.id).catch((err) => {
       console.warn(
@@ -125,7 +123,7 @@ export const POST = withErrorHandling(async (req) => {
     });
   }
 
-  if (!event.rrule && member.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
+  if (member.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
     void pushLocalEventToMicrosoft(event.id).catch((err) => {
       console.warn(
         "[events] push to Microsoft failed",

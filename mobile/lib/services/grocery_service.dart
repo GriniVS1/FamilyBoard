@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
 
+import '../db/cache_db.dart';
 import '../models/grocery.dart';
 import '../models/session.dart';
 import 'api_client.dart';
+import 'cache_service.dart';
 
 /// Thrown when the server returns 401 (bearer token revoked).
 class GrocerySessionRevokedException implements Exception {
@@ -26,31 +28,53 @@ class GroceryFetchException implements Exception {
   final String message;
 }
 
+/// Result of [GroceryService.fetchAll].
+class GroceryResult {
+  const GroceryResult({required this.items, this.staleAt});
+
+  final List<GroceryItem> items;
+
+  /// Non-null when this result was served from the disk cache.
+  final DateTime? staleAt;
+}
+
 /// HTTP client for all five grocery endpoints.
 ///
 /// All errors are translated to typed exceptions; callers never inspect raw
 /// DioException or HTTP status codes.
 class GroceryService {
-  GroceryService({required ApiClientFactory clientFactory})
-      : _clientFactory = clientFactory;
+  GroceryService({
+    required ApiClientFactory clientFactory,
+    required CacheDb cacheDb,
+  })  : _clientFactory = clientFactory,
+        _cached = CachedGet(cacheDb);
 
   final ApiClientFactory _clientFactory;
+  final CachedGet _cached;
 
-  Future<List<GroceryItem>> fetchAll(Session session) async {
-    final Response<Object?> response = await _get(
-      session: session,
-      path: '/api/mobile/grocery',
-    );
-    final Map<String, Object?> body = _extractMap(response);
+  Future<GroceryResult> fetchAll(Session session) async {
+    final CachedGetResult result;
+    try {
+      result = await _cached.get(
+        dio: _clientFactory.authenticated(session),
+        path: '/api/mobile/grocery',
+        memberId: session.member.id,
+      );
+    } on DioException catch (e) {
+      throw GroceryFetchException('Network error: ${e.message}');
+    }
+    _guardStatus(result.statusCode);
+    final Map<String, Object?> body = _extractMapFromData(result.data);
     final Object? rawItems = body['items'];
     if (rawItems is! List) {
       throw const GroceryFetchException('Unexpected response format');
     }
-    return rawItems
+    final List<GroceryItem> items = rawItems
         .whereType<Map<Object?, Object?>>()
         .map((Map<Object?, Object?> m) =>
             GroceryItem.fromJson(m.cast<String, Object?>()))
         .toList();
+    return GroceryResult(items: items, staleAt: result.cachedAt);
   }
 
   Future<GroceryItem> create(
@@ -125,18 +149,6 @@ class GroceryService {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  Future<Response<Object?>> _get({
-    required Session session,
-    required String path,
-  }) async {
-    final Dio dio = _clientFactory.authenticated(session);
-    try {
-      return await dio.get<Object?>(path);
-    } on DioException catch (e) {
-      throw GroceryFetchException('Network error: ${e.message}');
-    }
-  }
-
   Future<Response<Object?>> _post({
     required Session session,
     required String path,
@@ -175,6 +187,7 @@ class GroceryService {
     }
   }
 
+  /// Used by mutation paths that operate on a raw [Response].
   void _guard(Response<Object?> response, {required int expected}) {
     final int status = response.statusCode ?? 0;
     if (status == 401) {
@@ -184,7 +197,7 @@ class GroceryService {
       throw const GroceryNotFoundException();
     }
     if (status == 400) {
-      final String code = _errorCode(response);
+      final String code = _errorCode(response.data);
       if (code == 'TOO_MANY_ITEMS') {
         throw const GroceryCapReachedException();
       }
@@ -195,8 +208,21 @@ class GroceryService {
     }
   }
 
-  String _errorCode(Response<Object?> response) {
-    final Object? data = response.data;
+  /// Used by [fetchAll] which goes through [CachedGet] and only has a plain
+  /// int status code (no response body for error codes at this layer).
+  void _guardStatus(int status) {
+    if (status == 401) {
+      throw const GrocerySessionRevokedException();
+    }
+    if (status == 404) {
+      throw const GroceryNotFoundException();
+    }
+    if (status != 200) {
+      throw GroceryFetchException('Unexpected status $status');
+    }
+  }
+
+  String _errorCode(Object? data) {
     if (data is Map) {
       final Object? error = (data as Map<Object?, Object?>)['error'];
       if (error is Map) {
@@ -210,7 +236,10 @@ class GroceryService {
   }
 
   Map<String, Object?> _extractMap(Response<Object?> response) {
-    final Object? data = response.data;
+    return _extractMapFromData(response.data);
+  }
+
+  Map<String, Object?> _extractMapFromData(Object? data) {
     if (data is! Map) {
       throw const GroceryFetchException('Unexpected response format');
     }

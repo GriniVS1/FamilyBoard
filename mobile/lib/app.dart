@@ -17,6 +17,7 @@ import 'models/notification_payload.dart';
 import 'services/fcm_service.dart';
 import 'state/session_provider.dart';
 import 'theme.dart';
+import 'widgets/connectivity_banner.dart';
 
 /// Global messenger key so foreground FCM callbacks can show snackbars
 /// from outside the widget tree.
@@ -167,13 +168,20 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
       supportedLocales: AppL10n.supportedLocales,
       routerConfig: _router,
       debugShowCheckedModeBanner: false,
+      // Mount the connectivity banner above the router outlet on every screen.
+      builder: (BuildContext ctx, Widget? child) => Column(
+        children: <Widget>[
+          const ConnectivityBanner(),
+          Expanded(child: child ?? const SizedBox.shrink()),
+        ],
+      ),
     );
   }
 }
 
 class _RouterRefresh extends ChangeNotifier {
-  _RouterRefresh(this._ref) {
-    _ref.listen<SessionState>(
+  _RouterRefresh(WidgetRef ref) {
+    _subscription = ref.listenManual<SessionState>(
       sessionProvider,
       (SessionState? previous, SessionState next) {
         notifyListeners();
@@ -181,5 +189,11 @@ class _RouterRefresh extends ChangeNotifier {
     );
   }
 
-  final WidgetRef _ref;
+  late final ProviderSubscription<SessionState> _subscription;
+
+  @override
+  void dispose() {
+    _subscription.close();
+    super.dispose();
+  }
 }
