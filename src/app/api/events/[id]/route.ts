@@ -88,6 +88,9 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
     },
   });
 
+  // Google and Microsoft both support recurring events — push unconditionally.
+  // CalDAV recurrence push is not yet wired (PR #35 not merged); gate on rrule.
+  const rruleActive = updated.rrule != null;
   // Google + CalDAV support recurring events — push regardless of rrule.
   // Microsoft recurrence push is out of scope (Graph uses a structured object,
   // not an iCal string — different slice).
@@ -103,6 +106,7 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
         );
       }
     }
+    if (!rruleActive && member?.caldavSyncEnabled && member.caldavPasswordEnc) {
     if (member?.caldavSyncEnabled && member.caldavPasswordEnc) {
       void pushLocalEventToCaldav(updated.id).catch((err) => {
         console.warn(
