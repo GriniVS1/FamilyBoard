@@ -2,6 +2,7 @@ import type { calendar_v3 } from "googleapis";
 import { db } from "./db";
 import { getCalendarForMember, isNotFoundLike, listIncrementalEvents } from "./google";
 import { googleConfigured } from "./env";
+import { normalizeRruleForUntilDateOnly } from "./rrule";
 
 export type SyncCounts = {
   pulled: number;
@@ -133,13 +134,6 @@ export async function pullForMember(memberId: string): Promise<SyncCounts> {
   return { pulled, pushed: 0, deleted, skipped };
 }
 
-// Google requires UNTIL on all-day events to be DATE-only (no time component).
-// The DB stores the datetime form unconditionally, so strip the suffix here only.
-function normalizeRruleForGoogle(rrule: string, allDay: boolean): string {
-  if (!allDay) return rrule;
-  return rrule.replace(/UNTIL=(\d{8})T\d{6}Z/, "UNTIL=$1");
-}
-
 function toGoogleDateTime(date: Date, allDay: boolean): calendar_v3.Schema$EventDateTime {
   if (allDay) {
     const y = date.getUTCFullYear();
@@ -169,7 +163,7 @@ export async function pushLocalEvent(eventId: string): Promise<SyncCounts> {
   };
 
   if (event.rrule) {
-    requestBody.recurrence = [`RRULE:${normalizeRruleForGoogle(event.rrule, event.allDay)}`];
+    requestBody.recurrence = [`RRULE:${normalizeRruleForUntilDateOnly(event.rrule, event.allDay)}`];
   } else if (event.googleEventId) {
     // rrule was removed — tell Google to clear the recurrence rule.
     requestBody.recurrence = [];
