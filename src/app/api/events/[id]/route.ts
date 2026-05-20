@@ -88,8 +88,8 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
     },
   });
 
-  // Google supports recurring events — push for all LOCAL events regardless of rrule.
-  // CalDAV + Microsoft recurrence push is out of scope; skip when rrule is set.
+  // Google and Microsoft both support recurring events — push unconditionally.
+  // CalDAV recurrence push is not yet wired (PR #35 not merged); gate on rrule.
   const rruleActive = updated.rrule != null;
   if (!isGoogle && !isMicrosoft) {
     const member = await db.member.findUnique({ where: { id: updated.memberId } });
@@ -103,23 +103,21 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
         );
       }
     }
-    if (!rruleActive) {
-      if (member?.caldavSyncEnabled && member.caldavPasswordEnc) {
-        void pushLocalEventToCaldav(updated.id).catch((err) => {
-          console.warn(
-            "[events] push update to CalDAV failed",
-            err instanceof Error ? err.message : err,
-          );
-        });
-      }
-      if (member?.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
-        void pushLocalEventToMicrosoft(updated.id).catch((err) => {
-          console.warn(
-            "[events] push update to Microsoft failed",
-            err instanceof Error ? err.message : err,
-          );
-        });
-      }
+    if (!rruleActive && member?.caldavSyncEnabled && member.caldavPasswordEnc) {
+      void pushLocalEventToCaldav(updated.id).catch((err) => {
+        console.warn(
+          "[events] push update to CalDAV failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+    if (member?.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
+      void pushLocalEventToMicrosoft(updated.id).catch((err) => {
+        console.warn(
+          "[events] push update to Microsoft failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
     }
   }
 

@@ -113,25 +113,24 @@ export const POST = withErrorHandling(async (req) => {
     }
   }
 
-  // CalDAV + Microsoft recurrence push is out of scope for this slice.
-  if (!event.rrule) {
-    if (member.caldavSyncEnabled && member.caldavPasswordEnc) {
-      void pushLocalEventToCaldav(event.id).catch((err) => {
-        console.warn(
-          "[events] push to CalDAV failed",
-          err instanceof Error ? err.message : err,
-        );
-      });
-    }
+  // CalDAV recurrence push is not yet wired (PR #35 not merged); gate on rrule.
+  if (!event.rrule && member.caldavSyncEnabled && member.caldavPasswordEnc) {
+    void pushLocalEventToCaldav(event.id).catch((err) => {
+      console.warn(
+        "[events] push to CalDAV failed",
+        err instanceof Error ? err.message : err,
+      );
+    });
+  }
 
-    if (member.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
-      void pushLocalEventToMicrosoft(event.id).catch((err) => {
-        console.warn(
-          "[events] push to Microsoft failed",
-          err instanceof Error ? err.message : err,
-        );
-      });
-    }
+  // Microsoft supports recurring events — push regardless of rrule.
+  if (member.microsoftSyncEnabled && member.microsoftRefreshTokenEnc) {
+    void pushLocalEventToMicrosoft(event.id).catch((err) => {
+      console.warn(
+        "[events] push to Microsoft failed",
+        err instanceof Error ? err.message : err,
+      );
+    });
   }
 
   // Fire-and-forget — don't delay the response for push delivery.

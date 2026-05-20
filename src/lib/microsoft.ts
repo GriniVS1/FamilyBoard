@@ -11,6 +11,7 @@ import { db } from "./db";
 import { decryptToken, encryptToken } from "./crypto";
 import { env, microsoftConfigured } from "./env";
 import type { SyncCounts } from "./sync";
+import { rruleToGraphRecurrence } from "./microsoft-recurrence";
 
 export const MICROSOFT_OAUTH_REDIRECT_PATH = "/api/auth/microsoft/callback";
 
@@ -237,6 +238,8 @@ function buildGraphClient(accessToken: string): GraphClient {
 // Graph API response types (only the fields we use)
 type GraphEvent = {
   id?: string;
+  type?: "singleInstance" | "occurrence" | "exception" | "seriesMaster";
+  seriesMasterId?: string;
   subject?: string;
   body?: { content?: string };
   location?: { displayName?: string };
@@ -320,6 +323,24 @@ export async function pullForMicrosoftMember(memberId: string): Promise<SyncCoun
         }
 
         const etag = ev["@odata.etag"] ?? null;
+
+        // Instances of a locally-owned recurring series must not overwrite
+        // the master row. The master is identified by the seriesMasterId
+        // that Graph attaches to every expanded occurrence.
+        if (ev.seriesMasterId) {
+          const localMaster = await db.event.findFirst({
+            where: {
+              memberId,
+              microsoftEventId: ev.seriesMasterId,
+              rrule: { not: null },
+            },
+            select: { id: true },
+          });
+          if (localMaster) {
+            skipped++;
+            continue;
+          }
+        }
 
         await db.event.upsert({
           where: {
@@ -425,7 +446,7 @@ export async function pushLocalEventToMicrosoft(eventId: string): Promise<SyncCo
 
   const { client } = await getGraphClientForMember(member.id);
 
-  const body = {
+  const body: Record<string, unknown> = {
     subject: event.title,
     body: event.description
       ? { contentType: "text", content: event.description }
@@ -443,6 +464,13 @@ export async function pushLocalEventToMicrosoft(eventId: string): Promise<SyncCo
     },
     isAllDay: event.allDay,
   };
+
+  if (event.rrule) {
+    body.recurrence = rruleToGraphRecurrence(event.rrule, event.startsAt);
+  } else if (event.microsoftEventId) {
+    // rrule was removed — collapse the series back to a single occurrence.
+    body.recurrence = null;
+  }
 
   if (event.microsoftEventId) {
     const headers: Record<string, string> = {};
