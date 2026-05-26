@@ -8,7 +8,9 @@ import '../../models/session.dart';
 import '../../services/grocery_service.dart';
 import '../../state/grocery_provider.dart';
 import '../../state/session_provider.dart';
+import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/queue_badge.dart';
 
 /// Display order for categories in the grouped list.
 const List<GroceryCategory> _categoryOrder = <GroceryCategory>[
@@ -153,6 +155,7 @@ class _GroceryScreenState extends ConsumerState<GroceryScreen> {
       appBar: AppBar(
         title: const FamilyBoardLogo(fontSize: 18),
         actions: <Widget>[
+          const QueueBadge(),
           if (hasChecked)
             TextButton(
               onPressed: _clearChecked,
@@ -182,6 +185,7 @@ class _GroceryScreenState extends ConsumerState<GroceryScreen> {
                 ),
                 data: (GroceryResult result) => _GroceryBody(
                   items: result.items,
+                  staleAt: result.staleAt,
                   l10n: l10n,
                   onRefresh: () async {
                     ref.invalidate(groceryProvider);
@@ -267,11 +271,13 @@ class _GroceryBody extends StatelessWidget {
     required this.items,
     required this.l10n,
     required this.onRefresh,
+    this.staleAt,
   });
 
   final List<GroceryItem> items;
   final AppL10n l10n;
   final Future<void> Function() onRefresh;
+  final DateTime? staleAt;
 
   @override
   Widget build(BuildContext context) {
@@ -281,6 +287,11 @@ class _GroceryBody extends StatelessWidget {
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           children: <Widget>[
+            if (staleAt != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: CachedAtPill(staleAt: staleAt),
+              ),
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.4,
               child: _EmptyState(l10n: l10n),
@@ -305,9 +316,17 @@ class _GroceryBody extends StatelessWidget {
       child: ListView.builder(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.only(bottom: 24),
-        itemCount: _countItems(presentCategories, grouped),
+        itemCount:
+            _countItems(presentCategories, grouped) + (staleAt != null ? 1 : 0),
         itemBuilder: (BuildContext context, int index) {
-          return _buildItem(context, index, presentCategories, grouped);
+          if (staleAt != null && index == 0) {
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: CachedAtPill(staleAt: staleAt),
+            );
+          }
+          final int adjustedIndex = staleAt != null ? index - 1 : index;
+          return _buildItem(context, adjustedIndex, presentCategories, grouped);
         },
       ),
     );

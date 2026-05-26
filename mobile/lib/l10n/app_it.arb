@@ -321,5 +321,21 @@
     "placeholders": {
       "time": { "type": "String", "example": "14:32" }
     }
-  }
+  },
+  "queuePending": "{count, plural, =1 {1 in attesa} other {{count} in attesa}}",
+  "@queuePending": {
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+  "queuedRow": "In attesa di sync",
+  "@queuedRow": {},
+  "syncFailed": "Sincronizzazione fallita: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": { "type": "String", "example": "NOT_FOUND" }
+    }
+  },
+  "queueFull": "Troppe azioni offline — connettiti prima",
+  "@queueFull": {}
 }

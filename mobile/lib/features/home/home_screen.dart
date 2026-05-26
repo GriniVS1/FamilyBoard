@@ -16,7 +16,9 @@ import '../../services/today_service.dart';
 import '../../state/session_provider.dart';
 import '../../state/today_provider.dart';
 import '../../theme.dart';
+import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/queue_badge.dart';
 
 enum _HeartbeatStatus { idle, sending, done }
 
@@ -91,6 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       appBar: AppBar(
         title: const FamilyBoardLogo(fontSize: 18),
         actions: <Widget>[
+          const QueueBadge(),
           IconButton(
             icon: const Icon(Icons.restaurant_menu_outlined),
             tooltip: l10n.mealPlanOpenAria,
@@ -343,6 +346,10 @@ class _TodayBody extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
+        if (payload.staleAt != null) ...<Widget>[
+          CachedAtPill(staleAt: payload.staleAt),
+          const SizedBox(height: 8),
+        ],
         _EventsCard(payload: payload, l10n: l10n),
         const SizedBox(height: 12),
         _ChoresCard(payload: payload, session: session, l10n: l10n),
@@ -554,6 +561,7 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
   bool _busy = false;
   bool _optimisticDone = false;
   bool _optimisticOverride = false;
+  bool _isQueued = false;
 
   bool get _isDone =>
       _optimisticOverride ? _optimisticDone : widget.chore.completedToday;
@@ -585,11 +593,20 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
     StarBurstOverlay.show(context, center);
 
     try {
-      await ref.read(mutationsServiceProvider).completeChore(
-            session: widget.session,
-            id: widget.chore.id,
-          );
+      final ChoreCompletionResult result =
+          await ref.read(mutationsServiceProvider).completeChore(
+                session: widget.session,
+                id: widget.chore.id,
+              );
       if (!mounted) {
+        return;
+      }
+      // completionId == 'temp_pending' means the mutation was queued offline.
+      if (result.completionId == 'temp_pending') {
+        setState(() {
+          _isQueued = true;
+          _busy = false;
+        });
         return;
       }
       ref.invalidate(todayProvider);
@@ -706,83 +723,98 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: _busy ? null : () => _handleTap(context),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 56),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
+      child: Opacity(
+        opacity: _isQueued ? 0.6 : 1.0,
+        child: InkWell(
+          onTap: _busy ? null : () => _handleTap(context),
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
-          ),
-          child: Row(
-            children: <Widget>[
-              if (widget.chore.icon != null && widget.chore.icon!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
+            child: Row(
+              children: <Widget>[
+                if (widget.chore.icon != null && widget.chore.icon!.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: Text(
+                      widget.chore.icon!,
+                      style: const TextStyle(fontSize: 22),
+                    ),
+                  ),
+                Expanded(
                   child: Text(
-                    widget.chore.icon!,
-                    style: const TextStyle(fontSize: 22),
+                    widget.chore.title,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: done ? mutedColor : null,
+                          decoration: done ? TextDecoration.lineThrough : null,
+                          decorationColor: mutedColor,
+                        ),
                   ),
                 ),
-              Expanded(
-                child: Text(
-                  widget.chore.title,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: done ? mutedColor : null,
-                        decoration: done ? TextDecoration.lineThrough : null,
-                        decorationColor: mutedColor,
-                      ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (_busy)
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              else
-                Text(
-                  done ? '★' : '☆',
-                  style: TextStyle(
-                    fontSize: 20,
+                const SizedBox(width: 8),
+                if (_busy)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else if (_isQueued)
+                  Icon(
+                    Icons.schedule,
+                    size: 18,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.4),
+                  )
+                else
+                  Text(
+                    done ? '★' : '☆',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: done
+                          ? const Color(0xFFFFD166)
+                          : Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.3),
+                    ),
+                  ),
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
                     color: done
-                        ? const Color(0xFFFFD166)
-                        : Theme.of(context)
+                        ? Theme.of(context)
                             .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.3),
+                            .outline
+                            .withValues(alpha: 0.3)
+                        : Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    widget.l10n.homePointsLabel(widget.chore.points),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: done
+                              ? mutedColor
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onPrimaryContainer,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 12,
+                        ),
                   ),
                 ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: done
-                      ? Theme.of(context)
-                          .colorScheme
-                          .outline
-                          .withValues(alpha: 0.3)
-                      : Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  widget.l10n.homePointsLabel(widget.chore.points),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: done
-                            ? mutedColor
-                            : Theme.of(context).colorScheme.onPrimaryContainer,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 12,
-                      ),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -1083,6 +1115,7 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
   bool _busy = false;
   bool _optimisticDone = false;
   bool _optimisticOverride = false;
+  bool _isQueued = false;
 
   bool get _isDone => _optimisticOverride ? _optimisticDone : widget.todo.done;
 
@@ -1098,12 +1131,21 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
     });
 
     try {
-      await ref.read(mutationsServiceProvider).toggleTodo(
-            session: widget.session,
-            id: widget.todo.id,
-            done: newDone,
-          );
+      final TodoMutation result =
+          await ref.read(mutationsServiceProvider).toggleTodo(
+                session: widget.session,
+                id: widget.todo.id,
+                done: newDone,
+              );
       if (!mounted) {
+        return;
+      }
+      // An empty title signals a queued synthetic result.
+      if (result.title.isEmpty) {
+        setState(() {
+          _isQueued = true;
+          _busy = false;
+        });
         return;
       }
       ref.invalidate(todayProvider);
@@ -1205,68 +1247,93 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: _busy ? null : _toggle,
-        onLongPress: _busy ? null : _delete,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 56),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
+      child: Opacity(
+        opacity: _isQueued ? 0.6 : 1.0,
+        child: InkWell(
+          onTap: _busy ? null : _toggle,
+          onLongPress: _busy ? null : _delete,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 56),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outline,
+              ),
             ),
-          ),
-          child: Row(
-            children: <Widget>[
-              GestureDetector(
-                onTap: _busy ? null : _toggle,
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: SizedBox(
-                    width: 32,
-                    height: 32,
-                    child: _busy
-                        ? const Center(
-                            child: SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          )
-                        : Icon(
-                            done
-                                ? Icons.check_circle_rounded
-                                : Icons.radio_button_unchecked_rounded,
-                            color: done
-                                ? mutedColor
-                                : Theme.of(context).colorScheme.primary,
-                            size: 24,
-                          ),
+            child: Row(
+              children: <Widget>[
+                GestureDetector(
+                  onTap: _busy ? null : _toggle,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 10),
+                    child: SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: _busy
+                          ? const Center(
+                              child: SizedBox(
+                                width: 18,
+                                height: 18,
+                                child:
+                                    CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            )
+                          : _isQueued
+                              ? Icon(
+                                  Icons.schedule,
+                                  size: 20,
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .onSurface
+                                      .withValues(alpha: 0.4),
+                                )
+                              : Icon(
+                                  done
+                                      ? Icons.check_circle_rounded
+                                      : Icons.radio_button_unchecked_rounded,
+                                  color: done
+                                      ? mutedColor
+                                      : Theme.of(context).colorScheme.primary,
+                                  size: 24,
+                                ),
+                    ),
                   ),
                 ),
-              ),
-              Expanded(
-                child: Text(
-                  widget.todo.title,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: done ? mutedColor : null,
-                        decoration: done ? TextDecoration.lineThrough : null,
-                        decorationColor: mutedColor,
-                      ),
+                Expanded(
+                  child: Text(
+                    widget.todo.title,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          color: done ? mutedColor : null,
+                          decoration: done ? TextDecoration.lineThrough : null,
+                          decorationColor: mutedColor,
+                        ),
+                  ),
                 ),
-              ),
-              if (duePill != null) ...<Widget>[
-                const SizedBox(width: 8),
-                _DuePill(
-                  label: duePill,
-                  overdue: _isOverdue(widget.todo.dueDate),
-                ),
+                if (_isQueued) ...<Widget>[
+                  const SizedBox(width: 4),
+                  Text(
+                    AppL10n.of(context).queuedRow,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.4),
+                          fontSize: 11,
+                        ),
+                  ),
+                ] else if (duePill != null) ...<Widget>[
+                  const SizedBox(width: 8),
+                  _DuePill(
+                    label: duePill,
+                    overdue: _isOverdue(widget.todo.dueDate),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
