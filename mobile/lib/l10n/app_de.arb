@@ -321,5 +321,21 @@
     "placeholders": {
       "time": { "type": "String", "example": "14:32" }
     }
-  }
+  },
+  "queuePending": "{count, plural, =1 {1 wartet} other {{count} warten}}",
+  "@queuePending": {
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+  "queuedRow": "Wartet auf Synchronisation",
+  "@queuedRow": {},
+  "syncFailed": "Synchronisation fehlgeschlagen: {error}",
+  "@syncFailed": {
+    "placeholders": {
+      "error": { "type": "String", "example": "NOT_FOUND" }
+    }
+  },
+  "queueFull": "Zu viele Offline-Aktionen — bitte zuerst verbinden",
+  "@queueFull": {}
 }

@@ -332,5 +332,27 @@
     "placeholders": {
       "time": { "type": "String", "example": "14:32" }
     }
+  },
+  "queuePending": "{count, plural, =1 {1 pending} other {{count} pending}}",
+  "@queuePending": {
+    "description": "Badge showing how many mutations are queued offline.",
+    "placeholders": {
+      "count": { "type": "int", "example": "3" }
+    }
+  },
+  "queuedRow": "Waiting to sync",
+  "@queuedRow": {
+    "description": "Label shown next to a row whose mutation is queued offline."
+  },
+  "syncFailed": "Couldn't sync: {error}",
+  "@syncFailed": {
+    "description": "Snackbar shown when a queued mutation is rejected by the server.",
+    "placeholders": {
+      "error": { "type": "String", "example": "NOT_FOUND" }
+    }
+  },
+  "queueFull": "Too many offline actions — connect to sync first",
+  "@queueFull": {
+    "description": "Shown when the offline write queue is full."
   }
 }

@@ -15,7 +15,9 @@ import 'features/splash/splash_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'models/notification_payload.dart';
 import 'services/fcm_service.dart';
+import 'services/write_queue_service.dart';
 import 'state/session_provider.dart';
+import 'state/write_queue_provider.dart';
 import 'theme.dart';
 import 'widgets/connectivity_banner.dart';
 
@@ -33,12 +35,39 @@ class FamilyBoardApp extends ConsumerStatefulWidget {
 
 class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
   late final GoRouter _router;
+  StreamSubscription<ReplayFailure>? _replayFailureSub;
 
   @override
   void initState() {
     super.initState();
     _router = _buildRouter();
     _bootstrapFcmListeners();
+    // Keep the replay coordinator alive for the full app lifetime.
+    ref.read(queueReplayCoordinatorProvider);
+    // Surface permanent 4xx replay failures as snackbars.
+    _replayFailureSub = ref
+        .read(writeQueueServiceProvider)
+        .replayFailures
+        .listen(_onReplayFailure);
+  }
+
+  @override
+  void dispose() {
+    _replayFailureSub?.cancel();
+    super.dispose();
+  }
+
+  void _onReplayFailure(ReplayFailure failure) {
+    final BuildContext? ctx = scaffoldMessengerKey.currentContext;
+    final String message = ctx != null
+        ? AppL10n.of(ctx).syncFailed(failure.message)
+        : 'Couldn\'t sync: ${failure.message}';
+    scaffoldMessengerKey.currentState?.showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
   }
 
   GoRouter _buildRouter() {

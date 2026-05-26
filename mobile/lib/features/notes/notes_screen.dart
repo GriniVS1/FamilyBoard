@@ -9,7 +9,9 @@ import '../../services/notes_service.dart';
 import '../../state/notes_provider.dart';
 import '../../state/session_provider.dart';
 import '../../theme.dart';
+import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/queue_badge.dart';
 import 'note_edit_sheet.dart';
 
 class NotesScreen extends ConsumerWidget {
@@ -24,6 +26,7 @@ class NotesScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const FamilyBoardLogo(fontSize: 18),
         actions: <Widget>[
+          const QueueBadge(),
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: Tooltip(
@@ -59,8 +62,11 @@ class NotesScreen extends ConsumerWidget {
                 await ref.read(sessionProvider.notifier).clear();
               },
             ),
-            data: (NotesResult result) =>
-                _NotesList(notes: result.notes, l10n: l10n),
+            data: (NotesResult result) => _NotesList(
+              notes: result.notes,
+              l10n: l10n,
+              staleAt: result.staleAt,
+            ),
           ),
         ),
       ),
@@ -73,10 +79,15 @@ class NotesScreen extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 
 class _NotesList extends ConsumerWidget {
-  const _NotesList({required this.notes, required this.l10n});
+  const _NotesList({
+    required this.notes,
+    required this.l10n,
+    this.staleAt,
+  });
 
   final List<Note> notes;
   final AppL10n l10n;
+  final DateTime? staleAt;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -96,6 +107,13 @@ class _NotesList extends ConsumerWidget {
     return CustomScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       slivers: <Widget>[
+        if (staleAt != null)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: CachedAtPill(staleAt: staleAt),
+            ),
+          ),
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverGrid(

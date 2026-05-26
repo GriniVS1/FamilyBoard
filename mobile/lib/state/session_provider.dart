@@ -13,6 +13,7 @@ import '../services/notes_service.dart';
 import '../services/pair_service.dart';
 import '../services/secure_storage.dart';
 import '../services/today_service.dart';
+import '../services/write_queue_service.dart';
 
 final Provider<ApiClientFactory> apiClientFactoryProvider =
     Provider<ApiClientFactory>((Ref ref) => const ApiClientFactory());
@@ -37,10 +38,18 @@ final Provider<FcmService> fcmServiceProvider = Provider<FcmService>(
   (Ref ref) => FcmService(clientFactory: ref.watch(apiClientFactoryProvider)),
 );
 
+final Provider<WriteQueueService> writeQueueServiceProvider =
+    Provider<WriteQueueService>(
+  (Ref ref) => WriteQueueService(
+    db: ref.watch(cacheDbProvider),
+    clientFactory: ref.watch(apiClientFactoryProvider),
+  ),
+);
+
 final Provider<MutationsService> mutationsServiceProvider =
     Provider<MutationsService>(
   (Ref ref) => MutationsService(
-    clientFactory: ref.watch(apiClientFactoryProvider),
+    writeQueueService: ref.watch(writeQueueServiceProvider),
   ),
 );
 
@@ -62,6 +71,7 @@ final Provider<NotesService> notesServiceProvider = Provider<NotesService>(
   (Ref ref) => NotesService(
     clientFactory: ref.watch(apiClientFactoryProvider),
     cacheDb: ref.watch(cacheDbProvider),
+    writeQueueService: ref.watch(writeQueueServiceProvider),
   ),
 );
 
@@ -70,6 +80,7 @@ final Provider<GroceryService> groceryServiceProvider =
   (Ref ref) => GroceryService(
     clientFactory: ref.watch(apiClientFactoryProvider),
     cacheDb: ref.watch(cacheDbProvider),
+    writeQueueService: ref.watch(writeQueueServiceProvider),
   ),
 );
 

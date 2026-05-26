@@ -5,6 +5,7 @@ import '../models/grocery.dart';
 import '../models/session.dart';
 import 'api_client.dart';
 import 'cache_service.dart';
+import 'write_queue_service.dart';
 
 /// Thrown when the server returns 401 (bearer token revoked).
 class GrocerySessionRevokedException implements Exception {
@@ -40,17 +41,20 @@ class GroceryResult {
 
 /// HTTP client for all five grocery endpoints.
 ///
-/// All errors are translated to typed exceptions; callers never inspect raw
-/// DioException or HTTP status codes.
+/// Reads use [CachedGet] for offline fallback. Writes route through
+/// [WriteQueueService] so they queue on network failure and replay on reconnect.
 class GroceryService {
   GroceryService({
     required ApiClientFactory clientFactory,
     required CacheDb cacheDb,
+    required WriteQueueService writeQueueService,
   })  : _clientFactory = clientFactory,
-        _cached = CachedGet(cacheDb);
+        _cached = CachedGet(cacheDb),
+        _queue = writeQueueService;
 
   final ApiClientFactory _clientFactory;
   final CachedGet _cached;
+  final WriteQueueService _queue;
 
   Future<GroceryResult> fetchAll(Session session) async {
     final CachedGetResult result;
@@ -63,7 +67,7 @@ class GroceryService {
     } on DioException catch (e) {
       throw GroceryFetchException('Network error: ${e.message}');
     }
-    _guardStatus(result.statusCode);
+    _guardStatusInt(result.statusCode);
     final Map<String, Object?> body = _extractMapFromData(result.data);
     final Object? rawItems = body['items'];
     if (rawItems is! List) {
@@ -83,6 +87,7 @@ class GroceryService {
     double? quantity,
     String? unit,
     GroceryCategory? category,
+    String? tempId,
   }) async {
     final Map<String, Object?> body = <String, Object?>{
       'name': name,
@@ -91,11 +96,31 @@ class GroceryService {
       if (category != null && category != GroceryCategory.uncategorized)
         'category': category.name,
     };
-    final Response<Object?> response = await _post(
+    final Response<Object?> response = await _sendOrQueue(
       session: session,
+      method: 'POST',
       path: '/api/mobile/grocery',
       body: body,
+      tempId: tempId,
     );
+
+    if (_wasQueued(response)) {
+      final DateTime now = DateTime.now();
+      return GroceryItem(
+        id: tempId ?? 'temp_pending',
+        familyId: session.family.id,
+        name: name,
+        quantity: quantity?.toString(),
+        unit: unit,
+        category: category ?? GroceryCategory.uncategorized,
+        checked: false,
+        source: null,
+        order: 0,
+        createdAt: now,
+        updatedAt: now,
+      );
+    }
+
     _guard(response, expected: 201);
     return GroceryItem.fromJson(_extractMap(response));
   }
@@ -117,29 +142,54 @@ class GroceryService {
       if (category != null && category != GroceryCategory.uncategorized)
         'category': category.name,
     };
-    final Response<Object?> response = await _patch(
+    final Response<Object?> response = await _sendOrQueue(
       session: session,
+      method: 'PATCH',
       path: '/api/mobile/grocery/$id',
       body: body,
     );
+
+    if (_wasQueued(response)) {
+      final DateTime now = DateTime.now();
+      return GroceryItem(
+        id: id,
+        familyId: session.family.id,
+        name: name ?? '',
+        quantity: quantity?.toString(),
+        unit: unit,
+        category: category ?? GroceryCategory.uncategorized,
+        checked: checked ?? false,
+        source: null,
+        order: 0,
+        createdAt: now,
+        updatedAt: now,
+      );
+    }
+
     _guard(response, expected: 200);
     return GroceryItem.fromJson(_extractMap(response));
   }
 
   Future<void> delete(Session session, {required String id}) async {
-    final Response<Object?> response = await _delete(
+    final Response<Object?> response = await _sendOrQueue(
       session: session,
+      method: 'DELETE',
       path: '/api/mobile/grocery/$id',
     );
+
+    if (_wasQueued(response)) return;
     _guard(response, expected: 200);
   }
 
   Future<int> clearChecked(Session session) async {
-    final Response<Object?> response = await _post(
+    final Response<Object?> response = await _sendOrQueue(
       session: session,
+      method: 'POST',
       path: '/api/mobile/grocery/clear-checked',
       body: <String, Object?>{},
     );
+
+    if (_wasQueued(response)) return 0;
     _guard(response, expected: 200);
     final Map<String, Object?> body = _extractMap(response);
     return body['deleted'] is int ? body['deleted']! as int : 0;
@@ -149,42 +199,31 @@ class GroceryService {
   // Private helpers
   // ---------------------------------------------------------------------------
 
-  Future<Response<Object?>> _post({
+  Future<Response<Object?>> _sendOrQueue({
     required Session session,
+    required String method,
     required String path,
-    required Map<String, Object?> body,
+    Map<String, Object?>? body,
+    String? tempId,
   }) async {
-    final Dio dio = _clientFactory.authenticated(session);
     try {
-      return await dio.post<Object?>(path, data: body);
-    } on DioException catch (e) {
-      throw GroceryFetchException('Network error: ${e.message}');
+      return await _queue.sendOrQueue(
+        session: session,
+        method: method,
+        path: path,
+        body: body,
+        tempId: tempId,
+      );
+    } on WriteQueueFullException {
+      throw const GroceryCapReachedException();
     }
   }
 
-  Future<Response<Object?>> _patch({
-    required Session session,
-    required String path,
-    required Map<String, Object?> body,
-  }) async {
-    final Dio dio = _clientFactory.authenticated(session);
-    try {
-      return await dio.patch<Object?>(path, data: body);
-    } on DioException catch (e) {
-      throw GroceryFetchException('Network error: ${e.message}');
-    }
-  }
-
-  Future<Response<Object?>> _delete({
-    required Session session,
-    required String path,
-  }) async {
-    final Dio dio = _clientFactory.authenticated(session);
-    try {
-      return await dio.delete<Object?>(path);
-    } on DioException catch (e) {
-      throw GroceryFetchException('Network error: ${e.message}');
-    }
+  bool _wasQueued(Response<Object?> response) {
+    if ((response.statusCode ?? 0) != 202) return false;
+    final Object? data = response.data;
+    if (data is! Map) return false;
+    return (data as Map<Object?, Object?>)['queued'] == true;
   }
 
   /// Used by mutation paths that operate on a raw [Response].
@@ -209,8 +248,8 @@ class GroceryService {
   }
 
   /// Used by [fetchAll] which goes through [CachedGet] and only has a plain
-  /// int status code (no response body for error codes at this layer).
-  void _guardStatus(int status) {
+  /// int status code.
+  void _guardStatusInt(int status) {
     if (status == 401) {
       throw const GrocerySessionRevokedException();
     }

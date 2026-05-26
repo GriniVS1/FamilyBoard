@@ -5,6 +5,7 @@ import '../models/note.dart';
 import '../models/session.dart';
 import 'api_client.dart';
 import 'cache_service.dart';
+import 'write_queue_service.dart';
 
 /// Thrown when the server returns 401 (session revoked).
 class NoteSessionRevokedException implements Exception {
@@ -39,15 +40,21 @@ class NotesResult {
 }
 
 /// CRUD service for the `/api/mobile/notes` endpoints.
+///
+/// Reads use [CachedGet] for offline fallback. Writes route through
+/// [WriteQueueService] so they queue on network failure and replay on reconnect.
 class NotesService {
   NotesService({
     required ApiClientFactory clientFactory,
     required CacheDb cacheDb,
+    required WriteQueueService writeQueueService,
   })  : _clientFactory = clientFactory,
-        _cached = CachedGet(cacheDb);
+        _cached = CachedGet(cacheDb),
+        _queue = writeQueueService;
 
   final ApiClientFactory _clientFactory;
   final CachedGet _cached;
+  final WriteQueueService _queue;
 
   Future<NotesResult> fetchNotes(Session session) async {
     final CachedGetResult result;
@@ -80,17 +87,33 @@ class NotesService {
     required String body,
     String color = 'sun',
     bool pinned = false,
+    String? tempId,
   }) async {
     final Map<String, Object?> payload = <String, Object?>{
       'body': body,
       'color': color,
       'pinned': pinned,
     };
-    final Response<Object?> response = await _send(
+    final Response<Object?> response = await _sendOrQueue(
       session: session,
-      request: (Dio dio) =>
-          dio.post<Object?>('/api/mobile/notes', data: payload),
+      method: 'POST',
+      path: '/api/mobile/notes',
+      body: payload,
+      tempId: tempId,
     );
+
+    if (_wasQueued(response)) {
+      return Note(
+        id: tempId ?? 'temp_pending',
+        familyId: session.family.id,
+        body: body,
+        color: color,
+        pinned: pinned,
+        createdAt: DateTime.now(),
+        author: null,
+      );
+    }
+
     _guardStatus(response, expected: 201);
     return Note.fromJson(_extractMap(response));
   }
@@ -107,11 +130,25 @@ class NotesService {
       if (color != null) 'color': color,
       if (pinned != null) 'pinned': pinned,
     };
-    final Response<Object?> response = await _send(
+    final Response<Object?> response = await _sendOrQueue(
       session: session,
-      request: (Dio dio) =>
-          dio.patch<Object?>('/api/mobile/notes/$id', data: payload),
+      method: 'PATCH',
+      path: '/api/mobile/notes/$id',
+      body: payload,
     );
+
+    if (_wasQueued(response)) {
+      return Note(
+        id: id,
+        familyId: session.family.id,
+        body: body ?? '',
+        color: color ?? 'sun',
+        pinned: pinned ?? false,
+        createdAt: DateTime.now(),
+        author: null,
+      );
+    }
+
     _guardStatus(response, expected: 200);
     return Note.fromJson(_extractMap(response));
   }
@@ -120,10 +157,13 @@ class NotesService {
     required Session session,
     required String id,
   }) async {
-    final Response<Object?> response = await _send(
+    final Response<Object?> response = await _sendOrQueue(
       session: session,
-      request: (Dio dio) => dio.delete<Object?>('/api/mobile/notes/$id'),
+      method: 'DELETE',
+      path: '/api/mobile/notes/$id',
     );
+
+    if (_wasQueued(response)) return;
     _guardStatus(response, expected: 200);
   }
 
@@ -131,16 +171,31 @@ class NotesService {
   // Helpers
   // --------------------------------------------------------------------------
 
-  Future<Response<Object?>> _send({
+  Future<Response<Object?>> _sendOrQueue({
     required Session session,
-    required Future<Response<Object?>> Function(Dio dio) request,
+    required String method,
+    required String path,
+    Map<String, Object?>? body,
+    String? tempId,
   }) async {
-    final Dio dio = _clientFactory.authenticated(session);
     try {
-      return await request(dio);
-    } on DioException catch (e) {
-      throw NoteFetchException('Network error: ${e.message}');
+      return await _queue.sendOrQueue(
+        session: session,
+        method: method,
+        path: path,
+        body: body,
+        tempId: tempId,
+      );
+    } on WriteQueueFullException {
+      throw const NoteCapReachedException();
     }
+  }
+
+  bool _wasQueued(Response<Object?> response) {
+    if ((response.statusCode ?? 0) != 202) return false;
+    final Object? data = response.data;
+    if (data is! Map) return false;
+    return (data as Map<Object?, Object?>)['queued'] == true;
   }
 
   /// Used by mutation paths operating on a raw [Response].
@@ -170,7 +225,8 @@ class NotesService {
     }
   }
 
-  /// Used by [fetchNotes] which goes through [CachedGet].
+  /// Used by [fetchNotes] which goes through [CachedGet] and only has a plain
+  /// int status code (no response body for error codes at this layer).
   void _guardCode(int status, {required int expected}) {
     if (status == 401) {
       throw const NoteSessionRevokedException();
