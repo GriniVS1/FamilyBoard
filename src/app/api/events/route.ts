@@ -62,6 +62,7 @@ export const GET = withErrorHandling(async (req) => {
         },
       ],
     },
+    include: { overrides: true },
   });
 
   const expanded = expandEventsInRange(rows, from, to);

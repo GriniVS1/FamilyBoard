@@ -20,23 +20,74 @@ const patchSchema = z.object({
   rrule: rruleSchema.nullable().optional(),
 });
 
-// Synthetic occurrence IDs look like "<masterId>__<isoTimestamp>".
-// Returns the master DB id by stripping the suffix.
-function resolveMasterId(rawId: string): string {
+const scopeSchema = z.enum(["instance", "series"]).optional();
+
+function parseSyntheticId(rawId: string): { masterId: string; recurrenceId: string | null } {
   const sep = rawId.indexOf("__");
-  return sep === -1 ? rawId : rawId.slice(0, sep);
+  if (sep === -1) return { masterId: rawId, recurrenceId: null };
+  return { masterId: rawId.slice(0, sep), recurrenceId: rawId.slice(sep + 2) };
 }
 
 type Ctx = { params: Promise<{ id: string }> };
 
 export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
   const { id: rawId } = await params;
+  const url = new URL(req.url);
+  const scopeRaw = url.searchParams.get("scope") ?? undefined;
+  const scope = scopeSchema.parse(scopeRaw);
   const body = patchSchema.parse(await req.json());
 
-  // Occurrence edits resolve to the master row (whole-series for Stage 1).
-  const id = resolveMasterId(rawId);
+  const { masterId, recurrenceId } = parseSyntheticId(rawId);
 
-  const event = await db.event.findUnique({ where: { id } });
+  // Default: synthetic ID → instance scope; plain master ID → series scope.
+  const effectiveScope = scope ?? (recurrenceId ? "instance" : "series");
+
+  if (effectiveScope === "instance" && recurrenceId) {
+    const master = await db.event.findUnique({ where: { id: masterId } });
+    if (!master) throw new AppError("Event not found", "EVENT_NOT_FOUND", 404);
+    if (master.source !== "LOCAL") {
+      throw new AppError(
+        "Per-occurrence overrides are only supported for LOCAL-source events",
+        "OVERRIDE_NOT_SUPPORTED",
+        400,
+      );
+    }
+
+    if (body.startsAt && body.endsAt && body.endsAt <= body.startsAt) {
+      throw new AppError("endsAt must be after startsAt", "INVALID_RANGE", 400);
+    }
+
+    const override = await db.eventOverride.upsert({
+      where: { masterId_recurrenceId: { masterId, recurrenceId } },
+      update: {
+        cancelled: false,
+        ...(body.title !== undefined && { title: body.title }),
+        ...(body.description !== undefined && { description: body.description }),
+        ...(body.location !== undefined && { location: body.location }),
+        ...(body.startsAt !== undefined && { startsAt: body.startsAt }),
+        ...(body.endsAt !== undefined && { endsAt: body.endsAt }),
+        ...(body.allDay !== undefined && { allDay: body.allDay }),
+        ...(body.color !== undefined && { color: body.color }),
+      },
+      create: {
+        masterId,
+        recurrenceId,
+        cancelled: false,
+        title: body.title ?? null,
+        description: body.description ?? null,
+        location: body.location ?? null,
+        startsAt: body.startsAt ?? null,
+        endsAt: body.endsAt ?? null,
+        allDay: body.allDay ?? null,
+        color: body.color ?? null,
+      },
+    });
+
+    return ok({ ...override, id: rawId, seriesId: masterId, isRecurring: true });
+  }
+
+  // series scope — update master row
+  const event = await db.event.findUnique({ where: { id: masterId } });
   if (!event) throw new AppError("Event not found", "EVENT_NOT_FOUND", 404);
 
   const isGoogle = event.source === "GOOGLE";
@@ -73,8 +124,15 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
     if (!member) throw new AppError("Member not found", "MEMBER_NOT_FOUND", 404);
   }
 
+  // Shifting the series schedule makes existing per-occurrence overrides
+  // semantically orphaned — purge them, matching Google Calendar's behavior.
+  const scheduleChanged = body.rrule !== undefined || body.startsAt !== undefined;
+  if (scheduleChanged && event.rrule) {
+    await db.eventOverride.deleteMany({ where: { masterId } });
+  }
+
   const updated = await db.event.update({
-    where: { id },
+    where: { id: masterId },
     data: {
       memberId: body.memberId,
       title: body.title,
@@ -88,8 +146,7 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
     },
   });
 
-  // All three providers (Google, CalDAV, Microsoft) support recurring events
-  // now — push unconditionally for LOCAL-source events.
+  // All three providers support recurring events — push unconditionally for LOCAL.
   if (!isGoogle && !isMicrosoft) {
     const member = await db.member.findUnique({ where: { id: updated.memberId } });
     if (member?.googleSyncEnabled && member.googleRefreshTokenEnc) {
@@ -120,28 +177,55 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
     }
   }
 
-  const fresh = await db.event.findUnique({ where: { id } });
+  const fresh = await db.event.findUnique({ where: { id: masterId } });
   return ok(fresh);
 });
 
-export const DELETE = withErrorHandling<Ctx>(async (_req, { params }) => {
+export const DELETE = withErrorHandling<Ctx>(async (req, { params }) => {
   const { id: rawId } = await params;
+  const url = new URL(req.url);
+  const scopeRaw = url.searchParams.get("scope") ?? undefined;
+  const scope = scopeSchema.parse(scopeRaw);
 
-  // Synthetic occurrence IDs → resolve to master row for whole-series delete (Stage 1).
-  const id = resolveMasterId(rawId);
+  const { masterId, recurrenceId } = parseSyntheticId(rawId);
 
-  const event = await db.event.findUnique({ where: { id } });
+  // Default: synthetic ID → instance scope; plain master ID → series scope.
+  const effectiveScope = scope ?? (recurrenceId ? "instance" : "series");
+
+  if (effectiveScope === "instance" && recurrenceId) {
+    const master = await db.event.findUnique({ where: { id: masterId } });
+    if (!master) throw new AppError("Event not found", "EVENT_NOT_FOUND", 404);
+    if (master.source !== "LOCAL") {
+      throw new AppError(
+        "Per-occurrence cancellations are only supported for LOCAL-source events",
+        "OVERRIDE_NOT_SUPPORTED",
+        400,
+      );
+    }
+
+    await db.eventOverride.upsert({
+      where: { masterId_recurrenceId: { masterId, recurrenceId } },
+      update: { cancelled: true },
+      create: { masterId, recurrenceId, cancelled: true },
+    });
+
+    return ok({ ok: true });
+  }
+
+  // series scope — delete master row and any remote copies
+  const event = await db.event.findUnique({ where: { id: masterId } });
   if (!event) throw new AppError("Event not found", "EVENT_NOT_FOUND", 404);
 
   if (event.source === "LOCAL" && event.googleEventId) {
-    await deleteRemoteEvent(id);
+    await deleteRemoteEvent(masterId);
   }
   if (event.source === "LOCAL" && event.caldavHref) {
-    await deleteRemoteCaldavEvent(id);
+    await deleteRemoteCaldavEvent(masterId);
   }
   if (event.source === "LOCAL" && event.microsoftEventId) {
-    await deleteRemoteMicrosoftEvent(id);
+    await deleteRemoteMicrosoftEvent(masterId);
   }
-  await db.event.delete({ where: { id } });
+  // onDelete: Cascade on EventOverride.master handles override cleanup.
+  await db.event.delete({ where: { id: masterId } });
   return ok({ ok: true });
 });
