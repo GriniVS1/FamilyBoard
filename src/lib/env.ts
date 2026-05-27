@@ -22,6 +22,10 @@ const schema = z.object({
   // Firebase service-account JSON for mobile push (FCM). Optional — if absent,
   // FCM silently no-ops and only web-push is used.
   FIREBASE_SERVICE_ACCOUNT_PATH: z.string().optional(),
+  // Ed25519 public key (base64 SPKI DER) for offline license verification.
+  // When unset, the baked-in dev key from src/lib/license.ts is used — safe for
+  // development/testing but the matching private key must never be committed.
+  LICENSE_PUBLIC_KEY: z.string().optional(),
 });
 
 export const env = schema.parse(process.env);

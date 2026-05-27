@@ -725,6 +725,29 @@
       "separator": " · "
     }
   },
+  "license": {
+    "activateTitle": "Activer FamilyBoard",
+    "activateIntro": "Saisis ta clé de licence pour débloquer toutes les fonctionnalités. Tu trouveras la clé dans ta confirmation d'achat.",
+    "deviceIdLabel": "ID de l'appareil",
+    "deviceIdHelp": "Communique cet identifiant à ton vendeur pour obtenir la clé de licence correspondante.",
+    "keyLabel": "Clé de licence",
+    "keyPlaceholder": "FB1-XXXX-XXXX-XXXX",
+    "activateButton": "Activer",
+    "activating": "Activation…",
+    "errorDeviceMismatch": "Cette clé appartient à un autre appareil.",
+    "errorInvalid": "Clé de licence invalide.",
+    "errorGeneric": "L'activation a échoué. Réessaie.",
+    "graceBanner": "Période d'essai : encore {days, plural, =1 {1 jour} other {# jours}}. Activer →",
+    "softBanner": "Écriture bloquée — activez votre licence →",
+    "settingsCardTitle": "Licence",
+    "statusLabel": "Statut",
+    "planLabel": "Offre",
+    "validUntilLabel": "Valide jusqu'au",
+    "changeKeyButton": "Saisir / modifier la clé de licence",
+    "copyDeviceId": "Copier",
+    "copied": "Copié !",
+    "dismissBanner": "Fermer"
+  },
   "errors": {
     "generic": "Une erreur s'est produite.",
     "network": "Erreur réseau. Vérifie ta connexion.",
