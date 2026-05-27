@@ -502,6 +502,112 @@ export async function pushLocalEventToMicrosoft(eventId: string): Promise<SyncCo
   return { pulled: 0, pushed: 1, deleted: 0, skipped: 0 };
 }
 
+// Resolve a recurrenceId ISO string to the Graph instance event id by querying
+// the series instances endpoint and matching originalStart by UTC value.
+async function resolveGraphInstanceId(
+  client: GraphClient,
+  seriesMasterId: string,
+  recurrenceId: string,
+): Promise<string | null> {
+  const occurrenceDate = new Date(recurrenceId);
+  const startDateTime = new Date(occurrenceDate.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const endDateTime = new Date(occurrenceDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
+  type InstancesResponse = { value: GraphEvent[] };
+  const res: InstancesResponse = await client
+    .api(`me/events/${seriesMasterId}/instances`)
+    .query({ startDateTime, endDateTime })
+    .get() as InstancesResponse;
+
+  for (const inst of res.value ?? []) {
+    if (!inst.id || !inst.start?.dateTime) continue;
+    // Normalize: Graph may return local-zone datetimes without Z; parse as-is
+    // and compare by proximity (< 60 s) to handle sub-minute offset drift.
+    const instStart = new Date(
+      inst.start.dateTime.endsWith("Z")
+        ? inst.start.dateTime
+        : inst.start.dateTime + "Z",
+    );
+    if (Math.abs(instStart.getTime() - occurrenceDate.getTime()) < 60_000) {
+      return inst.id;
+    }
+  }
+
+  return null;
+}
+
+export async function pushOverrideToMicrosoft(
+  masterId: string,
+  recurrenceId: string,
+): Promise<void> {
+  if (!microsoftConfigured) return;
+
+  const master = await db.event.findUnique({ where: { id: masterId } });
+  if (!master || master.source !== "LOCAL" || !master.microsoftEventId) return;
+
+  const member = await db.member.findUnique({ where: { id: master.memberId } });
+  if (!member || !member.microsoftSyncEnabled || !member.microsoftRefreshTokenEnc) return;
+
+  const override = await db.eventOverride.findUnique({
+    where: { masterId_recurrenceId: { masterId, recurrenceId } },
+  });
+  if (!override) return;
+
+  try {
+    const { client } = await getGraphClientForMember(member.id);
+
+    const instanceId = await resolveGraphInstanceId(
+      client,
+      master.microsoftEventId,
+      recurrenceId,
+    );
+    if (!instanceId) {
+      console.warn("[microsoft] pushOverrideToMicrosoft: could not resolve instance id");
+      return;
+    }
+
+    if (override.cancelled) {
+      await client.api(`me/events/${instanceId}`).delete();
+      return;
+    }
+
+    const effectiveAllDay = override.allDay ?? master.allDay;
+    const effectiveStartsAt = override.startsAt ?? master.startsAt;
+    const effectiveEndsAt = override.endsAt ?? master.endsAt;
+
+    const body: Record<string, unknown> = {};
+    if (override.title !== null) body.subject = override.title;
+    if (override.description !== null) {
+      body.body = override.description
+        ? { contentType: "text", content: override.description }
+        : undefined;
+    }
+    if (override.location !== null) {
+      body.location = override.location
+        ? { displayName: override.location }
+        : undefined;
+    }
+    if (override.startsAt !== null || override.allDay !== null) {
+      body.start = { dateTime: effectiveStartsAt.toISOString(), timeZone: "UTC" };
+    }
+    if (override.endsAt !== null || override.allDay !== null) {
+      body.end = { dateTime: effectiveEndsAt.toISOString(), timeZone: "UTC" };
+    }
+    if (override.allDay !== null) {
+      body.isAllDay = effectiveAllDay;
+    }
+
+    if (Object.keys(body).length > 0) {
+      await client.api(`me/events/${instanceId}`).patch(body);
+    }
+  } catch (err) {
+    console.warn(
+      "[microsoft] pushOverrideToMicrosoft failed",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
 export async function deleteRemoteMicrosoftEvent(eventId: string): Promise<void> {
   const event = await db.event.findUnique({ where: { id: eventId } });
   if (!event || !event.microsoftEventId) return;

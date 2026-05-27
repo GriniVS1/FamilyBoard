@@ -192,6 +192,117 @@ export async function pushLocalEvent(eventId: string): Promise<SyncCounts> {
   return { pulled: 0, pushed: 1, deleted: 0, skipped: 0 };
 }
 
+// Convert a UTC ISO recurrenceId to the iCal "basic" UTC format Google uses to
+// address recurring event instances: YYYYMMDDTHHMMSSZ (datetime) or YYYYMMDD (all-day).
+function recurrenceIdToBasicUtc(recurrenceId: string, allDay: boolean): string {
+  const d = new Date(recurrenceId);
+  if (allDay) {
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, "0");
+    const day = String(d.getUTCDate()).padStart(2, "0");
+    return `${y}${m}${day}`;
+  }
+  return d.toISOString().replace(/[-:]/g, "").replace(".000", "");
+}
+
+export async function pushOverrideToGoogle(masterId: string, recurrenceId: string): Promise<void> {
+  if (!googleConfigured) return;
+
+  const master = await db.event.findUnique({ where: { id: masterId } });
+  if (!master || master.source !== "LOCAL" || !master.googleEventId) return;
+
+  const member = await db.member.findUnique({ where: { id: master.memberId } });
+  if (!member || !member.googleSyncEnabled || !member.googleRefreshTokenEnc) return;
+
+  const override = await db.eventOverride.findUnique({
+    where: { masterId_recurrenceId: { masterId, recurrenceId } },
+  });
+  if (!override) return;
+
+  try {
+    const calendar = await getCalendarForMember(member.id);
+
+    // Prefer looking up the instance via the instances endpoint so timezone
+    // quirks in the constructed id don't cause a 404.
+    const occurrenceDate = new Date(recurrenceId);
+    const timeMin = new Date(occurrenceDate.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const timeMax = new Date(occurrenceDate.getTime() + 24 * 60 * 60 * 1000).toISOString();
+
+    let instanceId: string | null = null;
+
+    try {
+      const instancesRes = await calendar.events.instances({
+        calendarId: "primary",
+        eventId: master.googleEventId,
+        timeMin,
+        timeMax,
+        maxResults: 10,
+      });
+      const instances = instancesRes.data.items ?? [];
+      // Match by originalStartTime — the stable per-instance key.
+      const allDay = override.allDay ?? master.allDay;
+      const matched = instances.find((inst) => {
+        const ost = inst.originalStartTime;
+        if (!ost) return false;
+        if (allDay && ost.date) {
+          const ostDate = new Date(ost.date + "T00:00:00Z");
+          return Math.abs(ostDate.getTime() - occurrenceDate.getTime()) < 24 * 60 * 60 * 1000;
+        }
+        if (ost.dateTime) {
+          return Math.abs(new Date(ost.dateTime).getTime() - occurrenceDate.getTime()) < 60_000;
+        }
+        return false;
+      });
+      instanceId = matched?.id ?? null;
+    } catch {
+      // Instances lookup failed — fall through to constructed id.
+    }
+
+    if (!instanceId) {
+      const effectiveAllDay = override.allDay ?? master.allDay;
+      instanceId = `${master.googleEventId}_${recurrenceIdToBasicUtc(recurrenceId, effectiveAllDay)}`;
+    }
+
+    if (override.cancelled) {
+      await calendar.events.patch({
+        calendarId: "primary",
+        eventId: instanceId,
+        requestBody: { status: "cancelled" },
+      });
+      return;
+    }
+
+    const requestBody: calendar_v3.Schema$Event = {};
+    if (override.title !== null) requestBody.summary = override.title;
+    if (override.description !== null) requestBody.description = override.description;
+    if (override.location !== null) requestBody.location = override.location;
+
+    const effectiveAllDay = override.allDay ?? master.allDay;
+    const effectiveStartsAt = override.startsAt ?? master.startsAt;
+    const effectiveEndsAt = override.endsAt ?? master.endsAt;
+
+    if (override.startsAt !== null || override.allDay !== null) {
+      requestBody.start = toGoogleDateTime(effectiveStartsAt, effectiveAllDay);
+    }
+    if (override.endsAt !== null || override.allDay !== null) {
+      requestBody.end = toGoogleDateTime(effectiveEndsAt, effectiveAllDay);
+    }
+
+    if (Object.keys(requestBody).length > 0) {
+      await calendar.events.patch({
+        calendarId: "primary",
+        eventId: instanceId,
+        requestBody,
+      });
+    }
+  } catch (err) {
+    console.warn(
+      "[sync] pushOverrideToGoogle failed",
+      err instanceof Error ? err.message : err,
+    );
+  }
+}
+
 export async function deleteRemoteEvent(eventId: string): Promise<void> {
   if (!googleConfigured) return;
   const event = await db.event.findUnique({ where: { id: eventId } });
