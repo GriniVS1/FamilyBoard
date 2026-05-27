@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
-import { deleteRemoteEvent, pushLocalEvent } from "@/lib/sync";
-import { deleteRemoteCaldavEvent, pushLocalEventToCaldav } from "@/lib/caldav";
-import { deleteRemoteMicrosoftEvent, pushLocalEventToMicrosoft } from "@/lib/microsoft";
+import { deleteRemoteEvent, pushLocalEvent, pushOverrideToGoogle } from "@/lib/sync";
+import { deleteRemoteCaldavEvent, pushLocalEventToCaldav, pushOverrideToCaldav } from "@/lib/caldav";
+import { deleteRemoteMicrosoftEvent, pushLocalEventToMicrosoft, pushOverrideToMicrosoft } from "@/lib/microsoft";
 import { rruleSchema } from "@/lib/rrule";
 
 export const runtime = "nodejs";
@@ -82,6 +82,33 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
         color: body.color ?? null,
       },
     });
+
+    // Fire-and-forget remote override pushes — same posture as series-scope pushes.
+    const overrideMember = await db.member.findUnique({ where: { id: master.memberId } });
+    if (overrideMember?.googleSyncEnabled && overrideMember.googleRefreshTokenEnc) {
+      void pushOverrideToGoogle(masterId, recurrenceId).catch((err) => {
+        console.warn(
+          "[events] push override to Google failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+    if (overrideMember?.caldavSyncEnabled && overrideMember.caldavPasswordEnc) {
+      void pushOverrideToCaldav(masterId, recurrenceId).catch((err) => {
+        console.warn(
+          "[events] push override to CalDAV failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+    if (overrideMember?.microsoftSyncEnabled && overrideMember.microsoftRefreshTokenEnc) {
+      void pushOverrideToMicrosoft(masterId, recurrenceId).catch((err) => {
+        console.warn(
+          "[events] push override to Microsoft failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
 
     return ok({ ...override, id: rawId, seriesId: masterId, isRecurring: true });
   }
@@ -208,6 +235,33 @@ export const DELETE = withErrorHandling<Ctx>(async (req, { params }) => {
       update: { cancelled: true },
       create: { masterId, recurrenceId, cancelled: true },
     });
+
+    // Fire-and-forget cancellation pushes — load member once for all providers.
+    const cancelMember = await db.member.findUnique({ where: { id: master.memberId } });
+    if (cancelMember?.googleSyncEnabled && cancelMember.googleRefreshTokenEnc) {
+      void pushOverrideToGoogle(masterId, recurrenceId).catch((err) => {
+        console.warn(
+          "[events] push cancellation to Google failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+    if (cancelMember?.caldavSyncEnabled && cancelMember.caldavPasswordEnc) {
+      void pushOverrideToCaldav(masterId, recurrenceId).catch((err) => {
+        console.warn(
+          "[events] push cancellation to CalDAV failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
+    if (cancelMember?.microsoftSyncEnabled && cancelMember.microsoftRefreshTokenEnc) {
+      void pushOverrideToMicrosoft(masterId, recurrenceId).catch((err) => {
+        console.warn(
+          "[events] push cancellation to Microsoft failed",
+          err instanceof Error ? err.message : err,
+        );
+      });
+    }
 
     return ok({ ok: true });
   }

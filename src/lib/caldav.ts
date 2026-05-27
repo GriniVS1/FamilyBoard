@@ -480,10 +480,21 @@ export async function pullCaldavForMember(memberId: string): Promise<SyncCounts>
 }
 
 // ---------------------------------------------------------------------------
-// Build iCal string from a local Event
+// Build iCal string from a local Event (optionally including overrides)
 // ---------------------------------------------------------------------------
 
-function buildVEventString(event: {
+type OverrideFields = {
+  recurrenceId: string;
+  cancelled: boolean;
+  title: string | null;
+  description: string | null;
+  location: string | null;
+  startsAt: Date | null;
+  endsAt: Date | null;
+  allDay: boolean | null;
+};
+
+type MasterEventFields = {
   caldavUid: string | null;
   title: string;
   description: string | null;
@@ -492,8 +503,23 @@ function buildVEventString(event: {
   endsAt: Date;
   allDay: boolean;
   rrule: string | null;
-}): { icalString: string; uid: string } {
+};
+
+function makeIcalTime(date: Date, allDay: boolean): ICAL.Time {
+  const t = ICAL.Time.fromJSDate(date, true);
+  if (allDay) t.isDate = true;
+  return t;
+}
+
+// Build a VCALENDAR containing the master VEVENT plus any overrides. This is
+// the canonical builder used for both initial create and override re-PUT. When
+// overrides is empty the output is equivalent to the old buildVEventString.
+function buildVCalendarWithOverrides(
+  event: MasterEventFields,
+  overrides: OverrideFields[],
+): { icalString: string; uid: string } {
   const uid = event.caldavUid ?? randomUUID();
+  const now = ICAL.Time.fromJSDate(new Date(), true);
 
   const vcal = new ICAL.Component(["vcalendar", [], []]);
   vcal.updatePropertyWithValue("prodid", "-//FamilyBoard//CalDAV Sync//EN");
@@ -501,32 +527,21 @@ function buildVEventString(event: {
 
   const vevent = new ICAL.Component(["vevent", [], []]);
   vevent.updatePropertyWithValue("uid", uid);
-  vevent.updatePropertyWithValue(
-    "dtstamp",
-    ICAL.Time.fromJSDate(new Date(), true),
-  );
+  vevent.updatePropertyWithValue("dtstamp", now);
 
   if (event.allDay) {
     // DATE-only value per RFC 5545 §3.3.4
-    const startTime = ICAL.Time.fromJSDate(event.startsAt, true);
-    startTime.isDate = true;
+    const startTime = makeIcalTime(event.startsAt, true);
     // DTEND for all-day events is exclusive — add one day.
-    const endTime = ICAL.Time.fromJSDate(
+    const endTime = makeIcalTime(
       new Date(event.endsAt.getTime() + 24 * 60 * 60 * 1000),
       true,
     );
-    endTime.isDate = true;
     vevent.updatePropertyWithValue("dtstart", startTime);
     vevent.updatePropertyWithValue("dtend", endTime);
   } else {
-    vevent.updatePropertyWithValue(
-      "dtstart",
-      ICAL.Time.fromJSDate(event.startsAt, true),
-    );
-    vevent.updatePropertyWithValue(
-      "dtend",
-      ICAL.Time.fromJSDate(event.endsAt, true),
-    );
+    vevent.updatePropertyWithValue("dtstart", makeIcalTime(event.startsAt, false));
+    vevent.updatePropertyWithValue("dtend", makeIcalTime(event.endsAt, false));
   }
 
   vevent.updatePropertyWithValue("summary", event.title);
@@ -543,8 +558,63 @@ function buildVEventString(event: {
     vevent.updatePropertyWithValue("rrule", recur);
   }
 
+  // Cancelled overrides become EXDATE lines on the master; modified overrides
+  // become separate exception VEVENTs.
+  const exceptionVevents: ICAL.Component[] = [];
+
+  for (const ov of overrides) {
+    const occurrenceDate = new Date(ov.recurrenceId);
+    const effectiveAllDay = ov.allDay ?? event.allDay;
+    const ridTime = makeIcalTime(occurrenceDate, effectiveAllDay);
+
+    if (ov.cancelled) {
+      // RFC 5545 §3.8.5.1 — EXDATE on master skips that occurrence.
+      vevent.addPropertyWithValue("exdate", ridTime);
+      continue;
+    }
+
+    const exVevent = new ICAL.Component(["vevent", [], []]);
+    exVevent.updatePropertyWithValue("uid", uid);
+    exVevent.updatePropertyWithValue("dtstamp", now);
+    exVevent.addPropertyWithValue("recurrence-id", ridTime);
+
+    const effectiveStartsAt = ov.startsAt ?? occurrenceDate;
+    const effectiveEndsAt = ov.endsAt ?? (() => {
+      const duration = event.endsAt.getTime() - event.startsAt.getTime();
+      return new Date(effectiveStartsAt.getTime() + duration);
+    })();
+
+    if (effectiveAllDay) {
+      exVevent.updatePropertyWithValue("dtstart", makeIcalTime(effectiveStartsAt, true));
+      exVevent.updatePropertyWithValue(
+        "dtend",
+        makeIcalTime(new Date(effectiveEndsAt.getTime() + 24 * 60 * 60 * 1000), true),
+      );
+    } else {
+      exVevent.updatePropertyWithValue("dtstart", makeIcalTime(effectiveStartsAt, false));
+      exVevent.updatePropertyWithValue("dtend", makeIcalTime(effectiveEndsAt, false));
+    }
+
+    exVevent.updatePropertyWithValue("summary", ov.title ?? event.title);
+    const effectiveDesc = ov.description ?? event.description;
+    if (effectiveDesc) exVevent.updatePropertyWithValue("description", effectiveDesc);
+    const effectiveLoc = ov.location ?? event.location;
+    if (effectiveLoc) exVevent.updatePropertyWithValue("location", effectiveLoc);
+
+    exceptionVevents.push(exVevent);
+  }
+
   vcal.addSubcomponent(vevent);
+  for (const ex of exceptionVevents) {
+    vcal.addSubcomponent(ex);
+  }
+
   return { icalString: vcal.toString(), uid };
+}
+
+// Thin wrapper kept for backward compatibility with non-override callers.
+function buildVEventString(event: MasterEventFields): { icalString: string; uid: string } {
+  return buildVCalendarWithOverrides(event, []);
 }
 
 // ---------------------------------------------------------------------------
@@ -621,6 +691,66 @@ export async function pushLocalEventToCaldav(
   }
 
   return { pulled: 0, pushed: 1, deleted: 0, skipped: 0 };
+}
+
+// Push a single override change by rebuilding the whole calendar object with
+// all current overrides. A re-PUT is necessary because CalDAV stores the master
+// VEVENT + all exception VEVENTs in a single .ics resource.
+export async function pushOverrideToCaldav(masterId: string, recurrenceId: string): Promise<void> {
+  const master = await db.event.findUnique({
+    where: { id: masterId },
+    include: { overrides: true },
+  });
+  if (!master || master.source !== "LOCAL" || !master.caldavHref) return;
+
+  const member = await db.member.findUnique({ where: { id: master.memberId } });
+  if (!member || !member.caldavSyncEnabled || !member.caldavPasswordEnc || !member.caldavCalendarUrl) return;
+
+  // Confirm the triggering override actually exists before rebuilding.
+  const triggerOverride = master.overrides.find((o) => o.recurrenceId === recurrenceId);
+  if (!triggerOverride) return;
+
+  try {
+    const { icalString } = buildVCalendarWithOverrides(
+      {
+        caldavUid: master.caldavUid,
+        title: master.title,
+        description: master.description,
+        location: master.location,
+        startsAt: master.startsAt,
+        endsAt: master.endsAt,
+        allDay: master.allDay,
+        rrule: master.rrule,
+      },
+      master.overrides,
+    );
+
+    const password = decryptToken(member.caldavPasswordEnc);
+    const client = makeClient({
+      serverUrl: member.caldavServerUrl ?? "",
+      username: member.caldavUsername ?? "",
+      password,
+    });
+    await client.login();
+
+    const res = await client.updateCalendarObject({
+      calendarObject: {
+        url: master.caldavHref,
+        data: icalString,
+        etag: master.caldavEtag ?? undefined,
+      },
+    });
+    const newEtag = res.headers.get("ETag") ?? master.caldavEtag;
+    await db.event.update({
+      where: { id: masterId },
+      data: { caldavEtag: newEtag, caldavSyncedAt: new Date() },
+    });
+  } catch (err) {
+    console.warn(
+      "[caldav] pushOverrideToCaldav failed",
+      err instanceof Error ? err.message : err,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------
