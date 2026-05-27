@@ -18,6 +18,8 @@ import type { CalendarEvent, CalendarMember, EventCreateInput } from "./types";
 
 type RecurrenceFreq = "none" | "daily" | "weekly" | "monthly";
 
+export type EditScope = "instance" | "series";
+
 type EventDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,8 +31,8 @@ type EventDialogProps = {
     endsAt?: string;
     allDay?: boolean;
   };
-  onSave: (input: EventCreateInput, eventId: string | null) => Promise<void>;
-  onDelete: (eventId: string) => Promise<void>;
+  onSave: (input: EventCreateInput, eventId: string | null, scope: EditScope | null) => Promise<void>;
+  onDelete: (eventId: string, scope: EditScope | null) => Promise<void>;
 };
 
 type FormState = {
@@ -157,6 +159,59 @@ function defaultState(
 
 const RECURRENCE_OPTIONS: RecurrenceFreq[] = ["none", "daily", "weekly", "monthly"];
 
+type DeleteDialogProps = {
+  open: boolean;
+  onClose: () => void;
+  onDeleteThis: () => void;
+  onDeleteSeries: () => void;
+  submitting: boolean;
+};
+
+function DeleteScopeDialog({ open, onClose, onDeleteThis, onDeleteSeries, submitting }: DeleteDialogProps) {
+  const t = useTranslations("calendar.dialog");
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent showClose={false}>
+        <div className="flex flex-col gap-5">
+          <DialogTitle>{t("deleteScopeQuestion")}</DialogTitle>
+          <div className="flex flex-col gap-3">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={submitting}
+              onClick={onDeleteThis}
+              className="justify-start min-h-[52px] text-accent-rose hover:bg-accent-rose/10"
+            >
+              <Trash2 className="size-4 shrink-0" />
+              {t("deleteThis")}
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={submitting}
+              onClick={onDeleteSeries}
+              className="justify-start min-h-[52px] text-accent-rose hover:bg-accent-rose/10"
+            >
+              <Trash2 className="size-4 shrink-0" />
+              {t("deleteSeries")}
+            </Button>
+          </div>
+          <div className="flex justify-end">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={submitting}
+              onClick={onClose}
+            >
+              {t("cancel")}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function EventDialog({
   open,
   onOpenChange,
@@ -172,18 +227,21 @@ export function EventDialog({
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [scope, setScope] = useState<EditScope>("instance");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+  const isGoogle = event?.source === "GOOGLE";
+  const isEdit = Boolean(event);
+  const isOccurrence = Boolean(event?.seriesId && event.seriesId !== event.id);
 
   useEffect(() => {
     if (open) {
       setState(defaultState(members, event, initial));
       setError(null);
+      setScope("instance");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, event?.id, initial?.startsAt, initial?.endsAt, initial?.memberId]);
-
-  const isGoogle = event?.source === "GOOGLE";
-  const isEdit = Boolean(event);
-  const isOccurrence = Boolean(event?.seriesId && event.seriesId !== event.id);
 
   const customRrule = useMemo(() => {
     if (!event?.rrule) return false;
@@ -197,8 +255,23 @@ export function EventDialog({
     [members, state.memberId],
   );
 
+  const showSeriesWipeWarning =
+    isOccurrence &&
+    scope === "series" &&
+    event != null &&
+    (state.recurrence !== (event.rrule ? parseRrule(event.rrule).freq : "none") ||
+      state.date !== toLocalDate(event.startsAt) ||
+      state.startTime !== toLocalTime(event.startsAt) ||
+      state.endDate !== toLocalDate(event.endsAt) ||
+      state.endTime !== toLocalTime(event.endsAt));
+
   function patch(p: Partial<FormState>) {
     setState((prev) => ({ ...prev, ...p }));
+  }
+
+  function resolvedScope(): EditScope | null {
+    if (!isOccurrence) return null;
+    return scope;
   }
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -230,6 +303,7 @@ export function EventDialog({
     setSubmitting(true);
     setError(null);
     try {
+      const effectiveScope = resolvedScope();
       const input: EventCreateInput = {
         memberId: state.memberId,
         title: state.title.trim(),
@@ -239,9 +313,9 @@ export function EventDialog({
         endsAt,
         allDay: state.allDay,
         color: state.color || null,
-        rrule: buildRrule(state.recurrence, state.recurrenceEnd),
+        rrule: effectiveScope === "instance" ? null : buildRrule(state.recurrence, state.recurrenceEnd),
       };
-      await onSave(input, masterEventId);
+      await onSave(input, masterEventId, effectiveScope);
       onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("failedToSave"));
@@ -252,11 +326,21 @@ export function EventDialog({
 
   async function handleDelete() {
     if (!event) return;
+    if (isOccurrence) {
+      setDeleteDialogOpen(true);
+      return;
+    }
     if (!window.confirm(t("deleteConfirm"))) return;
+    await executeDelete(null);
+  }
+
+  async function executeDelete(deleteScope: EditScope | null) {
+    if (!event) return;
+    setDeleteDialogOpen(false);
     setSubmitting(true);
     setError(null);
     try {
-      await onDelete(masterEventId ?? event.id);
+      await onDelete(masterEventId ?? event.id, deleteScope);
       onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("failedToDelete"));
@@ -281,292 +365,344 @@ export function EventDialog({
     monthly: "recurrenceMonthly",
   };
 
+  const memberDisabled = isGoogle || (isOccurrence && scope === "instance");
+  const showRecurrencePicker = !isGoogle && !(isOccurrence && scope === "instance");
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-          <div className="flex items-start justify-between gap-3 pr-10">
-            <DialogTitle>{isEdit ? t("editTitle") : t("newTitle")}</DialogTitle>
-          </div>
-
-          {isGoogle && (
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
-              <Link2 className="size-4 text-accent-sky" />
-              {t("googleManaged")}
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            <div className="flex items-start justify-between gap-3 pr-10">
+              <DialogTitle>{isEdit ? t("editTitle") : t("newTitle")}</DialogTitle>
             </div>
-          )}
 
-          {isOccurrence && (
-            <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
-              <RotateCcw className="size-4 text-accent-lilac shrink-0" />
-              {t("editingSeries")}
-            </div>
-          )}
+            {isGoogle && (
+              <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
+                <Link2 className="size-4 text-accent-sky" />
+                {t("googleManaged")}
+              </div>
+            )}
 
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              {t("title")}
-            </label>
-            <Input
-              value={state.title}
-              onChange={(e) => patch({ title: e.target.value })}
-              placeholder={t("whatsHappening")}
-              disabled={isGoogle}
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              {t("member")}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {members.map((m) => {
-                const selected = m.id === state.memberId;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => patch({ memberId: m.id })}
-                    className={cn(
-                      "inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 tap-target border transition-colors",
-                      selected
-                        ? "border-ink bg-surface shadow-soft"
-                        : "border-border bg-surface/50 opacity-70 hover:opacity-100",
-                    )}
-                    aria-pressed={selected}
-                  >
-                    <MemberAvatar
-                      name={m.name}
-                      color={m.color}
-                      emoji={m.emoji}
-                      className="size-9 border-0"
-                    />
-                    <span className="text-sm text-ink">{m.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-2xl border border-border bg-bg/30 px-4 py-3">
-            <input
-              id="allDay"
-              type="checkbox"
-              checked={state.allDay}
-              onChange={(e) => patch({ allDay: e.target.checked })}
-              disabled={isGoogle}
-              className="size-5 accent-ink"
-            />
-            <label htmlFor="allDay" className="text-sm text-ink">
-              {t("allDay")}
-            </label>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-                {t("startsAt")}
-              </label>
-              <Input
-                type="date"
-                value={state.date}
-                onChange={(e) => patch({ date: e.target.value })}
-                disabled={isGoogle}
-                className="text-base"
-              />
-              {!state.allDay && (
-                <Input
-                  type="time"
-                  value={state.startTime}
-                  onChange={(e) => patch({ startTime: e.target.value })}
-                  disabled={isGoogle}
-                  className="text-base tabular"
-                />
-              )}
-            </div>
-            <div className="space-y-2">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-                {t("endsAt")}
-              </label>
-              <Input
-                type="date"
-                value={state.endDate || state.date}
-                onChange={(e) => patch({ endDate: e.target.value })}
-                disabled={isGoogle}
-                className="text-base"
-              />
-              {!state.allDay && (
-                <Input
-                  type="time"
-                  value={state.endTime}
-                  onChange={(e) => patch({ endTime: e.target.value })}
-                  disabled={isGoogle}
-                  className="text-base tabular"
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Recurrence picker — only for local events */}
-          {!isGoogle && (
-            <div className="space-y-3">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-                {t("recurrence")}
-              </label>
-
-              {customRrule ? (
-                <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
-                  <RotateCcw className="size-4 shrink-0" />
-                  {t("customRecurrence")}
-                </div>
-              ) : (
-                <>
-                  <div className="flex flex-wrap gap-2">
-                    {RECURRENCE_OPTIONS.map((freq) => (
-                      <button
-                        key={freq}
-                        type="button"
-                        onClick={() => patch({ recurrence: freq })}
-                        className={cn(
-                          "min-h-[44px] rounded-full border px-4 text-sm font-medium transition-colors",
-                          state.recurrence === freq
-                            ? "border-ink bg-ink text-bg"
-                            : "border-border bg-surface text-ink hover:bg-bg",
-                        )}
-                        aria-pressed={state.recurrence === freq}
-                      >
-                        {t(recurrenceLabelKey[freq] as Parameters<typeof t>[0])}
-                      </button>
-                    ))}
-                  </div>
-
-                  {state.recurrence !== "none" && (
-                    <div className="flex items-center gap-3 rounded-2xl border border-border bg-bg/30 px-4 py-3">
+            {isEdit && isOccurrence && (
+              <fieldset className="space-y-2">
+                <legend className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  {t("scopeQuestion")}
+                </legend>
+                <div className="flex flex-col gap-2 pt-1">
+                  {(["instance", "series"] as const).map((s) => {
+                    const label = s === "instance" ? t("scopeThis") : t("scopeSeries");
+                    const selected = scope === s;
+                    return (
                       <label
-                        htmlFor="recurrenceEnd"
-                        className="text-sm text-ink shrink-0"
+                        key={s}
+                        className={cn(
+                          "flex items-center gap-3 rounded-2xl border px-4 cursor-pointer transition-colors min-h-[52px]",
+                          selected
+                            ? "border-ink bg-ink/5"
+                            : "border-border bg-surface/50 hover:bg-bg",
+                        )}
                       >
-                        {t("recurrenceEnds")}
+                        <input
+                          type="radio"
+                          name="editScope"
+                          value={s}
+                          checked={selected}
+                          onChange={() => setScope(s)}
+                          className="size-4 accent-ink shrink-0"
+                        />
+                        <span className="text-sm font-medium text-ink">{label}</span>
                       </label>
-                      <Input
-                        id="recurrenceEnd"
-                        type="date"
-                        value={state.recurrenceEnd}
-                        onChange={(e) => patch({ recurrenceEnd: e.target.value })}
-                        placeholder={t("recurrenceForever")}
-                        className="text-base flex-1"
-                      />
-                    </div>
-                  )}
-                </>
-              )}
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                {t("title")}
+              </label>
+              <Input
+                value={state.title}
+                onChange={(e) => patch({ title: e.target.value })}
+                placeholder={t("whatsHappening")}
+                disabled={isGoogle}
+                required
+              />
             </div>
-          )}
 
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              {t("location")}
-            </label>
-            <Input
-              value={state.location}
-              onChange={(e) => patch({ location: e.target.value })}
-              placeholder={t("optional")}
-              disabled={isGoogle}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              {t("description")}
-            </label>
-            <textarea
-              value={state.description}
-              onChange={(e) => patch({ description: e.target.value })}
-              disabled={isGoogle}
-              rows={3}
-              className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-base text-ink placeholder:text-muted focus:ring-2 focus:ring-ink/20 disabled:opacity-50 disabled:pointer-events-none"
-              placeholder={t("optional")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wider text-muted">
-              {t("color")}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {colorChoices.map((c) => {
-                const selected = c.value === state.color;
-                if (c.value === "") {
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                {t("member")}
+              </label>
+              <div className={cn("flex flex-wrap gap-2", memberDisabled && "opacity-50 pointer-events-none")}>
+                {members.map((m) => {
+                  const selected = m.id === state.memberId;
                   return (
                     <button
-                      key="default"
+                      key={m.id}
                       type="button"
-                      onClick={() => patch({ color: "" })}
+                      onClick={() => patch({ memberId: m.id })}
+                      disabled={memberDisabled}
                       className={cn(
-                        "h-12 tap-target rounded-full border px-4 text-sm transition-colors",
+                        "inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 tap-target border transition-colors",
                         selected
-                          ? "bg-ink text-bg border-ink"
-                          : "bg-surface text-ink border-border hover:bg-bg",
+                          ? "border-ink bg-surface shadow-soft"
+                          : "border-border bg-surface/50 opacity-70 hover:opacity-100",
                       )}
                       aria-pressed={selected}
                     >
-                      {t("memberColor")}
+                      <MemberAvatar
+                        name={m.name}
+                        color={m.color}
+                        emoji={m.emoji}
+                        className="size-9 border-0"
+                      />
+                      <span className="text-sm text-ink">{m.name}</span>
                     </button>
                   );
-                }
-                return (
-                  <MemberColorSwatch
-                    key={c.value}
-                    color={c.color as MemberColor}
-                    selected={selected}
-                    onClick={() => patch({ color: c.value })}
-                  />
-                );
-              })}
+                })}
+              </div>
+              {isOccurrence && scope === "instance" && (
+                <p className="text-xs text-muted">{t("memberSeriesOnly")}</p>
+              )}
             </div>
-          </div>
 
-          {error && (
-            <p role="alert" className="text-sm text-accent-rose">
-              {error}
-            </p>
-          )}
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-bg/30 px-4 py-3">
+              <input
+                id="allDay"
+                type="checkbox"
+                checked={state.allDay}
+                onChange={(e) => patch({ allDay: e.target.checked })}
+                disabled={isGoogle}
+                className="size-5 accent-ink"
+              />
+              <label htmlFor="allDay" className="text-sm text-ink">
+                {t("allDay")}
+              </label>
+            </div>
 
-          <div className="flex items-center justify-between gap-3 pt-2">
-            <div>
-              {isEdit && !isGoogle && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  {t("startsAt")}
+                </label>
+                <Input
+                  type="date"
+                  value={state.date}
+                  onChange={(e) => patch({ date: e.target.value })}
+                  disabled={isGoogle}
+                  className="text-base"
+                />
+                {!state.allDay && (
+                  <Input
+                    type="time"
+                    value={state.startTime}
+                    onChange={(e) => patch({ startTime: e.target.value })}
+                    disabled={isGoogle}
+                    className="text-base tabular"
+                  />
+                )}
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  {t("endsAt")}
+                </label>
+                <Input
+                  type="date"
+                  value={state.endDate || state.date}
+                  onChange={(e) => patch({ endDate: e.target.value })}
+                  disabled={isGoogle}
+                  className="text-base"
+                />
+                {!state.allDay && (
+                  <Input
+                    type="time"
+                    value={state.endTime}
+                    onChange={(e) => patch({ endTime: e.target.value })}
+                    disabled={isGoogle}
+                    className="text-base tabular"
+                  />
+                )}
+              </div>
+            </div>
+
+            {showRecurrencePicker && (
+              <div className="space-y-3">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                  {t("recurrence")}
+                </label>
+
+                {customRrule ? (
+                  <div className="flex items-center gap-2 rounded-2xl border border-border bg-bg/40 px-3 py-2 text-xs text-muted">
+                    <RotateCcw className="size-4 shrink-0" />
+                    {t("customRecurrence")}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap gap-2">
+                      {RECURRENCE_OPTIONS.map((freq) => (
+                        <button
+                          key={freq}
+                          type="button"
+                          onClick={() => patch({ recurrence: freq })}
+                          className={cn(
+                            "min-h-[44px] rounded-full border px-4 text-sm font-medium transition-colors",
+                            state.recurrence === freq
+                              ? "border-ink bg-ink text-bg"
+                              : "border-border bg-surface text-ink hover:bg-bg",
+                          )}
+                          aria-pressed={state.recurrence === freq}
+                        >
+                          {t(recurrenceLabelKey[freq] as Parameters<typeof t>[0])}
+                        </button>
+                      ))}
+                    </div>
+
+                    {state.recurrence !== "none" && (
+                      <div className="flex items-center gap-3 rounded-2xl border border-border bg-bg/30 px-4 py-3">
+                        <label
+                          htmlFor="recurrenceEnd"
+                          className="text-sm text-ink shrink-0"
+                        >
+                          {t("recurrenceEnds")}
+                        </label>
+                        <Input
+                          id="recurrenceEnd"
+                          type="date"
+                          value={state.recurrenceEnd}
+                          onChange={(e) => patch({ recurrenceEnd: e.target.value })}
+                          placeholder={t("recurrenceForever")}
+                          className="text-base flex-1"
+                        />
+                      </div>
+                    )}
+
+                    {showSeriesWipeWarning && (
+                      <p className="text-xs text-accent-rose">
+                        {t("seriesEditsWipeOverrides")}
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                {t("location")}
+              </label>
+              <Input
+                value={state.location}
+                onChange={(e) => patch({ location: e.target.value })}
+                placeholder={t("optional")}
+                disabled={isGoogle}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                {t("description")}
+              </label>
+              <textarea
+                value={state.description}
+                onChange={(e) => patch({ description: e.target.value })}
+                disabled={isGoogle}
+                rows={3}
+                className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-base text-ink placeholder:text-muted focus:ring-2 focus:ring-ink/20 disabled:opacity-50 disabled:pointer-events-none"
+                placeholder={t("optional")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+                {t("color")}
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {colorChoices.map((c) => {
+                  const selected = c.value === state.color;
+                  if (c.value === "") {
+                    return (
+                      <button
+                        key="default"
+                        type="button"
+                        onClick={() => patch({ color: "" })}
+                        className={cn(
+                          "h-12 tap-target rounded-full border px-4 text-sm transition-colors",
+                          selected
+                            ? "bg-ink text-bg border-ink"
+                            : "bg-surface text-ink border-border hover:bg-bg",
+                        )}
+                        aria-pressed={selected}
+                      >
+                        {t("memberColor")}
+                      </button>
+                    );
+                  }
+                  return (
+                    <MemberColorSwatch
+                      key={c.value}
+                      color={c.color as MemberColor}
+                      selected={selected}
+                      onClick={() => patch({ color: c.value })}
+                    />
+                  );
+                })}
+              </div>
+            </div>
+
+            {error && (
+              <p role="alert" className="text-sm text-accent-rose">
+                {error}
+              </p>
+            )}
+
+            <div className="flex items-center justify-between gap-3 pt-2">
+              <div>
+                {isEdit && !isGoogle && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={handleDelete}
+                    disabled={submitting}
+                    className="text-accent-rose hover:bg-accent-rose/10"
+                  >
+                    <Trash2 className="size-4" />
+                    {t("deleteEvent")}
+                  </Button>
+                )}
+                {isEdit && isGoogle && (
+                  <span className="text-xs text-muted">{t("deleteInGoogle")}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={handleDelete}
+                  onClick={() => onOpenChange(false)}
                   disabled={submitting}
-                  className="text-accent-rose hover:bg-accent-rose/10"
                 >
-                  <Trash2 className="size-4" />
-                  {t("deleteEvent")}
+                  {t("cancel")}
                 </Button>
-              )}
-              {isEdit && isGoogle && (
-                <span className="text-xs text-muted">{t("deleteInGoogle")}</span>
-              )}
+                <Button type="submit" disabled={submitting}>
+                  {t("save")}
+                </Button>
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => onOpenChange(false)}
-                disabled={submitting}
-              >
-                {t("cancel")}
-              </Button>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? t("save") : t("save")}
-              </Button>
-            </div>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {deleteDialogOpen && (
+        <DeleteScopeDialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          onDeleteThis={() => executeDelete("instance")}
+          onDeleteSeries={() => executeDelete("series")}
+          submitting={submitting}
+        />
+      )}
+    </>
   );
 }

@@ -17,6 +17,7 @@ import type {
   CalendarView,
   EventCreateInput,
 } from "./types";
+import type { EditScope } from "./event-dialog";
 
 type CalendarViewProps = {
   initialMembers: CalendarMember[];
@@ -100,8 +101,12 @@ export function CalendarView({ initialMembers }: CalendarViewProps) {
     mutationFn: async (args: {
       input: EventCreateInput;
       eventId: string | null;
+      scope: EditScope | null;
     }) => {
-      const url = args.eventId ? `/api/events/${args.eventId}` : "/api/events";
+      let url = args.eventId ? `/api/events/${args.eventId}` : "/api/events";
+      if (args.eventId && args.scope) {
+        url += `?scope=${args.scope}`;
+      }
       const method = args.eventId ? "PATCH" : "POST";
       const res = await fetch(url, {
         method,
@@ -126,8 +131,12 @@ export function CalendarView({ initialMembers }: CalendarViewProps) {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: async (eventId: string) => {
-      const res = await fetch(`/api/events/${eventId}`, { method: "DELETE" });
+    mutationFn: async (args: { eventId: string; scope: EditScope | null }) => {
+      let url = `/api/events/${args.eventId}`;
+      if (args.scope) {
+        url += `?scope=${args.scope}`;
+      }
+      const res = await fetch(url, { method: "DELETE" });
       if (!res.ok) {
         let message = `Delete failed (${res.status})`;
         try {
@@ -246,11 +255,11 @@ export function CalendarView({ initialMembers }: CalendarViewProps) {
         members={initialMembers}
         event={dialog.event}
         initial={dialog.initial}
-        onSave={async (input, eventId) => {
-          await saveMutation.mutateAsync({ input, eventId });
+        onSave={async (input, eventId, scope) => {
+          await saveMutation.mutateAsync({ input, eventId, scope });
         }}
-        onDelete={async (eventId) => {
-          await deleteMutation.mutateAsync(eventId);
+        onDelete={async (eventId, scope) => {
+          await deleteMutation.mutateAsync({ eventId, scope });
         }}
       />
     </div>
