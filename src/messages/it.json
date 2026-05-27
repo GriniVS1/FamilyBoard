@@ -725,6 +725,29 @@
       "separator": " · "
     }
   },
+  "license": {
+    "activateTitle": "Attiva FamilyBoard",
+    "activateIntro": "Inserisci la tua chiave di licenza per sbloccare tutte le funzionalità. Trovi la chiave nella conferma d'acquisto.",
+    "deviceIdLabel": "ID dispositivo",
+    "deviceIdHelp": "Condividi questo ID con il tuo rivenditore per ricevere la chiave di licenza corrispondente.",
+    "keyLabel": "Chiave di licenza",
+    "keyPlaceholder": "FB1-XXXX-XXXX-XXXX",
+    "activateButton": "Attiva",
+    "activating": "Attivazione…",
+    "errorDeviceMismatch": "Questa chiave appartiene a un altro dispositivo.",
+    "errorInvalid": "Chiave di licenza non valida.",
+    "errorGeneric": "Attivazione fallita. Riprova.",
+    "graceBanner": "Periodo di prova: ancora {days, plural, =1 {1 giorno} other {# giorni}}. Attiva ora →",
+    "softBanner": "Scrittura bloccata — attiva la licenza →",
+    "settingsCardTitle": "Licenza",
+    "statusLabel": "Stato",
+    "planLabel": "Piano",
+    "validUntilLabel": "Valida fino al",
+    "changeKeyButton": "Inserisci / modifica chiave di licenza",
+    "copyDeviceId": "Copia",
+    "copied": "Copiato!",
+    "dismissBanner": "Chiudi"
+  },
   "errors": {
     "generic": "Qualcosa è andato storto.",
     "network": "Errore di rete. Controlla la connessione.",

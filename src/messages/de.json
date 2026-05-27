@@ -725,6 +725,29 @@
       "separator": " · "
     }
   },
+  "license": {
+    "activateTitle": "FamilyBoard aktivieren",
+    "activateIntro": "Gib deinen Lizenzschlüssel ein, um alle Funktionen freizuschalten. Den Schlüssel findest du in deiner Kaufbestätigung.",
+    "deviceIdLabel": "Geräte-ID",
+    "deviceIdHelp": "Diese ID brauchst du, um deinen Lizenzschlüssel zu erhalten.",
+    "keyLabel": "Lizenzschlüssel",
+    "keyPlaceholder": "FB1-XXXX-XXXX-XXXX",
+    "activateButton": "Aktivieren",
+    "activating": "Wird aktiviert…",
+    "errorDeviceMismatch": "Dieser Schlüssel gehört zu einem anderen Gerät.",
+    "errorInvalid": "Ungültiger Lizenzschlüssel.",
+    "errorGeneric": "Aktivierung fehlgeschlagen. Bitte erneut versuchen.",
+    "graceBanner": "Testzeitraum: noch {days, plural, =1 {1 Tag} other {# Tage}}. Jetzt aktivieren →",
+    "softBanner": "Schreibzugriff gesperrt — Lizenz aktivieren →",
+    "settingsCardTitle": "Lizenz",
+    "statusLabel": "Status",
+    "planLabel": "Plan",
+    "validUntilLabel": "Gültig bis",
+    "changeKeyButton": "Lizenzschlüssel eingeben/ändern",
+    "copyDeviceId": "Kopieren",
+    "copied": "Kopiert!",
+    "dismissBanner": "Ausblenden"
+  },
   "errors": {
     "generic": "Etwas ist schiefgelaufen.",
     "network": "Netzwerkfehler. Überprüfe deine Verbindung.",

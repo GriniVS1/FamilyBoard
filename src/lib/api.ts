@@ -20,11 +20,40 @@ export function fail(code: string, message: string, status = 400) {
   return NextResponse.json({ error: { code, message } }, { status });
 }
 
+// Mutation requests through these path prefixes bypass the license gate so the
+// user can always activate, set up, or recover — even when the license is locked.
+const LICENSE_WHITELIST_PREFIXES = [
+  "/api/license",
+  "/api/setup",
+  "/api/network",
+  "/api/auth",
+  "/api/devices/pair",
+  "/api/settings/pin",
+  "/api/settings/factory-reset",
+];
+
+const MUTATION_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
+
+function isWhitelisted(pathname: string): boolean {
+  return LICENSE_WHITELIST_PREFIXES.some((prefix) =>
+    pathname === prefix || pathname.startsWith(prefix + "/"),
+  );
+}
+
 type Handler<C> = (req: Request, ctx: C) => Promise<Response>;
 
 export function withErrorHandling<C>(handler: Handler<C>): Handler<C> {
   return async (req, ctx) => {
     try {
+      if (MUTATION_METHODS.has(req.method)) {
+        const pathname = new URL(req.url).pathname;
+        if (!isWhitelisted(pathname)) {
+          // Dynamic import breaks the otherwise-circular dependency at module load
+          // (license.ts → db.ts; api.ts is imported by nearly every route).
+          const { requireActiveLicense } = await import("./license");
+          await requireActiveLicense();
+        }
+      }
       return await handler(req, ctx);
     } catch (err) {
       if (err instanceof AppError) {

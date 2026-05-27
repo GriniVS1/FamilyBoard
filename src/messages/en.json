@@ -725,6 +725,29 @@
       "separator": " · "
     }
   },
+  "license": {
+    "activateTitle": "Activate FamilyBoard",
+    "activateIntro": "Enter your license key to unlock all features. You'll find the key in your purchase confirmation.",
+    "deviceIdLabel": "Device ID",
+    "deviceIdHelp": "Share this ID with your vendor to receive the matching license key.",
+    "keyLabel": "License key",
+    "keyPlaceholder": "FB1-XXXX-XXXX-XXXX",
+    "activateButton": "Activate",
+    "activating": "Activating…",
+    "errorDeviceMismatch": "This key belongs to a different device.",
+    "errorInvalid": "Invalid license key.",
+    "errorGeneric": "Activation failed. Please try again.",
+    "graceBanner": "Trial period: {days, plural, =1 {1 day} other {# days}} remaining. Activate now →",
+    "softBanner": "Write access blocked — please activate your license.",
+    "settingsCardTitle": "License",
+    "statusLabel": "Status",
+    "planLabel": "Plan",
+    "validUntilLabel": "Valid until",
+    "changeKeyButton": "Enter / change license key",
+    "copyDeviceId": "Copy",
+    "copied": "Copied!",
+    "dismissBanner": "Dismiss"
+  },
   "errors": {
     "generic": "Something went wrong.",
     "network": "Network error. Check your connection.",

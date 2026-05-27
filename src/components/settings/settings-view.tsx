@@ -35,6 +35,7 @@ import { PinChangeDialog } from "./pin-change-dialog";
 import { GateOverlay, PinGate } from "./pin-gate";
 import { PushToggle } from "./push-toggle";
 import { ScreensaverIdlePicker } from "./screensaver-idle-picker";
+import { LicenseSettingsCard } from "@/components/license/license-settings-card";
 
 type FamilyData = {
   id: string;
@@ -341,6 +342,10 @@ export function SettingsView({
 
       <GateOverlay locked={!unlocked}>
         <NetworkSection adminPin={verifiedPin} unlocked={unlocked} />
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <LicenseSettingsCard />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>

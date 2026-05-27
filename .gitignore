@@ -18,3 +18,7 @@ coverage
 secrets/
 *.private.json
 *-service-account*.json
+
+# License vendor private key — NEVER commit
+tool/.license-private.pem
+tool/*.pem

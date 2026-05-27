@@ -16,6 +16,9 @@ import {
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
+import { ActivationScreen } from "@/components/license/activation-screen";
+import { LicenseBanner } from "@/components/license/license-banner";
+import { useLicense } from "@/components/license/use-license";
 import { NavItem } from "./nav-item";
 import { TopbarClock } from "./topbar-clock";
 
@@ -66,8 +69,19 @@ export function AppShell({ children }: AppShellProps) {
   const hideChrome =
     pathname.startsWith("/setup") || pathname.startsWith("/screensaver");
 
+  const { data: license } = useLicense();
+
   if (hideChrome) {
     return <>{children}</>;
+  }
+
+  const isHardLocked =
+    license?.gate === "hard" &&
+    !pathname.startsWith("/setup") &&
+    !pathname.startsWith("/screensaver");
+
+  if (isHardLocked) {
+    return <ActivationScreen />;
   }
 
   function pageTitleFor(p: string): string {
@@ -140,6 +154,8 @@ export function AppShell({ children }: AppShellProps) {
           <ThemeToggle />
         </div>
       </header>
+
+      <LicenseBanner />
 
       <main className="md:ml-60 px-4 pt-6 pb-28 md:px-8 md:pb-12">
         {children}
