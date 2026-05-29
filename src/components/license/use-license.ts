@@ -71,6 +71,7 @@ export function useLicense() {
     queryFn: fetchLicense,
     staleTime: 60_000,
     refetchOnWindowFocus: false,
+    refetchInterval: 60 * 60 * 1000,
   });
 }
 
@@ -81,6 +82,16 @@ export function useActivateLicense() {
     mutationFn: (key: string) => postActivate(key),
     onSuccess: (data) => {
       queryClient.setQueryData(LICENSE_QUERY_KEY, data.snapshot);
+      void queryClient.invalidateQueries({ queryKey: LICENSE_QUERY_KEY });
+      // Clear any grace-dismiss flags so a future lapse re-shows warnings.
+      try {
+        const prefix = "license-grace-dismissed:";
+        Object.keys(sessionStorage)
+          .filter((k) => k.startsWith(prefix))
+          .forEach((k) => sessionStorage.removeItem(k));
+      } catch {
+        // sessionStorage may be unavailable
+      }
     },
   });
 }

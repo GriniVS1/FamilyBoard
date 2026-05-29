@@ -202,7 +202,7 @@ function recurrenceIdToBasicUtc(recurrenceId: string, allDay: boolean): string {
     const day = String(d.getUTCDate()).padStart(2, "0");
     return `${y}${m}${day}`;
   }
-  return d.toISOString().replace(/[-:]/g, "").replace(".000", "");
+  return d.toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
 }
 
 export async function pushOverrideToGoogle(masterId: string, recurrenceId: string): Promise<void> {

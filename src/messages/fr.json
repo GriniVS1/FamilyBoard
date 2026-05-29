@@ -746,7 +746,11 @@
     "changeKeyButton": "Saisir / modifier la clé de licence",
     "copyDeviceId": "Copier",
     "copied": "Copié !",
-    "dismissBanner": "Fermer"
+    "dismissBanner": "Fermer",
+    "statusActive": "Actif",
+    "statusTrial": "Essai",
+    "statusExpired": "Expiré",
+    "statusUnlicensed": "Sans licence"
   },
   "errors": {
     "generic": "Une erreur s'est produite.",

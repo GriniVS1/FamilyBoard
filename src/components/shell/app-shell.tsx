@@ -69,18 +69,22 @@ export function AppShell({ children }: AppShellProps) {
   const hideChrome =
     pathname.startsWith("/setup") || pathname.startsWith("/screensaver");
 
-  const { data: license } = useLicense();
+  const { data: license, isLoading } = useLicense();
 
   if (hideChrome) {
     return <>{children}</>;
   }
 
-  const isHardLocked =
-    license?.gate === "hard" &&
-    !pathname.startsWith("/setup") &&
-    !pathname.startsWith("/screensaver");
+  if (isLoading) {
+    return (
+      <div className="min-h-dvh bg-bg flex items-center justify-center">
+        <Logo />
+      </div>
+    );
+  }
 
-  if (isHardLocked) {
+  // Fail-open visually on a transient /api/license error — server still gates writes.
+  if (license?.gate === "hard") {
     return <ActivationScreen />;
   }
 

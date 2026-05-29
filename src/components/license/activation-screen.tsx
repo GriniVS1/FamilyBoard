@@ -28,10 +28,9 @@ export function ActivationScreen() {
   const deviceId = license?.deviceId ?? "…";
 
   function handleCopy() {
-    void navigator.clipboard.writeText(deviceId).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
+    const p = navigator.clipboard?.writeText?.(deviceId);
+    if (!p) return; // no clipboard API on plain-HTTP LAN — raw id is shown with select-all as fallback
+    void p.then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); }).catch(() => {});
   }
 
   function handleSubmit(e: React.FormEvent) {
