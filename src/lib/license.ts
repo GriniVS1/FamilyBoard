@@ -120,7 +120,7 @@ export function verifyLicenseKey(key: string, deviceId: string): VerifyResult {
   try {
     publicKey = getPublicKeyObject();
   } catch {
-    return { valid: false, reason: "MALFORMED" };
+    return { valid: false, reason: "PUBKEY_CONFIG" };
   }
 
   const signedData = Buffer.from(payloadB64, "utf-8");
@@ -142,6 +142,9 @@ export function verifyLicenseKey(key: string, deviceId: string): VerifyResult {
   let validUntil: Date | null = null;
   if (payload.validUntil) {
     validUntil = new Date(payload.validUntil);
+    if (Number.isNaN(validUntil.getTime())) {
+      return { valid: false, reason: "MALFORMED" };
+    }
     if (validUntil < new Date()) {
       return { valid: false, reason: "EXPIRED" };
     }
@@ -185,11 +188,21 @@ export function computeGate(
   return { gate: "hard", status: "UNLICENSED", isActive: false, graceEndsAt, softEndsAt };
 }
 
-export async function getLicenseSnapshot(): Promise<LicenseSnapshot> {
-  let installation = await db.installation.findFirst();
-  if (!installation) {
-    installation = await db.installation.create({ data: {} });
+async function getOrCreateInstallation() {
+  const existing = await db.installation.findFirst();
+  if (existing) return existing;
+  try {
+    return await db.installation.create({ data: {} });
+  } catch {
+    // Lost a create race — re-read.
+    const again = await db.installation.findFirst();
+    if (again) return again;
+    throw new AppError("Installation init failed", "INSTALLATION_INIT_FAILED", 500);
   }
+}
+
+export async function getLicenseSnapshot(): Promise<LicenseSnapshot> {
+  const installation = await getOrCreateInstallation();
 
   const deviceId = await getDeviceId();
   const { graceDays, softDays } = await getGraceDays();
@@ -232,6 +245,13 @@ export async function activateLicense(key: string): Promise<LicenseSnapshot> {
   const result = verifyLicenseKey(key, deviceId);
 
   if (!result.valid) {
+    if (result.reason === "PUBKEY_CONFIG") {
+      throw new AppError(
+        "License verification is misconfigured on this server",
+        "LICENSE_SERVER_MISCONFIG",
+        500,
+      );
+    }
     if (result.reason === "DEVICE_MISMATCH") {
       throw new AppError(
         "This license key is bound to a different device",
@@ -242,10 +262,7 @@ export async function activateLicense(key: string): Promise<LicenseSnapshot> {
     throw new AppError("Invalid license key", "LICENSE_INVALID", 400);
   }
 
-  let installation = await db.installation.findFirst();
-  if (!installation) {
-    installation = await db.installation.create({ data: {} });
-  }
+  const installation = await getOrCreateInstallation();
 
   await db.installation.update({
     where: { id: installation.id },

@@ -746,7 +746,11 @@
     "changeKeyButton": "Lizenzschlüssel eingeben/ändern",
     "copyDeviceId": "Kopieren",
     "copied": "Kopiert!",
-    "dismissBanner": "Ausblenden"
+    "dismissBanner": "Ausblenden",
+    "statusActive": "Aktiv",
+    "statusTrial": "Testphase",
+    "statusExpired": "Abgelaufen",
+    "statusUnlicensed": "Nicht lizenziert"
   },
   "errors": {
     "generic": "Etwas ist schiefgelaufen.",

@@ -21,9 +21,10 @@ function GraceBanner({
   onActivate: () => void;
 }) {
   const t = useTranslations("license");
+  const dismissKey = `license-grace-dismissed:${graceEndsAt}`;
   const [dismissed, setDismissed] = useState(() => {
     try {
-      return sessionStorage.getItem("license-grace-dismissed") === "1";
+      return sessionStorage.getItem(dismissKey) === "1";
     } catch {
       return false;
     }
@@ -31,7 +32,7 @@ function GraceBanner({
 
   function dismiss() {
     try {
-      sessionStorage.setItem("license-grace-dismissed", "1");
+      sessionStorage.setItem(dismissKey, "1");
     } catch {
       // storage may be unavailable
     }
@@ -101,6 +102,7 @@ function SoftBanner({ onActivate }: { onActivate: () => void }) {
 }
 
 export function LicenseBanner() {
+  const t = useTranslations("license");
   const { data: license } = useLicense();
   const [activateOpen, setActivateOpen] = useState(false);
 
@@ -123,7 +125,7 @@ export function LicenseBanner() {
       <Dialog open={activateOpen} onOpenChange={setActivateOpen}>
         <DialogContent className="max-w-lg p-0 overflow-hidden" showClose>
           <DialogTitle className="sr-only">
-            {"FamilyBoard aktivieren"}
+            {t("activateTitle")}
           </DialogTitle>
           <div className="max-h-[85dvh] overflow-y-auto">
             <ActivationScreen />

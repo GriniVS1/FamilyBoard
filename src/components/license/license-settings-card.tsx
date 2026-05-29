@@ -12,7 +12,14 @@ import {
   DialogTitle,
 } from "@/components/shared/dialog";
 import { ActivationScreen } from "./activation-screen";
-import { useLicense } from "./use-license";
+import { type LicenseSnapshot, useLicense } from "./use-license";
+
+const STATUS_KEY_MAP: Record<LicenseSnapshot["status"], "statusActive" | "statusTrial" | "statusExpired" | "statusUnlicensed"> = {
+  ACTIVE: "statusActive",
+  TRIAL: "statusTrial",
+  EXPIRED: "statusExpired",
+  UNLICENSED: "statusUnlicensed",
+};
 
 export function LicenseSettingsCard() {
   const t = useTranslations("license");
@@ -55,7 +62,7 @@ export function LicenseSettingsCard() {
               {t("statusLabel")}
             </div>
             <div className={`text-sm font-medium ${statusColor}`}>
-              {license.status}
+              {t(STATUS_KEY_MAP[license.status])}
             </div>
           </div>
 

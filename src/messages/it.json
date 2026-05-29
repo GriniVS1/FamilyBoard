@@ -746,7 +746,11 @@
     "changeKeyButton": "Inserisci / modifica chiave di licenza",
     "copyDeviceId": "Copia",
     "copied": "Copiato!",
-    "dismissBanner": "Chiudi"
+    "dismissBanner": "Chiudi",
+    "statusActive": "Attivo",
+    "statusTrial": "Prova",
+    "statusExpired": "Scaduto",
+    "statusUnlicensed": "Senza licenza"
   },
   "errors": {
     "generic": "Qualcosa è andato storto.",

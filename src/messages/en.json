@@ -746,7 +746,11 @@
     "changeKeyButton": "Enter / change license key",
     "copyDeviceId": "Copy",
     "copied": "Copied!",
-    "dismissBanner": "Dismiss"
+    "dismissBanner": "Dismiss",
+    "statusActive": "Active",
+    "statusTrial": "Trial",
+    "statusExpired": "Expired",
+    "statusUnlicensed": "Unlicensed"
   },
   "errors": {
     "generic": "Something went wrong.",
