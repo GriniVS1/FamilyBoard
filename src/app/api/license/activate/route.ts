@@ -5,7 +5,7 @@ import { activateLicense, getLicenseSnapshot } from "@/lib/license";
 export const runtime = "nodejs";
 
 const schema = z.object({
-  key: z.string().min(1),
+  key: z.string().min(1).max(4096),
 });
 
 function serializeSnapshot(snap: Awaited<ReturnType<typeof getLicenseSnapshot>>) {

@@ -8,9 +8,9 @@
     "start": "next start -H 0.0.0.0",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "db:push": "DATABASE_URL=\"${DATABASE_URL:-file:../data/app.db}\" prisma db push",
-    "db:migrate": "DATABASE_URL=\"${DATABASE_URL:-file:../data/app.db}\" prisma migrate dev",
-    "db:studio": "DATABASE_URL=\"${DATABASE_URL:-file:../data/app.db}\" prisma studio",
+    "db:push": "DATABASE_URL=\"${DATABASE_URL:-file:../data/app.db?connection_limit=1}\" prisma db push",
+    "db:migrate": "DATABASE_URL=\"${DATABASE_URL:-file:../data/app.db?connection_limit=1}\" prisma migrate dev",
+    "db:studio": "DATABASE_URL=\"${DATABASE_URL:-file:../data/app.db?connection_limit=1}\" prisma studio",
     "postinstall": "prisma generate"
   },
   "dependencies": {

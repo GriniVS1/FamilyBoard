@@ -1,3 +1,5 @@
+import "server-only";
+
 import { google, type calendar_v3 } from "googleapis";
 import type { OAuth2Client } from "google-auth-library";
 import { AppError } from "./api";

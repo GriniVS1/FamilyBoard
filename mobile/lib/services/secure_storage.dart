@@ -8,7 +8,11 @@ class SecureSessionStore {
             const FlutterSecureStorage(
               aOptions: AndroidOptions(encryptedSharedPreferences: true),
               iOptions: IOSOptions(
-                accessibility: KeychainAccessibility.first_unlock,
+                // first_unlock_this_device (kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+                // is non-migratable and excluded from iTunes/Finder backups,
+                // preventing token cloning onto a different device. Background
+                // push/heartbeat still work after first unlock.
+                accessibility: KeychainAccessibility.first_unlock_this_device,
               ),
             );
 
