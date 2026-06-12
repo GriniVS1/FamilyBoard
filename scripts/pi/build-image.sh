@@ -17,7 +17,7 @@
 #        - disables wpa_supplicant in favour of NetworkManager
 #        - creates the familyboard system user + group
 #        - clones the FamilyBoard repo to /opt/familyboard
-#        - generates unique secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY) per image
+#        - secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY) are generated at first boot
 #        - copies sudoers + systemd unit files into place
 #        - enables familyboard.service (Docker Compose) and avahi-daemon
 #        - leaves WiFi unconfigured — buyer sets it at first boot via the
@@ -31,7 +31,8 @@
 #   ./scripts/pi/build-image.sh v1.2.0
 #
 # The resulting file is safe to distribute. WiFi credentials are NOT embedded.
-# Each SD card has unique secrets generated at build time.
+# Secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY) are generated at first boot on each
+# device, so every unit is unique even when one image is flashed to many cards.
 
 set -euo pipefail
 
@@ -100,9 +101,11 @@ cp -r "$SCRIPT_DIR/pi-gen-stage/stage3/00-familyboard-install" "$CUSTOM_STAGE"
 
 # Copy supporting files that the run-script expects in /tmp/pi-gen-files inside chroot.
 mkdir -p "$CUSTOM_STAGE/files"
-cp "$SCRIPT_DIR/sudoers.d/familyboard-network"  "$CUSTOM_STAGE/files/familyboard-network"
-cp "$SCRIPT_DIR/familyboard.service"             "$CUSTOM_STAGE/files/familyboard.service"
-cp "$SCRIPT_DIR/chromium-kiosk.service"          "$CUSTOM_STAGE/files/chromium-kiosk.service"
+cp "$SCRIPT_DIR/sudoers.d/familyboard-network"      "$CUSTOM_STAGE/files/familyboard-network"
+cp "$SCRIPT_DIR/familyboard.service"               "$CUSTOM_STAGE/files/familyboard.service"
+cp "$SCRIPT_DIR/chromium-kiosk.service"            "$CUSTOM_STAGE/files/chromium-kiosk.service"
+cp "$SCRIPT_DIR/firstboot-secrets.sh"              "$CUSTOM_STAGE/files/firstboot-secrets.sh"
+cp "$SCRIPT_DIR/familyboard-firstboot.service"     "$CUSTOM_STAGE/files/familyboard-firstboot.service"
 
 chmod +x "$CUSTOM_STAGE/00-run.sh"
 

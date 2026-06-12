@@ -23,7 +23,7 @@ The script:
 1. Clones `pi-gen` at the pinned Bookworm tag.
 2. Injects the `scripts/pi/pi-gen-stage/stage3/00-familyboard-install/` overlay.
 3. Produces a minimal Bookworm image with Docker, NetworkManager, the FamilyBoard
-   repo at `/opt/familyboard`, unique secrets, and the sudoers rule for `nmcli`.
+   repo at `/opt/familyboard`, and the sudoers rule for `nmcli`. Secrets are generated at first boot on each device.
 4. WiFi is **not** pre-configured — the buyer sets it at first boot.
 
 Build takes ~20 minutes. Re-run for each release tag.
@@ -33,7 +33,7 @@ Build takes ~20 minutes. Re-run for each release tag.
 ```bash
 # With Raspberry Pi Imager (recommended)
 # Open Imager → "Use custom" → select familyboard-v1.2.0.img.gz
-# No advanced options needed — secrets are already in the image.
+# No advanced options needed — secrets are generated at first boot on each device.
 # The default user is "familyboard" with a random password; SSH is enabled.
 
 # Or with dd (Linux/macOS):

@@ -1,0 +1,13 @@
+[Unit]
+Description=FamilyBoard first-boot secret generation
+Before=familyboard.service
+ConditionPathExists=/opt/familyboard
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/familyboard-firstboot
+
+[Install]
+WantedBy=multi-user.target
