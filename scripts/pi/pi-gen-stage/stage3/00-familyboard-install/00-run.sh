@@ -1,6 +1,16 @@
 #!/bin/bash -e
-# Runs inside the pi-gen chroot. Installs system deps, sets up the kiosk
-# environment, and places all systemd + sudoers artefacts.
+# pi-gen stage2 substage. This preamble runs on the HOST; the on_chroot block
+# below runs inside the chroot. ${ROOTFS_DIR} is the target rootfs on the host
+# and CWD is this substage dir, so files/ resolves to the support files that
+# build-image.sh copied in. pi-gen never populates /tmp inside the chroot, so
+# we stage our files into ${ROOTFS_DIR}/tmp/pi-gen-files here, let the chroot
+# block install them with the right owner/mode, then delete them afterwards so
+# they never ship inside the image.
+install -d "${ROOTFS_DIR}/tmp/pi-gen-files"
+install -m 644 files/familyboard-network           "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-network"
+install -m 644 files/familyboard.service           "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard.service"
+install -m 644 files/firstboot-secrets.sh          "${ROOTFS_DIR}/tmp/pi-gen-files/firstboot-secrets.sh"
+install -m 644 files/familyboard-firstboot.service "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-firstboot.service"
 
 on_chroot << EOF
 
@@ -129,3 +139,6 @@ systemctl enable familyboard-firstboot.service
 systemctl enable avahi-daemon
 
 EOF
+
+# Remove the staged support files so they are not baked into the shipped image.
+rm -rf "${ROOTFS_DIR}/tmp/pi-gen-files"
