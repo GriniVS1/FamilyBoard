@@ -1,11 +1,10 @@
-docker.io
-docker-compose-plugin
 chromium-browser
 unclutter
 avahi-daemon
-log2ram
 git
 curl
+ca-certificates
+gnupg
 jq
 network-manager
 xserver-xorg

@@ -5,25 +5,18 @@
 on_chroot << EOF
 
 # ---------------------------------------------------------------------------
-# System packages (listed in 00-packages, but apt-get here for explicit deps)
+# Docker CE + Compose v2 plugin from Docker's official repo.
+# Debian's docker.io ships no compose-v2 plugin, and docker-compose-plugin is
+# not in the Debian/RPi repos — so install the whole Docker stack from
+# download.docker.com. Every other package (chromium, X stack, avahi, …) is
+# installed by the 00-packages list from the base repos before this runs.
 # ---------------------------------------------------------------------------
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/debian/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+echo "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/debian bookworm stable" > /etc/apt/sources.list.d/docker.list
 apt-get update -qq
-apt-get install -y --no-install-recommends \
-  docker.io \
-  docker-compose-plugin \
-  chromium-browser \
-  unclutter \
-  avahi-daemon \
-  log2ram \
-  git \
-  curl \
-  jq \
-  network-manager \
-  xserver-xorg \
-  xinit \
-  x11-xserver-utils \
-  xserver-xorg-legacy \
-  openbox
+apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
 # Disable wpa_supplicant — NetworkManager handles WiFi exclusively.
 systemctl disable wpa_supplicant || true
@@ -134,8 +127,5 @@ systemctl enable familyboard-firstboot.service
 
 # Avahi for mDNS (familyboard.local)
 systemctl enable avahi-daemon
-
-# log2ram to reduce SD wear
-systemctl enable log2ram || true
 
 EOF

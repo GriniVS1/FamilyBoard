@@ -12,9 +12,9 @@
 # What it does:
 #   1. Clones https://github.com/RPi-Distro/pi-gen at the Bookworm tag
 #   2. Injects a custom substage into stage2 (99-familyboard-install) that:
-#        - installs docker.io, docker-compose-plugin, chromium-browser,
-#          unclutter, avahi-daemon, log2ram, git, curl, jq, network-manager,
-#          xserver-xorg, xinit, openbox and supporting X11 packages
+#        - installs Docker CE + compose plugin (from Docker's official repo),
+#          chromium-browser, unclutter, avahi-daemon, git, curl, jq,
+#          network-manager, xserver-xorg, xinit, openbox + supporting X11 pkgs
 #        - disables wpa_supplicant in favour of NetworkManager
 #        - adds the pi-gen-created familyboard user to the docker group
 #        - clones the FamilyBoard repo to /opt/familyboard
