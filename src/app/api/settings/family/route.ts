@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
+import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,7 @@ const bodySchema = z
   );
 
 export const PATCH = withErrorHandling(async (req) => {
+  await requireAdminPin(req);
   const body = bodySchema.parse(await req.json());
 
   const family = await db.family.findFirst();

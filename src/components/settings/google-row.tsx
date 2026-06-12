@@ -17,6 +17,7 @@ type GoogleStatus = {
 
 type GoogleRowProps = {
   member: CalendarMember;
+  adminPin: string;
 };
 
 async function fetchStatus(memberId: string): Promise<GoogleStatus> {
@@ -29,7 +30,7 @@ async function fetchStatus(memberId: string): Promise<GoogleStatus> {
   return (await res.json()) as GoogleStatus;
 }
 
-export function GoogleRow({ member }: GoogleRowProps) {
+export function GoogleRow({ member, adminPin }: GoogleRowProps) {
   const t = useTranslations("settings.google");
   const [actionError, setActionError] = useState<string | null>(null);
   const queryClient = useQueryClient();
@@ -43,7 +44,7 @@ export function GoogleRow({ member }: GoogleRowProps) {
     mutationFn: async () => {
       const res = await fetch(`/api/members/${member.id}/connect-google`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Admin-Pin": adminPin },
       });
       if (!res.ok) {
         let message = `Connect failed (${res.status})`;
@@ -69,6 +70,7 @@ export function GoogleRow({ member }: GoogleRowProps) {
     mutationFn: async () => {
       const res = await fetch(`/api/members/${member.id}/connect-google`, {
         method: "DELETE",
+        headers: { "X-Admin-Pin": adminPin },
       });
       if (!res.ok) throw new Error(`Disconnect failed (${res.status})`);
     },
@@ -84,6 +86,7 @@ export function GoogleRow({ member }: GoogleRowProps) {
     mutationFn: async () => {
       const res = await fetch(`/api/members/${member.id}/sync`, {
         method: "POST",
+        headers: { "X-Admin-Pin": adminPin },
       });
       if (!res.ok) throw new Error(`Sync failed (${res.status})`);
       return (await res.json()) as {

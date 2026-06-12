@@ -3,6 +3,7 @@ import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { MEMBER_ROLE } from "@/lib/enums";
 import { MEMBER_COLORS } from "@/lib/utils";
+import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
 
@@ -25,6 +26,7 @@ const patchSchema = z
 type Ctx = { params: Promise<{ id: string }> };
 
 export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
+  await requireAdminPin(req);
   const { id } = await params;
   const body = patchSchema.parse(await req.json());
 
@@ -58,6 +60,7 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
 });
 
 export const DELETE = withErrorHandling<Ctx>(async (_req, { params }) => {
+  await requireAdminPin(_req);
   const { id } = await params;
   const member = await db.member.findUnique({ where: { id } });
   if (!member) throw new AppError("Member not found", "MEMBER_NOT_FOUND", 404);

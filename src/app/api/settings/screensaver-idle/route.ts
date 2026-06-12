@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { getScreensaverIdleMinutes } from "@/lib/queries";
+import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,7 @@ const PatchBody = z.object({
 });
 
 export const PATCH = withErrorHandling(async (req) => {
+  await requireAdminPin(req);
   const body = PatchBody.parse(await req.json());
   await db.setting.upsert({
     where: { key: "screensaver_idle_minutes" },

@@ -30,10 +30,10 @@ async function fetchIdleMinutes(): Promise<number> {
   return data.minutes;
 }
 
-async function patchIdleMinutes(minutes: number): Promise<number> {
+async function patchIdleMinutes(minutes: number, adminPin: string): Promise<number> {
   const res = await fetch("/api/settings/screensaver-idle", {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "X-Admin-Pin": adminPin },
     body: JSON.stringify({ minutes }),
   });
   if (!res.ok) throw new Error(`Failed (${res.status})`);
@@ -41,7 +41,11 @@ async function patchIdleMinutes(minutes: number): Promise<number> {
   return data.minutes;
 }
 
-export function ScreensaverIdlePicker() {
+type ScreensaverIdlePickerProps = {
+  adminPin: string;
+};
+
+export function ScreensaverIdlePicker({ adminPin }: ScreensaverIdlePickerProps) {
   const t = useTranslations("settings.screensaver");
   const tSettings = useTranslations("settings");
   const queryClient = useQueryClient();
@@ -52,7 +56,7 @@ export function ScreensaverIdlePicker() {
   });
 
   const { mutate, isPending, isSuccess } = useMutation({
-    mutationFn: patchIdleMinutes,
+    mutationFn: (minutes: number) => patchIdleMinutes(minutes, adminPin),
     onSuccess: (minutes) => {
       queryClient.setQueryData(["screensaver-idle"], minutes);
     },

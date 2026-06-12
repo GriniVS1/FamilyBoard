@@ -17,6 +17,7 @@ type MicrosoftStatus = {
 
 type MicrosoftRowProps = {
   member: CalendarMember;
+  adminPin: string;
 };
 
 async function fetchMicrosoftStatus(memberId: string): Promise<MicrosoftStatus> {
@@ -34,7 +35,7 @@ type ConnectError =
   | { kind: "provider_conflict"; detail: string }
   | { kind: "network"; detail: string };
 
-export function MicrosoftRow({ member }: MicrosoftRowProps) {
+export function MicrosoftRow({ member, adminPin }: MicrosoftRowProps) {
   const t = useTranslations("settings.microsoft");
   const [connectError, setConnectError] = useState<ConnectError | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -50,7 +51,7 @@ export function MicrosoftRow({ member }: MicrosoftRowProps) {
       setConnectError(null);
       const res = await fetch(`/api/members/${member.id}/connect-microsoft`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Admin-Pin": adminPin },
       });
 
       if (res.status === 503) {
@@ -99,6 +100,7 @@ export function MicrosoftRow({ member }: MicrosoftRowProps) {
     mutationFn: async () => {
       const res = await fetch(`/api/members/${member.id}/disconnect-microsoft`, {
         method: "POST",
+        headers: { "X-Admin-Pin": adminPin },
       });
       if (!res.ok) throw new Error(`Disconnect failed (${res.status})`);
     },
