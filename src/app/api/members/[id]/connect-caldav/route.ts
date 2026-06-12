@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { encryptToken } from "@/lib/crypto";
 import { CALDAV_PRESETS, discoverCalendars } from "@/lib/caldav";
 import type { CaldavPresetKey } from "@/lib/caldav";
+import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,7 @@ const bodySchema = z.object({
 type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = withErrorHandling<Ctx>(async (req, { params }) => {
+  await requireAdminPin(req);
   const { id } = await params;
   const member = await db.member.findUnique({ where: { id } });
   if (!member) throw new AppError("Member not found", "MEMBER_NOT_FOUND", 404);

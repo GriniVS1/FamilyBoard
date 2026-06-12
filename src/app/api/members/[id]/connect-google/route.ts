@@ -3,6 +3,7 @@ import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { buildAuthorizeUrl, getOAuth2Client } from "@/lib/google";
 import { decryptToken } from "@/lib/crypto";
+import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,7 @@ const STATE_TTL_MS = 10 * 60 * 1000;
 type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = withErrorHandling<Ctx>(async (_req, { params }) => {
+  await requireAdminPin(_req);
   const { id } = await params;
   const member = await db.member.findUnique({ where: { id } });
   if (!member) throw new AppError("Member not found", "MEMBER_NOT_FOUND", 404);
@@ -47,6 +49,7 @@ export const POST = withErrorHandling<Ctx>(async (_req, { params }) => {
 });
 
 export const DELETE = withErrorHandling<Ctx>(async (_req, { params }) => {
+  await requireAdminPin(_req);
   const { id } = await params;
   const member = await db.member.findUnique({ where: { id } });
   if (!member) throw new AppError("Member not found", "MEMBER_NOT_FOUND", 404);

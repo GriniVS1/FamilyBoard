@@ -2,6 +2,7 @@ import { randomBytes } from "node:crypto";
 import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { getAuthorizeUrlAsync, isMicrosoftConfigured } from "@/lib/microsoft";
+import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
 
@@ -10,6 +11,7 @@ const STATE_TTL_MS = 10 * 60 * 1000;
 type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = withErrorHandling<Ctx>(async (_req, { params }) => {
+  await requireAdminPin(_req);
   if (!isMicrosoftConfigured()) {
     throw new AppError(
       "Microsoft OAuth is not configured on this server",

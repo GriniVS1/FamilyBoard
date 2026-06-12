@@ -3,6 +3,7 @@ import { ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { getCurrentLocale } from "@/i18n/locale";
 import { locales } from "@/i18n/config";
+import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,7 @@ const PatchBody = z.object({
 });
 
 export const PATCH = withErrorHandling(async (req) => {
+  await requireAdminPin(req);
   const body = PatchBody.parse(await req.json());
   await db.setting.upsert({
     where: { key: "locale" },

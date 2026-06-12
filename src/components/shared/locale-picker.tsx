@@ -5,16 +5,19 @@ import { useLocale, useTranslations } from "next-intl";
 import { locales, localeLabels, type Locale } from "@/i18n/config";
 import { cn } from "@/lib/utils";
 
-async function patchLocale(locale: Locale): Promise<void> {
+async function patchLocale(locale: Locale, adminPin?: string): Promise<void> {
   await fetch("/api/settings/locale", {
     method: "PATCH",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      ...(adminPin ? { "X-Admin-Pin": adminPin } : {}),
+    },
     body: JSON.stringify({ locale }),
   });
   window.location.reload();
 }
 
-export function LocalePicker({ className }: { className?: string }) {
+export function LocalePicker({ className, adminPin }: { className?: string; adminPin?: string }) {
   const currentLocale = useLocale();
   const [saving, setSaving] = useState(false);
 
@@ -22,7 +25,7 @@ export function LocalePicker({ className }: { className?: string }) {
     if (locale === currentLocale || saving) return;
     setSaving(true);
     try {
-      await patchLocale(locale);
+      await patchLocale(locale, adminPin);
     } catch {
       setSaving(false);
     }

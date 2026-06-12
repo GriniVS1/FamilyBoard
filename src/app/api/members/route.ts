@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { MEMBER_ROLE } from "@/lib/enums";
 import { listMembers } from "@/lib/queries";
 import { MEMBER_COLORS } from "@/lib/utils";
+import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,6 +35,7 @@ export const GET = withErrorHandling(async () => {
  *   (the wizard's first-member-is-admin shortcut doesn't apply post-setup)
  */
 export const POST = withErrorHandling(async (req) => {
+  await requireAdminPin(req);
   const body = createSchema.parse(await req.json());
 
   const family = await db.family.findFirst();

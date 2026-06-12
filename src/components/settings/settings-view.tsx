@@ -61,11 +61,15 @@ export type OauthBanner = {
 async function jsonRequest<T>(
   url: string,
   method: string,
+  adminPin: string,
   body?: unknown,
 ): Promise<T> {
   const res = await fetch(url, {
     method,
-    headers: body ? { "Content-Type": "application/json" } : undefined,
+    headers: {
+      "X-Admin-Pin": adminPin,
+      ...(body ? { "Content-Type": "application/json" } : {}),
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -111,7 +115,7 @@ export function SettingsView({
       weatherLat?: number | null;
       weatherLon?: number | null;
       weatherLabel?: string | null;
-    }) => jsonRequest<FamilyData>("/api/settings/family", "PATCH", patch),
+    }) => jsonRequest<FamilyData>("/api/settings/family", "PATCH", verifiedPin, patch),
     onSuccess: (data) => {
       setFamilyState(data);
       void queryClient.invalidateQueries({ queryKey: ["weather"] });
@@ -127,7 +131,7 @@ export function SettingsView({
         emoji?: string | null;
         role?: string;
       };
-    }) => jsonRequest<CalendarMember>(`/api/members/${args.id}`, "PATCH", args.patch),
+    }) => jsonRequest<CalendarMember>(`/api/members/${args.id}`, "PATCH", verifiedPin, args.patch),
     onSuccess: (data) => {
       setMemberList((prev) =>
         prev.map((m) => (m.id === data.id ? data : m)),
@@ -137,7 +141,7 @@ export function SettingsView({
 
   const memberDeleteMutation = useMutation({
     mutationFn: (id: string) =>
-      jsonRequest<{ ok: true }>(`/api/members/${id}`, "DELETE"),
+      jsonRequest<{ ok: true }>(`/api/members/${id}`, "DELETE", verifiedPin),
     onSuccess: (_data, id) => {
       setMemberList((prev) => prev.filter((m) => m.id !== id));
     },
@@ -149,7 +153,7 @@ export function SettingsView({
       color: string;
       emoji?: string | null;
       role?: string;
-    }) => jsonRequest<CalendarMember>("/api/members", "POST", input),
+    }) => jsonRequest<CalendarMember>("/api/members", "POST", verifiedPin, input),
     onSuccess: (data) => {
       setMemberList((prev) => [...prev, data]);
     },
@@ -249,13 +253,13 @@ export function SettingsView({
           </div>
           <div className="flex items-center gap-2">
             <Globe className="size-4 text-muted" />
-            <LocalePicker />
+            <LocalePicker adminPin={verifiedPin} />
           </div>
         </GlassCard>
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
-        <ScreensaverIdlePicker />
+        <ScreensaverIdlePicker adminPin={verifiedPin} />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
@@ -328,9 +332,9 @@ export function SettingsView({
                     <span className="hidden sm:inline">{tCommon("edit")}</span>
                   </Button>
                 </div>
-                <GoogleRow member={m} />
-                <CaldavRow member={m} />
-                <MicrosoftRow member={m} />
+                <GoogleRow member={m} adminPin={verifiedPin} />
+                <CaldavRow member={m} adminPin={verifiedPin} />
+                <MicrosoftRow member={m} adminPin={verifiedPin} />
               </li>
             ))}
             {memberList.length === 0 && (

@@ -82,12 +82,14 @@ type CaldavConnectDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   memberId: string;
+  adminPin: string;
 };
 
 export function CaldavConnectDialog({
   open,
   onOpenChange,
   memberId,
+  adminPin,
 }: CaldavConnectDialogProps) {
   const t = useTranslations("settings.caldav");
   const tCommon = useTranslations("common");
@@ -110,7 +112,7 @@ export function CaldavConnectDialog({
     mutationFn: async () => {
       const res = await fetch(`/api/members/${memberId}/connect-caldav`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-Admin-Pin": adminPin },
         body: JSON.stringify({
           serverUrl: resolvedServerUrl,
           username,
@@ -161,7 +163,7 @@ export function CaldavConnectDialog({
         `/api/members/${memberId}/select-caldav-calendar`,
         {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "X-Admin-Pin": adminPin },
           body: JSON.stringify({
             calendarUrl: selectedCalendar.url,
             calendarName: selectedCalendar.displayName,
@@ -251,7 +253,7 @@ export function CaldavConnectDialog({
                   </div>
                 </div>
 
-                {(!presetConfig.serverUrl) && (
+                {!presetConfig.serverUrl && (
                   <div className="space-y-1.5">
                     <label
                       htmlFor="caldav-server-url"

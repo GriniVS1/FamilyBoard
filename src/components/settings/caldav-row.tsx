@@ -19,6 +19,7 @@ type CaldavStatus = {
 
 type CaldavRowProps = {
   member: CalendarMember;
+  adminPin: string;
 };
 
 async function fetchCaldavStatus(memberId: string): Promise<CaldavStatus> {
@@ -29,7 +30,7 @@ async function fetchCaldavStatus(memberId: string): Promise<CaldavStatus> {
   return (await res.json()) as CaldavStatus;
 }
 
-export function CaldavRow({ member }: CaldavRowProps) {
+export function CaldavRow({ member, adminPin }: CaldavRowProps) {
   const t = useTranslations("settings.caldav");
   const [connectOpen, setConnectOpen] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -44,6 +45,7 @@ export function CaldavRow({ member }: CaldavRowProps) {
     mutationFn: async () => {
       const res = await fetch(`/api/members/${member.id}/disconnect-caldav`, {
         method: "POST",
+        headers: { "X-Admin-Pin": adminPin },
       });
       if (!res.ok) throw new Error(`Disconnect failed (${res.status})`);
     },
@@ -171,6 +173,7 @@ export function CaldavRow({ member }: CaldavRowProps) {
         open={connectOpen}
         onOpenChange={handleConnectClose}
         memberId={member.id}
+        adminPin={adminPin}
       />
     </>
   );
