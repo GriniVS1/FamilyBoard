@@ -115,6 +115,11 @@ chmod +x "$CUSTOM_STAGE/00-run.sh"
 # 4. Run pi-gen build via its Docker wrapper
 # ---------------------------------------------------------------------------
 cd "$PI_GEN_DIR"
+# pi-gen refuses to start if a container from a previous (often failed) run is
+# still around. Remove it for a clean build so a failed attempt never blocks
+# the next one. (The stage cache lives in this container, so this forces a
+# from-scratch build — acceptable given how fast the build reaches our stage.)
+docker rm -v pigen_work >/dev/null 2>&1 || true
 bash build-docker.sh
 
 # ---------------------------------------------------------------------------
