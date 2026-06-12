@@ -8,3 +8,8 @@ git
 curl
 jq
 network-manager
+xserver-xorg
+xinit
+x11-xserver-utils
+xserver-xorg-legacy
+openbox

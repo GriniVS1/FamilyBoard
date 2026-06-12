@@ -11,19 +11,19 @@
 #
 # What it does:
 #   1. Clones https://github.com/RPi-Distro/pi-gen at the Bookworm tag
-#   2. Generates a custom stage-3 overlay that:
+#   2. Injects a custom substage into stage2 (99-familyboard-install) that:
 #        - installs docker.io, docker-compose-plugin, chromium-browser,
-#          unclutter, avahi-daemon, log2ram, git, curl, jq, network-manager
+#          unclutter, avahi-daemon, log2ram, git, curl, jq, network-manager,
+#          xserver-xorg, xinit, openbox and supporting X11 packages
 #        - disables wpa_supplicant in favour of NetworkManager
-#        - creates the familyboard system user + group
+#        - adds the pi-gen-created familyboard user to the docker group
 #        - clones the FamilyBoard repo to /opt/familyboard
 #        - secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY) are generated at first boot
 #        - copies sudoers + systemd unit files into place
 #        - enables familyboard.service (Docker Compose) and avahi-daemon
+#        - configures tty1 autologin as familyboard + .xinitrc kiosk launch
 #        - leaves WiFi unconfigured — buyer sets it at first boot via the
 #          touchscreen (/setup/network step)
-#        - disables the default pi user — vendor re-sets via Imager userconf
-#          before reflashing if a shell is needed
 #   3. Runs pi-gen via its docker-build.sh wrapper (~20 min on a fast host)
 #   4. Renames and gzips the resulting image into ./dist/
 #
@@ -87,17 +87,18 @@ TIMEZONE_DEFAULT="Europe/London"
 FIRST_USER_NAME="familyboard"
 FIRST_USER_PASS="$(openssl rand -base64 12)"
 ENABLE_SSH=1
-# Disable pi-gen stages 4 (desktop extras) and 5 (recommend packages) —
-# we ship a stripped image; Docker runs the actual app.
-STAGE_LIST="stage0 stage1 stage2 stage3"
+DISABLE_FIRST_BOOT_USER_RENAME=1
+# Build only the lite base — our stage2 substage adds docker + the kiosk stack.
+# stage3 and above are desktop environments we do not need.
+STAGE_LIST="stage0 stage1 stage2"
 EOF
 
 # ---------------------------------------------------------------------------
-# 3. Skip default pi-gen stage3 and inject our custom overlay
+# 3. Inject our overlay as a late substage of stage2 so it is baked into
+#    the exported lite image. Substages sort lexicographically; 99-… runs
+#    after all default stage2 work is complete.
 # ---------------------------------------------------------------------------
-touch "$PI_GEN_DIR/stage3/SKIP"
-
-CUSTOM_STAGE="$PI_GEN_DIR/stage3/00-familyboard-install"
+CUSTOM_STAGE="$PI_GEN_DIR/stage2/99-familyboard-install"
 rm -rf "$CUSTOM_STAGE"
 cp -r "$SCRIPT_DIR/pi-gen-stage/stage3/00-familyboard-install" "$CUSTOM_STAGE"
 
@@ -105,7 +106,6 @@ cp -r "$SCRIPT_DIR/pi-gen-stage/stage3/00-familyboard-install" "$CUSTOM_STAGE"
 mkdir -p "$CUSTOM_STAGE/files"
 cp "$SCRIPT_DIR/sudoers.d/familyboard-network"      "$CUSTOM_STAGE/files/familyboard-network"
 cp "$SCRIPT_DIR/familyboard.service"               "$CUSTOM_STAGE/files/familyboard.service"
-cp "$SCRIPT_DIR/chromium-kiosk.service"            "$CUSTOM_STAGE/files/chromium-kiosk.service"
 cp "$SCRIPT_DIR/firstboot-secrets.sh"              "$CUSTOM_STAGE/files/firstboot-secrets.sh"
 cp "$SCRIPT_DIR/familyboard-firstboot.service"     "$CUSTOM_STAGE/files/familyboard-firstboot.service"
 
