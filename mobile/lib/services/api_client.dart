@@ -35,6 +35,11 @@ class ApiClientFactory {
       sendTimeout: const Duration(seconds: 10),
       contentType: 'application/json',
       responseType: ResponseType.json,
+      // The wall API never issues 3xx. Disabling redirect-following prevents
+      // dart:io from forwarding the Authorization header to a redirect target
+      // on an untrusted LAN. (CVE class: token exfiltration via open redirect.)
+      followRedirects: false,
+      maxRedirects: 0,
       // Don't throw on 4xx; we inspect the error envelope manually.
       validateStatus: (int? status) => status != null && status < 500,
     );

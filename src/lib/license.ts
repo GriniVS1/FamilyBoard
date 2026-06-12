@@ -1,3 +1,5 @@
+import "server-only";
+
 import { randomUUID, createPublicKey, verify as cryptoVerify } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { db } from "./db";

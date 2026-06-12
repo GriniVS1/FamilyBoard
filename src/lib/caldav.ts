@@ -196,22 +196,20 @@ function expandRecurring(
     masterEvent.relateException(ex);
   }
 
-  // Fast-forward iteration to rangeStart so long-running series (e.g. a daily
-  // standup recurring since 2010) don't burn through the safety counter before
-  // reaching the sync window. ICAL's iterator only treats this as a reference
-  // dtstart, so the first next() returns the next valid occurrence ≥ rangeStart.
-  const iterStart = masterEvent.startDate.compare(rangeStart) < 0
-    ? rangeStart
-    : masterEvent.startDate;
-  const iter = masterEvent.iterator(iterStart);
+  // Always iterate from the true DTSTART so time-of-day, weekday, and INTERVAL
+  // parity are preserved. Occurrences before the window are skipped cheaply;
+  // the step budget (not a result budget) ensures a long-running series still
+  // reaches the window even if it predates the sync window by years.
+  const iter = masterEvent.iterator();
   const rows: OccurrenceRow[] = [];
-  // Guard against pathological infinite RRULEs (e.g. FREQ=SECONDLY with no COUNT/UNTIL).
-  const MAX_OCCURRENCES = 5000;
-  let safety = 0;
+  // Budget counts every iter.next() call, not only in-window results, so a
+  // 13-year daily series (~4700 steps) still reaches a future window.
+  const MAX_STEPS = 20000;
+  let steps = 0;
   let next: ICAL.Time | null;
 
-  while ((next = iter.next()) && safety < MAX_OCCURRENCES) {
-    safety++;
+  while ((next = iter.next()) && steps < MAX_STEPS) {
+    steps++;
 
     if (next.compare(rangeEnd) > 0) break;
     if (next.compare(rangeStart) < 0) continue;

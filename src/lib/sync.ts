@@ -1,3 +1,5 @@
+import "server-only";
+
 import type { calendar_v3 } from "googleapis";
 import { db } from "./db";
 import { getCalendarForMember, isNotFoundLike, listIncrementalEvents } from "./google";

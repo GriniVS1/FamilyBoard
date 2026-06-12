@@ -49,6 +49,7 @@ export const GET = withErrorHandling<Ctx>(async (_req, { params }) => {
       "Content-Type": mime,
       "Cache-Control": "public, max-age=3600",
       "Content-Length": String(buffer.byteLength),
+      "X-Content-Type-Options": "nosniff",
     },
   });
 });
