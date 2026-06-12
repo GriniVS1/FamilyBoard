@@ -10,7 +10,11 @@ RemainAfterExit=yes
 WorkingDirectory=/opt/familyboard
 ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d
 ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.pi.yml down
-TimeoutStartSec=300
+# First boot builds the Next.js image on-device (no prebuilt image yet); on a
+# Pi 4 that can take ~30 min. Later boots just start the cached image, so this
+# long timeout only matters once. Allow up to an hour so systemd does not kill
+# the initial build.
+TimeoutStartSec=3600
 
 [Install]
 WantedBy=multi-user.target

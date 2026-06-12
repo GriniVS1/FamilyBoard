@@ -40,6 +40,15 @@ systemctl enable NetworkManager
 usermod -aG docker familyboard || true
 
 # ---------------------------------------------------------------------------
+# Swap headroom for the first-boot Next.js build. On a 4 GB Pi 4 the in-place
+# docker compose build can exceed RAM and get OOM-killed; a 2 GB swap file
+# gives it room to finish. Only the first boot builds the image — later boots
+# reuse familyboard:latest — so this swap mostly sits idle afterwards.
+# ---------------------------------------------------------------------------
+sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=2048/' /etc/dphys-swapfile
+systemctl enable dphys-swapfile
+
+# ---------------------------------------------------------------------------
 # Sudoers: allow familyboard group to run nmcli without password
 # ---------------------------------------------------------------------------
 install -m 440 -o root -g root /tmp/pi-gen-files/familyboard-network /etc/sudoers.d/familyboard-network
