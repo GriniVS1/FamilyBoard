@@ -41,8 +41,10 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 DIST_DIR="$REPO_ROOT/dist"
 
 PI_GEN_REPO="https://github.com/RPi-Distro/pi-gen.git"
-# Pin to the Bookworm release tag for reproducibility.
-PI_GEN_TAG="arm64-2024-11-19"
+# Pin to a real pi-gen Bookworm arm64 release tag for reproducibility.
+# Tag format is <date>-raspios-<release>-<arch> (verify with
+# `git ls-remote --tags https://github.com/RPi-Distro/pi-gen.git`).
+PI_GEN_TAG="2024-11-19-raspios-bookworm-arm64"
 PI_GEN_DIR="/tmp/pi-gen-familyboard"
 
 VERSION="${1:-}"
