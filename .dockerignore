@@ -8,3 +8,11 @@ coverage
 .DS_Store
 README.md
 .claude
+# Build output and unrelated trees — keep them out of the Docker build context
+# so cross-building the arm64 image for the Pi doesn't ship gigabytes of cruft.
+dist
+graphify-out
+mobile
+.idea
+*.xlsx
+.~lock.*

@@ -1,10 +1,10 @@
 import "server-only";
 
 // NetworkManager (nmcli) is the sole interface for WiFi management on Pi OS.
-// The container runs with network_mode: host so nmcli on the host filesystem
-// (bind-mounted at /usr/bin/nmcli) can talk to the host NetworkManager daemon
-// via its DBus socket (/var/run/dbus). This avoids the complexity of a separate
-// sidecar process and keeps all WiFi logic inside the Next.js server.
+// The container uses pid:host + privileged so it can nsenter into the host's
+// namespaces and run the host's nmcli/rfkill/iw/raspi-config binaries directly,
+// without bind-mounting them. DBus access is implicit because the host mounts
+// are visible once we enter the host's mount namespace via nsenter -m.
 //
 // In dev (non-production, nmcli absent) we return deterministic mock data so
 // the wall UI can be developed and tested on a Mac without a Pi.
@@ -28,7 +28,13 @@ export type WifiNetwork = {
 
 export class NetworkError extends Error {
   constructor(
-    public readonly code: "NMCLI_MISSING" | "CONNECT_FAILED" | "SCAN_FAILED" | "TIMEOUT",
+    public readonly code:
+      | "NMCLI_MISSING"
+      | "CONNECT_FAILED"
+      | "SCAN_FAILED"
+      | "TIMEOUT"
+      | "INVALID_COUNTRY"
+      | "COUNTRY_SET_FAILED",
     message: string,
   ) {
     super(message);
@@ -36,8 +42,53 @@ export class NetworkError extends Error {
   }
 }
 
+// Alphabetically sorted subset of wireless-regdb ISO 3166-1 alpha-2 codes that
+// covers the Pi's primary markets. Extend as needed; list is validated at
+// runtime so adding a code here immediately allows it in the API.
+export const SUPPORTED_WIFI_COUNTRIES = [
+  "AT",
+  "AU",
+  "BE",
+  "CA",
+  "CH",
+  "CZ",
+  "DE",
+  "DK",
+  "ES",
+  "FI",
+  "FR",
+  "GB",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LU",
+  "NL",
+  "NO",
+  "NZ",
+  "PL",
+  "PT",
+  "SE",
+  "SI",
+  "SK",
+  "US",
+] as const satisfies readonly string[];
+
 // Printed once across the process lifetime so repeated calls don't spam logs.
 let devWarnEmitted = false;
+
+let lastScan: WifiNetwork[] = [];
+
+export function getCachedScan(): WifiNetwork[] {
+  return lastScan;
+}
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function emitDevWarn() {
   if (!devWarnEmitted) {
@@ -91,6 +142,19 @@ function runCommand(
       void code;
     });
   });
+}
+
+// On the Pi the app runs in a container sharing the host's PID and network
+// namespaces (see docker-compose.pi.yml). The WiFi tools live on the HOST and
+// cannot run inside this Alpine container, so execute them in the host's
+// namespaces via nsenter. sudo provides the privileges needed to setns; a
+// container sudoers rule (see Dockerfile) lets the app user run nsenter.
+function hostCommand(args: string[], timeoutMs = 25_000) {
+  return runCommand(
+    "sudo",
+    ["/usr/bin/nsenter", "-t", "1", "-m", "-u", "-i", "-n", "--", ...args],
+    timeoutMs,
+  );
 }
 
 // Strip anything that looks like a credential from nmcli stderr before it
@@ -147,8 +211,8 @@ export async function getNetworkStatus(): Promise<NetworkStatus> {
   // `nmcli -t -f DEVICE,STATE,CONNECTION,IP4.ADDRESS device show wlan0`
   // We use two separate calls for clarity and robustness.
   const [deviceResult, connResult] = await Promise.all([
-    runCommand("sudo", ["/usr/bin/nmcli", "-t", "-f", "GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS[1]", "device", "show", "wlan0"], 10_000).catch(() => ({ stdout: "", stderr: "" })),
-    runCommand("sudo", ["/usr/bin/nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"], 5_000).catch(() => ({ stdout: "", stderr: "" })),
+    hostCommand(["/usr/bin/nmcli", "-t", "-f", "GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS[1]", "device", "show", "wlan0"], 10_000).catch(() => ({ stdout: "", stderr: "" })),
+    hostCommand(["/usr/bin/nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"], 5_000).catch(() => ({ stdout: "", stderr: "" })),
   ]);
 
   // Parse IP address and connection name from device show output
@@ -202,15 +266,16 @@ export async function scanWifi(): Promise<WifiNetwork[]> {
       await runCommand("/usr/bin/nmcli", ["--version"], 2_000);
     } catch (err) {
       if (err instanceof NetworkError && err.code === "NMCLI_MISSING") {
-        return mockScanWifi();
+        const mocked = mockScanWifi();
+        lastScan = mocked;
+        return mocked;
       }
     }
   }
 
   let result: { stdout: string; stderr: string };
   try {
-    result = await runCommand(
-      "sudo",
+    result = await hostCommand(
       ["/usr/bin/nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "device", "wifi", "list", "--rescan", "yes"],
       25_000,
     );
@@ -241,9 +306,11 @@ export async function scanWifi(): Promise<WifiNetwork[]> {
     }
   }
 
-  return Array.from(seen.values())
+  const networks = Array.from(seen.values())
     .sort((a, b) => b.signal - a.signal)
     .slice(0, 30);
+  lastScan = networks;
+  return networks;
 }
 
 // ---------------------------------------------------------------------------
@@ -269,7 +336,7 @@ export async function connectWifi(ssid: string, psk?: string): Promise<void> {
 
   let result: { stdout: string; stderr: string };
   try {
-    result = await runCommand("sudo", args, 25_000);
+    result = await hostCommand(args, 25_000);
   } catch (err) {
     if (err instanceof NetworkError && err.code === "TIMEOUT") {
       throw new NetworkError("TIMEOUT", "WiFi connection timed out after 25s");
@@ -301,7 +368,7 @@ export async function disconnectWifi(): Promise<void> {
     }
   }
 
-  await runCommand("sudo", ["/usr/bin/nmcli", "device", "disconnect", "wlan0"], 10_000);
+  await hostCommand(["/usr/bin/nmcli", "device", "disconnect", "wlan0"], 10_000);
 }
 
 // ---------------------------------------------------------------------------
@@ -329,8 +396,7 @@ export async function startHotspot(): Promise<{
   // Never logged.
   const psk = randomBytes(4).toString("hex");
 
-  await runCommand(
-    "sudo",
+  await hostCommand(
     [
       "/usr/bin/nmcli",
       "device",
@@ -366,5 +432,68 @@ export async function stopHotspot(): Promise<void> {
   }
 
   // NetworkManager names the hotspot connection "Hotspot" by default.
-  await runCommand("sudo", ["/usr/bin/nmcli", "connection", "down", "Hotspot"], 10_000);
+  await hostCommand(["/usr/bin/nmcli", "connection", "down", "Hotspot"], 10_000);
+}
+
+// ---------------------------------------------------------------------------
+// setRegulatoryCountry
+// ---------------------------------------------------------------------------
+
+export async function setRegulatoryCountry(country: string): Promise<void> {
+  if (!(SUPPORTED_WIFI_COUNTRIES as readonly string[]).includes(country)) {
+    throw new NetworkError("INVALID_COUNTRY", `Unsupported WiFi country: ${country}`);
+  }
+
+  if (isDev()) {
+    try {
+      await runCommand("/usr/bin/nmcli", ["--version"], 2_000);
+    } catch (err) {
+      if (err instanceof NetworkError && err.code === "NMCLI_MISSING") {
+        emitDevWarn();
+        return;
+      }
+    }
+  }
+
+  // rfkill unblock is best-effort; on some Pi OS versions raspi-config handles
+  // this internally, but doing it first avoids a race if the driver is blocked.
+  try {
+    await hostCommand(["/usr/sbin/rfkill", "unblock", "wifi"], 10_000);
+  } catch {
+    // Intentionally ignored — rfkill failure is non-fatal.
+  }
+
+  // Set the runtime regulatory domain directly. On Pi OS with NetworkManager
+  // (wpa_supplicant masked) this most reliably lifts the WiFi block in the
+  // current session so scanning works immediately; best-effort because iw may
+  // be absent. raspi-config below persists the country across reboots.
+  try {
+    await hostCommand(["/usr/sbin/iw", "reg", "set", country], 10_000);
+  } catch {
+    // Intentionally ignored — iw failure is non-fatal.
+  }
+
+  // raspi-config do_wifi_country persists the country to /etc/wpa_supplicant/
+  // wpa_supplicant.conf and triggers iw reg set, which lifts the rfkill soft block.
+  try {
+    await hostCommand(
+      ["/usr/bin/raspi-config", "nonint", "do_wifi_country", country],
+      15_000,
+    );
+  } catch (err) {
+    if (err instanceof NetworkError) {
+      throw new NetworkError("COUNTRY_SET_FAILED", err.message.slice(0, 300));
+    }
+    throw new NetworkError("COUNTRY_SET_FAILED", "raspi-config do_wifi_country failed");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getWifiCountry
+// ---------------------------------------------------------------------------
+
+export async function getWifiCountry(): Promise<string | null> {
+  const { db } = await import("./db");
+  const row = await db.setting.findUnique({ where: { key: "wifi_country" } });
+  return row?.value ?? null;
 }

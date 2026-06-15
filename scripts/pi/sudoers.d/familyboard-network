@@ -1,4 +1,12 @@
-# Allow members of the familyboard group to run nmcli as root without a password.
-# Installed to /etc/sudoers.d/familyboard-network by scripts/pi/install.sh.
-# Validated with `visudo -c` before activation.
+# Allow members of the familyboard group to manage WiFi as root without a
+# password. Installed to /etc/sudoers.d/familyboard-network by the pi-gen stage
+# and validated with `visudo -c` before activation.
+#
+# nmcli is unrestricted (the app drives many subcommands: scan, connect,
+# hotspot, status). rfkill and raspi-config are restricted to the exact WiFi
+# regulatory-domain calls the country-setup step makes, which lift the rfkill
+# soft-block on a fresh Pi so WiFi can be scanned.
 %familyboard ALL=(root) NOPASSWD: /usr/bin/nmcli
+%familyboard ALL=(root) NOPASSWD: /usr/sbin/rfkill unblock wifi
+%familyboard ALL=(root) NOPASSWD: /usr/sbin/iw reg set *
+%familyboard ALL=(root) NOPASSWD: /usr/bin/raspi-config nonint do_wifi_country *

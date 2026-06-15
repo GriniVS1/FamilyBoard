@@ -1,6 +1,23 @@
 #!/bin/bash -e
-# Runs inside the pi-gen chroot. Installs system deps, sets up the kiosk
-# environment, and places all systemd + sudoers artefacts.
+# pi-gen stage2 substage. This preamble runs on the HOST; the on_chroot block
+# below runs inside the chroot. ${ROOTFS_DIR} is the target rootfs on the host
+# and CWD is this substage dir, so files/ resolves to the support files that
+# build-image.sh copied in. pi-gen never populates /tmp inside the chroot, so
+# we stage our files into ${ROOTFS_DIR}/tmp/pi-gen-files here, let the chroot
+# block install them with the right owner/mode, then delete them afterwards so
+# they never ship inside the image.
+install -d "${ROOTFS_DIR}/tmp/pi-gen-files"
+install -m 644 files/familyboard-network           "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-network"
+install -m 644 files/familyboard.service           "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard.service"
+install -m 644 files/firstboot-secrets.sh          "${ROOTFS_DIR}/tmp/pi-gen-files/firstboot-secrets.sh"
+install -m 644 files/familyboard-firstboot.service "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-firstboot.service"
+install -m 644 files/docker-compose.pi.yml         "${ROOTFS_DIR}/tmp/pi-gen-files/docker-compose.pi.yml"
+
+# Bake the prebuilt arm64 app image into the rootfs so the first boot can load
+# it with no network. familyboard.service's ExecStartPre runs `docker load` on
+# it before bringing the stack up.
+install -d "${ROOTFS_DIR}/var/lib/familyboard"
+install -m 644 files/familyboard-image.tar.gz "${ROOTFS_DIR}/var/lib/familyboard/familyboard-image.tar.gz"
 
 on_chroot << EOF
 
@@ -18,9 +35,12 @@ echo "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.d
 apt-get update -qq
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-# Disable wpa_supplicant — NetworkManager handles WiFi exclusively.
+# NetworkManager is the WiFi manager, but it uses wpa_supplicant as its backend
+# (started on demand via D-Bus). wpa_supplicant must therefore NOT be masked —
+# masking it leaves NM unable to scan and wlan0 stuck "unavailable" even though
+# the radio, firmware and rfkill are all fine. Just keep the standalone service
+# from auto-starting (NM activates it itself) and enable NetworkManager.
 systemctl disable wpa_supplicant || true
-systemctl mask wpa_supplicant || true
 systemctl enable NetworkManager
 
 # ---------------------------------------------------------------------------
@@ -28,6 +48,14 @@ systemctl enable NetworkManager
 # it to the docker group so it can call docker compose if needed.
 # ---------------------------------------------------------------------------
 usermod -aG docker familyboard || true
+
+# ---------------------------------------------------------------------------
+# Swap headroom. The app image is prebuilt off-device so nothing compiles here,
+# but a 2 GB swap file keeps the running stack (Next.js server + Chromium
+# kiosk) comfortable on a 4 GB Pi 4 and absorbs memory spikes.
+# ---------------------------------------------------------------------------
+sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=2048/' /etc/dphys-swapfile
+systemctl enable dphys-swapfile
 
 # ---------------------------------------------------------------------------
 # Sudoers: allow familyboard group to run nmcli without password
@@ -41,6 +69,11 @@ visudo -c -f /etc/sudoers.d/familyboard-network
 git clone https://github.com/GriniVS1/FamilyBoard.git /opt/familyboard
 chown -R familyboard:familyboard /opt/familyboard
 
+# Use this build's pi compose override (host networking + privileges for the
+# nsenter-based WiFi control) instead of whatever the cloned main branch ships.
+cp /tmp/pi-gen-files/docker-compose.pi.yml /opt/familyboard/docker-compose.pi.yml
+chown familyboard:familyboard /opt/familyboard/docker-compose.pi.yml
+
 # Write non-secret defaults only. Secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY) are
 # generated at first boot by familyboard-firstboot.service so that every device
 # that is flashed from this image gets its own unique AES-256-GCM key.
@@ -51,6 +84,13 @@ ENVEOF
 
 chmod 600 /opt/familyboard/.env
 chown familyboard:familyboard /opt/familyboard/.env
+
+# The app container runs as uid:gid 1001:1001 (nextjs:nodejs in the Dockerfile)
+# and bind-mounts ./data -> /app/data. Pre-create the host data dir owned by
+# 1001 so SQLite can open /app/data/app.db on first boot. Without this Docker
+# creates the dir as root and the non-root container cannot write to it, so
+# `prisma db push` fails with "unable to open database file".
+install -d -o 1001 -g 1001 /opt/familyboard/data
 
 # ---------------------------------------------------------------------------
 # X11 wrapper: allow the familyboard user to start X from the console
@@ -129,3 +169,6 @@ systemctl enable familyboard-firstboot.service
 systemctl enable avahi-daemon
 
 EOF
+
+# Remove the staged support files so they are not baked into the shipped image.
+rm -rf "${ROOTFS_DIR}/tmp/pi-gen-files"

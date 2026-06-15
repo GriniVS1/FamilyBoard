@@ -121,6 +121,14 @@
     "network": {
       "title": "Connect to WiFi",
       "subtitle": "Pick your network and enter the password.",
+      "country": {
+        "title": "Set WiFi country",
+        "subtitle": "Your region must be set before WiFi can be used. This is a one-time step.",
+        "searchPlaceholder": "Search countries…",
+        "confirm": "Continue",
+        "settingUp": "Applying…",
+        "error": "Could not set the WiFi country. Please try again."
+      },
       "scanning": "Scanning networks…",
       "rescan": "Rescan",
       "empty": "No networks found. Make sure WiFi is on.",
@@ -137,7 +145,12 @@
       "phoneStep2": "Then open this link on your phone",
       "phoneStep3": "Waiting for your phone to connect…",
       "backToKeyboard": "Use this screen instead",
-      "skipForNow": "Skip for now"
+      "skipForNow": "Skip for now",
+      "phone": {
+        "submittedTitle": "WiFi details sent",
+        "submittedBody": "Your phone will now disconnect from \"FamilyBoard-Setup\" — that's expected. Watch the wall display to see whether the connection succeeded. If it didn't, you can try again from the wall."
+      },
+      "hotspotTimeout": "Phone setup didn't complete in time. Try again or enter the password using the on-screen keyboard."
     },
     "done": {
       "title": "You're all set",

@@ -75,17 +75,23 @@ fi
 # ---------------------------------------------------------------------------
 # 2. Write pi-gen config
 # ---------------------------------------------------------------------------
+# Password for the 'familyboard' Linux user. Defaults to a random value; set
+# FAMILYBOARD_PI_PASS to pin a known password for debugging a test unit via SSH
+# or a TTY. It is printed at the end of the build either way. The kiosk itself
+# autologins on tty1 and never needs it.
+FIRST_USER_PASS="${FAMILYBOARD_PI_PASS:-$(openssl rand -base64 12)}"
+
 cat > "$PI_GEN_DIR/config" << EOF
 IMG_NAME="familyboard-${VERSION}"
 RELEASE="bookworm"
 DEPLOY_COMPRESSION=gz
 LOCALE_DEFAULT="en_GB.UTF-8"
 TARGET_HOSTNAME="familyboard"
-KEYBOARD_KEYMAP="gb"
-KEYBOARD_LAYOUT="English (UK)"
-TIMEZONE_DEFAULT="Europe/London"
+KEYBOARD_KEYMAP="ch"
+KEYBOARD_LAYOUT="German (Switzerland)"
+TIMEZONE_DEFAULT="Europe/Zurich"
 FIRST_USER_NAME="familyboard"
-FIRST_USER_PASS="$(openssl rand -base64 12)"
+FIRST_USER_PASS="${FIRST_USER_PASS}"
 ENABLE_SSH=1
 DISABLE_FIRST_BOOT_USER_RENAME=1
 # Build only the lite base — our stage2 substage adds docker + the kiosk stack.
@@ -108,13 +114,51 @@ cp "$SCRIPT_DIR/sudoers.d/familyboard-network"      "$CUSTOM_STAGE/files/familyb
 cp "$SCRIPT_DIR/familyboard.service"               "$CUSTOM_STAGE/files/familyboard.service"
 cp "$SCRIPT_DIR/firstboot-secrets.sh"              "$CUSTOM_STAGE/files/firstboot-secrets.sh"
 cp "$SCRIPT_DIR/familyboard-firstboot.service"     "$CUSTOM_STAGE/files/familyboard-firstboot.service"
+# The Pi compose override is baked from this working tree (not the cloned main)
+# so the device gets the host-networking + nsenter privileges the WiFi setup needs.
+cp "$REPO_ROOT/docker-compose.pi.yml"              "$CUSTOM_STAGE/files/docker-compose.pi.yml"
 
 chmod +x "$CUSTOM_STAGE/00-run.sh"
+
+# ---------------------------------------------------------------------------
+# 3b. Cross-build the arm64 app image on THIS host (which has internet) and
+#     bake it into the stage as a loadable tarball. The Pi loads it at first
+#     boot, so the device never builds or pulls anything over the network —
+#     essential because WiFi is configured later inside the app, leaving the
+#     very first boot with no connectivity at all.
+#
+#     A dedicated docker-container buildx builder is used because it reliably
+#     supports exporting to a tar (-o type=docker) regardless of the host's
+#     Docker image-store configuration.
+# ---------------------------------------------------------------------------
+if ! docker buildx version &> /dev/null; then
+  echo "ERROR: 'docker buildx' is required to cross-build the arm64 app image." >&2
+  echo "       Install Docker Desktop (bundles buildx) or the buildx plugin." >&2
+  exit 1
+fi
+
+if ! docker buildx inspect familyboard-builder &> /dev/null; then
+  docker buildx create --name familyboard-builder --driver docker-container >/dev/null
+fi
+
+echo "Cross-building arm64 app image (several minutes; longer on Intel Macs) ..."
+docker buildx build --builder familyboard-builder --platform linux/arm64 \
+  -t familyboard:latest \
+  -o "type=docker,dest=$CUSTOM_STAGE/files/familyboard-image.tar" \
+  "$REPO_ROOT"
+
+echo "Compressing app image into the stage ..."
+gzip -f "$CUSTOM_STAGE/files/familyboard-image.tar"
 
 # ---------------------------------------------------------------------------
 # 4. Run pi-gen build via its Docker wrapper
 # ---------------------------------------------------------------------------
 cd "$PI_GEN_DIR"
+# pi-gen refuses to start if a container from a previous (often failed) run is
+# still around. Remove it for a clean build so a failed attempt never blocks
+# the next one. (The stage cache lives in this container, so this forces a
+# from-scratch build — acceptable given how fast the build reaches our stage.)
+docker rm -v pigen_work >/dev/null 2>&1 || true
 bash build-docker.sh
 
 # ---------------------------------------------------------------------------
@@ -135,5 +179,12 @@ echo "Flash with Raspberry Pi Imager or:"
 echo "  gunzip -c \"$OUT\" | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync"
 echo ""
 echo "First-boot expected behavior:"
-echo "  The display shows the WiFi-onboarding step at http://familyboard.local:3000/setup/network"
-echo "  after the FamilyBoard container starts (~60–90 s from power-on)."
+echo "  First boot loads the prebuilt app image from the SD card (~2-4 min; the"
+echo "  screen is black meanwhile), then shows the WiFi-onboarding step at"
+echo "  http://familyboard.local:3000/setup/network. Later boots start in ~60-90 s."
+echo "  No network is needed until the user configures WiFi in the app."
+echo ""
+echo "Debug / SSH login for this image:"
+echo "  user: familyboard   password: ${FIRST_USER_PASS}"
+echo "  (random per build unless FAMILYBOARD_PI_PASS=... was set; the tty1 kiosk"
+echo "   autologin does not need it. SSH works once the device has network.)"

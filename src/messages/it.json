@@ -121,6 +121,14 @@
     "network": {
       "title": "Connetti al WiFi",
       "subtitle": "Scegli la rete e inserisci la password.",
+      "country": {
+        "title": "Imposta il paese WiFi",
+        "subtitle": "La tua regione deve essere impostata prima di usare il WiFi. Questo passaggio è unico.",
+        "searchPlaceholder": "Cerca paesi…",
+        "confirm": "Continua",
+        "settingUp": "Applicazione in corso…",
+        "error": "Impossibile impostare il paese WiFi. Riprova."
+      },
       "scanning": "Ricerca reti…",
       "rescan": "Nuova ricerca",
       "empty": "Nessuna rete trovata. Assicurati che il WiFi sia attivo.",
@@ -137,7 +145,12 @@
       "phoneStep2": "Poi apri questo link sul telefono",
       "phoneStep3": "In attesa della connessione del telefono…",
       "backToKeyboard": "Usa questo schermo",
-      "skipForNow": "Salta per ora"
+      "skipForNow": "Salta per ora",
+      "phone": {
+        "submittedTitle": "Dettagli WiFi inviati",
+        "submittedBody": "Il tuo telefono si disconnetterà ora da \"FamilyBoard-Setup\" — è normale. Guarda il display a parete per vedere se la connessione è riuscita. Se non è andata a buon fine, puoi riprovare dal display."
+      },
+      "hotspotTimeout": "La configurazione tramite telefono non è stata completata in tempo. Riprova o inserisci la password con la tastiera a schermo."
     },
     "done": {
       "title": "Tutto pronto",

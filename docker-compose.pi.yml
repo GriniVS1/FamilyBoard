@@ -1,25 +1,20 @@
 # Raspberry Pi production override. Apply with:
 #   docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d
 #
-# Why a separate file: host networking + nmcli/dbus bind mounts are required so
-# the in-app WiFi onboarding flow (POST /api/network/*) can drive the host
-# NetworkManager. On macOS Docker Desktop `network_mode: host` silently breaks
-# port 3000 reachability — local-dev compose stays bridge mode so it works
-# everywhere. Pi systemd unit + install.sh pass this file explicitly.
+# Why a separate file: the app drives host WiFi (nmcli/rfkill/iw/raspi-config)
+# by entering the host's namespaces via nsenter, so it needs the host PID
+# namespace and broad privileges. On macOS Docker Desktop `network_mode: host`
+# silently breaks port 3000 reachability — local-dev compose stays bridge mode
+# so it works everywhere. Pi systemd unit + install.sh pass this file explicitly.
 
 services:
   app:
-    # Host networking required: the app calls sudo nmcli, which speaks DBus to
-    # the host's NetworkManager. With bridge networking the container would
-    # land in a different network namespace and the calls would fail.
+    # The app drives host WiFi (nmcli/rfkill/iw/raspi-config) by entering the
+    # host's namespaces via nsenter, so it needs the host PID namespace and
+    # broad privileges. privileged + pid:host is acceptable for a single-purpose
+    # appliance and can be tightened to SYS_ADMIN/SYS_PTRACE caps once verified.
     network_mode: host
-    cap_add:
-      - NET_ADMIN
-    # In host mode the ports stanza is ignored — port 3000 is published via
-    # the host's own network. Clear it so Compose doesn't warn.
+    pid: "host"
+    privileged: true
+    # In host mode the ports stanza is ignored; clear it so Compose doesn't warn.
     ports: !reset []
-    volumes:
-      # Bind-mount nmcli and the DBus socket so the container can control the
-      # host NetworkManager without installing network-manager inside the image.
-      - /usr/bin/nmcli:/usr/bin/nmcli:ro
-      - /var/run/dbus:/var/run/dbus:ro

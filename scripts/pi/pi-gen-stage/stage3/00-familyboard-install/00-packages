@@ -1,4 +1,5 @@
 chromium-browser
+fonts-noto-color-emoji
 unclutter
 avahi-daemon
 git
@@ -7,6 +8,10 @@ ca-certificates
 gnupg
 jq
 network-manager
+dphys-swapfile
+rfkill
+raspi-config
+iw
 xserver-xorg
 xinit
 x11-xserver-utils

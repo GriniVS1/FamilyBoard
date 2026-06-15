@@ -121,6 +121,14 @@
     "network": {
       "title": "Mit WLAN verbinden",
       "subtitle": "Wähle dein Netzwerk und gib das Passwort ein.",
+      "country": {
+        "title": "WLAN-Land festlegen",
+        "subtitle": "Deine Region muss eingestellt werden, bevor WLAN genutzt werden kann. Dies ist ein einmaliger Schritt.",
+        "searchPlaceholder": "Länder suchen…",
+        "confirm": "Weiter",
+        "settingUp": "Wird angewendet…",
+        "error": "WLAN-Land konnte nicht gesetzt werden. Bitte erneut versuchen."
+      },
       "scanning": "Netzwerke werden gesucht…",
       "rescan": "Erneut suchen",
       "empty": "Keine Netzwerke gefunden. Stelle sicher, dass WLAN eingeschaltet ist.",
@@ -137,7 +145,12 @@
       "phoneStep2": "Öffne dann diesen Link auf dem Handy",
       "phoneStep3": "Warte auf die Verbindung deines Handys…",
       "backToKeyboard": "Diesen Bildschirm verwenden",
-      "skipForNow": "Jetzt überspringen"
+      "skipForNow": "Jetzt überspringen",
+      "phone": {
+        "submittedTitle": "WLAN-Details gesendet",
+        "submittedBody": "Dein Handy trennt sich jetzt vom \"FamilyBoard-Setup\" — das ist normal. Schau auf das Wanddisplay, um zu sehen, ob die Verbindung geklappt hat. Falls nicht, kannst du es dort erneut versuchen."
+      },
+      "hotspotTimeout": "Das Handy-Setup wurde nicht rechtzeitig abgeschlossen. Versuche es erneut oder gib das Passwort über die Bildschirmtastatur ein."
     },
     "done": {
       "title": "Alles bereit",
