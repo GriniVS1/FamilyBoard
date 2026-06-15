@@ -80,6 +80,16 @@ export const SUPPORTED_WIFI_COUNTRIES = [
 // Printed once across the process lifetime so repeated calls don't spam logs.
 let devWarnEmitted = false;
 
+let lastScan: WifiNetwork[] = [];
+
+export function getCachedScan(): WifiNetwork[] {
+  return lastScan;
+}
+
+export function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function emitDevWarn() {
   if (!devWarnEmitted) {
     console.warn("[network] nmcli not found — using dev mocks");
@@ -256,7 +266,9 @@ export async function scanWifi(): Promise<WifiNetwork[]> {
       await runCommand("/usr/bin/nmcli", ["--version"], 2_000);
     } catch (err) {
       if (err instanceof NetworkError && err.code === "NMCLI_MISSING") {
-        return mockScanWifi();
+        const mocked = mockScanWifi();
+        lastScan = mocked;
+        return mocked;
       }
     }
   }
@@ -294,9 +306,11 @@ export async function scanWifi(): Promise<WifiNetwork[]> {
     }
   }
 
-  return Array.from(seen.values())
+  const networks = Array.from(seen.values())
     .sort((a, b) => b.signal - a.signal)
     .slice(0, 30);
+  lastScan = networks;
+  return networks;
 }
 
 // ---------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { withErrorHandling, ok, AppError } from "@/lib/api";
-import { connectWifi, getNetworkStatus, NetworkError } from "@/lib/network";
+import { connectWifi, getNetworkStatus, stopHotspot, sleep, NetworkError } from "@/lib/network";
 import { requireNetworkAccess } from "../guard";
 
 export const runtime = "nodejs";
@@ -26,11 +26,25 @@ const schema = z.object({
       message: "PSK must be 8–63 printable ASCII characters",
     })
     .optional(),
+  viaHotspot: z.boolean().optional(),
 });
 
 export const POST = withErrorHandling(async (req) => {
   await requireNetworkAccess(req);
   const body = schema.parse(await req.json());
+
+  if (body.viaHotspot === true) {
+    // The phone is connected via the hotspot. Tearing down the AP will disconnect
+    // the phone mid-flight, so we ACK immediately and do the real work in the
+    // background after a grace delay that lets the response reach the phone.
+    const { ssid, psk } = body;
+    void (async () => {
+      await sleep(1500);
+      try { await stopHotspot(); } catch {}
+      try { await connectWifi(ssid, psk); } catch {}
+    })();
+    return ok({ accepted: true });
+  }
 
   try {
     await connectWifi(body.ssid, body.psk);

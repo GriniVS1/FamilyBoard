@@ -145,7 +145,12 @@
       "phoneStep2": "Puis ouvre ce lien sur ton téléphone",
       "phoneStep3": "En attente de la connexion de ton téléphone…",
       "backToKeyboard": "Utiliser cet écran",
-      "skipForNow": "Passer pour l'instant"
+      "skipForNow": "Passer pour l'instant",
+      "phone": {
+        "submittedTitle": "Détails WiFi envoyés",
+        "submittedBody": "Ton téléphone va maintenant se déconnecter de \"FamilyBoard-Setup\" — c'est normal. Regarde l'écran mural pour voir si la connexion a réussi. Sinon, tu pourras réessayer depuis l'écran."
+      },
+      "hotspotTimeout": "La configuration via téléphone n'a pas abouti à temps. Réessaie ou saisis le mot de passe avec le clavier à l'écran."
     },
     "done": {
       "title": "Tout est prêt",

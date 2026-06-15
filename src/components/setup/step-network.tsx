@@ -91,7 +91,9 @@ export function StepNetwork({ onComplete, onSkip }: StepNetworkProps) {
   const [connectingSsid, setConnectingSsid] = useState<string | null>(null);
   const [hotspot, setHotspot] = useState<HotspotInfo | null>(null);
   const [hotspotStarting, setHotspotStarting] = useState(false);
+  const [hotspotTimeoutError, setHotspotTimeoutError] = useState<string | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollStartRef = useRef<number | null>(null);
 
   const countryNames = useCountryNames(supportedCountries, locale);
 
@@ -159,7 +161,18 @@ export function StepNetwork({ onComplete, onSkip }: StepNetworkProps) {
 
   function startHotspotPoll() {
     stopPoll();
+    pollStartRef.current = Date.now();
     pollRef.current = setInterval(async () => {
+      if (
+        pollStartRef.current !== null &&
+        Date.now() - pollStartRef.current > 80_000
+      ) {
+        stopPoll();
+        await stopHotspot();
+        setMode("list");
+        setHotspotTimeoutError(t("hotspotTimeout"));
+        return;
+      }
       try {
         const status = await fetchJson<{
           connected: boolean;
@@ -241,7 +254,9 @@ export function StepNetwork({ onComplete, onSkip }: StepNetworkProps) {
 
   async function handleStartHotspot() {
     setHotspotStarting(true);
+    setHotspotTimeoutError(null);
     try {
+      await scan();
       const info = await postJson<HotspotInfo>("/api/network/hotspot-start");
       setHotspot(info);
       setMode("hotspot");
@@ -453,6 +468,20 @@ export function StepNetwork({ onComplete, onSkip }: StepNetworkProps) {
                 )}
               </AnimatePresence>
             </GlassCard>
+
+            <AnimatePresence>
+              {hotspotTimeoutError && (
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  role="alert"
+                  className="text-sm text-accent-rose"
+                >
+                  {hotspotTimeoutError}
+                </motion.p>
+              )}
+            </AnimatePresence>
 
             <div className="flex flex-wrap items-center gap-3">
               <Button

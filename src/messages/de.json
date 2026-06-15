@@ -145,7 +145,12 @@
       "phoneStep2": "Öffne dann diesen Link auf dem Handy",
       "phoneStep3": "Warte auf die Verbindung deines Handys…",
       "backToKeyboard": "Diesen Bildschirm verwenden",
-      "skipForNow": "Jetzt überspringen"
+      "skipForNow": "Jetzt überspringen",
+      "phone": {
+        "submittedTitle": "WLAN-Details gesendet",
+        "submittedBody": "Dein Handy trennt sich jetzt vom \"FamilyBoard-Setup\" — das ist normal. Schau auf das Wanddisplay, um zu sehen, ob die Verbindung geklappt hat. Falls nicht, kannst du es dort erneut versuchen."
+      },
+      "hotspotTimeout": "Das Handy-Setup wurde nicht rechtzeitig abgeschlossen. Versuche es erneut oder gib das Passwort über die Bildschirmtastatur ein."
     },
     "done": {
       "title": "Alles bereit",

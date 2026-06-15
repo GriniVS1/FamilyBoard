@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Wifi, CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { Wifi, Info, Loader2, RefreshCw } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 type WifiNetwork = {
@@ -10,26 +10,36 @@ type WifiNetwork = {
   secured: boolean;
 };
 
-type Phase = "scan" | "password" | "connecting" | "done";
+type Phase = "scan" | "password" | "submitted";
 
 async function fetchNetworks(): Promise<WifiNetwork[]> {
-  const res = await fetch("/api/network/wifi-scan");
+  const res = await fetch("/api/network/wifi-scan?cached=1");
   if (!res.ok) throw new Error("scan failed");
   const data = (await res.json()) as { networks: WifiNetwork[] };
   return data.networks;
 }
 
-async function connectWifi(ssid: string, psk?: string): Promise<void> {
-  const res = await fetch("/api/network/wifi-connect", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ ssid, psk }),
-  });
-  if (!res.ok) throw new Error("connect failed");
+async function submitWifi(ssid: string, psk?: string): Promise<void> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 4000);
+  try {
+    await fetch("/api/network/wifi-connect", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ssid, psk, viaHotspot: true }),
+      signal: controller.signal,
+    });
+  } catch {
+    // Hotspot teardown will kill the connection — treat any error (including
+    // abort / network drop) as expected and not a failure.
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export default function PhonePage() {
   const t = useTranslations("setup.network");
+  const tCommon = useTranslations("common");
   const [phase, setPhase] = useState<Phase>("scan");
   const [networks, setNetworks] = useState<WifiNetwork[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,22 +71,15 @@ export default function PhonePage() {
     setPassword("");
     setError(null);
     if (!net.secured) {
-      void connect(net.ssid, undefined);
+      void submitAndFinish(net.ssid, undefined);
     } else {
       setPhase("password");
     }
   }
 
-  async function connect(ssid: string, psk: string | undefined) {
-    setPhase("connecting");
-    setError(null);
-    try {
-      await connectWifi(ssid, psk);
-      setPhase("done");
-    } catch {
-      setError(t("connectFailed"));
-      setPhase("password");
-    }
+  async function submitAndFinish(ssid: string, psk: string | undefined) {
+    await submitWifi(ssid, psk);
+    setPhase("submitted");
   }
 
   return (
@@ -92,20 +95,15 @@ export default function PhonePage() {
           </div>
         </div>
 
-        {phase === "done" && (
-          <div className="flex flex-col items-center gap-4 py-12 text-center">
-            <CheckCircle2 className="size-16 text-accent-mint" />
-            <h2 className="text-2xl font-semibold">{t("connected")}</h2>
-            <p className="text-muted">Return to the wall display.</p>
-          </div>
-        )}
-
-        {phase === "connecting" && (
-          <div className="flex flex-col items-center gap-4 py-12">
-            <Loader2 className="size-10 animate-spin text-muted" />
-            <p className="text-muted">
-              {t("connecting", { ssid: selected?.ssid ?? "…" })}
-            </p>
+        {phase === "submitted" && (
+          <div className="flex flex-col items-center gap-6 py-12 text-center">
+            <div className="size-16 rounded-full bg-accent-mint/20 flex items-center justify-center">
+              <Info className="size-8 text-accent-mint" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <h2 className="text-2xl font-semibold">{t("phone.submittedTitle")}</h2>
+              <p className="text-muted leading-relaxed max-w-sm">{t("phone.submittedBody")}</p>
+            </div>
           </div>
         )}
 
@@ -170,7 +168,7 @@ export default function PhonePage() {
             />
             <button
               type="button"
-              onClick={() => void connect(selected.ssid, password || undefined)}
+              onClick={() => void submitAndFinish(selected.ssid, password || undefined)}
               disabled={password.length === 0}
               className="h-14 rounded-full bg-ink text-bg font-medium disabled:opacity-40 active:scale-[0.98] transition-transform tap-target w-full"
             >
@@ -181,7 +179,7 @@ export default function PhonePage() {
               onClick={() => setPhase("scan")}
               className="text-sm text-muted text-center tap-target"
             >
-              Back
+              {tCommon("back")}
             </button>
           </div>
         )}
