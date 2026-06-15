@@ -438,6 +438,16 @@ export async function setRegulatoryCountry(country: string): Promise<void> {
     // Intentionally ignored — rfkill failure is non-fatal.
   }
 
+  // Set the runtime regulatory domain directly. On Pi OS with NetworkManager
+  // (wpa_supplicant masked) this most reliably lifts the WiFi block in the
+  // current session so scanning works immediately; best-effort because iw may
+  // be absent. raspi-config below persists the country across reboots.
+  try {
+    await runCommand("sudo", ["/usr/sbin/iw", "reg", "set", country], 10_000);
+  } catch {
+    // Intentionally ignored — iw failure is non-fatal.
+  }
+
   // raspi-config do_wifi_country persists the country to /etc/wpa_supplicant/
   // wpa_supplicant.conf and triggers iw reg set, which lifts the rfkill soft block.
   try {

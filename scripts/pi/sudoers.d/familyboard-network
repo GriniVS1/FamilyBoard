@@ -8,4 +8,5 @@
 # soft-block on a fresh Pi so WiFi can be scanned.
 %familyboard ALL=(root) NOPASSWD: /usr/bin/nmcli
 %familyboard ALL=(root) NOPASSWD: /usr/sbin/rfkill unblock wifi
+%familyboard ALL=(root) NOPASSWD: /usr/sbin/iw reg set *
 %familyboard ALL=(root) NOPASSWD: /usr/bin/raspi-config nonint do_wifi_country *

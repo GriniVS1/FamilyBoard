@@ -10,6 +10,7 @@ network-manager
 dphys-swapfile
 rfkill
 raspi-config
+iw
 xserver-xorg
 xinit
 x11-xserver-utils
