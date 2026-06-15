@@ -1,10 +1,10 @@
 import "server-only";
 
 // NetworkManager (nmcli) is the sole interface for WiFi management on Pi OS.
-// The container runs with network_mode: host so nmcli on the host filesystem
-// (bind-mounted at /usr/bin/nmcli) can talk to the host NetworkManager daemon
-// via its DBus socket (/var/run/dbus). This avoids the complexity of a separate
-// sidecar process and keeps all WiFi logic inside the Next.js server.
+// The container uses pid:host + privileged so it can nsenter into the host's
+// namespaces and run the host's nmcli/rfkill/iw/raspi-config binaries directly,
+// without bind-mounting them. DBus access is implicit because the host mounts
+// are visible once we enter the host's mount namespace via nsenter -m.
 //
 // In dev (non-production, nmcli absent) we return deterministic mock data so
 // the wall UI can be developed and tested on a Mac without a Pi.
@@ -134,6 +134,19 @@ function runCommand(
   });
 }
 
+// On the Pi the app runs in a container sharing the host's PID and network
+// namespaces (see docker-compose.pi.yml). The WiFi tools live on the HOST and
+// cannot run inside this Alpine container, so execute them in the host's
+// namespaces via nsenter. sudo provides the privileges needed to setns; a
+// container sudoers rule (see Dockerfile) lets the app user run nsenter.
+function hostCommand(args: string[], timeoutMs = 25_000) {
+  return runCommand(
+    "sudo",
+    ["/usr/bin/nsenter", "-t", "1", "-m", "-u", "-i", "-n", "--", ...args],
+    timeoutMs,
+  );
+}
+
 // Strip anything that looks like a credential from nmcli stderr before it
 // reaches the client. Removes key-value pairs whose key contains "password",
 // "psk", "secret", or "key" (case-insensitive).
@@ -188,8 +201,8 @@ export async function getNetworkStatus(): Promise<NetworkStatus> {
   // `nmcli -t -f DEVICE,STATE,CONNECTION,IP4.ADDRESS device show wlan0`
   // We use two separate calls for clarity and robustness.
   const [deviceResult, connResult] = await Promise.all([
-    runCommand("sudo", ["/usr/bin/nmcli", "-t", "-f", "GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS[1]", "device", "show", "wlan0"], 10_000).catch(() => ({ stdout: "", stderr: "" })),
-    runCommand("sudo", ["/usr/bin/nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"], 5_000).catch(() => ({ stdout: "", stderr: "" })),
+    hostCommand(["/usr/bin/nmcli", "-t", "-f", "GENERAL.STATE,GENERAL.CONNECTION,IP4.ADDRESS[1]", "device", "show", "wlan0"], 10_000).catch(() => ({ stdout: "", stderr: "" })),
+    hostCommand(["/usr/bin/nmcli", "-t", "-f", "NAME,TYPE", "connection", "show", "--active"], 5_000).catch(() => ({ stdout: "", stderr: "" })),
   ]);
 
   // Parse IP address and connection name from device show output
@@ -250,8 +263,7 @@ export async function scanWifi(): Promise<WifiNetwork[]> {
 
   let result: { stdout: string; stderr: string };
   try {
-    result = await runCommand(
-      "sudo",
+    result = await hostCommand(
       ["/usr/bin/nmcli", "-t", "-f", "SSID,SIGNAL,SECURITY", "device", "wifi", "list", "--rescan", "yes"],
       25_000,
     );
@@ -310,7 +322,7 @@ export async function connectWifi(ssid: string, psk?: string): Promise<void> {
 
   let result: { stdout: string; stderr: string };
   try {
-    result = await runCommand("sudo", args, 25_000);
+    result = await hostCommand(args, 25_000);
   } catch (err) {
     if (err instanceof NetworkError && err.code === "TIMEOUT") {
       throw new NetworkError("TIMEOUT", "WiFi connection timed out after 25s");
@@ -342,7 +354,7 @@ export async function disconnectWifi(): Promise<void> {
     }
   }
 
-  await runCommand("sudo", ["/usr/bin/nmcli", "device", "disconnect", "wlan0"], 10_000);
+  await hostCommand(["/usr/bin/nmcli", "device", "disconnect", "wlan0"], 10_000);
 }
 
 // ---------------------------------------------------------------------------
@@ -370,8 +382,7 @@ export async function startHotspot(): Promise<{
   // Never logged.
   const psk = randomBytes(4).toString("hex");
 
-  await runCommand(
-    "sudo",
+  await hostCommand(
     [
       "/usr/bin/nmcli",
       "device",
@@ -407,7 +418,7 @@ export async function stopHotspot(): Promise<void> {
   }
 
   // NetworkManager names the hotspot connection "Hotspot" by default.
-  await runCommand("sudo", ["/usr/bin/nmcli", "connection", "down", "Hotspot"], 10_000);
+  await hostCommand(["/usr/bin/nmcli", "connection", "down", "Hotspot"], 10_000);
 }
 
 // ---------------------------------------------------------------------------
@@ -433,7 +444,7 @@ export async function setRegulatoryCountry(country: string): Promise<void> {
   // rfkill unblock is best-effort; on some Pi OS versions raspi-config handles
   // this internally, but doing it first avoids a race if the driver is blocked.
   try {
-    await runCommand("sudo", ["/usr/sbin/rfkill", "unblock", "wifi"], 10_000);
+    await hostCommand(["/usr/sbin/rfkill", "unblock", "wifi"], 10_000);
   } catch {
     // Intentionally ignored — rfkill failure is non-fatal.
   }
@@ -443,7 +454,7 @@ export async function setRegulatoryCountry(country: string): Promise<void> {
   // current session so scanning works immediately; best-effort because iw may
   // be absent. raspi-config below persists the country across reboots.
   try {
-    await runCommand("sudo", ["/usr/sbin/iw", "reg", "set", country], 10_000);
+    await hostCommand(["/usr/sbin/iw", "reg", "set", country], 10_000);
   } catch {
     // Intentionally ignored — iw failure is non-fatal.
   }
@@ -451,8 +462,7 @@ export async function setRegulatoryCountry(country: string): Promise<void> {
   // raspi-config do_wifi_country persists the country to /etc/wpa_supplicant/
   // wpa_supplicant.conf and triggers iw reg set, which lifts the rfkill soft block.
   try {
-    await runCommand(
-      "sudo",
+    await hostCommand(
       ["/usr/bin/raspi-config", "nonint", "do_wifi_country", country],
       15_000,
     );

@@ -11,6 +11,7 @@ install -m 644 files/familyboard-network           "${ROOTFS_DIR}/tmp/pi-gen-fil
 install -m 644 files/familyboard.service           "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard.service"
 install -m 644 files/firstboot-secrets.sh          "${ROOTFS_DIR}/tmp/pi-gen-files/firstboot-secrets.sh"
 install -m 644 files/familyboard-firstboot.service "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-firstboot.service"
+install -m 644 files/docker-compose.pi.yml         "${ROOTFS_DIR}/tmp/pi-gen-files/docker-compose.pi.yml"
 
 # Bake the prebuilt arm64 app image into the rootfs so the first boot can load
 # it with no network. familyboard.service's ExecStartPre runs `docker load` on
@@ -64,6 +65,11 @@ visudo -c -f /etc/sudoers.d/familyboard-network
 # ---------------------------------------------------------------------------
 git clone https://github.com/GriniVS1/FamilyBoard.git /opt/familyboard
 chown -R familyboard:familyboard /opt/familyboard
+
+# Use this build's pi compose override (host networking + privileges for the
+# nsenter-based WiFi control) instead of whatever the cloned main branch ships.
+cp /tmp/pi-gen-files/docker-compose.pi.yml /opt/familyboard/docker-compose.pi.yml
+chown familyboard:familyboard /opt/familyboard/docker-compose.pi.yml
 
 # Write non-secret defaults only. Secrets (NEXTAUTH_SECRET, ENCRYPTION_KEY) are
 # generated at first boot by familyboard-firstboot.service so that every device

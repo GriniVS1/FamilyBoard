@@ -114,6 +114,9 @@ cp "$SCRIPT_DIR/sudoers.d/familyboard-network"      "$CUSTOM_STAGE/files/familyb
 cp "$SCRIPT_DIR/familyboard.service"               "$CUSTOM_STAGE/files/familyboard.service"
 cp "$SCRIPT_DIR/firstboot-secrets.sh"              "$CUSTOM_STAGE/files/firstboot-secrets.sh"
 cp "$SCRIPT_DIR/familyboard-firstboot.service"     "$CUSTOM_STAGE/files/familyboard-firstboot.service"
+# The Pi compose override is baked from this working tree (not the cloned main)
+# so the device gets the host-networking + nsenter privileges the WiFi setup needs.
+cp "$REPO_ROOT/docker-compose.pi.yml"              "$CUSTOM_STAGE/files/docker-compose.pi.yml"
 
 chmod +x "$CUSTOM_STAGE/00-run.sh"
 
