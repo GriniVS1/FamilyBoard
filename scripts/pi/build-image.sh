@@ -75,6 +75,12 @@ fi
 # ---------------------------------------------------------------------------
 # 2. Write pi-gen config
 # ---------------------------------------------------------------------------
+# Password for the 'familyboard' Linux user. Defaults to a random value; set
+# FAMILYBOARD_PI_PASS to pin a known password for debugging a test unit via SSH
+# or a TTY. It is printed at the end of the build either way. The kiosk itself
+# autologins on tty1 and never needs it.
+FIRST_USER_PASS="${FAMILYBOARD_PI_PASS:-$(openssl rand -base64 12)}"
+
 cat > "$PI_GEN_DIR/config" << EOF
 IMG_NAME="familyboard-${VERSION}"
 RELEASE="bookworm"
@@ -85,7 +91,7 @@ KEYBOARD_KEYMAP="gb"
 KEYBOARD_LAYOUT="English (UK)"
 TIMEZONE_DEFAULT="Europe/London"
 FIRST_USER_NAME="familyboard"
-FIRST_USER_PASS="$(openssl rand -base64 12)"
+FIRST_USER_PASS="${FIRST_USER_PASS}"
 ENABLE_SSH=1
 DISABLE_FIRST_BOOT_USER_RENAME=1
 # Build only the lite base — our stage2 substage adds docker + the kiosk stack.
@@ -170,5 +176,12 @@ echo "Flash with Raspberry Pi Imager or:"
 echo "  gunzip -c \"$OUT\" | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync"
 echo ""
 echo "First-boot expected behavior:"
-echo "  The display shows the WiFi-onboarding step at http://familyboard.local:3000/setup/network"
-echo "  after the FamilyBoard container starts (~60–90 s from power-on)."
+echo "  First boot loads the prebuilt app image from the SD card (~2-4 min; the"
+echo "  screen is black meanwhile), then shows the WiFi-onboarding step at"
+echo "  http://familyboard.local:3000/setup/network. Later boots start in ~60-90 s."
+echo "  No network is needed until the user configures WiFi in the app."
+echo ""
+echo "Debug / SSH login for this image:"
+echo "  user: familyboard   password: ${FIRST_USER_PASS}"
+echo "  (random per build unless FAMILYBOARD_PI_PASS=... was set; the tty1 kiosk"
+echo "   autologin does not need it. SSH works once the device has network.)"
