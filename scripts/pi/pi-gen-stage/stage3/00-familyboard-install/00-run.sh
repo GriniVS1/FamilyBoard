@@ -76,6 +76,13 @@ ENVEOF
 chmod 600 /opt/familyboard/.env
 chown familyboard:familyboard /opt/familyboard/.env
 
+# The app container runs as uid:gid 1001:1001 (nextjs:nodejs in the Dockerfile)
+# and bind-mounts ./data -> /app/data. Pre-create the host data dir owned by
+# 1001 so SQLite can open /app/data/app.db on first boot. Without this Docker
+# creates the dir as root and the non-root container cannot write to it, so
+# `prisma db push` fails with "unable to open database file".
+install -d -o 1001 -g 1001 /opt/familyboard/data
+
 # ---------------------------------------------------------------------------
 # X11 wrapper: allow the familyboard user to start X from the console
 # ---------------------------------------------------------------------------
