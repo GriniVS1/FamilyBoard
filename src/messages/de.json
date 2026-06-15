@@ -121,6 +121,14 @@
     "network": {
       "title": "Mit WLAN verbinden",
       "subtitle": "Wähle dein Netzwerk und gib das Passwort ein.",
+      "country": {
+        "title": "WLAN-Land festlegen",
+        "subtitle": "Deine Region muss eingestellt werden, bevor WLAN genutzt werden kann. Dies ist ein einmaliger Schritt.",
+        "searchPlaceholder": "Länder suchen…",
+        "confirm": "Weiter",
+        "settingUp": "Wird angewendet…",
+        "error": "WLAN-Land konnte nicht gesetzt werden. Bitte erneut versuchen."
+      },
       "scanning": "Netzwerke werden gesucht…",
       "rescan": "Erneut suchen",
       "empty": "Keine Netzwerke gefunden. Stelle sicher, dass WLAN eingeschaltet ist.",

@@ -121,6 +121,14 @@
     "network": {
       "title": "Connect to WiFi",
       "subtitle": "Pick your network and enter the password.",
+      "country": {
+        "title": "Set WiFi country",
+        "subtitle": "Your region must be set before WiFi can be used. This is a one-time step.",
+        "searchPlaceholder": "Search countries…",
+        "confirm": "Continue",
+        "settingUp": "Applying…",
+        "error": "Could not set the WiFi country. Please try again."
+      },
       "scanning": "Scanning networks…",
       "rescan": "Rescan",
       "empty": "No networks found. Make sure WiFi is on.",

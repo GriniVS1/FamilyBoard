@@ -121,6 +121,14 @@
     "network": {
       "title": "Connetti al WiFi",
       "subtitle": "Scegli la rete e inserisci la password.",
+      "country": {
+        "title": "Imposta il paese WiFi",
+        "subtitle": "La tua regione deve essere impostata prima di usare il WiFi. Questo passaggio è unico.",
+        "searchPlaceholder": "Cerca paesi…",
+        "confirm": "Continua",
+        "settingUp": "Applicazione in corso…",
+        "error": "Impossibile impostare il paese WiFi. Riprova."
+      },
       "scanning": "Ricerca reti…",
       "rescan": "Nuova ricerca",
       "empty": "Nessuna rete trovata. Assicurati che il WiFi sia attivo.",

@@ -28,13 +28,54 @@ export type WifiNetwork = {
 
 export class NetworkError extends Error {
   constructor(
-    public readonly code: "NMCLI_MISSING" | "CONNECT_FAILED" | "SCAN_FAILED" | "TIMEOUT",
+    public readonly code:
+      | "NMCLI_MISSING"
+      | "CONNECT_FAILED"
+      | "SCAN_FAILED"
+      | "TIMEOUT"
+      | "INVALID_COUNTRY"
+      | "COUNTRY_SET_FAILED",
     message: string,
   ) {
     super(message);
     this.name = "NetworkError";
   }
 }
+
+// Alphabetically sorted subset of wireless-regdb ISO 3166-1 alpha-2 codes that
+// covers the Pi's primary markets. Extend as needed; list is validated at
+// runtime so adding a code here immediately allows it in the API.
+export const SUPPORTED_WIFI_COUNTRIES = [
+  "AT",
+  "AU",
+  "BE",
+  "CA",
+  "CH",
+  "CZ",
+  "DE",
+  "DK",
+  "ES",
+  "FI",
+  "FR",
+  "GB",
+  "GR",
+  "HR",
+  "HU",
+  "IE",
+  "IS",
+  "IT",
+  "LI",
+  "LU",
+  "NL",
+  "NO",
+  "NZ",
+  "PL",
+  "PT",
+  "SE",
+  "SI",
+  "SK",
+  "US",
+] as const satisfies readonly string[];
 
 // Printed once across the process lifetime so repeated calls don't spam logs.
 let devWarnEmitted = false;
@@ -367,4 +408,58 @@ export async function stopHotspot(): Promise<void> {
 
   // NetworkManager names the hotspot connection "Hotspot" by default.
   await runCommand("sudo", ["/usr/bin/nmcli", "connection", "down", "Hotspot"], 10_000);
+}
+
+// ---------------------------------------------------------------------------
+// setRegulatoryCountry
+// ---------------------------------------------------------------------------
+
+export async function setRegulatoryCountry(country: string): Promise<void> {
+  if (!(SUPPORTED_WIFI_COUNTRIES as readonly string[]).includes(country)) {
+    throw new NetworkError("INVALID_COUNTRY", `Unsupported WiFi country: ${country}`);
+  }
+
+  if (isDev()) {
+    try {
+      await runCommand("/usr/bin/nmcli", ["--version"], 2_000);
+    } catch (err) {
+      if (err instanceof NetworkError && err.code === "NMCLI_MISSING") {
+        emitDevWarn();
+        return;
+      }
+    }
+  }
+
+  // rfkill unblock is best-effort; on some Pi OS versions raspi-config handles
+  // this internally, but doing it first avoids a race if the driver is blocked.
+  try {
+    await runCommand("sudo", ["/usr/sbin/rfkill", "unblock", "wifi"], 10_000);
+  } catch {
+    // Intentionally ignored — rfkill failure is non-fatal.
+  }
+
+  // raspi-config do_wifi_country persists the country to /etc/wpa_supplicant/
+  // wpa_supplicant.conf and triggers iw reg set, which lifts the rfkill soft block.
+  try {
+    await runCommand(
+      "sudo",
+      ["/usr/bin/raspi-config", "nonint", "do_wifi_country", country],
+      15_000,
+    );
+  } catch (err) {
+    if (err instanceof NetworkError) {
+      throw new NetworkError("COUNTRY_SET_FAILED", err.message.slice(0, 300));
+    }
+    throw new NetworkError("COUNTRY_SET_FAILED", "raspi-config do_wifi_country failed");
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getWifiCountry
+// ---------------------------------------------------------------------------
+
+export async function getWifiCountry(): Promise<string | null> {
+  const { db } = await import("./db");
+  const row = await db.setting.findUnique({ where: { key: "wifi_country" } });
+  return row?.value ?? null;
 }

@@ -8,6 +8,8 @@ gnupg
 jq
 network-manager
 dphys-swapfile
+rfkill
+raspi-config
 xserver-xorg
 xinit
 x11-xserver-utils

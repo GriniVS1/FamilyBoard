@@ -121,6 +121,14 @@
     "network": {
       "title": "Connexion au WiFi",
       "subtitle": "Choisis ton réseau et entre le mot de passe.",
+      "country": {
+        "title": "Définir le pays WiFi",
+        "subtitle": "Ta région doit être configurée avant d'utiliser le WiFi. Cette étape est unique.",
+        "searchPlaceholder": "Rechercher un pays…",
+        "confirm": "Continuer",
+        "settingUp": "Application en cours…",
+        "error": "Impossible de définir le pays WiFi. Veuillez réessayer."
+      },
       "scanning": "Recherche des réseaux…",
       "rescan": "Rescanner",
       "empty": "Aucun réseau trouvé. Vérifie que le WiFi est activé.",
