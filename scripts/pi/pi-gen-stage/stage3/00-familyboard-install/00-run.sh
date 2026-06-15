@@ -35,9 +35,12 @@ echo "deb [arch=arm64 signed-by=/etc/apt/keyrings/docker.asc] https://download.d
 apt-get update -qq
 apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
 
-# Disable wpa_supplicant — NetworkManager handles WiFi exclusively.
+# NetworkManager is the WiFi manager, but it uses wpa_supplicant as its backend
+# (started on demand via D-Bus). wpa_supplicant must therefore NOT be masked —
+# masking it leaves NM unable to scan and wlan0 stuck "unavailable" even though
+# the radio, firmware and rfkill are all fine. Just keep the standalone service
+# from auto-starting (NM activates it itself) and enable NetworkManager.
 systemctl disable wpa_supplicant || true
-systemctl mask wpa_supplicant || true
 systemctl enable NetworkManager
 
 # ---------------------------------------------------------------------------
