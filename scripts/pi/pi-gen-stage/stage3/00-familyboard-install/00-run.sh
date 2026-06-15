@@ -12,6 +12,12 @@ install -m 644 files/familyboard.service           "${ROOTFS_DIR}/tmp/pi-gen-fil
 install -m 644 files/firstboot-secrets.sh          "${ROOTFS_DIR}/tmp/pi-gen-files/firstboot-secrets.sh"
 install -m 644 files/familyboard-firstboot.service "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-firstboot.service"
 
+# Bake the prebuilt arm64 app image into the rootfs so the first boot can load
+# it with no network. familyboard.service's ExecStartPre runs `docker load` on
+# it before bringing the stack up.
+install -d "${ROOTFS_DIR}/var/lib/familyboard"
+install -m 644 files/familyboard-image.tar.gz "${ROOTFS_DIR}/var/lib/familyboard/familyboard-image.tar.gz"
+
 on_chroot << EOF
 
 # ---------------------------------------------------------------------------
@@ -40,10 +46,9 @@ systemctl enable NetworkManager
 usermod -aG docker familyboard || true
 
 # ---------------------------------------------------------------------------
-# Swap headroom for the first-boot Next.js build. On a 4 GB Pi 4 the in-place
-# docker compose build can exceed RAM and get OOM-killed; a 2 GB swap file
-# gives it room to finish. Only the first boot builds the image — later boots
-# reuse familyboard:latest — so this swap mostly sits idle afterwards.
+# Swap headroom. The app image is prebuilt off-device so nothing compiles here,
+# but a 2 GB swap file keeps the running stack (Next.js server + Chromium
+# kiosk) comfortable on a 4 GB Pi 4 and absorbs memory spikes.
 # ---------------------------------------------------------------------------
 sed -i 's/^CONF_SWAPSIZE=.*/CONF_SWAPSIZE=2048/' /etc/dphys-swapfile
 systemctl enable dphys-swapfile

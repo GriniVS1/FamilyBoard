@@ -1,20 +1,24 @@
 [Unit]
 Description=FamilyBoard wall app (Docker Compose)
 Requires=docker.service
-After=docker.service network-online.target
-Wants=network-online.target
+After=docker.service
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
 WorkingDirectory=/opt/familyboard
+# The arm64 app image is baked into the OS image as a tarball, so the very
+# first boot needs no network at all — WiFi is configured later, inside the
+# app's own /setup flow. Load the image into Docker once (only if it is not
+# already present), then bring the stack up. Subsequent boots skip the load and
+# just start the cached image. No network-online dependency: the app serves
+# /setup locally and only needs connectivity once the user configures WiFi.
+ExecStartPre=/bin/sh -c 'docker image inspect familyboard:latest >/dev/null 2>&1 || docker load -i /var/lib/familyboard/familyboard-image.tar.gz'
 ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d
 ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.pi.yml down
-# First boot builds the Next.js image on-device (no prebuilt image yet); on a
-# Pi 4 that can take ~30 min. Later boots just start the cached image, so this
-# long timeout only matters once. Allow up to an hour so systemd does not kill
-# the initial build.
-TimeoutStartSec=3600
+# Loading the few-hundred-MB image tarball from the SD card takes a couple of
+# minutes on first boot; give it generous headroom but not forever.
+TimeoutStartSec=600
 
 [Install]
 WantedBy=multi-user.target

@@ -112,6 +112,36 @@ cp "$SCRIPT_DIR/familyboard-firstboot.service"     "$CUSTOM_STAGE/files/familybo
 chmod +x "$CUSTOM_STAGE/00-run.sh"
 
 # ---------------------------------------------------------------------------
+# 3b. Cross-build the arm64 app image on THIS host (which has internet) and
+#     bake it into the stage as a loadable tarball. The Pi loads it at first
+#     boot, so the device never builds or pulls anything over the network —
+#     essential because WiFi is configured later inside the app, leaving the
+#     very first boot with no connectivity at all.
+#
+#     A dedicated docker-container buildx builder is used because it reliably
+#     supports exporting to a tar (-o type=docker) regardless of the host's
+#     Docker image-store configuration.
+# ---------------------------------------------------------------------------
+if ! docker buildx version &> /dev/null; then
+  echo "ERROR: 'docker buildx' is required to cross-build the arm64 app image." >&2
+  echo "       Install Docker Desktop (bundles buildx) or the buildx plugin." >&2
+  exit 1
+fi
+
+if ! docker buildx inspect familyboard-builder &> /dev/null; then
+  docker buildx create --name familyboard-builder --driver docker-container >/dev/null
+fi
+
+echo "Cross-building arm64 app image (several minutes; longer on Intel Macs) ..."
+docker buildx build --builder familyboard-builder --platform linux/arm64 \
+  -t familyboard:latest \
+  -o "type=docker,dest=$CUSTOM_STAGE/files/familyboard-image.tar" \
+  "$REPO_ROOT"
+
+echo "Compressing app image into the stage ..."
+gzip -f "$CUSTOM_STAGE/files/familyboard-image.tar"
+
+# ---------------------------------------------------------------------------
 # 4. Run pi-gen build via its Docker wrapper
 # ---------------------------------------------------------------------------
 cd "$PI_GEN_DIR"
