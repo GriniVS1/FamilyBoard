@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ProgressDots } from "@/components/setup/progress-dots";
+import { StepLanguage } from "@/components/setup/step-language";
 import { StepNetwork } from "@/components/setup/step-network";
 import { StepWelcome } from "@/components/setup/step-welcome";
 import { StepFamily } from "@/components/setup/step-family";
@@ -15,6 +16,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import type { SetupStatus, StepKey } from "@/components/setup/types";
 
 const STEP_ORDER: StepKey[] = [
+  "language",
   "network",
   "welcome",
   "family",
@@ -58,7 +60,14 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
       .finally(() => setNetworkChecked(true));
   }, [initiallyConnected]);
 
-  const initialStep: StepKey = networkConnected ? "welcome" : "network";
+  // Language is always the very first step until one has been chosen, so a user
+  // who doesn't read the default language isn't lost. Once chosen the page
+  // reloads with localeChosen=true and we drop into the normal first step.
+  const initialStep: StepKey = !initialStatus.localeChosen
+    ? "language"
+    : networkConnected
+      ? "welcome"
+      : "network";
   const [step, setStep] = useState<StepKey>(initialStep);
 
   // When the async network check resolves and we were already showing the
@@ -70,7 +79,11 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
   }, [networkChecked, networkConnected, step]);
 
   const stepIndex = STEP_ORDER.indexOf(step);
-  const showProgress = step !== "welcome" && step !== "done" && step !== "network";
+  const showProgress =
+    step !== "language" &&
+    step !== "welcome" &&
+    step !== "done" &&
+    step !== "network";
   const resumeStep = nextMissingStep(initialStatus);
   const isPartialSetup = resumeStep !== "family" && resumeStep !== "done";
 
@@ -78,6 +91,8 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
 
   const content = useMemo(() => {
     switch (step) {
+      case "language":
+        return <StepLanguage />;
       case "network":
         return (
           <StepNetwork
@@ -137,7 +152,7 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
           <Logo size={22} />
           <div className="flex items-center gap-3">
             {showProgress && (
-              <ProgressDots total={STEP_ORDER.length - 2} current={stepIndex - 1} />
+              <ProgressDots total={STEP_ORDER.length - 3} current={stepIndex - 2} />
             )}
             <ThemeToggle />
           </div>
