@@ -5,9 +5,12 @@ import { requireNetworkAccess } from "../guard";
 
 export const runtime = "nodejs";
 
-// SSID: 1–32 octets per 802.11; reject shell-special chars as a defence-in-depth
-// measure (spawn-with-args already prevents injection, but we keep the input clean).
-const SAFE_SSID = /^[^;&|`$<>\\'"!#%^*(){}[\]]{1,32}$/;
+// SSID: 1–32 octets per 802.11. We only reject control characters; every other
+// printable character is legal in an SSID — including "!", "#", "(", ")", spaces
+// and accented letters (e.g. "FRITZ!Box 7590", "Müller-WLAN"). spawn-with-args
+// already prevents shell injection, so the previous strict allowlist wrongly
+// rejected very common router SSIDs and silently failed the connect.
+const SAFE_SSID = /^[^\x00-\x1F\x7F]{1,32}$/;
 
 // WPA2-Personal PSK: 8–63 printable ASCII characters.
 const SAFE_PSK = /^[\x20-\x7E]{8,63}$/;
@@ -40,8 +43,17 @@ export const POST = withErrorHandling(async (req) => {
     const { ssid, psk } = body;
     void (async () => {
       await sleep(1500);
-      try { await stopHotspot(); } catch {}
-      try { await connectWifi(ssid, psk); } catch {}
+      try {
+        await stopHotspot();
+      } catch (e) {
+        console.error("[network] phone-setup: stopHotspot failed", e);
+      }
+      try {
+        await connectWifi(ssid, psk);
+      } catch (e) {
+        // NetworkError messages are PSK-sanitized; safe to log.
+        console.error("[network] phone-setup: background connect failed", e);
+      }
     })();
     return ok({ accepted: true });
   }
