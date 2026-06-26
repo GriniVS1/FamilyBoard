@@ -199,7 +199,7 @@ export function ChoreDialog({
                 type="button"
                 onClick={() => patch({ icon: "" })}
                 className={cn(
-                  "size-12 tap-target rounded-2xl flex items-center justify-center text-sm transition-all",
+                  "size-12 tap-target rounded-2xl flex items-center justify-center text-sm transition-[background-color,box-shadow,color,transform] ease-snappy",
                   state.icon === ""
                     ? "bg-bg ring-2 ring-ink"
                     : "bg-bg/60 hover:bg-bg text-muted",
@@ -215,7 +215,7 @@ export function ChoreDialog({
                   type="button"
                   onClick={() => patch({ icon: emoji })}
                   className={cn(
-                    "size-12 tap-target rounded-2xl flex items-center justify-center text-2xl transition-all",
+                    "size-12 tap-target rounded-2xl flex items-center justify-center text-2xl transition-[background-color,box-shadow,color,transform] ease-snappy",
                     state.icon === emoji
                       ? "bg-bg ring-2 ring-ink"
                       : "bg-bg/60 hover:bg-bg",
