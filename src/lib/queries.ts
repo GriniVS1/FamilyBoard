@@ -367,9 +367,13 @@ export async function getSetupStatus() {
   );
   const familyCreated = Boolean(family);
   const setupComplete = familyCreated && memberCount >= 1 && pinSet;
+  const localeChosen = Boolean(
+    await db.setting.findUnique({ where: { key: "locale" } }),
+  );
 
   return {
     installationId: installation.id,
+    localeChosen,
     familyCreated,
     memberCount,
     pinSet,

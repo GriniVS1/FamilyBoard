@@ -3,6 +3,10 @@ import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
   darkMode: "class",
+  // Wall-mounted touchscreen: gate every `hover:` utility behind
+  // `@media (hover: hover) and (pointer: fine)` so taps don't trigger sticky
+  // hover states on the touch display.
+  future: { hoverOnlyWhenSupported: true },
   content: ["./src/**/*.{ts,tsx}"],
   theme: {
     container: {
@@ -39,6 +43,11 @@ const config: Config = {
       },
       borderRadius: {
         "4xl": "2rem",
+      },
+      transitionTimingFunction: {
+        // Strong ease-out — same curve as the slide-up animation. Built-in
+        // CSS easings are too weak; reuse this for snappy, intentional motion.
+        snappy: "cubic-bezier(0.22, 1, 0.36, 1)",
       },
       boxShadow: {
         soft: "0 1px 2px 0 rgb(27 31 59 / 0.04), 0 4px 16px -4px rgb(27 31 59 / 0.06)",

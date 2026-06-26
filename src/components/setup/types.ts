@@ -2,6 +2,7 @@ import type { MemberColor } from "@/lib/utils";
 
 export type SetupStatus = {
   installationId: string;
+  localeChosen: boolean;
   familyCreated: boolean;
   memberCount: number;
   pinSet: boolean;
@@ -23,6 +24,7 @@ export type DraftMember = {
 };
 
 export type StepKey =
+  | "language"
   | "network"
   | "welcome"
   | "family"
