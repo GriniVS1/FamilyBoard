@@ -1,6 +1,8 @@
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
 
+  const { internalHeaders } = await import("@/lib/internal-secret");
+
   const intervalMs = Number(process.env.SYNC_INTERVAL_MS ?? 5 * 60 * 1000);
   // Use loopback unconditionally — NEXTAUTH_URL is for OAuth redirect URIs, not
   // internal calls; on the Pi the external hostname may not resolve inside the container.
@@ -17,6 +19,7 @@ export async function register() {
     try {
       await fetch(`${baseUrl}/api/sync/google`, {
         method: "POST",
+        headers: internalHeaders(),
         signal: AbortSignal.timeout(240_000),
       });
     } catch (err) {
@@ -35,6 +38,7 @@ export async function register() {
     try {
       await fetch(`${baseUrl}/api/sync/caldav`, {
         method: "POST",
+        headers: internalHeaders(),
         signal: AbortSignal.timeout(240_000),
       });
     } catch (err) {
@@ -53,6 +57,7 @@ export async function register() {
     try {
       await fetch(`${baseUrl}/api/sync/microsoft`, {
         method: "POST",
+        headers: internalHeaders(),
         signal: AbortSignal.timeout(240_000),
       });
     } catch (err) {
@@ -71,6 +76,7 @@ export async function register() {
     try {
       await fetch(`${baseUrl}/api/push/tick`, {
         method: "POST",
+        headers: internalHeaders(),
         signal: AbortSignal.timeout(240_000),
       });
     } catch (err) {
