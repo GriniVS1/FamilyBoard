@@ -24,10 +24,17 @@ export async function GET(req: Request) {
   if (oauthError) return redirect(oauthError);
   if (!code || !state) return redirect("missing_params");
 
-  const stateRow = await db.setting.findUnique({
-    where: { key: `oauth_state_${state}` },
-  });
-  if (!stateRow) return redirect("invalid_state");
+  // Consume the state atomically: delete-and-return in one query so a replayed
+  // callback (same state) hits a missing row and is rejected. A findUnique +
+  // later delete leaves a race window where two concurrent callbacks both pass.
+  let stateRow: { value: string };
+  try {
+    stateRow = await db.setting.delete({
+      where: { key: `oauth_state_${state}` },
+    });
+  } catch {
+    return redirect("invalid_state");
+  }
 
   let stateData: { memberId: string; expiresAt: number };
   try {
@@ -35,7 +42,6 @@ export async function GET(req: Request) {
   } catch {
     return redirect("invalid_state");
   }
-  await db.setting.delete({ where: { key: `oauth_state_${state}` } }).catch(() => {});
 
   if (Date.now() > stateData.expiresAt) return redirect("expired_state");
 

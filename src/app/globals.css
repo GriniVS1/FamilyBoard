@@ -82,7 +82,7 @@
   .tap-target {
     min-height: 48px;
     min-width: 48px;
-    @apply active:scale-[0.97] active:opacity-90 transition-transform duration-75;
+    @apply active:scale-[0.97] active:opacity-90 transition-transform duration-100 ease-snappy;
   }
 }
 

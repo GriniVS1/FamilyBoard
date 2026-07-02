@@ -22,7 +22,15 @@ export function hitRateLimit(
   return { allowed: true, remaining: limit - existing.count };
 }
 
+import { env } from "./env";
+
+// X-Forwarded-For / X-Real-IP are client-supplied and only meaningful behind a
+// trusted proxy. When TRUST_PROXY is off we ignore them and return a shared key,
+// so IP-keyed rate limits degrade to a single global bucket per endpoint instead
+// of being trivially bypassable by rotating the header.
 export function getClientIp(headers: Headers): string {
+  if (!env.TRUST_PROXY) return "shared";
+
   const xff = headers.get("x-forwarded-for");
   if (xff) {
     const first = xff.split(",")[0]?.trim();

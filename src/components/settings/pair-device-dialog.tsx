@@ -173,7 +173,7 @@ export function PairDeviceDialog({
                 key="pick"
                 initial={{ x: 0, opacity: 1 }}
                 exit={{ x: "-100%", opacity: 0 }}
-                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className="flex flex-col gap-5"
               >
                 <div className="pr-10">
@@ -271,7 +271,7 @@ export function PairDeviceDialog({
                 key="code"
                 initial={{ x: "100%", opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className="flex flex-col gap-5"
               >
                 <div className="pr-10">

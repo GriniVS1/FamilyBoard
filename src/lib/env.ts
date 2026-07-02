@@ -18,6 +18,14 @@ const schema = z.object({
   MICROSOFT_CLIENT_SECRET: z.string().optional(),
   MICROSOFT_TENANT: z.string().optional().default("common"),
   SYNC_INTERVAL_MS: z.coerce.number().int().positive().default(5 * 60 * 1000),
+  // Only trust the X-Forwarded-For header (for rate-limit client IPs) when the
+  // app runs behind a trusted reverse proxy that sets it. Left off, the header
+  // is attacker-controlled and would let clients evade IP-keyed rate limits by
+  // rotating the value — so untrusted deployments fall back to a shared bucket.
+  TRUST_PROXY: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((v) => v === "true"),
   // Optional VAPID key overrides — if set, DB-generated keys are ignored.
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
@@ -31,6 +39,24 @@ const schema = z.object({
 });
 
 export const env = schema.parse(process.env);
+
+// Refuse to run in production with the built-in dev secrets: the zero-key would
+// encrypt every OAuth refresh token under a publicly known key, and the default
+// NEXTAUTH_SECRET is equally public. Fail fast rather than ship a false sense of
+// encryption. Dev/test may keep the defaults for zero-config local runs.
+if (env.NODE_ENV === "production") {
+  const weak: string[] = [];
+  if (env.ENCRYPTION_KEY === "0".repeat(64)) weak.push("ENCRYPTION_KEY");
+  if (env.NEXTAUTH_SECRET === "dev-secret-change-me-please-32-characters") {
+    weak.push("NEXTAUTH_SECRET");
+  }
+  if (weak.length > 0) {
+    throw new Error(
+      `Refusing to start in production with default ${weak.join(" and ")}. ` +
+        `Set a strong value (generate ENCRYPTION_KEY with: openssl rand -hex 32).`,
+    );
+  }
+}
 
 export const googleConfigured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
 export const microsoftConfigured = Boolean(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET);

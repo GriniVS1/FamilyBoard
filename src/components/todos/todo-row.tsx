@@ -72,7 +72,7 @@ export function TodoRow({ todo, member, pending, onToggle, onDelete }: TodoRowPr
           }}
           transition={{ duration: 0.18 }}
           className={cn(
-            "truncate text-base text-ink transition-all",
+            "truncate text-base text-ink",
             todo.done && "line-through decoration-2",
           )}
         >

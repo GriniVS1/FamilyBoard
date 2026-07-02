@@ -18,7 +18,7 @@ export function ProgressDots({ total, current }: ProgressDotsProps) {
         <span
           key={idx}
           className={cn(
-            "h-2 rounded-full transition-all duration-200",
+            "h-2 rounded-full transition-[width,background-color] duration-200 ease-snappy",
             idx === current
               ? "w-8 bg-ink"
               : idx < current

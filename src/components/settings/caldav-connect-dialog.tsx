@@ -222,7 +222,7 @@ export function CaldavConnectDialog({
                 key="credentials"
                 initial={{ x: 0, opacity: 1 }}
                 exit={{ x: "-100%", opacity: 0 }}
-                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className="flex flex-col gap-5"
               >
                 <div className="flex items-start justify-between gap-3 pr-10">
@@ -352,7 +352,7 @@ export function CaldavConnectDialog({
                 key="calendar"
                 initial={{ x: "100%", opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+                transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 className="flex flex-col gap-5"
               >
                 <div className="flex items-start justify-between gap-3 pr-10">
