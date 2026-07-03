@@ -4,6 +4,9 @@ import { z } from "zod";
 
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  // Baked into the Docker image at build time (--build-arg APP_VERSION=vX.Y.Z);
+  // synced into Installation.appVersion at boot for the OTA updater.
+  APP_VERSION: z.string().default("dev"),
   DATABASE_URL: z.string().min(1).default("file:../data/app.db?connection_limit=1"),
   NEXTAUTH_URL: z.string().url().default("http://localhost:3000"),
   NEXTAUTH_SECRET: z.string().min(32).default("dev-secret-change-me-please-32-characters"),
