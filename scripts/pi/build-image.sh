@@ -118,6 +118,22 @@ cp "$SCRIPT_DIR/familyboard-firstboot.service"     "$CUSTOM_STAGE/files/familybo
 # so the device gets the host-networking + nsenter privileges the WiFi setup needs.
 cp "$REPO_ROOT/docker-compose.pi.yml"              "$CUSTOM_STAGE/files/docker-compose.pi.yml"
 
+# OTA updater: host script, systemd units, config, and the release public key
+# (the trust anchor devices verify update manifests against). See
+# docs/ota-update-plan.md.
+cp "$SCRIPT_DIR/familyboard-updater.sh"            "$CUSTOM_STAGE/files/familyboard-updater.sh"
+cp "$SCRIPT_DIR/familyboard-updater.service"       "$CUSTOM_STAGE/files/familyboard-updater.service"
+cp "$SCRIPT_DIR/familyboard-updater.timer"         "$CUSTOM_STAGE/files/familyboard-updater.timer"
+cp "$SCRIPT_DIR/familyboard-updater.path"          "$CUSTOM_STAGE/files/familyboard-updater.path"
+cp "$SCRIPT_DIR/updater.env"                        "$CUSTOM_STAGE/files/updater.env"
+if [[ ! -f "$REPO_ROOT/tool/release-pub.pem" ]]; then
+  echo "ERROR: tool/release-pub.pem missing — run 'node tool/sign-release.mjs keygen' first." >&2
+  exit 1
+fi
+cp "$REPO_ROOT/tool/release-pub.pem"               "$CUSTOM_STAGE/files/release-pub.pem"
+# Seed the running version so the updater only applies strictly newer releases.
+echo "$VERSION" > "$CUSTOM_STAGE/files/current-version"
+
 chmod +x "$CUSTOM_STAGE/00-run.sh"
 
 # ---------------------------------------------------------------------------

@@ -12,6 +12,13 @@ install -m 644 files/familyboard.service           "${ROOTFS_DIR}/tmp/pi-gen-fil
 install -m 644 files/firstboot-secrets.sh          "${ROOTFS_DIR}/tmp/pi-gen-files/firstboot-secrets.sh"
 install -m 644 files/familyboard-firstboot.service "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-firstboot.service"
 install -m 644 files/docker-compose.pi.yml         "${ROOTFS_DIR}/tmp/pi-gen-files/docker-compose.pi.yml"
+install -m 644 files/familyboard-updater.sh        "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-updater.sh"
+install -m 644 files/familyboard-updater.service   "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-updater.service"
+install -m 644 files/familyboard-updater.timer     "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-updater.timer"
+install -m 644 files/familyboard-updater.path      "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-updater.path"
+install -m 644 files/updater.env                   "${ROOTFS_DIR}/tmp/pi-gen-files/updater.env"
+install -m 644 files/release-pub.pem               "${ROOTFS_DIR}/tmp/pi-gen-files/release-pub.pem"
+install -m 644 files/current-version               "${ROOTFS_DIR}/tmp/pi-gen-files/current-version"
 
 # Bake the prebuilt arm64 app image into the rootfs so the first boot can load
 # it with no network. familyboard.service's ExecStartPre runs `docker load` on
@@ -167,6 +174,23 @@ systemctl enable familyboard-firstboot.service
 
 # Avahi for mDNS (familyboard.local)
 systemctl enable avahi-daemon
+
+# ---------------------------------------------------------------------------
+# OTA updater — host script + config + release public key + systemd units.
+# Pulls signed updates from updates.familyboard.ch, verifies with openssl,
+# swaps the app image, health-checks, and rolls back. See docs/ota-update-plan.md.
+# ---------------------------------------------------------------------------
+install -m 750 -o root -g root /tmp/pi-gen-files/familyboard-updater.sh /usr/local/sbin/familyboard-updater
+install -d -m 755 /etc/familyboard
+install -m 644 -o root -g root /tmp/pi-gen-files/updater.env      /etc/familyboard/updater.env
+install -m 644 -o root -g root /tmp/pi-gen-files/release-pub.pem   /etc/familyboard/release-pub.pem
+# Seed the running version so the updater only applies strictly newer releases.
+install -m 644 -o root -g root /tmp/pi-gen-files/current-version   /var/lib/familyboard/current-version
+cp /tmp/pi-gen-files/familyboard-updater.service /etc/systemd/system/familyboard-updater.service
+cp /tmp/pi-gen-files/familyboard-updater.timer   /etc/systemd/system/familyboard-updater.timer
+cp /tmp/pi-gen-files/familyboard-updater.path    /etc/systemd/system/familyboard-updater.path
+systemctl enable familyboard-updater.timer
+systemctl enable familyboard-updater.path
 
 EOF
 
