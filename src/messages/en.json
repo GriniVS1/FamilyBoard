@@ -636,7 +636,17 @@
     "googleFailedNoReason": "Could not connect to Google.",
     "dismiss": "Dismiss",
     "saved": "Saved.",
-    "save": "Save"
+    "save": "Save",
+    "updates": {
+      "title": "Software updates",
+      "description": "FamilyBoard keeps itself up to date automatically. Updates install overnight.",
+      "currentVersion": "Current version",
+      "channel": "Channel",
+      "checkNow": "Check for updates now",
+      "checking": "Checking…",
+      "requested": "Update check started. If an update is available it installs now — this can take a few minutes and the screen may restart.",
+      "checkFailed": "Could not start the update check."
+    }
   },
   "meals": {
     "title": "Meals",

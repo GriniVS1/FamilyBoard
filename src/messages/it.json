@@ -636,7 +636,17 @@
     "googleFailedNoReason": "Impossibile connettersi a Google.",
     "dismiss": "Chiudi",
     "saved": "Salvato.",
-    "save": "Salva"
+    "save": "Salva",
+    "updates": {
+      "title": "Aggiornamenti software",
+      "description": "FamilyBoard si aggiorna automaticamente. Gli aggiornamenti si installano di notte.",
+      "currentVersion": "Versione attuale",
+      "channel": "Canale",
+      "checkNow": "Cerca aggiornamenti",
+      "checking": "Ricerca…",
+      "requested": "Controllo avviato. Se è disponibile un aggiornamento verrà installato ora — può richiedere alcuni minuti e lo schermo potrebbe riavviarsi.",
+      "checkFailed": "Impossibile avviare il controllo degli aggiornamenti."
+    }
   },
   "meals": {
     "title": "Pasti",

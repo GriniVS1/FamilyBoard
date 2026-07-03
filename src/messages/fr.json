@@ -636,7 +636,17 @@
     "googleFailedNoReason": "Impossible de se connecter à Google.",
     "dismiss": "Fermer",
     "saved": "Enregistré.",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "updates": {
+      "title": "Mises à jour logicielles",
+      "description": "FamilyBoard se met à jour automatiquement. Les mises à jour s'installent la nuit.",
+      "currentVersion": "Version actuelle",
+      "channel": "Canal",
+      "checkNow": "Rechercher les mises à jour",
+      "checking": "Recherche…",
+      "requested": "Vérification lancée. Si une mise à jour est disponible, elle s'installe maintenant — cela peut prendre quelques minutes et l'écran peut redémarrer.",
+      "checkFailed": "Impossible de lancer la vérification des mises à jour."
+    }
   },
   "meals": {
     "title": "Repas",
