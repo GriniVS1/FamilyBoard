@@ -44,7 +44,12 @@ export const env = schema.parse(process.env);
 // encrypt every OAuth refresh token under a publicly known key, and the default
 // NEXTAUTH_SECRET is equally public. Fail fast rather than ship a false sense of
 // encryption. Dev/test may keep the defaults for zero-config local runs.
-if (env.NODE_ENV === "production") {
+//
+// Skipped during `next build`: page-data collection runs route modules with
+// NODE_ENV=production but no real secrets in the environment — those are only
+// injected at container start (e.g. the Pi's first-boot secret generation).
+const isBuildPhase = process.env.NEXT_PHASE === "phase-production-build";
+if (env.NODE_ENV === "production" && !isBuildPhase) {
   const weak: string[] = [];
   if (env.ENCRYPTION_KEY === "0".repeat(64)) weak.push("ENCRYPTION_KEY");
   if (env.NEXTAUTH_SECRET === "dev-secret-change-me-please-32-characters") {
