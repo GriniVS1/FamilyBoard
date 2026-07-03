@@ -115,7 +115,10 @@ export function MicrosoftRow({ member, adminPin }: MicrosoftRowProps) {
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/sync/microsoft`, { method: "POST" });
+      const res = await fetch(`/api/sync/microsoft`, {
+        method: "POST",
+        headers: { "X-Admin-Pin": adminPin },
+      });
       if (!res.ok) throw new Error(`Sync failed (${res.status})`);
       return (await res.json()) as {
         pulled: number;

@@ -1,5 +1,6 @@
 import { ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
+import { requireInternalOrAdmin } from "@/lib/internal-auth";
 import { getNotificationTranslator } from "@/lib/notification-i18n";
 import { sendNotificationToFamily } from "@/lib/notifications";
 
@@ -61,7 +62,8 @@ async function markNotified(dateKey: string, ids: string[]): Promise<void> {
   });
 }
 
-export const POST = withErrorHandling(async () => {
+export const POST = withErrorHandling(async (req) => {
+  await requireInternalOrAdmin(req);
   await db.pairingCode.deleteMany({
     where: {
       OR: [

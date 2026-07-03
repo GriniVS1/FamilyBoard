@@ -63,7 +63,10 @@ export function CaldavRow({ member, adminPin }: CaldavRowProps) {
 
   const syncMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/sync/caldav`, { method: "POST" });
+      const res = await fetch(`/api/sync/caldav`, {
+        method: "POST",
+        headers: { "X-Admin-Pin": adminPin },
+      });
       if (!res.ok) throw new Error(`Sync failed (${res.status})`);
     },
     onSuccess: () => {
