@@ -1,0 +1,125 @@
+name: OTA release
+
+# Push a tag like v1.2.0 (stable) or v1.2.0-beta.1 (beta) to cut a release:
+# cross-build the arm64 app image, export it as a docker-load tarball, sign a
+# manifest with the Ed25519 release key, and publish both to Cloudflare R2.
+# See docs/ota-update-plan.md. Requires the repo secrets listed under `env`.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag to build (e.g. v1.2.0)"
+        required: true
+      channel:
+        description: "Release channel"
+        required: true
+        default: stable
+        type: choice
+        options: [stable, beta]
+
+concurrency:
+  group: ota-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    env:
+      # Overridable floor for which base image may apply this update.
+      MIN_BASE_VERSION: ${{ vars.OTA_MIN_BASE_VERSION || 'v1.1.0' }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve version and channel
+        id: meta
+        run: |
+          VERSION="${{ github.event.inputs.version || github.ref_name }}"
+          case "$VERSION" in
+            v*) ;;
+            *) echo "::error::version must start with 'v' (got '$VERSION')"; exit 1 ;;
+          esac
+          CHANNEL="${{ github.event.inputs.channel }}"
+          if [ -z "$CHANNEL" ]; then
+            case "$VERSION" in
+              *-beta*|*-rc*) CHANNEL=beta ;;
+              *) CHANNEL=stable ;;
+            esac
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+          echo "Building $VERSION on channel $CHANNEL"
+
+      - name: Guard required secrets
+        run: |
+          missing=""
+          for v in R2_ACCOUNT_ID R2_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY; do
+            [ -z "${!v}" ] && missing="$missing $v"
+          done
+          [ -z "${{ secrets.RELEASE_PRIVATE_KEY }}" ] && missing="$missing RELEASE_PRIVATE_KEY"
+          if [ -n "$missing" ]; then
+            echo "::error::Missing required secrets/vars:$missing (set them in repo settings — see docs/r2-setup.md)"
+            exit 1
+          fi
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Cross-build arm64 app image → tarball
+        run: |
+          mkdir -p dist
+          docker buildx build --platform linux/arm64 \
+            --build-arg APP_VERSION="${{ steps.meta.outputs.version }}" \
+            -t familyboard:latest \
+            -o "type=docker,dest=dist/app.tar" \
+            .
+          gzip -f dist/app.tar
+          echo "SHA256=$(sha256sum dist/app.tar.gz | awk '{print $1}')" >> "$GITHUB_ENV"
+
+      - name: Assemble + sign manifest
+        env:
+          RELEASE_PRIVATE_KEY: ${{ secrets.RELEASE_PRIVATE_KEY }}
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          CHANNEL="${{ steps.meta.outputs.channel }}"
+          BUNDLE_URL="https://updates.familyboard.ch/app/familyboard-${VERSION}.tar.gz"
+          NOW="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          # Build the manifest with the exact name the device fetches, then sign
+          # those bytes — no canonicalization gap.
+          jq -n \
+            --arg v "$VERSION" --arg url "$BUNDLE_URL" --arg sha "$SHA256" \
+            --arg min "$MIN_BASE_VERSION" --arg pub "$NOW" \
+            '{version:$v, appBundleUrl:$url, appBundleSha256:$sha, minBaseVersion:$min, publishedAt:$pub}' \
+            > "dist/${CHANNEL}.json"
+          # sign-release.mjs reads the private key from tool/.release-private.pem.
+          printf '%s\n' "$RELEASE_PRIVATE_KEY" > tool/.release-private.pem
+          chmod 600 tool/.release-private.pem
+          node tool/sign-release.mjs sign --in "dist/${CHANNEL}.json"
+          node tool/sign-release.mjs verify --in "dist/${CHANNEL}.json"
+          rm -f tool/.release-private.pem
+
+      - name: Publish to R2
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          CHANNEL="${{ steps.meta.outputs.channel }}"
+          ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          S3="aws s3 cp --endpoint-url $ENDPOINT"
+          # Immutable, versioned tarball → cache forever.
+          $S3 dist/app.tar.gz "s3://${R2_BUCKET}/app/familyboard-${VERSION}.tar.gz" \
+            --content-type application/gzip \
+            --cache-control "public, max-age=31536000, immutable"
+          # Manifest + sig change per release → short cache so rollouts/rollbacks propagate.
+          $S3 "dist/${CHANNEL}.json" "s3://${R2_BUCKET}/${CHANNEL}.json" \
+            --content-type application/json --cache-control "public, max-age=300"
+          $S3 "dist/${CHANNEL}.json.sig" "s3://${R2_BUCKET}/${CHANNEL}.json.sig" \
+            --content-type text/plain --cache-control "public, max-age=300"
+          echo "Published $VERSION to channel $CHANNEL"

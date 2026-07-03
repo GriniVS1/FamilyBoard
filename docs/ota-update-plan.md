@@ -164,9 +164,10 @@ VPS würde irgendwann eine Stufe größer.
 ### Phase 1 — MVP „Geräte updaten sich" (~5–7 Tage)
 - [x] **Signing-Tool** `tool/sign-release.mjs` (keygen/sign/verify, Ed25519). Krypto-Round-Trip offline verifiziert: sign → openssl-verify (Geräte-Pfad) → Manipulations- + Falscher-Key-Test korrekt abgelehnt.
 - [x] **`familyboard-updater`**: Host-Script + `service`/`timer`/`path`-Units + `updater.env`. Signaturprüfung (openssl), Versionsvergleich (`sort -V`), Bundle-SHA-256, DB-Backup, Health-Check, Rollback auf `:previous`, `bad-versions`-Merkliste, flock. `bash -n` sauber.
-- [ ] CI-Release-Pipeline: Tag → arm64-Build → Tarball-Export (`-o type=docker` + gzip, wie `build-image.sh`) → R2-Upload → Manifest generieren + signieren (1–1,5 T) — **braucht R2-Creds**
-- [ ] `updates.familyboard.ch`: R2-Bucket + Worker/Custom-Domain (0,5 T) — **braucht Cloudflare-Zugang**
-- [ ] Settings-UI: aktuelle Version, „Nach Updates suchen" (schreibt `data/update-request`), Update-läuft-Anzeige, Release-Notes — bewusst **ohne** Deaktivierungs-Toggle (1 T)
+- [x] **CI-Release-Pipeline** `.github/workflows/release.yml`: Tag `v*` → arm64-Cross-Build (QEMU) → Tarball-Export → Manifest bauen (`jq`) + signieren (`sign-release.mjs`) + verifizieren → Upload nach R2 mit korrekten Cache-Headern. YAML valide, Sign/Verify-Schritt lokal in Workflow-Form geprüft. **Läuft grün, sobald die Secrets gesetzt sind** (Guard-Step meldet fehlende).
+- [x] **`docs/r2-setup.md`**: Schritt-für-Schritt-Anleitung (Bucket, Custom Domain, Token, Secrets). ⏳ Ausführung wartet auf DNSSEC-Deaktivierung + Domain-Umzug zu Cloudflare.
+- [ ] `updates.familyboard.ch` tatsächlich aufsetzen (0,5 T) — **braucht Cloudflare-Zugang / DNSSEC aus**
+- [x] **Settings-UI** (`UpdatesSettingsCard` + `/api/settings/update-status`): aktuelle Version + Kanal, „Nach Updates suchen" schreibt `data/update-request`, i18n en/de/fr/it. Ohne Deaktivierungs-Toggle (Auto-Update immer an). Release-Notes-Anzeige zurückgestellt (Gerät müsste dafür das Manifest selbst holen).
 - [ ] pi-gen-Integration: Updater + Units + Public Key in die Basisversion backen, Timer/Path aktivieren, `current-version` seeden → **neue Basis `v1.1.0`** (0,5 T) — **braucht den echten Release-Key**
 - [ ] End-to-End-Test am echten Pi: Basis flashen → OTA auf latest → Rollback provozieren (1 T)
 
