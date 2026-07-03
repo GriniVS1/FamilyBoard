@@ -151,9 +151,9 @@ VPS würde irgendwann eine Stufe größer.
 
 ## 5. Aufgaben & Aufwand
 
-### Phase 0 — Voraussetzung (~1 Tag)
-- [ ] **Prisma auf `migrate` umstellen** (Baseline + Entrypoint `migrate deploy`) — Blocker für alles Weitere
-- [ ] `Installation.appVersion` + `updateChannel` Felder; Version ins Image backen (`NEXT_PUBLIC_APP_VERSION` aus Git-Tag)
+### Phase 0 — Voraussetzung (~1 Tag) ✅ erledigt
+- [x] **Prisma auf `migrate` umstellen**: `0_baseline` (v1.0.11-Stand) + `scripts/docker-migrate.mjs` als Container-Entrypoint — erkennt `db push`-Bestandsdatenbanken und baselined sie automatisch, dann `migrate deploy`. Ersetzt das gefährliche `db push --accept-data-loss` im Docker-CMD.
+- [x] `Installation.appVersion` + `updateChannel` Felder (Migration `20260703000001`); `APP_VERSION` als Docker-Build-Arg (`build-image.sh` reicht `$VERSION` durch), Sync in `getOrCreateInstallation()`
 
 ### Phase 1 — MVP „Geräte updaten sich" (~5–7 Tage)
 - [ ] CI-Release-Pipeline: Tag → arm64-Build → Tarball-Export (`-o type=docker` + gzip, wie `build-image.sh`) → R2-Upload → Manifest generieren + Ed25519-signieren (1–1,5 T)

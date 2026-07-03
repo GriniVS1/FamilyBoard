@@ -13,7 +13,7 @@ The long-term plan is a sellable product (v3) with monthly/yearly licensing — 
 ```bash
 # Local dev (creates ./data/app.db on first run)
 npm install
-npm run db:push        # apply Prisma schema to SQLite
+npm run db:migrate     # apply committed migrations (prisma migrate dev)
 npm run dev            # http://localhost:3000
 
 # Type-checking and build
@@ -26,6 +26,8 @@ docker buildx build --platform linux/arm64 -t familyboard:arm64 .   # Pi image
 ```
 
 `DATABASE_URL` defaults to `file:../data/app.db` (resolved relative to `prisma/`, so it lands at `<repo>/data/app.db`). For one-off Prisma commands, the `db:push`/`db:migrate`/`db:studio` npm scripts inject this default — for dev mode it's read by `src/lib/env.ts`.
+
+**Schema changes go through committed migrations** (`prisma/migrations/`, canonical since the OTA groundwork — see `docs/ota-update-plan.md`): edit `schema.prisma`, then `npm run db:migrate` to generate + apply. `db:push` is for throwaway prototyping only — the Docker entrypoint (`scripts/docker-migrate.mjs`) runs `migrate deploy` and auto-baselines old `db push` databases. If your local `data/app.db` predates the migrations, run once: `npx prisma migrate resolve --applied 0_baseline`.
 
 ## Architecture
 

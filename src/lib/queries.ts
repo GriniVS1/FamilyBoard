@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { googleConfigured } from "./env";
+import { env, googleConfigured } from "./env";
 import { isAdminPinSet } from "./pin";
 
 export type WeeklyChoreTotals = { points: number; completions: number };
@@ -100,7 +100,15 @@ export async function getWeeklyTotalsForMember(
 export async function getOrCreateInstallation() {
   let installation = await db.installation.findFirst();
   if (!installation) {
-    installation = await db.installation.create({ data: {} });
+    installation = await db.installation.create({
+      data: { appVersion: env.APP_VERSION },
+    });
+  } else if (installation.appVersion !== env.APP_VERSION) {
+    // Keep the recorded version in sync after an OTA update swapped the image.
+    installation = await db.installation.update({
+      where: { id: installation.id },
+      data: { appVersion: env.APP_VERSION },
+    });
   }
   return installation;
 }

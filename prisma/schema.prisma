@@ -24,6 +24,10 @@ model Installation {
   licensePlan        String?
   licenseValidUntil  DateTime?
   lastLicenseCheckAt DateTime?
+  // OTA: version currently running on this device (synced at app boot) and
+  // the release channel the updater follows. See docs/ota-update-plan.md.
+  appVersion         String?
+  updateChannel      String    @default("stable")
   createdAt          DateTime  @default(now())
 }
 

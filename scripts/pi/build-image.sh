@@ -143,6 +143,7 @@ fi
 
 echo "Cross-building arm64 app image (several minutes; longer on Intel Macs) ..."
 docker buildx build --builder familyboard-builder --platform linux/arm64 \
+  --build-arg APP_VERSION="$VERSION" \
   -t familyboard:latest \
   -o "type=docker,dest=$CUSTOM_STAGE/files/familyboard-image.tar" \
   "$REPO_ROOT"
