@@ -14,6 +14,7 @@ import {
 import { MEMBER_COLORS, type MemberColor } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { MEMBER_EMOJIS, postJson, type DraftMember } from "./types";
+import { InlineKeyboardPanel } from "./inline-keyboard-panel";
 
 const MAX_MEMBERS = 8;
 
@@ -50,6 +51,7 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
   const [members, setMembers] = useState<DraftMember[]>([defaultMember(0)]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeMemberId, setActiveMemberId] = useState<string | null>(null);
 
   function updateMember(id: string, patch: Partial<DraftMember>) {
     setMembers((prev) =>
@@ -144,6 +146,10 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
                       onChange={(e) =>
                         updateMember(member.id, { name: e.target.value })
                       }
+                      onFocus={() => setActiveMemberId(member.id)}
+                      onBlur={() =>
+                        setActiveMemberId((id) => (id === member.id ? null : id))
+                      }
                       placeholder={t("namePlaceholder", { n: idx + 1 })}
                       maxLength={40}
                       aria-label={t("namePlaceholder", { n: idx + 1 })}
@@ -153,6 +159,11 @@ export function StepMembers({ onComplete, onBack }: StepMembersProps) {
                         {tCommon("admin")}
                       </span>
                     )}
+                    <InlineKeyboardPanel
+                      open={activeMemberId === member.id}
+                      value={member.name}
+                      onChange={(value) => updateMember(member.id, { name: value })}
+                    />
                   </div>
                   {members.length > 1 && (
                     <button
