@@ -168,7 +168,7 @@ VPS würde irgendwann eine Stufe größer.
 - [x] **`docs/r2-setup.md`**: Schritt-für-Schritt-Anleitung (Bucket, Custom Domain, Token, Secrets). ⏳ Ausführung wartet auf DNSSEC-Deaktivierung + Domain-Umzug zu Cloudflare.
 - [ ] `updates.familyboard.ch` tatsächlich aufsetzen (0,5 T) — **braucht Cloudflare-Zugang / DNSSEC aus**
 - [x] **Settings-UI** (`UpdatesSettingsCard` + `/api/settings/update-status`): aktuelle Version + Kanal, „Nach Updates suchen" schreibt `data/update-request`, i18n en/de/fr/it. Ohne Deaktivierungs-Toggle (Auto-Update immer an). Release-Notes-Anzeige zurückgestellt (Gerät müsste dafür das Manifest selbst holen).
-- [ ] pi-gen-Integration: Updater + Units + Public Key in die Basisversion backen, Timer/Path aktivieren, `current-version` seeden → **neue Basis `v1.1.0`** (0,5 T) — **braucht den echten Release-Key**
+- [x] **pi-gen-Integration**: `build-image.sh` + Stage-`00-run.sh` backen Updater-Script, 3 systemd-Units, `updater.env` und `tool/release-pub.pem` ein, aktivieren `.timer`/`.path` und seeden `/var/lib/familyboard/current-version` mit der Build-Version. `jq`/`curl`/`openssl` sind im Image. `bash -n` sauber, Staging-Namen abgeglichen. ⏳ **Der v1.1.0-Image-Build selbst ist noch auszuführen** (die neue Basis, die den Updater mitbringt).
 - [ ] End-to-End-Test am echten Pi: Basis flashen → OTA auf latest → Rollback provozieren (1 T)
 
 ### Phase 2 — Flottenbetrieb (~3–5 Tage)
