@@ -19,6 +19,9 @@ secrets/
 *.private.json
 *-service-account*.json
 
-# License vendor private key — NEVER commit
+# Vendor private keys — NEVER commit
 tool/.license-private.pem
+tool/.release-private.pem
 tool/*.pem
+# …but the OTA release PUBLIC key is meant to be committed and baked into the image
+!tool/release-pub.pem

@@ -72,6 +72,12 @@ Fleet-Broker nötig.
 }
 ```
 
+Signatur **detached** (`stable.json` + `stable.json.sig`), nicht eingebettet:
+das Gerät verifiziert die exakt geladenen Bytes → keine JSON-Kanonisierung, die
+schiefgehen kann. Signaturformat: base64 einer rohen 64-Byte-Ed25519-Signatur;
+`tool/sign-release.mjs` erzeugt sie, der Updater prüft mit `openssl pkeyutl
+-verify -rawin` (der Pi-Host hat openssl, aber kein Node).
+
 - **Signatur zusätzlich zu TLS**: selbst wenn CDN/DNS kompromittiert wäre,
   akzeptiert das Gerät nur Manifeste, die mit dem privaten Release-Key signiert
   sind (Public Key ist ins OS-Image eingebacken — gleiche Ed25519-Mechanik wie
@@ -156,11 +162,12 @@ VPS würde irgendwann eine Stufe größer.
 - [x] `Installation.appVersion` + `updateChannel` Felder (Migration `20260703000001`); `APP_VERSION` als Docker-Build-Arg (`build-image.sh` reicht `$VERSION` durch), Sync in `getOrCreateInstallation()`
 
 ### Phase 1 — MVP „Geräte updaten sich" (~5–7 Tage)
-- [ ] CI-Release-Pipeline: Tag → arm64-Build → Tarball-Export (`-o type=docker` + gzip, wie `build-image.sh`) → R2-Upload → Manifest generieren + Ed25519-signieren (1–1,5 T)
-- [ ] `updates.familyboard.ch`: R2-Bucket + Worker/Custom-Domain (0,5 T)
-- [ ] `familyboard-updater`: Host-Script + `timer`/`path`-Units, Signaturprüfung, DB-Backup, Health-Check, Rollback auf `:previous` (2–3 T)
-- [ ] Settings-UI: aktuelle Version, „Nach Updates suchen", Update-läuft-Anzeige, Release-Notes — bewusst **ohne** Deaktivierungs-Toggle (1 T)
-- [ ] pi-gen-Integration: Updater + Public Key in die Basisversion backen → **neue Basis `v1.1.0`** (0,5 T)
+- [x] **Signing-Tool** `tool/sign-release.mjs` (keygen/sign/verify, Ed25519). Krypto-Round-Trip offline verifiziert: sign → openssl-verify (Geräte-Pfad) → Manipulations- + Falscher-Key-Test korrekt abgelehnt.
+- [x] **`familyboard-updater`**: Host-Script + `service`/`timer`/`path`-Units + `updater.env`. Signaturprüfung (openssl), Versionsvergleich (`sort -V`), Bundle-SHA-256, DB-Backup, Health-Check, Rollback auf `:previous`, `bad-versions`-Merkliste, flock. `bash -n` sauber.
+- [ ] CI-Release-Pipeline: Tag → arm64-Build → Tarball-Export (`-o type=docker` + gzip, wie `build-image.sh`) → R2-Upload → Manifest generieren + signieren (1–1,5 T) — **braucht R2-Creds**
+- [ ] `updates.familyboard.ch`: R2-Bucket + Worker/Custom-Domain (0,5 T) — **braucht Cloudflare-Zugang**
+- [ ] Settings-UI: aktuelle Version, „Nach Updates suchen" (schreibt `data/update-request`), Update-läuft-Anzeige, Release-Notes — bewusst **ohne** Deaktivierungs-Toggle (1 T)
+- [ ] pi-gen-Integration: Updater + Units + Public Key in die Basisversion backen, Timer/Path aktivieren, `current-version` seeden → **neue Basis `v1.1.0`** (0,5 T) — **braucht den echten Release-Key**
 - [ ] End-to-End-Test am echten Pi: Basis flashen → OTA auf latest → Rollback provozieren (1 T)
 
 ### Phase 2 — Flottenbetrieb (~3–5 Tage)
