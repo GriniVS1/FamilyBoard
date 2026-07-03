@@ -1,0 +1,14 @@
+[Unit]
+Description=Nightly FamilyBoard OTA update check
+
+[Timer]
+# Auto-update is always on (no opt-out — see docs/ota-update-plan.md §7).
+# Nightly window with a wide random delay so a fleet doesn't hit the CDN at the
+# same second, and Persistent so a device that was off overnight still checks
+# after the next boot.
+OnCalendar=*-*-* 03:00:00
+RandomizedDelaySec=7200
+Persistent=true
+
+[Install]
+WantedBy=timers.target

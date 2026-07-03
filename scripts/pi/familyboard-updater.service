@@ -1,0 +1,12 @@
+[Unit]
+Description=FamilyBoard OTA updater (fetch, verify, swap, health-check, rollback)
+After=network-online.target time-sync.target docker.service familyboard.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/familyboard-updater
+# The updater does its own rollback; a nonzero exit just means "stayed on the
+# current version". Don't let a failed run mark the unit permanently failed.
+SuccessExitStatus=0 1
