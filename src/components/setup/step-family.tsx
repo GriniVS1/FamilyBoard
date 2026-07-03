@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import { Input } from "@/components/shared/input";
+import { InlineKeyboardPanel } from "./inline-keyboard-panel";
 import { postJson } from "./types";
 
 type StepFamilyProps = {
@@ -20,6 +21,7 @@ export function StepFamily({ initialName = "", onComplete, onBack }: StepFamilyP
   const [name, setName] = useState(initialName);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,10 +66,13 @@ export function StepFamily({ initialName = "", onComplete, onBack }: StepFamilyP
           id="family-name"
           value={name}
           onChange={(e) => setName(e.target.value)}
+          onFocus={() => setKeyboardOpen(true)}
+          onBlur={() => setKeyboardOpen(false)}
           placeholder={t("placeholder")}
           autoFocus
           maxLength={60}
         />
+        <InlineKeyboardPanel open={keyboardOpen} value={name} onChange={setName} />
         {error && (
           <p className="text-sm text-accent-rose pl-2" role="alert">
             {error}

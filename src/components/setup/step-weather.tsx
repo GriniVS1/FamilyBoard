@@ -6,8 +6,11 @@ import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { Input } from "@/components/shared/input";
+import { InlineKeyboardPanel } from "./inline-keyboard-panel";
 import { cn } from "@/lib/utils";
 import { postJson } from "./types";
+
+type ActiveField = "label" | "lat" | "lon" | null;
 
 type StepWeatherProps = {
   onComplete: () => void;
@@ -35,6 +38,7 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
   );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeField, setActiveField] = useState<ActiveField>(null);
 
   function useMyLocation() {
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
@@ -137,9 +141,12 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
             id="weather-label"
             value={label}
             onChange={(e) => setLabel(e.target.value)}
+            onFocus={() => setActiveField("label")}
+            onBlur={() => setActiveField((f) => (f === "label" ? null : f))}
             placeholder="Berlin, home, the cabin…"
             maxLength={60}
           />
+          <InlineKeyboardPanel open={activeField === "label"} value={label} onChange={setLabel} />
         </div>
 
         <Button
@@ -193,6 +200,8 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
                       inputMode="decimal"
                       value={latStr}
                       onChange={(e) => setLatStr(e.target.value)}
+                      onFocus={() => setActiveField("lat")}
+                      onBlur={() => setActiveField((f) => (f === "lat" ? null : f))}
                       placeholder="52.52"
                     />
                   </div>
@@ -205,10 +214,26 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
                       inputMode="decimal"
                       value={lonStr}
                       onChange={(e) => setLonStr(e.target.value)}
+                      onFocus={() => setActiveField("lon")}
+                      onBlur={() => setActiveField((f) => (f === "lon" ? null : f))}
                       placeholder="13.40"
                     />
                   </div>
                 </div>
+                <InlineKeyboardPanel
+                  open={activeField === "lat"}
+                  value={latStr}
+                  onChange={setLatStr}
+                  defaultLayer="symbols"
+                  showAccents={false}
+                />
+                <InlineKeyboardPanel
+                  open={activeField === "lon"}
+                  value={lonStr}
+                  onChange={setLonStr}
+                  defaultLayer="symbols"
+                  showAccents={false}
+                />
               </motion.div>
             )}
           </AnimatePresence>

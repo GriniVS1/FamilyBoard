@@ -9,6 +9,7 @@ import { GlassCard } from "@/components/shared/glass-card";
 import { WifiKeyboard } from "./wifi-keyboard";
 import { WifiNetworkList, type WifiNetwork } from "./wifi-network-list";
 import { WifiHotspotQr } from "./wifi-hotspot-qr";
+import { InlineKeyboardPanel } from "./inline-keyboard-panel";
 
 type Mode = "country" | "list" | "keyboard" | "hotspot" | "connecting";
 
@@ -81,6 +82,7 @@ export function StepNetwork({ onComplete, onSkip }: StepNetworkProps) {
   const [countrySearch, setCountrySearch] = useState("");
   const [countryPosting, setCountryPosting] = useState(false);
   const [countryError, setCountryError] = useState<string | null>(null);
+  const [countrySearchFocused, setCountrySearchFocused] = useState(false);
 
   const [isConnecting, setIsConnecting] = useState(false);
   const [networks, setNetworks] = useState<WifiNetwork[]>([]);
@@ -314,10 +316,19 @@ export function StepNetwork({ onComplete, onSkip }: StepNetworkProps) {
                   type="text"
                   value={countrySearch}
                   onChange={(e) => setCountrySearch(e.target.value)}
+                  onFocus={() => setCountrySearchFocused(true)}
+                  onBlur={() => setCountrySearchFocused(false)}
                   placeholder={t("country.searchPlaceholder")}
                   className="w-full min-h-12 rounded-2xl border border-border bg-surface pl-10 pr-4 py-3 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-accent-sky/60"
                 />
               </div>
+
+              <InlineKeyboardPanel
+                open={countrySearchFocused}
+                value={countrySearch}
+                onChange={setCountrySearch}
+                showAccents={false}
+              />
 
               <div className="max-h-[320px] overflow-y-auto flex flex-col gap-1">
                 {sortedCountries.length === 0 && (
