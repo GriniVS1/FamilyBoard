@@ -116,7 +116,10 @@
       "locationFailed": "Impossible d'obtenir ta position. Saisis les coordonnées manuellement.",
       "locationError": "Impossible de demander ta position.",
       "invalidCoords": "Saisis des coordonnées valides (lat -90..90, lon -180..180).",
-      "coordsRequired": "Utilise « Utiliser ma position » ou saisis les coordonnées manuellement."
+      "coordsRequired": "Utilise « Utiliser ma position » ou saisis les coordonnées manuellement.",
+      "searchPlaceholder": "Rechercher une ville ou un lieu…",
+      "noResults": "Aucun lieu trouvé.",
+      "searchError": "Recherche impossible pour le moment. Réessaie."
     },
     "network": {
       "title": "Connexion au WiFi",
@@ -434,6 +437,9 @@
     "invalidCoords": "Saisis des coordonnées valides (lat -90..90, lon -180..180).",
     "labelRequired": "Donne un nom à cet emplacement.",
     "couldNotSave": "Impossible d'enregistrer.",
+    "searchPlaceholder": "Rechercher une ville ou un lieu…",
+    "noResults": "Aucun lieu trouvé.",
+    "searchError": "Recherche impossible pour le moment. Réessaie.",
     "members": {
       "title": "Membres",
       "description": "Modifier les profils, gérer les rôles et connecter le calendrier Google de chaque membre.",
@@ -458,7 +464,9 @@
       "statusFailed": "Impossible de charger le statut.",
       "connectFailed": "Impossible de démarrer OAuth.",
       "disconnectFailed": "Déconnexion échouée.",
-      "syncFailed": "Synchronisation échouée."
+      "syncFailed": "Synchronisation échouée.",
+      "notConfigured": "Google Agenda indisponible",
+      "notConfiguredHelp": "La connexion à Google Agenda n'est pas encore disponible sur cet appareil."
     },
     "pin": {
       "title": "Sécurité",

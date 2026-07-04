@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/shared/dialog";
 import { Input } from "@/components/shared/input";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
 import { postJson } from "@/components/setup/types";
 
 type FactoryResetDialogProps = {
@@ -26,12 +27,18 @@ export function FactoryResetDialog({
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmFocused, setConfirmFocused] = useState(false);
+
+  function setConfirmUpper(value: string) {
+    setConfirm(value.toUpperCase());
+  }
 
   useEffect(() => {
     if (open) {
       setPin("");
       setConfirm("");
       setError(null);
+      setConfirmFocused(false);
     }
   }, [open]);
 
@@ -106,9 +113,17 @@ export function FactoryResetDialog({
             <Input
               id="reset-confirm"
               value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              onChange={(e) => setConfirmUpper(e.target.value)}
+              onFocus={() => setConfirmFocused(true)}
+              onBlur={() => setConfirmFocused(false)}
               placeholder="RESET"
               autoCapitalize="characters"
+            />
+            <InlineKeyboardPanel
+              open={confirmFocused}
+              value={confirm}
+              onChange={setConfirmUpper}
+              showAccents={false}
             />
           </div>
 

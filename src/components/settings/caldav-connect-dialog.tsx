@@ -12,7 +12,10 @@ import {
   DialogTitle,
 } from "@/components/shared/dialog";
 import { Input } from "@/components/shared/input";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
 import { cn } from "@/lib/utils";
+
+type ActiveField = "serverUrl" | "username" | "password" | null;
 
 type CaldavPresetKey = "icloud" | "fastmail" | "yahoo" | "nextcloud" | "custom";
 
@@ -104,6 +107,7 @@ export function CaldavConnectDialog({
     useState<DiscoveredCalendar | null>(null);
   const [credentialError, setCredentialError] = useState<string | null>(null);
   const [importCount, setImportCount] = useState<number | null>(null);
+  const [activeField, setActiveField] = useState<ActiveField>(null);
 
   const presetConfig = PRESETS[preset];
   const resolvedServerUrl = presetConfig.serverUrl ?? serverUrl;
@@ -195,6 +199,7 @@ export function CaldavConnectDialog({
     setSelectedCalendar(null);
     setCredentialError(null);
     setImportCount(null);
+    setActiveField(null);
     connectMutation.reset();
     selectMutation.reset();
   }
@@ -266,8 +271,16 @@ export function CaldavConnectDialog({
                       type="url"
                       value={serverUrl}
                       onChange={(e) => setServerUrl(e.target.value)}
+                      onFocus={() => setActiveField("serverUrl")}
+                      onBlur={() => setActiveField((f) => (f === "serverUrl" ? null : f))}
                       placeholder="https://your-server.example.com"
                       autoComplete="url"
+                    />
+                    <InlineKeyboardPanel
+                      open={activeField === "serverUrl"}
+                      value={serverUrl}
+                      onChange={setServerUrl}
+                      showAccents={false}
                     />
                   </div>
                 )}
@@ -295,8 +308,16 @@ export function CaldavConnectDialog({
                     type="email"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
+                    onFocus={() => setActiveField("username")}
+                    onBlur={() => setActiveField((f) => (f === "username" ? null : f))}
                     autoComplete="username"
                     inputMode="email"
+                  />
+                  <InlineKeyboardPanel
+                    open={activeField === "username"}
+                    value={username}
+                    onChange={setUsername}
+                    showAccents={false}
                   />
                 </div>
 
@@ -312,7 +333,15 @@ export function CaldavConnectDialog({
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
+                    onFocus={() => setActiveField("password")}
+                    onBlur={() => setActiveField((f) => (f === "password" ? null : f))}
                     autoComplete="current-password"
+                  />
+                  <InlineKeyboardPanel
+                    open={activeField === "password"}
+                    value={password}
+                    onChange={setPassword}
+                    showAccents={false}
                   />
                   <p className="text-xs text-muted">
                     {presetConfig.passwordLabelAppleYahoo

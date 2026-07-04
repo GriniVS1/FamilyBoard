@@ -116,7 +116,10 @@
       "locationFailed": "Impossibile ottenere la posizione. Inserisci le coordinate manualmente.",
       "locationError": "Impossibile richiedere la posizione.",
       "invalidCoords": "Inserisci coordinate valide (lat -90..90, lon -180..180).",
-      "coordsRequired": "Usa «Usa la mia posizione» o inserisci le coordinate manualmente."
+      "coordsRequired": "Usa «Usa la mia posizione» o inserisci le coordinate manualmente.",
+      "searchPlaceholder": "Cerca una città o un luogo…",
+      "noResults": "Nessun luogo trovato.",
+      "searchError": "Ricerca non disponibile al momento. Riprova."
     },
     "network": {
       "title": "Connetti al WiFi",
@@ -434,6 +437,9 @@
     "invalidCoords": "Inserisci coordinate valide (lat -90..90, lon -180..180).",
     "labelRequired": "Dai un nome a questa posizione.",
     "couldNotSave": "Impossibile salvare.",
+    "searchPlaceholder": "Cerca una città o un luogo…",
+    "noResults": "Nessun luogo trovato.",
+    "searchError": "Ricerca non disponibile al momento. Riprova.",
     "members": {
       "title": "Membri",
       "description": "Modifica profili, gestisci ruoli e connetti il Google Calendar di ogni membro.",
@@ -458,7 +464,9 @@
       "statusFailed": "Impossibile caricare lo stato.",
       "connectFailed": "Impossibile avviare OAuth.",
       "disconnectFailed": "Disconnessione fallita.",
-      "syncFailed": "Sincronizzazione fallita."
+      "syncFailed": "Sincronizzazione fallita.",
+      "notConfigured": "Google Calendar non disponibile",
+      "notConfiguredHelp": "Il collegamento a Google Calendar non è ancora disponibile su questo dispositivo."
     },
     "pin": {
       "title": "Sicurezza",

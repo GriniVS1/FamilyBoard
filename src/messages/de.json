@@ -116,7 +116,10 @@
       "locationFailed": "Standort konnte nicht ermittelt werden. Koordinaten manuell eingeben.",
       "locationError": "Standort konnte nicht abgerufen werden.",
       "invalidCoords": "Gültige Koordinaten eingeben (Breite -90..90, Länge -180..180).",
-      "coordsRequired": "\"Meinen Standort verwenden\" wählen oder Koordinaten manuell eingeben."
+      "coordsRequired": "\"Meinen Standort verwenden\" wählen oder Koordinaten manuell eingeben.",
+      "searchPlaceholder": "Stadt oder Ort suchen…",
+      "noResults": "Keine Orte gefunden.",
+      "searchError": "Suche momentan nicht möglich. Bitte erneut versuchen."
     },
     "network": {
       "title": "Mit WLAN verbinden",
@@ -434,6 +437,9 @@
     "invalidCoords": "Gültige Koordinaten eingeben (Breite -90..90, Länge -180..180).",
     "labelRequired": "Gib dem Standort einen Namen.",
     "couldNotSave": "Konnte nicht gespeichert werden.",
+    "searchPlaceholder": "Stadt oder Ort suchen…",
+    "noResults": "Keine Orte gefunden.",
+    "searchError": "Suche momentan nicht möglich. Bitte erneut versuchen.",
     "members": {
       "title": "Mitglieder",
       "description": "Profile bearbeiten, Rollen verwalten und Google Kalender verbinden.",
@@ -458,7 +464,9 @@
       "statusFailed": "Status konnte nicht geladen werden.",
       "connectFailed": "OAuth konnte nicht gestartet werden.",
       "disconnectFailed": "Trennen fehlgeschlagen.",
-      "syncFailed": "Synchronisierung fehlgeschlagen."
+      "syncFailed": "Synchronisierung fehlgeschlagen.",
+      "notConfigured": "Google Kalender nicht verfügbar",
+      "notConfiguredHelp": "Die Google-Kalender-Verknüpfung ist auf diesem Gerät noch nicht verfügbar."
     },
     "pin": {
       "title": "Sicherheit",

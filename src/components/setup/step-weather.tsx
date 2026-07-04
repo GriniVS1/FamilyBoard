@@ -1,16 +1,17 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, ChevronDown } from "lucide-react";
 import { Button } from "@/components/shared/button";
 import { Input } from "@/components/shared/input";
+import { PlaceSearch, type GeocodeResult } from "@/components/shared/place-search";
 import { InlineKeyboardPanel } from "./inline-keyboard-panel";
 import { cn } from "@/lib/utils";
 import { postJson } from "./types";
 
-type ActiveField = "label" | "lat" | "lon" | null;
+type ActiveField = "lat" | "lon" | null;
 
 type StepWeatherProps = {
   onComplete: () => void;
@@ -28,6 +29,7 @@ type FamilyResponse = {
 export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
   const t = useTranslations("setup.weather");
   const tCommon = useTranslations("common");
+  const locale = useLocale();
   const [label, setLabel] = useState("");
   const [showCoords, setShowCoords] = useState(false);
   const [latStr, setLatStr] = useState("");
@@ -39,6 +41,12 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeField, setActiveField] = useState<ActiveField>(null);
+
+  function handlePlacePick(result: GeocodeResult) {
+    setCoords({ lat: result.latitude, lon: result.longitude });
+    setLabel(result.admin1 ? `${result.name}, ${result.admin1}` : result.name);
+    setGeoStatus("ok");
+  }
 
   function useMyLocation() {
     if (typeof window === "undefined" || !("geolocation" in navigator)) {
@@ -137,16 +145,16 @@ export function StepWeather({ onComplete, onSkip, onBack }: StepWeatherProps) {
           <label htmlFor="weather-label" className="text-sm font-medium text-ink">
             {t("city")}
           </label>
-          <Input
-            id="weather-label"
+          <PlaceSearch
+            inputId="weather-label"
+            locale={locale}
             value={label}
-            onChange={(e) => setLabel(e.target.value)}
-            onFocus={() => setActiveField("label")}
-            onBlur={() => setActiveField((f) => (f === "label" ? null : f))}
-            placeholder="Berlin, home, the cabin…"
-            maxLength={60}
+            onValueChange={setLabel}
+            onPick={handlePlacePick}
+            placeholder={t("searchPlaceholder")}
+            noResultsLabel={t("noResults")}
+            searchErrorLabel={t("searchError")}
           />
-          <InlineKeyboardPanel open={activeField === "label"} value={label} onChange={setLabel} />
         </div>
 
         <Button
