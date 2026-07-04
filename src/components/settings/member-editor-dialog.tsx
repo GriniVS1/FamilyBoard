@@ -11,6 +11,7 @@ import {
 } from "@/components/shared/dialog";
 import { Input } from "@/components/shared/input";
 import { MemberColorSwatch } from "@/components/shared/member-color-swatch";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
 import { MEMBER_EMOJIS } from "@/components/setup/types";
 import { MEMBER_COLORS, cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import type { CalendarMember } from "@/components/calendar/types";
@@ -77,6 +78,7 @@ export function MemberEditorDialog({
   const [state, setState] = useState<FormState>(() => makeState(member));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [nameFocused, setNameFocused] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -158,9 +160,16 @@ export function MemberEditorDialog({
             <Input
               value={state.name}
               onChange={(e) => patch({ name: e.target.value })}
+              onFocus={() => setNameFocused(true)}
+              onBlur={() => setNameFocused(false)}
               required
               autoFocus
               maxLength={40}
+            />
+            <InlineKeyboardPanel
+              open={nameFocused}
+              value={state.name}
+              onChange={(name) => patch({ name })}
             />
           </div>
 

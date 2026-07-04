@@ -13,6 +13,7 @@ import {
 } from "@/components/shared/dialog";
 import { Input } from "@/components/shared/input";
 import { MemberAvatar } from "@/components/shared/member-avatar";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
 import { cn } from "@/lib/utils";
 import type { CalendarMember } from "@/components/calendar/types";
 
@@ -48,6 +49,7 @@ export function PairDeviceDialog({
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [copied, setCopied] = useState(false);
+  const [pinFocused, setPinFocused] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export function PairDeviceDialog({
       setExpiresAt(null);
       setSecondsLeft(0);
       setCopied(false);
+      setPinFocused(false);
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -232,9 +235,18 @@ export function PairDeviceDialog({
                     onChange={(e) =>
                       setPin(e.target.value.replace(/\D/g, "").slice(0, 6))
                     }
+                    onFocus={() => setPinFocused(true)}
+                    onBlur={() => setPinFocused(false)}
                     maxLength={6}
                     placeholder="••••"
                     className="tabular-nums"
+                  />
+                  <InlineKeyboardPanel
+                    open={pinFocused}
+                    value={pin}
+                    onChange={(v) => setPin(v.replace(/\D/g, "").slice(0, 6))}
+                    defaultLayer="symbols"
+                    showAccents={false}
                   />
                 </div>
 

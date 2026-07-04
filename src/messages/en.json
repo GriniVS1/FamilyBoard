@@ -116,7 +116,10 @@
       "locationFailed": "Couldn't get your location. Enter coordinates manually.",
       "locationError": "Couldn't request your location.",
       "invalidCoords": "Enter valid coordinates (lat -90..90, lon -180..180).",
-      "coordsRequired": "Use \"Use my location\" or enter coordinates manually to continue."
+      "coordsRequired": "Use \"Use my location\" or enter coordinates manually to continue.",
+      "searchPlaceholder": "Search for a city or place…",
+      "noResults": "No places found.",
+      "searchError": "Couldn't search right now. Try again."
     },
     "network": {
       "title": "Connect to WiFi",
@@ -434,6 +437,9 @@
     "invalidCoords": "Enter valid coordinates (lat -90..90, lon -180..180).",
     "labelRequired": "Give the location a label.",
     "couldNotSave": "Could not save.",
+    "searchPlaceholder": "Search for a city or place…",
+    "noResults": "No places found.",
+    "searchError": "Couldn't search right now. Try again.",
     "members": {
       "title": "Members",
       "description": "Edit profiles, manage roles, and connect each member's Google Calendar.",
@@ -458,7 +464,9 @@
       "statusFailed": "Could not load status.",
       "connectFailed": "Could not start OAuth.",
       "disconnectFailed": "Could not disconnect.",
-      "syncFailed": "Sync failed."
+      "syncFailed": "Sync failed.",
+      "notConfigured": "Google Calendar not available",
+      "notConfiguredHelp": "Google Calendar linking isn't available on this device yet."
     },
     "pin": {
       "title": "Security",

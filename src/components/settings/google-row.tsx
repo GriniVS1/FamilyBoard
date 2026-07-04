@@ -49,8 +49,17 @@ export function GoogleRow({ member, adminPin }: GoogleRowProps) {
       if (!res.ok) {
         let message = `Connect failed (${res.status})`;
         try {
-          const data = (await res.json()) as { error?: { message?: string } };
-          if (data?.error?.message) message = data.error.message;
+          const data = (await res.json()) as {
+            error?: { code?: string; message?: string };
+          };
+          // Show a clear, localized hint when the server has no Google OAuth
+          // configured (the case on shipped devices until the OAuth broker ships)
+          // rather than the raw server string.
+          if (data?.error?.code === "GOOGLE_NOT_CONFIGURED") {
+            message = t("notConfiguredHelp");
+          } else if (data?.error?.message) {
+            message = data.error.message;
+          }
         } catch {
           // ignore
         }

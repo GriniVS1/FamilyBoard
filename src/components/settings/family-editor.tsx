@@ -3,10 +3,12 @@
 import { ChevronDown, Loader2, MapPin } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState, type FormEvent } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { Input } from "@/components/shared/input";
+import { PlaceSearch, type GeocodeResult } from "@/components/shared/place-search";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
 import { cn } from "@/lib/utils";
 
 type FamilyData = {
@@ -30,7 +32,9 @@ type FamilyEditorProps = {
 
 export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) {
   const t = useTranslations("settings");
+  const locale = useLocale();
   const [name, setName] = useState(family?.name ?? "");
+  const [nameFocused, setNameFocused] = useState(false);
   const [label, setLabel] = useState(family?.weatherLabel ?? "");
   const [latStr, setLatStr] = useState(
     family?.weatherLat != null ? String(family.weatherLat) : "",
@@ -47,6 +51,14 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
   const [nameOk, setNameOk] = useState(false);
   const [weatherOk, setWeatherOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeCoordField, setActiveCoordField] = useState<"lat" | "lon" | null>(null);
+
+  function handlePlacePick(result: GeocodeResult) {
+    setLatStr(String(result.latitude));
+    setLonStr(String(result.longitude));
+    setLabel(result.admin1 ? `${result.name}, ${result.admin1}` : result.name);
+    setGeoStatus("ok");
+  }
 
   async function handleSaveName(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -149,6 +161,8 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
             id="family-name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            onFocus={() => setNameFocused(true)}
+            onBlur={() => setNameFocused(false)}
             disabled={disabled || savingName}
             maxLength={60}
             placeholder="The Smith Family"
@@ -162,6 +176,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
             {savingName ? <Loader2 className="size-4 animate-spin" /> : t("save")}
           </Button>
         </div>
+        <InlineKeyboardPanel open={nameFocused} value={name} onChange={setName} />
         {nameOk && (
           <p className="text-xs text-accent-mint">{t("saved")}</p>
         )}
@@ -170,15 +185,19 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
       <div className="h-px bg-border" />
 
       <form onSubmit={handleSaveWeather} className="flex flex-col gap-3">
-        <label className="text-xs font-semibold uppercase tracking-wider text-muted">
+        <label htmlFor="family-weather-label" className="text-xs font-semibold uppercase tracking-wider text-muted">
           {t("weatherLocation")}
         </label>
-        <Input
+        <PlaceSearch
+          inputId="family-weather-label"
+          locale={locale}
           value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          placeholder="Berlin, home, the cabin…"
+          onValueChange={setLabel}
+          onPick={handlePlacePick}
+          placeholder={t("searchPlaceholder")}
+          noResultsLabel={t("noResults")}
+          searchErrorLabel={t("searchError")}
           disabled={disabled || savingWeather}
-          maxLength={60}
         />
 
         <Button
@@ -231,6 +250,8 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
                     inputMode="decimal"
                     value={latStr}
                     onChange={(e) => setLatStr(e.target.value)}
+                    onFocus={() => setActiveCoordField("lat")}
+                    onBlur={() => setActiveCoordField((f) => (f === "lat" ? null : f))}
                     placeholder="52.52"
                     disabled={disabled || savingWeather}
                   />
@@ -244,11 +265,27 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
                     inputMode="decimal"
                     value={lonStr}
                     onChange={(e) => setLonStr(e.target.value)}
+                    onFocus={() => setActiveCoordField("lon")}
+                    onBlur={() => setActiveCoordField((f) => (f === "lon" ? null : f))}
                     placeholder="13.40"
                     disabled={disabled || savingWeather}
                   />
                 </div>
               </div>
+              <InlineKeyboardPanel
+                open={activeCoordField === "lat"}
+                value={latStr}
+                onChange={setLatStr}
+                defaultLayer="symbols"
+                showAccents={false}
+              />
+              <InlineKeyboardPanel
+                open={activeCoordField === "lon"}
+                value={lonStr}
+                onChange={setLonStr}
+                defaultLayer="symbols"
+                showAccents={false}
+              />
             </motion.div>
           )}
         </AnimatePresence>
