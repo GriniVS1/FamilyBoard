@@ -13,7 +13,7 @@ type WeatherNow = {
   windKmh: number;
 };
 
-type WeatherHourly = { ts: string; tempC: number; code: number };
+type WeatherHourly = { ts: string; tempC: number; code: number; isDay: boolean };
 
 type WeatherDaily = {
   date: string;
@@ -47,6 +47,7 @@ type OpenMeteoResponse = {
     time?: string[];
     temperature_2m?: number[];
     weather_code?: number[];
+    is_day?: number[];
   };
   daily?: {
     time?: string[];
@@ -87,6 +88,7 @@ function buildResponse(
   const hourlyTimes = raw.hourly?.time ?? [];
   const hourlyTemps = raw.hourly?.temperature_2m ?? [];
   const hourlyCodes = raw.hourly?.weather_code ?? [];
+  const hourlyIsDay = raw.hourly?.is_day ?? [];
 
   const currentMs = current.time ? new Date(current.time).getTime() : Date.now();
   let startIdx = 0;
@@ -107,7 +109,9 @@ function buildResponse(
     const temp = hourlyTemps[i];
     const code = hourlyCodes[i];
     if (typeof t === "string" && typeof temp === "number" && typeof code === "number") {
-      hourly.push({ ts: t, tempC: temp, code });
+      // Lenient on is_day: if the provider omits it, assume day rather than
+      // dropping the row (only affects the icon).
+      hourly.push({ ts: t, tempC: temp, code, isDay: hourlyIsDay[i] !== 0 });
     }
   }
 
@@ -174,7 +178,7 @@ export const GET = withErrorHandling(async () => {
     "current",
     "temperature_2m,weather_code,is_day,wind_speed_10m",
   );
-  url.searchParams.set("hourly", "temperature_2m,weather_code");
+  url.searchParams.set("hourly", "temperature_2m,weather_code,is_day");
   url.searchParams.set(
     "daily",
     "temperature_2m_max,temperature_2m_min,weather_code,sunrise,sunset",

@@ -26,8 +26,10 @@ type WeatherNow = {
   windKmh: number;
 };
 
+// Field names must match /api/weather's response exactly (ts/maxC/minC —
+// a silent mismatch here renders as NaN on the wall).
 type WeatherHourly = {
-  time: string;
+  ts: string;
   tempC: number;
   code: number;
   isDay: boolean;
@@ -35,8 +37,8 @@ type WeatherHourly = {
 
 type WeatherDaily = {
   date: string;
-  tempMaxC: number;
-  tempMinC: number;
+  maxC: number;
+  minC: number;
   code: number;
 };
 
@@ -189,11 +191,11 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
             const Icon = iconForCode(h.code, h.isDay);
             return (
               <li
-                key={h.time}
+                key={h.ts}
                 className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center"
               >
                 <span className="tabular text-[10px] text-ink/70">
-                  {shortTime(h.time)}
+                  {shortTime(h.ts)}
                 </span>
                 <Icon className="size-4 text-ink/80" strokeWidth={1.75} />
                 <span className="tabular text-xs text-ink">
@@ -220,10 +222,10 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
                 <span className="text-xs text-ink/70">{shortDay(d.date)}</span>
                 <Icon className="size-4 text-ink/80" strokeWidth={1.75} />
                 <span className="tabular text-xs text-ink">
-                  {Math.round(d.tempMaxC)}°
+                  {Math.round(d.maxC)}°
                 </span>
                 <span className="tabular text-[10px] text-ink/50">
-                  {Math.round(d.tempMinC)}°
+                  {Math.round(d.minC)}°
                 </span>
               </li>
             );
