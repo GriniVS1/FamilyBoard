@@ -111,7 +111,16 @@ jobs:
         run: |
           VERSION="${{ steps.meta.outputs.version }}"
           CHANNEL="${{ steps.meta.outputs.channel }}"
-          ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          # The bucket was created with EU jurisdiction, which is only reachable
+          # via the regional S3 endpoint (….eu.r2…). The default endpoint returns
+          # NoSuchBucket. Override with the R2_JURISDICTION var if the bucket is
+          # ever non-EU (set it empty → drop the segment).
+          JUR="${{ vars.R2_JURISDICTION || 'eu' }}"
+          if [ -n "$JUR" ]; then
+            ENDPOINT="https://${R2_ACCOUNT_ID}.${JUR}.r2.cloudflarestorage.com"
+          else
+            ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          fi
           S3="aws s3 cp --endpoint-url $ENDPOINT"
           # Immutable, versioned tarball → cache forever.
           $S3 dist/app.tar.gz "s3://${R2_BUCKET}/app/familyboard-${VERSION}.tar.gz" \
