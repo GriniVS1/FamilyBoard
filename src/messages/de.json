@@ -653,7 +653,13 @@
       "checkNow": "Jetzt nach Updates suchen",
       "checking": "Suche…",
       "requested": "Update-Prüfung gestartet. Falls ein Update verfügbar ist, wird es jetzt installiert — das kann einige Minuten dauern und der Bildschirm startet ggf. neu.",
-      "checkFailed": "Update-Prüfung konnte nicht gestartet werden."
+      "checkFailed": "Update-Prüfung konnte nicht gestartet werden.",
+      "showLog": "Update-Log anzeigen",
+      "hideLog": "Update-Log ausblenden",
+      "logTitle": "Update-Log",
+      "logRefresh": "Aktualisieren",
+      "logEmpty": "Noch keine Update-Aktivität.",
+      "logUnavailable": "Update-Logging ist im Basis-Image dieses Geräts noch nicht verfügbar."
     }
   },
   "meals": {

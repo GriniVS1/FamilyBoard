@@ -653,7 +653,13 @@
       "checkNow": "Check for updates now",
       "checking": "Checking…",
       "requested": "Update check started. If an update is available it installs now — this can take a few minutes and the screen may restart.",
-      "checkFailed": "Could not start the update check."
+      "checkFailed": "Could not start the update check.",
+      "showLog": "Show update log",
+      "hideLog": "Hide update log",
+      "logTitle": "Update log",
+      "logRefresh": "Refresh",
+      "logEmpty": "No update activity yet.",
+      "logUnavailable": "Update logging isn't available on this device's base image yet."
     }
   },
   "meals": {

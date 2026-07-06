@@ -1,6 +1,6 @@
 import "server-only";
 
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { env } from "./env";
 
@@ -20,4 +20,17 @@ export function requestUpdateCheck(): void {
   const target = path.join(dataDir(), "update-request");
   // Content is just a timestamp; the updater only cares that the file appears.
   writeFileSync(target, new Date().toISOString() + "\n");
+}
+
+// Tail of the host updater's log (written to <data>/update.log). Empty string
+// when no update run has happened yet (or on a device whose base image predates
+// file logging — the log only appears once the host updater writes it).
+export function readUpdateLog(maxLines = 300): { log: string; available: boolean } {
+  const target = path.join(dataDir(), "update.log");
+  try {
+    const lines = readFileSync(target, "utf8").split("\n");
+    return { log: lines.slice(-maxLines).join("\n").trimEnd(), available: true };
+  } catch {
+    return { log: "", available: false };
+  }
 }

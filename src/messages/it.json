@@ -653,7 +653,13 @@
       "checkNow": "Cerca aggiornamenti",
       "checking": "Ricerca…",
       "requested": "Controllo avviato. Se è disponibile un aggiornamento verrà installato ora — può richiedere alcuni minuti e lo schermo potrebbe riavviarsi.",
-      "checkFailed": "Impossibile avviare il controllo degli aggiornamenti."
+      "checkFailed": "Impossibile avviare il controllo degli aggiornamenti.",
+      "showLog": "Mostra log aggiornamenti",
+      "hideLog": "Nascondi log",
+      "logTitle": "Log aggiornamenti",
+      "logRefresh": "Aggiorna",
+      "logEmpty": "Nessuna attività di aggiornamento finora.",
+      "logUnavailable": "Il logging degli aggiornamenti non è ancora disponibile sull'immagine di base di questo dispositivo."
     }
   },
   "meals": {

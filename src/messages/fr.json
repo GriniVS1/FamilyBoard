@@ -653,7 +653,13 @@
       "checkNow": "Rechercher les mises à jour",
       "checking": "Recherche…",
       "requested": "Vérification lancée. Si une mise à jour est disponible, elle s'installe maintenant — cela peut prendre quelques minutes et l'écran peut redémarrer.",
-      "checkFailed": "Impossible de lancer la vérification des mises à jour."
+      "checkFailed": "Impossible de lancer la vérification des mises à jour.",
+      "showLog": "Afficher le journal",
+      "hideLog": "Masquer le journal",
+      "logTitle": "Journal des mises à jour",
+      "logRefresh": "Actualiser",
+      "logEmpty": "Aucune activité de mise à jour pour l'instant.",
+      "logUnavailable": "La journalisation des mises à jour n'est pas encore disponible sur l'image de base de cet appareil."
     }
   },
   "meals": {
