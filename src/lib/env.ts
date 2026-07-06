@@ -17,6 +17,10 @@ const schema = z.object({
     .describe("64-char hex (32 bytes) for AES-256-GCM"),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
+  // OAuth broker for shipped devices (no local client secret). When Google
+  // isn't configured locally, connect-google routes through this broker and
+  // adopts the token via /api/auth/google/adopt. See docs/google-oauth-broker-plan.md.
+  OAUTH_BROKER_URL: z.string().url().default("https://familyboard.ch"),
   MICROSOFT_CLIENT_ID: z.string().optional(),
   MICROSOFT_CLIENT_SECRET: z.string().optional(),
   MICROSOFT_TENANT: z.string().optional().default("common"),

@@ -3,6 +3,7 @@ import { withErrorHandling, ok, AppError } from "@/lib/api";
 import { db } from "@/lib/db";
 import { buildAuthorizeUrl, getOAuth2Client } from "@/lib/google";
 import { decryptToken } from "@/lib/crypto";
+import { env, googleConfigured } from "@/lib/env";
 import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
@@ -33,18 +34,48 @@ export const POST = withErrorHandling<Ctx>(async (_req, { params }) => {
     );
   }
 
-  const state = randomBytes(32).toString("hex");
-  const payload = JSON.stringify({
-    memberId: id,
-    expiresAt: Date.now() + STATE_TTL_MS,
+  // Self-hosted with local client credentials → direct OAuth (unchanged).
+  if (googleConfigured) {
+    const state = randomBytes(32).toString("hex");
+    await db.setting.upsert({
+      where: { key: `oauth_state_${state}` },
+      update: { value: JSON.stringify({ memberId: id, expiresAt: Date.now() + STATE_TTL_MS }) },
+      create: {
+        key: `oauth_state_${state}`,
+        value: JSON.stringify({ memberId: id, expiresAt: Date.now() + STATE_TTL_MS }),
+      },
+    });
+    return ok({ authorizeUrl: buildAuthorizeUrl(state) });
+  }
+
+  // Shipped device → route through the OAuth broker. The device holds the
+  // adoptSecret; the broker encrypts the refresh token with it and redirects
+  // back to /api/auth/google/adopt on this device. See docs/google-oauth-broker-plan.md.
+  const adoptSecret = randomBytes(32).toString("hex");
+  const returnUrl = `${env.NEXTAUTH_URL}/api/auth/google/adopt`;
+
+  const res = await fetch(`${env.OAUTH_BROKER_URL}/oauth/google/start`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ memberId: id, adoptSecret, returnUrl }),
   });
+  if (!res.ok) {
+    throw new AppError("Update broker unreachable", "BROKER_UNREACHABLE", 502);
+  }
+  const { authorizeUrl, state } = (await res.json()) as {
+    authorizeUrl: string;
+    state: string;
+  };
+
   await db.setting.upsert({
-    where: { key: `oauth_state_${state}` },
-    update: { value: payload },
-    create: { key: `oauth_state_${state}`, value: payload },
+    where: { key: `google_adopt_${state}` },
+    update: { value: JSON.stringify({ memberId: id, adoptSecret, expiresAt: Date.now() + STATE_TTL_MS }) },
+    create: {
+      key: `google_adopt_${state}`,
+      value: JSON.stringify({ memberId: id, adoptSecret, expiresAt: Date.now() + STATE_TTL_MS }),
+    },
   });
 
-  const authorizeUrl = buildAuthorizeUrl(state);
   return ok({ authorizeUrl });
 });
 
