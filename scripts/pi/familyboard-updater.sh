@@ -26,14 +26,29 @@ KEEP_DB_BACKUPS="${KEEP_DB_BACKUPS:-3}"
 VERSION_FILE="$STATE_DIR/current-version"
 BAD_FILE="$STATE_DIR/bad-versions"
 DATA_DIR="$COMPOSE_DIR/data"
+# Mirrored into the bind-mounted data dir so the wall UI can show update
+# activity without SSH (GET /api/settings/update-log reads this file).
+LOG_FILE="$DATA_DIR/update.log"
 COMPOSE=(docker compose -f "$COMPOSE_DIR/docker-compose.yml" -f "$COMPOSE_DIR/docker-compose.pi.yml")
 
-log() { echo "[updater] $(date -u +%FT%TZ) $*"; }
+log() {
+  local m="[updater] $(date -u +%FT%TZ) $*"
+  echo "$m"
+  # Best-effort file mirror — never let logging break an update run.
+  echo "$m" >> "$LOG_FILE" 2>/dev/null || true
+}
 die() { log "ERROR: $*"; exit 1; }
 
 # Single-flight: the timer and the path unit both call us.
 exec 9>"$STATE_DIR/updater.lock" || die "cannot open lock"
 flock -n 9 || { log "another update run holds the lock; exiting"; exit 0; }
+
+# Bound the UI-visible log and mark each run so entries are distinguishable.
+mkdir -p "$DATA_DIR" 2>/dev/null || true
+if [[ -f "$LOG_FILE" ]] && [[ "$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)" -gt 1000 ]]; then
+  tail -n 800 "$LOG_FILE" > "$LOG_FILE.tmp" 2>/dev/null && mv "$LOG_FILE.tmp" "$LOG_FILE"
+fi
+log "──────── run start ────────"
 
 command -v docker >/dev/null || die "docker not found"
 command -v openssl >/dev/null || die "openssl not found"
