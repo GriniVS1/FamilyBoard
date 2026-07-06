@@ -50,6 +50,14 @@ if [[ -f "$LOG_FILE" ]] && [[ "$(wc -l < "$LOG_FILE" 2>/dev/null || echo 0)" -gt
 fi
 log "──────── run start ────────"
 
+# Clear the UI's trigger flag at the START of every run, not just on a
+# successful update. The familyboard-updater.path unit only re-fires when the
+# file transitions from absent → present; if a run that ends in "already
+# up-to-date" (or any error/rollback) left the flag in place, the path unit
+# stayed armed and "check for updates" silently did nothing. Removing it here
+# means each run rearms the trigger regardless of outcome.
+rm -f "$DATA_DIR/update-request" 2>/dev/null || true
+
 command -v docker >/dev/null || die "docker not found"
 command -v openssl >/dev/null || die "openssl not found"
 command -v jq >/dev/null || die "jq not found"
@@ -160,9 +168,9 @@ fi
 echo "$VERSION" > "$VERSION_FILE"
 log "update OK: now running $VERSION"
 
-# prune: keep newest N db backups, drop the update-request flag, tidy images
+# prune: keep newest N db backups, tidy images (the update-request flag was
+# already cleared at run start).
 ls -1t "$DATA_DIR"/app.db.pre-* 2>/dev/null | tail -n +$((KEEP_DB_BACKUPS + 1)) | xargs -r rm -f
-rm -f "$DATA_DIR/update-request"
 docker image rm "$IMAGE:previous" >/dev/null 2>&1 || true
 docker image prune -f >/dev/null 2>&1 || true
 log "done"
