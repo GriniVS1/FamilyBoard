@@ -19,6 +19,12 @@ secrets/
 *.private.json
 *-service-account*.json
 
+# Legacy prototype files that hold live Google API keys — never commit.
+# Use config.js.example as the template. (A real key was leaked publicly from
+# config.js once; keep these out of git.)
+/config.js
+/index.html
+
 # Vendor private keys — NEVER commit
 tool/.license-private.pem
 tool/.release-private.pem
