@@ -11,7 +11,7 @@ BROKER_BASE_URL = "https://familyboard.ch"
 # then paste the returned id here.
 [[kv_namespaces]]
 binding = "OAUTH_KV"
-id = "REPLACE_WITH_KV_NAMESPACE_ID"
+id = "08c8577b8f314d81baf72a7527073151"
 
 # Serve only the /oauth/* path on the zone (leaves the website + updates.* alone).
 [[routes]]
