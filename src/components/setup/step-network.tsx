@@ -165,9 +165,14 @@ export function StepNetwork({ onComplete, onSkip }: StepNetworkProps) {
     stopPoll();
     pollStartRef.current = Date.now();
     pollRef.current = setInterval(async () => {
+      // The countdown starts when the QR codes appear, but everything after is
+      // manual on the phone: scan the join-QR, accept the hotspot (dismissing
+      // "no internet" prompts), scan the URL-QR, load the page, pick the network,
+      // type the password, submit — then the Pi tears down the AP and connects.
+      // 80 s was far too short for that; give the human 5 minutes.
       if (
         pollStartRef.current !== null &&
-        Date.now() - pollStartRef.current > 80_000
+        Date.now() - pollStartRef.current > 5 * 60 * 1000
       ) {
         stopPoll();
         await stopHotspot();
