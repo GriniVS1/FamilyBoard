@@ -1,0 +1,19 @@
+name = "familyboard-oauth-broker"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+# Non-secret. Secrets (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET) are set with
+# `wrangler secret put …` — never committed.
+[vars]
+BROKER_BASE_URL = "https://familyboard.ch"
+
+# Created once with: wrangler kv namespace create OAUTH_KV
+# then paste the returned id here.
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+# Serve only the /oauth/* path on the zone (leaves the website + updates.* alone).
+[[routes]]
+pattern = "familyboard.ch/oauth/*"
+zone_name = "familyboard.ch"
