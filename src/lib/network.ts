@@ -11,6 +11,8 @@ import "server-only";
 
 import { spawn } from "node:child_process";
 import { randomBytes } from "node:crypto";
+import { networkInterfaces } from "node:os";
+import { env } from "./env";
 
 export type NetworkStatus = {
   connected: boolean;
@@ -25,6 +27,43 @@ export type WifiNetwork = {
   signal: number;
   secured: boolean;
 };
+
+// Base URL a phone on the same LAN can reach this server at. The kiosk browser
+// runs on localhost, so window.location.origin is useless inside pairing QR
+// codes. On the Pi the container uses network_mode: host, so the process sees
+// the host's real interfaces and the first routable IPv4 is the device's LAN
+// address. If NEXTAUTH_URL points at a real hostname (reverse-proxy setups),
+// that wins. Returns null when no routable address exists (client falls back).
+export function getLanBaseUrl(): string | null {
+  const configured = new URL(env.NEXTAUTH_URL);
+  const localHosts = ["localhost", "127.0.0.1", "0.0.0.0", "::1", "[::1]"];
+  const isLoopback = localHosts.includes(configured.hostname);
+  // The Pi ships with NEXTAUTH_URL=http://familyboard.local:3000. iPhones
+  // resolve mDNS names fine, many Androids don't — so for phone-facing URLs
+  // prefer the concrete LAN IP and keep the .local name only as fallback.
+  const isMdns = configured.hostname.endsWith(".local");
+  if (!isLoopback && !isMdns) {
+    return configured.origin; // real hostname (reverse-proxy / custom domain)
+  }
+  const port = configured.port || (configured.protocol === "https:" ? "443" : "80");
+
+  const candidates: { name: string; address: string }[] = [];
+  for (const [name, addrs] of Object.entries(networkInterfaces())) {
+    // Skip loopback and container-side plumbing (docker0, bridges, veth pairs).
+    if (/^(lo|docker|br-|veth)/.test(name)) continue;
+    for (const a of addrs ?? []) {
+      if (a.family !== "IPv4" || a.internal) continue;
+      if (a.address.startsWith("169.254.")) continue; // link-local, unreachable for phones
+      candidates.push({ name, address: a.address });
+    }
+  }
+  if (candidates.length === 0) return isMdns ? configured.origin : null;
+
+  // Wired first (stablest), then WiFi, then anything else.
+  const rank = (n: string) => (/^(eth|en)/.test(n) ? 0 : /^wl/.test(n) ? 1 : 2);
+  candidates.sort((a, b) => rank(a.name) - rank(b.name));
+  return `http://${candidates[0].address}:${port}`;
+}
 
 export class NetworkError extends Error {
   constructor(
