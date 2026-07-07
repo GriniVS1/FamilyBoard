@@ -71,4 +71,9 @@ if (env.NODE_ENV === "production" && !isBuildPhase) {
 }
 
 export const googleConfigured = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+// Shipped devices have no local Google credentials but can still sync by
+// refreshing access tokens through the OAuth broker (which holds the vendor
+// client secret). OAUTH_BROKER_URL always has a default, so this is effectively
+// always available as the fallback path when googleConfigured is false.
+export const brokerConfigured = Boolean(env.OAUTH_BROKER_URL);
 export const microsoftConfigured = Boolean(env.MICROSOFT_CLIENT_ID && env.MICROSOFT_CLIENT_SECRET);

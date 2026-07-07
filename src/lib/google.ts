@@ -5,7 +5,7 @@ import type { OAuth2Client } from "google-auth-library";
 import { AppError } from "./api";
 import { db } from "./db";
 import { decryptToken, encryptToken } from "./crypto";
-import { env, googleConfigured } from "./env";
+import { env, googleConfigured, brokerConfigured } from "./env";
 
 export const GOOGLE_OAUTH_REDIRECT_PATH = "/api/auth/google/callback";
 
@@ -60,6 +60,34 @@ export async function fetchUserInfo(accessToken: string): Promise<UserInfo> {
   return { email: json.email };
 }
 
+// Mint an access token from a refresh token via the OAuth broker. Shipped
+// devices have no local client secret, so they can't do the refresh grant
+// themselves — the broker (which holds the vendor secret) does it for them.
+async function refreshAccessTokenViaBroker(
+  refreshToken: string,
+): Promise<{ accessToken: string; expiresAt: Date }> {
+  const res = await fetch(`${env.OAUTH_BROKER_URL}/oauth/google/refresh`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  if (!res.ok) {
+    throw new AppError(
+      `Broker token refresh failed (${res.status})`,
+      res.status === 401 ? "GOOGLE_TOKEN_REVOKED" : "BROKER_REFRESH_FAILED",
+      502,
+    );
+  }
+  const data = (await res.json()) as { access_token?: string; expires_in?: number };
+  if (!data.access_token) {
+    throw new AppError("Broker returned no access token", "BROKER_REFRESH_FAILED", 502);
+  }
+  return {
+    accessToken: data.access_token,
+    expiresAt: new Date(Date.now() + (data.expires_in ?? 3600) * 1000),
+  };
+}
+
 export async function getCalendarForMember(
   memberId: string,
 ): Promise<calendar_v3.Calendar> {
@@ -76,6 +104,31 @@ export async function getCalendarForMember(
   }
 
   const refreshToken = decryptToken(member.googleRefreshTokenEnc);
+
+  // Broker mode: no local client secret. Refresh the access token through the
+  // broker and drive the Google client with a bare bearer token — no client
+  // credentials on the device, so googleapis' own auto-refresh never runs. We
+  // pre-refresh whenever the cached token is missing or expires within 60 s.
+  if (!googleConfigured && brokerConfigured) {
+    const cached = member.googleAccessToken;
+    const expiresAt = member.googleAccessExpiresAt;
+    let accessToken = cached ?? undefined;
+    if (!accessToken || !expiresAt || expiresAt.getTime() < Date.now() + 60_000) {
+      const refreshed = await refreshAccessTokenViaBroker(refreshToken);
+      accessToken = refreshed.accessToken;
+      await db.member.update({
+        where: { id: memberId },
+        data: {
+          googleAccessToken: refreshed.accessToken,
+          googleAccessExpiresAt: refreshed.expiresAt,
+        },
+      });
+    }
+    const brokerClient = new google.auth.OAuth2();
+    brokerClient.setCredentials({ access_token: accessToken });
+    return google.calendar({ version: "v3", auth: brokerClient });
+  }
+
   const client = getOAuth2Client();
 
   const credentials: {

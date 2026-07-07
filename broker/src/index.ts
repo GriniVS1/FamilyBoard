@@ -95,6 +95,11 @@ async function encryptForDevice(adoptSecretHex: string, plaintext: string): Prom
   return b64urlFromBytes(out);
 }
 
+async function sha256B64url(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return b64urlFromBytes(new Uint8Array(buf));
+}
+
 function errorPage(message: string, status = 400): Response {
   return new Response(
     `<!doctype html><meta charset=utf-8><title>FamilyBoard</title>` +
@@ -193,6 +198,50 @@ async function handleCallback(req: Request, env: Env): Promise<Response> {
   return Response.redirect(dest.toString(), 302);
 }
 
+// Mint a fresh Google access token from a device's refresh token. Shipped
+// devices can't do this themselves — the refresh grant needs the vendor client
+// secret, which lives only here. The refresh token is the bearer credential
+// (the broker issued it in the callback); we don't persist it. Coarse per-token
+// rate limiting blunts a leaked-token refresh loop. HMAC per-installation
+// hardening is a planned follow-up.
+async function handleRefresh(req: Request, env: Env): Promise<Response> {
+  let body: { refreshToken?: string };
+  try {
+    body = (await req.json()) as { refreshToken?: string };
+  } catch {
+    return json({ error: "invalid_json" }, 400);
+  }
+  const refreshToken = body.refreshToken;
+  if (!refreshToken || typeof refreshToken !== "string") {
+    return json({ error: "refreshToken_required" }, 400);
+  }
+
+  const rlKey = `rl:refresh:${await sha256B64url(refreshToken)}`;
+  const count = parseInt((await env.OAUTH_KV.get(rlKey)) ?? "0", 10);
+  if (count >= 30) return json({ error: "rate_limited" }, 429);
+  await env.OAUTH_KV.put(rlKey, String(count + 1), { expirationTtl: 60 });
+
+  const res = await fetch(GOOGLE_TOKEN, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: env.GOOGLE_CLIENT_ID,
+      client_secret: env.GOOGLE_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+    }),
+  });
+  if (!res.ok) {
+    // 400/401 from Google means the refresh token is revoked/invalid — surface
+    // that to the device (401) so it can prompt a relink; anything else is 502.
+    const status = res.status === 400 || res.status === 401 ? 401 : 502;
+    return json({ error: "refresh_failed" }, status);
+  }
+  const t = (await res.json()) as { access_token?: string; expires_in?: number };
+  if (!t.access_token) return json({ error: "no_access_token" }, 502);
+  return json({ access_token: t.access_token, expires_in: t.expires_in ?? 3600 });
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
@@ -201,6 +250,9 @@ export default {
     }
     if (req.method === "GET" && url.pathname === "/oauth/google/callback") {
       return handleCallback(req, env);
+    }
+    if (req.method === "POST" && url.pathname === "/oauth/google/refresh") {
+      return handleRefresh(req, env);
     }
     if (url.pathname === "/health") return json({ ok: true });
     return new Response("Not found", { status: 404 });
