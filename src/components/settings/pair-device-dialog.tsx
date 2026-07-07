@@ -22,6 +22,8 @@ type Stage = "pick" | "code";
 type PairCodeResponse = {
   code: string;
   expiresAt: string;
+  serverUrl: string | null;
+  mdnsUrl: string | null;
 };
 
 type PairDeviceDialogProps = {
@@ -46,6 +48,8 @@ export function PairDeviceDialog({
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState<string | null>(null);
+  const [serverUrl, setServerUrl] = useState<string | null>(null);
+  const [mdnsUrl, setMdnsUrl] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [copied, setCopied] = useState(false);
@@ -60,6 +64,8 @@ export function PairDeviceDialog({
       setGenerating(false);
       setError(null);
       setCode(null);
+      setServerUrl(null);
+      setMdnsUrl(null);
       setExpiresAt(null);
       setSecondsLeft(0);
       setCopied(false);
@@ -118,6 +124,8 @@ export function PairDeviceDialog({
       }
       const data = (await res.json()) as PairCodeResponse;
       setCode(data.code);
+      setServerUrl(data.serverUrl);
+      setMdnsUrl(data.mdnsUrl);
       setExpiresAt(new Date(data.expiresAt));
       setStage("code");
     } catch {
@@ -137,9 +145,19 @@ export function PairDeviceDialog({
     ? `${code.slice(0, 3)}-${code.slice(3)}`
     : null;
 
+  // Prefer the server-reported LAN address: the kiosk browser runs on
+  // localhost, so window.location.origin would send the phone to itself.
+  // The mDNS origin rides along as `alt` so the app can re-find the board
+  // after a DHCP lease change invalidates the primary LAN IP.
+  const qrOrigin =
+    serverUrl ??
+    (typeof window !== "undefined" ? window.location.origin : null);
+  const qrAlt = mdnsUrl && mdnsUrl !== qrOrigin ? mdnsUrl : null;
   const qrValue =
-    code && typeof window !== "undefined"
-      ? `familyboard://pair?url=${window.location.origin}&code=${code}`
+    code && qrOrigin
+      ? `familyboard://pair?url=${encodeURIComponent(qrOrigin)}${
+          qrAlt ? `&alt=${encodeURIComponent(qrAlt)}` : ""
+        }&code=${code}`
       : "";
 
   async function handleCopy() {
@@ -156,6 +174,8 @@ export function PairDeviceDialog({
   function handleGoBack() {
     setStage("pick");
     setCode(null);
+    setServerUrl(null);
+    setMdnsUrl(null);
     setExpiresAt(null);
     setSecondsLeft(0);
     setPin("");

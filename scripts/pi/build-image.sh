@@ -112,6 +112,7 @@ cp -r "$SCRIPT_DIR/pi-gen-stage/stage3/00-familyboard-install" "$CUSTOM_STAGE"
 mkdir -p "$CUSTOM_STAGE/files"
 cp "$SCRIPT_DIR/sudoers.d/familyboard-network"      "$CUSTOM_STAGE/files/familyboard-network"
 cp "$SCRIPT_DIR/familyboard.service"               "$CUSTOM_STAGE/files/familyboard.service"
+cp "$SCRIPT_DIR/familyboard-avahi.service"         "$CUSTOM_STAGE/files/familyboard-avahi.service"
 cp "$SCRIPT_DIR/firstboot-secrets.sh"              "$CUSTOM_STAGE/files/firstboot-secrets.sh"
 cp "$SCRIPT_DIR/familyboard-firstboot.service"     "$CUSTOM_STAGE/files/familyboard-firstboot.service"
 # The Pi compose override is baked from this working tree (not the cloned main)

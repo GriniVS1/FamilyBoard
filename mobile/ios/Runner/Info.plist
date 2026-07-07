@@ -71,10 +71,33 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>UIBackgroundModes</key>
+	<key>CFBundleURLTypes</key>
 	<array>
-  		<string>fetch</string>
-  		<string>remote-notification</string>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.familyboard.pair</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>familyboard</string>
+			</array>
+		</dict>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>FamilyBoard uses the camera to scan the QR pairing code shown on your FamilyBoard.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>FamilyBoard looks for your board on the home network so it can reconnect automatically if its address changes.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_familyboard._tcp</string>
+	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>de</string>
+		<string>fr</string>
+		<string>it</string>
 	</array>
 </dict>
 </plist>

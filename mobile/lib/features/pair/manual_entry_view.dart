@@ -12,11 +12,17 @@ class ManualEntryView extends ConsumerStatefulWidget {
     required this.initialServerUrl,
     required this.initialCode,
     required this.initialDeviceName,
+    this.initialAltUrl,
   });
 
   final String initialServerUrl;
   final String initialCode;
   final String initialDeviceName;
+
+  /// Optional fallback URL carried from the QR code's `alt` parameter.
+  /// Not user-editable — there is no text field for it, it just rides along
+  /// to [PairController.submit] so connection recovery has a fallback host.
+  final String? initialAltUrl;
 
   @override
   ConsumerState<ManualEntryView> createState() => _ManualEntryViewState();
@@ -146,6 +152,7 @@ class _ManualEntryViewState extends ConsumerState<ManualEntryView> {
           serverUrl: server,
           code: code,
           deviceName: name,
+          altUrl: widget.initialAltUrl,
         );
   }
 

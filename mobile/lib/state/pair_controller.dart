@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/session.dart';
 import '../services/fcm_service.dart';
+import '../services/identity_service.dart';
 import '../services/pair_service.dart';
 import 'session_provider.dart';
 
@@ -37,6 +38,7 @@ class PairController extends Notifier<PairFormState> {
     required String serverUrl,
     required String code,
     required String deviceName,
+    String? altUrl,
   }) async {
     state = const PairFormState.submitting();
     final PairService pairService = ref.read(pairServiceProvider);
@@ -46,6 +48,7 @@ class PairController extends Notifier<PairFormState> {
           serverUrl: serverUrl,
           code: code,
           deviceName: deviceName,
+          altUrl: altUrl,
         ),
       );
       await ref.read(sessionProvider.notifier).adopt(session);
@@ -53,6 +56,12 @@ class PairController extends Notifier<PairFormState> {
       // FCM enrollment: intentionally non-blocking so the pair flow never
       // freezes waiting for a slow system permission dialog.
       unawaited(_enrollFcm(session));
+
+      // Fetches the wall's stable identity so connection recovery can later
+      // verify a rediscovered host by ID instead of just guessing. Also
+      // non-blocking — a slow/unreachable identity call must not stall the
+      // transition to Home after a successful pair.
+      unawaited(_fetchIdentity(session));
 
       state = const PairFormState.idle();
       return true;
@@ -74,6 +83,18 @@ class PairController extends Notifier<PairFormState> {
     final String? token = await fcm.getToken();
     if (token != null) {
       await fcm.registerWithWall(session, token);
+    }
+  }
+
+  /// Fetches `GET /api/mobile/identity` on the just-paired `serverUrl` and
+  /// persists `installationId` onto the session.
+  Future<void> _fetchIdentity(Session session) async {
+    final IdentityService identity = ref.read(identityServiceProvider);
+    final IdentityResult? result = await identity.fetch(session.serverUrl);
+    if (result != null) {
+      await ref
+          .read(sessionProvider.notifier)
+          .updateInstallationId(result.installationId);
     }
   }
 

@@ -93,6 +93,37 @@ Inside the existing `<activity android:name=".MainActivity" ...>`, add:
 > `app_links` package lands. The scheme is registered now so we don't have to
 > touch the native projects again later.
 
+## Self-healing connection (mDNS discovery) setup
+
+The wall's LAN IP can change after a DHCP lease renewal. To survive that
+without re-pairing, the QR code's `url` param may be paired with an optional
+`alt` fallback URL, and the app falls back further to scanning the LAN for
+the wall's `_familyboard._tcp` mDNS service (`package:nsd`) — see
+`lib/services/connection_recovery_service.dart`.
+
+### Android — `android/app/src/main/AndroidManifest.xml`
+
+`package:nsd` needs multicast to receive mDNS replies. Add next to the
+existing `INTERNET` permission:
+
+```xml
+<uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+```
+
+### iOS — `ios/Runner/Info.plist`
+
+Already updated in git — local-network + Bonjour usage keys, required for
+`nsd` to discover the wall on iOS 14+:
+
+```xml
+<key>NSLocalNetworkUsageDescription</key>
+<string>FamilyBoard looks for your board on the home network so it can reconnect automatically if its address changes.</string>
+<key>NSBonjourServices</key>
+<array>
+  <string>_familyboard._tcp</string>
+</array>
+```
+
 ## Project layout
 
 ```
@@ -145,6 +176,7 @@ All endpoints are on the FamilyBoard wall under the user-supplied
 | `POST` | `/api/devices/pair` | body `{ code, name, platform }`, returns `{ token, deviceId, member, family }` |
 | `POST` | `/api/devices/me/heartbeat` | bearer required, returns `{ ok, deviceId, memberId, lastSeenAt }` |
 | `POST` | `/api/devices/me/fcm-token` | bearer required; body `{ fcmToken? }` or `{ apnsToken? }` on iOS; wired in M2.3 |
+| `GET` | `/api/mobile/identity` | unauthenticated; `{ installationId, familyName, appVersion }` (accepts `{ data: {...} }` or flat); used to verify a rediscovered host during connection recovery |
 
 ## Android FCM setup
 

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { verifyAdminPin } from "@/lib/pin";
 import { getClientIp, hitRateLimit } from "@/lib/rate-limit";
 import { generatePairingCode } from "@/lib/mobile-tokens";
+import { getLanBaseUrl, getMdnsBaseUrl } from "@/lib/network";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -68,5 +69,14 @@ export const POST = withErrorHandling(async (req) => {
     },
   });
 
-  return ok({ code, expiresAt });
+  // LAN-reachable base URL for the QR code — the kiosk browser itself runs on
+  // localhost, so the client's window.location.origin is useless to a phone.
+  // mdnsUrl rides along as the QR's fallback so the app can recover when a
+  // DHCP lease change invalidates the embedded LAN IP.
+  return ok({
+    code,
+    expiresAt,
+    serverUrl: getLanBaseUrl(),
+    mdnsUrl: getMdnsBaseUrl(),
+  });
 });
