@@ -6,10 +6,18 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 import '../../l10n/generated/app_localizations.dart';
 
 class ScannedPairPayload {
-  const ScannedPairPayload({required this.serverUrl, required this.code});
+  const ScannedPairPayload({
+    required this.serverUrl,
+    required this.code,
+    this.altUrl,
+  });
 
   final String serverUrl;
   final String code;
+
+  /// Optional fallback URL (typically an mDNS hostname) carried by newer QR
+  /// codes as the `alt` query parameter. Null for older QR codes.
+  final String? altUrl;
 }
 
 class QrScannerView extends StatefulWidget {
@@ -107,6 +115,11 @@ class _QrScannerViewState extends State<QrScannerView> {
     if (code == null || code.isEmpty || url == null || url.isEmpty) {
       return null;
     }
-    return ScannedPairPayload(serverUrl: url, code: code);
+    final String? alt = uri.queryParameters['alt'];
+    return ScannedPairPayload(
+      serverUrl: url,
+      code: code,
+      altUrl: alt != null && alt.isNotEmpty ? alt : null,
+    );
   }
 }

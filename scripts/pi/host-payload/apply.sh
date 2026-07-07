@@ -52,6 +52,12 @@ install_file "$SRC/familyboard.service"         /etc/systemd/system/familyboard.
 # --- compose override (picked up on the next `docker compose up`) ---------------
 install_file "$SRC/docker-compose.pi.yml" /opt/familyboard/docker-compose.pi.yml 644
 
+# --- mDNS service advert (_familyboard._tcp) for mobile re-discovery ------------
+# avahi watches /etc/avahi/services and reloads changed files automatically.
+if [[ -d /etc/avahi/services ]]; then
+  install_file "$SRC/familyboard-avahi.service" /etc/avahi/services/familyboard.service 644
+fi
+
 # --- updater config: only seed if missing (may carry per-device overrides) ------
 if [[ ! -f /etc/familyboard/updater.env ]]; then
   install_file "$SRC/updater.env" /etc/familyboard/updater.env 644

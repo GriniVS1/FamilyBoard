@@ -56,6 +56,8 @@ class Session {
     required this.deviceId,
     required this.member,
     required this.family,
+    this.altUrl,
+    this.installationId,
   });
 
   factory Session.fromJson(Map<String, Object?> json) {
@@ -63,12 +65,19 @@ class Session {
         (json['member']! as Map<Object?, Object?>).cast<String, Object?>();
     final Map<String, Object?> familyJson =
         (json['family']! as Map<Object?, Object?>).cast<String, Object?>();
+    final Object? altUrlRaw = json['altUrl'];
+    final Object? installationIdRaw = json['installationId'];
     return Session(
       serverUrl: json['serverUrl']! as String,
       token: json['token']! as String,
       deviceId: json['deviceId']! as String,
       member: Member.fromJson(memberJson),
       family: Family.fromJson(familyJson),
+      altUrl: altUrlRaw is String && altUrlRaw.isNotEmpty ? altUrlRaw : null,
+      installationId:
+          installationIdRaw is String && installationIdRaw.isNotEmpty
+              ? installationIdRaw
+              : null,
     );
   }
 
@@ -86,13 +95,40 @@ class Session {
   final Member member;
   final Family family;
 
+  /// Fallback server URL (typically an mDNS hostname) scanned from the same
+  /// QR code as [serverUrl]. Used by connection recovery when [serverUrl]
+  /// (a LAN IP) goes stale after a DHCP lease change. Null for older
+  /// pairings or manual entry.
+  final String? altUrl;
+
+  /// Stable identity of the paired wall (`Installation.id` on the server),
+  /// fetched from `GET /api/mobile/identity`. Used to verify that a
+  /// rediscovered host is actually the same wall before trusting it. Null
+  /// until the first successful identity fetch.
+  final String? installationId;
+
   Map<String, Object?> toJson() => <String, Object?>{
         'serverUrl': serverUrl,
         'token': token,
         'deviceId': deviceId,
         'member': member.toJson(),
         'family': family.toJson(),
+        if (altUrl != null) 'altUrl': altUrl,
+        if (installationId != null) 'installationId': installationId,
       };
 
   String encode() => jsonEncode(toJson());
+
+  Session copyWith(
+      {String? serverUrl, String? altUrl, String? installationId}) {
+    return Session(
+      serverUrl: serverUrl ?? this.serverUrl,
+      token: token,
+      deviceId: deviceId,
+      member: member,
+      family: family,
+      altUrl: altUrl ?? this.altUrl,
+      installationId: installationId ?? this.installationId,
+    );
+  }
 }

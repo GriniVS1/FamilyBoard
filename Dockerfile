@@ -54,6 +54,7 @@ COPY --from=builder /app/scripts/pi/host-payload/apply.sh \
      /app/scripts/pi/familyboard-updater.timer \
      /app/scripts/pi/familyboard-updater.path \
      /app/scripts/pi/familyboard.service \
+     /app/scripts/pi/familyboard-avahi.service \
      /app/scripts/pi/updater.env \
      /app/scripts/pi/sudoers.d/familyboard-network \
      ./host-payload/

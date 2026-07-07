@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone='no'?><!--*-nxml-*-->
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<!-- Advertises the wall app as _familyboard._tcp so the mobile app can
+     re-discover the board after a DHCP lease change moved its LAN IP.
+     Installed to /etc/avahi/services/familyboard.service (host payload +
+     pi-gen stage3); avahi picks up changes to that directory automatically. -->
+<service-group>
+  <name replace-wildcards="yes">FamilyBoard on %h</name>
+  <service>
+    <type>_familyboard._tcp</type>
+    <port>3000</port>
+  </service>
+</service-group>

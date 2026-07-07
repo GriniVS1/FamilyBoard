@@ -22,6 +22,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
   _PairMode _mode = _PairMode.chooser;
   String _initialServerUrl = '';
   String _initialCode = '';
+  String? _initialAltUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -86,6 +87,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
                 initialServerUrl: _initialServerUrl,
                 initialCode: _initialCode,
                 initialDeviceName: _defaultDeviceName(),
+                initialAltUrl: _initialAltUrl,
               ),
             ],
           ),
@@ -104,6 +106,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
     setState(() {
       _initialServerUrl = payload.serverUrl;
       _initialCode = payload.code;
+      _initialAltUrl = payload.altUrl;
       _mode = _PairMode.manual;
     });
   }

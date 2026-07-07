@@ -9,6 +9,7 @@
 install -d "${ROOTFS_DIR}/tmp/pi-gen-files"
 install -m 644 files/familyboard-network           "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-network"
 install -m 644 files/familyboard.service           "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard.service"
+install -m 644 files/familyboard-avahi.service     "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-avahi.service"
 install -m 644 files/firstboot-secrets.sh          "${ROOTFS_DIR}/tmp/pi-gen-files/firstboot-secrets.sh"
 install -m 644 files/familyboard-firstboot.service "${ROOTFS_DIR}/tmp/pi-gen-files/familyboard-firstboot.service"
 install -m 644 files/docker-compose.pi.yml         "${ROOTFS_DIR}/tmp/pi-gen-files/docker-compose.pi.yml"
@@ -172,8 +173,11 @@ install -m 750 -o root -g root /tmp/pi-gen-files/firstboot-secrets.sh /usr/local
 cp /tmp/pi-gen-files/familyboard-firstboot.service /etc/systemd/system/familyboard-firstboot.service
 systemctl enable familyboard-firstboot.service
 
-# Avahi for mDNS (familyboard.local)
+# Avahi for mDNS (familyboard.local) + _familyboard._tcp service advert so the
+# mobile app can re-discover the board after a DHCP lease change.
 systemctl enable avahi-daemon
+install -d -m 755 /etc/avahi/services
+install -m 644 -o root -g root /tmp/pi-gen-files/familyboard-avahi.service /etc/avahi/services/familyboard.service
 
 # ---------------------------------------------------------------------------
 # OTA updater — host script + config + release public key + systemd units.

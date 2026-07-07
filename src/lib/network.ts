@@ -65,6 +65,14 @@ export function getLanBaseUrl(): string | null {
   return `http://${candidates[0].address}:${port}`;
 }
 
+// The .local origin (e.g. http://familyboard.local:3000) when the deployment
+// advertises one — used as the pairing QR's fallback URL so phones can recover
+// when the DHCP lease changes the LAN IP embedded as the primary URL.
+export function getMdnsBaseUrl(): string | null {
+  const configured = new URL(env.NEXTAUTH_URL);
+  return configured.hostname.endsWith(".local") ? configured.origin : null;
+}
+
 export class NetworkError extends Error {
   constructor(
     public readonly code:

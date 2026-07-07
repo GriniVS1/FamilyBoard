@@ -1,12 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../db/cache_db.dart';
 import '../models/session.dart';
 import '../services/api_client.dart';
+import '../services/connection_recovery_service.dart';
 import '../services/events_service.dart';
 import '../services/fcm_service.dart';
 import '../services/grocery_service.dart';
 import '../services/heartbeat_service.dart';
+import '../services/identity_service.dart';
 import '../services/meal_plan_service.dart';
 import '../services/mutations_service.dart';
 import '../services/notes_service.dart';
@@ -15,11 +19,43 @@ import '../services/secure_storage.dart';
 import '../services/today_service.dart';
 import '../services/write_queue_service.dart';
 
-final Provider<ApiClientFactory> apiClientFactoryProvider =
-    Provider<ApiClientFactory>((Ref ref) => const ApiClientFactory());
-
 final Provider<SecureSessionStore> sessionStoreProvider =
     Provider<SecureSessionStore>((Ref ref) => SecureSessionStore());
+
+/// Unauthenticated identity probe (`GET /api/mobile/identity`) — used after
+/// pairing and during connection recovery. Kept separate from
+/// [apiClientFactoryProvider] so it never recurses through the recovery hook
+/// it is itself used to implement.
+final Provider<IdentityService> identityServiceProvider =
+    Provider<IdentityService>((Ref ref) => IdentityService());
+
+/// Finds the wall again on the LAN (alt URL, then mDNS) when its IP changes.
+final Provider<ConnectionRecoveryService> connectionRecoveryServiceProvider =
+    Provider<ConnectionRecoveryService>(
+  (Ref ref) => ConnectionRecoveryService(
+    identityService: ref.watch(identityServiceProvider),
+  ),
+);
+
+/// Wires [ApiClientFactory]'s error-interceptor recovery hook to
+/// [ConnectionRecoveryService] + [SessionNotifier], so a rediscovered URL is
+/// persisted before the failed request is retried against it.
+final Provider<ApiClientFactory> apiClientFactoryProvider =
+    Provider<ApiClientFactory>((Ref ref) {
+  return ApiClientFactory(
+    recovery: (Session session) async {
+      final RecoveredConnection? recovered =
+          await ref.read(connectionRecoveryServiceProvider).recover(session);
+      if (recovered == null) {
+        return null;
+      }
+      await ref
+          .read(sessionProvider.notifier)
+          .applyRecoveredConnection(recovered);
+      return recovered.serverUrl;
+    },
+  );
+});
 
 final Provider<CacheDb> cacheDbProvider =
     Provider<CacheDb>((_) => CacheDb.instance);
@@ -123,11 +159,53 @@ class SessionNotifier extends Notifier<SessionState> {
     state = stored == null
         ? const SessionState.none()
         : SessionState.signedIn(stored);
+    if (stored != null && stored.installationId == null) {
+      // Device paired before the installationId contract existed. Backfill
+      // it opportunistically so connection recovery can verify candidates
+      // by identity instead of falling back to "exactly one host found".
+      unawaited(_backfillInstallationId(stored));
+    }
+  }
+
+  Future<void> _backfillInstallationId(Session session) async {
+    final IdentityResult? result =
+        await ref.read(identityServiceProvider).fetch(session.serverUrl);
+    if (result != null) {
+      await updateInstallationId(result.installationId);
+    }
   }
 
   Future<void> adopt(Session session) async {
     await ref.read(sessionStoreProvider).write(session);
     state = SessionState.signedIn(session);
+  }
+
+  /// Persists a rediscovered `serverUrl` (and its verified `installationId`)
+  /// after the wall's LAN IP changed. No-op if the session was cleared out
+  /// from under a concurrent recovery attempt.
+  Future<void> applyRecoveredConnection(RecoveredConnection recovered) async {
+    final Session? current = state.session;
+    if (current == null) {
+      return;
+    }
+    final Session updated = current.copyWith(
+      serverUrl: recovered.serverUrl,
+      installationId: recovered.installationId,
+    );
+    await ref.read(sessionStoreProvider).write(updated);
+    state = SessionState.signedIn(updated);
+  }
+
+  /// Backfills [Session.installationId] for a pairing that predates this
+  /// field, without touching `serverUrl`.
+  Future<void> updateInstallationId(String installationId) async {
+    final Session? current = state.session;
+    if (current == null || current.installationId == installationId) {
+      return;
+    }
+    final Session updated = current.copyWith(installationId: installationId);
+    await ref.read(sessionStoreProvider).write(updated);
+    state = SessionState.signedIn(updated);
   }
 
   Future<void> clear() async {
