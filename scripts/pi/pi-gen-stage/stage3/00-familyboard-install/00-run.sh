@@ -186,6 +186,9 @@ install -m 644 -o root -g root /tmp/pi-gen-files/updater.env      /etc/familyboa
 install -m 644 -o root -g root /tmp/pi-gen-files/release-pub.pem   /etc/familyboard/release-pub.pem
 # Seed the running version so the updater only applies strictly newer releases.
 install -m 644 -o root -g root /tmp/pi-gen-files/current-version   /var/lib/familyboard/current-version
+# Seed the host-payload version too: this base already carries these host files,
+# so the app container's host-sync (scripts/host-sync.sh) skips the first boot.
+install -m 644 -o root -g root /tmp/pi-gen-files/current-version   /var/lib/familyboard/host-payload-version
 cp /tmp/pi-gen-files/familyboard-updater.service /etc/systemd/system/familyboard-updater.service
 cp /tmp/pi-gen-files/familyboard-updater.timer   /etc/systemd/system/familyboard-updater.timer
 cp /tmp/pi-gen-files/familyboard-updater.path    /etc/systemd/system/familyboard-updater.path
