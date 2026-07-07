@@ -3,8 +3,14 @@ import "server-only";
 import type { calendar_v3 } from "googleapis";
 import { db } from "./db";
 import { getCalendarForMember, isNotFoundLike, listIncrementalEvents } from "./google";
-import { googleConfigured } from "./env";
+import { googleConfigured, brokerConfigured } from "./env";
 import { normalizeRruleForUntilDateOnly } from "./rrule";
+
+// Google sync is possible either with local client credentials (self-hosted) or
+// through the OAuth broker (shipped devices). Per-member gating still happens on
+// googleRefreshTokenEnc/googleSyncEnabled below, so this only short-circuits
+// deployments where neither path exists.
+const googleSyncPossible = googleConfigured || brokerConfigured;
 
 export type SyncCounts = {
   pulled: number;
@@ -46,7 +52,7 @@ function parseGoogleDateTime(
 }
 
 export async function pullForMember(memberId: string): Promise<SyncCounts> {
-  if (!googleConfigured) return ZERO;
+  if (!googleSyncPossible) return ZERO;
   const member = await db.member.findUnique({ where: { id: memberId } });
   if (!member || !member.googleSyncEnabled || !member.googleRefreshTokenEnc) {
     return ZERO;
@@ -147,7 +153,7 @@ function toGoogleDateTime(date: Date, allDay: boolean): calendar_v3.Schema$Event
 }
 
 export async function pushLocalEvent(eventId: string): Promise<SyncCounts> {
-  if (!googleConfigured) return ZERO;
+  if (!googleSyncPossible) return ZERO;
   const event = await db.event.findUnique({ where: { id: eventId } });
   if (!event || event.source !== "LOCAL") return ZERO;
   const member = await db.member.findUnique({ where: { id: event.memberId } });
@@ -208,7 +214,7 @@ function recurrenceIdToBasicUtc(recurrenceId: string, allDay: boolean): string {
 }
 
 export async function pushOverrideToGoogle(masterId: string, recurrenceId: string): Promise<void> {
-  if (!googleConfigured) return;
+  if (!googleSyncPossible) return;
 
   const master = await db.event.findUnique({ where: { id: masterId } });
   if (!master || master.source !== "LOCAL" || !master.googleEventId) return;
@@ -306,7 +312,7 @@ export async function pushOverrideToGoogle(masterId: string, recurrenceId: strin
 }
 
 export async function deleteRemoteEvent(eventId: string): Promise<void> {
-  if (!googleConfigured) return;
+  if (!googleSyncPossible) return;
   const event = await db.event.findUnique({ where: { id: eventId } });
   if (!event || !event.googleEventId) return;
   const member = await db.member.findUnique({ where: { id: event.memberId } });
@@ -329,7 +335,7 @@ export async function deleteRemoteEvent(eventId: string): Promise<void> {
 }
 
 export async function runGoogleSyncForAllMembers(): Promise<SyncCounts> {
-  if (!googleConfigured) return ZERO;
+  if (!googleSyncPossible) return ZERO;
   const members = await db.member.findMany({
     where: { googleSyncEnabled: true, googleRefreshTokenEnc: { not: null } },
   });
