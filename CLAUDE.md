@@ -185,7 +185,7 @@ Never route secrets (API tokens, client secrets, private keys, PINs) through cha
 - **Base image** (flashed before shipping a Pi): `bash scripts/pi/build-image.sh vX.Y.ZZ` (pi-gen, needs Docker Desktop + buildx). A local build **does not publish** anything.
 - **OTA release**: push a git tag `vX.Y.ZZ` → `.github/workflows/release.yml` builds arm64, signs, uploads to R2. Only a tag publishes.
 - **Versions are zero-padded** (`v1.1.02`, `v1.1.04`) so `sort -V` orders correctly.
-- **App-only change** → OTA release is enough. **Host change** (updater script, systemd units, kiosk) → needs a new base image.
+- **Everything ships via OTA — shipped devices are never re-flashed.** Host-side changes (updater script, systemd units, compose override, sudoers, packages) ride the **host payload** baked into every app image (`scripts/pi/host-payload/apply.sh` + files listed in the Dockerfile's `./host-payload/` COPY): at container start, `scripts/host-sync.sh` streams it onto the host via `sudo nsenter -t 1` (the container is privileged + pid:host) and runs `apply.sh` when `/var/lib/familyboard/host-payload-version` ≠ `APP_VERSION`. New host file → add it to the payload COPY list **and** `apply.sh`. **`apply.sh` must NEVER restart `familyboard.service` or `familyboard-updater.service`** (would kill the driving container / the updater mid-health-check); unit changes take effect on their next natural start. Base images are only the factory starting point.
 
 ### OTA architecture
 
