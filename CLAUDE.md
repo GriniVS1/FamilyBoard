@@ -157,3 +157,53 @@ Rules:
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
+## Working conventions, ops & gotchas (durable)
+
+### Git / repo
+
+- Repo **GriniVS1/FamilyBoard is PUBLIC**. Domain **familyboard.ch** on Cloudflare.
+- **OneDrive flips file-mode bits** (`100644↔100755`) across the whole tree → massive phantom diffs. Leave mode bits alone (do not touch `core.fileMode`). Stage **content only**: `git -c core.fileMode=false add <files>` — **never** `git add -A`.
+- **SSH push is broken.** Push/fetch over HTTPS with the gh token: `git push https://github.com/GriniVS1/FamilyBoard.git <branch>` ; `git fetch https://github.com/GriniVS1/FamilyBoard.git main:refs/remotes/origin/main`.
+- **Every PR merge needs the user's explicit "ja"/ok first.** Create the PR, then wait.
+- Commit trailer `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`; PR body ends with the Claude Code generated-with line.
+
+### Broken toolchain symlinks (OneDrive)
+
+`node_modules/.bin/*` symlinks are broken → run tools by direct path:
+- Typecheck: `node node_modules/typescript/lib/tsc.js --noEmit`
+- Build: `NEXT_PHASE=phase-production-build NODE_ENV=production node node_modules/next/dist/bin/next build`
+- Prisma: `node node_modules/prisma/build/index.js …`
+- **Always build with `NODE_ENV=production`** before shipping — dev default masks prod-only failures (e.g. the prod-secret refusal in `env.ts`).
+
+### Secrets
+
+Never route secrets (API tokens, client secrets, private keys, PINs) through chat or screenshots. Interactive secret entry (`wrangler secret put`, Google client secret) is the user's job. For deploys Claude runs, the user exports the token into `~/.zshenv` and Claude reads it from env — verify only set/unset, never print. Client IDs / KV ids / account ids are **not** secret.
+
+### Releases: base image ≠ OTA release
+
+- **Base image** (flashed before shipping a Pi): `bash scripts/pi/build-image.sh vX.Y.ZZ` (pi-gen, needs Docker Desktop + buildx). A local build **does not publish** anything.
+- **OTA release**: push a git tag `vX.Y.ZZ` → `.github/workflows/release.yml` builds arm64, signs, uploads to R2. Only a tag publishes.
+- **Versions are zero-padded** (`v1.1.02`, `v1.1.04`) so `sort -V` orders correctly.
+- **App-only change** → OTA release is enough. **Host change** (updater script, systemd units, kiosk) → needs a new base image.
+
+### OTA architecture
+
+Pull-based over HTTPS, **R2 tarballs** (not a registry), **auto-update always on, no opt-out**. Ed25519-signed manifest: `tool/sign-release.mjs`, public key `tool/release-pub.pem` baked into the image, private key offline with the user. Host updater `scripts/pi/familyboard-updater.sh`: verify sig → download → sha check → `docker load` → health check → rollback on failure; clears the `update-request` flag **at run start** (after flock), not only on success (else the `.path` unit stays armed → stuck "check for updates"). R2 bucket is **EU-jurisdiction** → CI must use the regional endpoint `https://<accountid>.eu.r2.cloudflarestorage.com` (`R2_JURISDICTION` var), served via `updates.familyboard.ch`. Field-device manual unstick: `sudo systemctl start familyboard-updater`.
+
+### Google OAuth broker
+
+Central Cloudflare Worker at `familyboard.ch/oauth/*` (dir `broker/`), so shipped devices need no per-family Google credentials. `connect-google` → broker `POST /oauth/google/start` (stores pending state in KV 10 min, returns authorizeUrl) → `GET /oauth/google/callback` exchanges the code, encrypts the refresh token, 302s back → device `/api/auth/google/adopt` decrypts (AES-256-GCM, framing `iv(12)||ct||tag(16)`). **Login works.**
+- **KNOWN GAP (open):** calendar **sync** on broker devices needs the client secret to refresh the access token, and that secret lives only on the broker. Fix = broker `POST /oauth/google/refresh` (mint access token from refresh token) + device `google.ts` obtains tokens via the broker in broker mode + relax the `googleConfigured` guards in `src/lib/sync.ts`.
+
+### Security posture
+
+- Prod refuses to start with default `ENCRYPTION_KEY`/`NEXTAUTH_SECRET` — but the check is **guarded by `NEXT_PHASE === "phase-production-build"`** so `next build` (which runs under `NODE_ENV=production`) isn't blocked. Keep that guard.
+- `TRUST_PROXY` gates whether `x-forwarded-for` is honored (behind Cloudflare/reverse proxy only).
+- Admin PIN endpoints go through `requireAdminPin` (rate-limited); internal endpoints through `requireInternalOrAdmin`.
+
+### Recurring field-bug patterns
+
+- **API ↔ widget field-name drift** → `NaN`/blank UI (weather widget expected `ts`/`maxC`/`minC` vs API `time`/`tempMaxC`). Keep response shape and consumer in sync.
+- **Kiosk has no system on-screen keyboard** — our React OSK can't cover third-party pages (e.g. Google's login). Needs an X11-wide OSK (`onboard`) baked into the image.
+- **Pi has a single WiFi radio** → phone-based WiFi setup has a ~5-min timeout; don't assume simultaneous AP + client.
