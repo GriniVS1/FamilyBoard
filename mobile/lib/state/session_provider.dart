@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../db/cache_db.dart';
 import '../models/session.dart';
 import '../services/api_client.dart';
+import '../services/calendar_setup_service.dart';
 import '../services/connection_recovery_service.dart';
 import '../services/events_service.dart';
 import '../services/fcm_service.dart';
@@ -126,6 +127,12 @@ final Provider<MealPlanService> mealPlanServiceProvider =
     clientFactory: ref.watch(apiClientFactoryProvider),
     cacheDb: ref.watch(cacheDbProvider),
   ),
+);
+
+final Provider<CalendarSetupService> calendarSetupServiceProvider =
+    Provider<CalendarSetupService>(
+  (Ref ref) =>
+      CalendarSetupService(clientFactory: ref.watch(apiClientFactoryProvider)),
 );
 
 class SessionState {

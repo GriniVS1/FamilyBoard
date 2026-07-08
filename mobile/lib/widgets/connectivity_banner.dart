@@ -27,7 +27,7 @@ class ConnectivityBanner extends ConsumerWidget {
       transitionBuilder: (Widget child, Animation<double> animation) {
         return SizeTransition(
           sizeFactor: animation,
-          axisAlignment: -1,
+          alignment: Alignment.topLeft,
           child: child,
         );
       },

@@ -6,7 +6,20 @@ import { exchangeCodeForTokens, pullForMicrosoftMember } from "@/lib/microsoft";
 
 export const runtime = "nodejs";
 
-function redirect(status: "connected" | "error", memberId?: string, reason?: string) {
+function redirect(
+  status: "connected" | "error",
+  memberId?: string,
+  reason?: string,
+  source?: "mobile",
+) {
+  if (source === "mobile") {
+    const url = new URL("/calendar-connected", env.NEXTAUTH_URL);
+    url.searchParams.set("provider", "microsoft");
+    url.searchParams.set("status", status);
+    if (memberId) url.searchParams.set("member", memberId);
+    if (status === "error" && reason) url.searchParams.set("reason", reason);
+    return NextResponse.redirect(url);
+  }
   const url = new URL("/settings", env.NEXTAUTH_URL);
   url.searchParams.set("microsoft", status);
   if (memberId) url.searchParams.set("member", memberId);
@@ -35,25 +48,30 @@ export async function GET(req: Request) {
     return redirect("error", undefined, "invalid_state");
   }
 
-  let stateData: { memberId: string; expiresAt: number };
+  let stateData: { memberId: string; expiresAt: number; source?: "mobile" };
   try {
-    stateData = JSON.parse(stateRow.value) as { memberId: string; expiresAt: number };
+    stateData = JSON.parse(stateRow.value) as {
+      memberId: string;
+      expiresAt: number;
+      source?: "mobile";
+    };
   } catch {
     return redirect("error", undefined, "invalid_state");
   }
+  const { source } = stateData;
 
   if (Date.now() > stateData.expiresAt) {
-    return redirect("error", stateData.memberId, "expired_state");
+    return redirect("error", stateData.memberId, "expired_state", source);
   }
 
   const member = await db.member.findUnique({ where: { id: stateData.memberId } });
-  if (!member) return redirect("error", stateData.memberId, "member_missing");
+  if (!member) return redirect("error", stateData.memberId, "member_missing", source);
 
   let tokens: Awaited<ReturnType<typeof exchangeCodeForTokens>>;
   try {
     tokens = await exchangeCodeForTokens(code);
   } catch {
-    return redirect("error", stateData.memberId, "token_exchange_failed");
+    return redirect("error", stateData.memberId, "token_exchange_failed", source);
   }
 
   await db.member.update({
@@ -75,5 +93,5 @@ export async function GET(req: Request) {
     );
   });
 
-  return redirect("connected", stateData.memberId);
+  return redirect("connected", stateData.memberId, undefined, source);
 }

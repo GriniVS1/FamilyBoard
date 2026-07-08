@@ -7,20 +7,26 @@ family member a phone-sized view of today's events, chores, and to-dos.
 
 ## First-time setup
 
-The Dart code in `lib/` was hand-authored. The native iOS/Android project
-shells are NOT in git. Run this once after you clone:
+The Dart code in `lib/` was hand-authored. The native iOS and Android project
+shells ARE checked in (including the hand-wired `Runner.xcodeproj`: bundle ID
+`com.familyboard.familyboardMobile`, entitlements, deployment target 15.5,
+`GoogleService-Info.plist` reference) — do NOT re-run `flutter create`, it
+overwrites the wiring. After you clone:
 
 ```bash
 # Install Flutter 3.x — https://docs.flutter.dev/get-started/install
 cd mobile
-flutter create --org com.familyboard --platforms=ios,android .
 flutter pub get
 flutter gen-l10n
 ```
 
-`flutter create` adds `ios/`, `android/`, and a default `main.dart`. The
-existing `lib/main.dart` (the one you cloned) takes precedence — Flutter will
-overwrite it. Restore it with `git checkout lib/main.dart`.
+The Firebase config files are gitignored and must be dropped in manually:
+`android/app/google-services.json` and `ios/Runner/GoogleService-Info.plist`
+(both from Firebase Console → Project Settings → Your apps). The iOS file is
+already referenced by the Xcode project — placing it on disk is enough.
+
+For building and uploading the iOS app to TestFlight see
+[`docs/testflight-upload.md`](../docs/testflight-upload.md).
 
 ### Brand the launcher icons (one extra step)
 

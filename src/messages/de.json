@@ -851,5 +851,18 @@
     "tooShort": "Zu kurz.",
     "invalidPin": "Ungültiger PIN.",
     "rateLimited": "Zu viele Versuche. Bitte warten."
+  },
+  "calendarConnected": {
+    "title": "Kalender verbunden",
+    "bodyWithProvider": "Dein {provider}-Kalender ist jetzt mit FamilyBoard verbunden.",
+    "bodyGeneric": "Dein Kalender ist jetzt mit FamilyBoard verbunden.",
+    "instructions": "Du kannst diesen Browser-Tab schliessen und zur FamilyBoard-App zurückkehren.",
+    "errorTitle": "Verbindung fehlgeschlagen",
+    "errorBodyWithProvider": "Dein {provider}-Kalender konnte nicht mit FamilyBoard verbunden werden.",
+    "errorBodyGeneric": "Dein Kalender konnte nicht mit FamilyBoard verbunden werden.",
+    "errorInstructions": "Schliesse diesen Browser-Tab und versuche es erneut in der FamilyBoard-App.",
+    "reasonLabel": "Grund: {reason}",
+    "google": "Google",
+    "microsoft": "Microsoft"
   }
 }

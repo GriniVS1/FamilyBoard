@@ -7,7 +7,15 @@ import { pullForMember } from "@/lib/sync";
 
 export const runtime = "nodejs";
 
-function redirect(reason: string, memberId?: string, ok = false) {
+function redirect(reason: string, memberId?: string, ok = false, source?: "mobile") {
+  if (source === "mobile") {
+    const url = new URL("/calendar-connected", env.NEXTAUTH_URL);
+    url.searchParams.set("provider", "google");
+    url.searchParams.set("status", ok ? "connected" : "error");
+    if (memberId) url.searchParams.set("member", memberId);
+    if (!ok) url.searchParams.set("reason", reason);
+    return NextResponse.redirect(url);
+  }
   const url = new URL("/settings", env.NEXTAUTH_URL);
   url.searchParams.set("google", ok ? "connected" : "error");
   if (memberId) url.searchParams.set("member", memberId);
@@ -36,17 +44,18 @@ export async function GET(req: Request) {
     return redirect("invalid_state");
   }
 
-  let stateData: { memberId: string; expiresAt: number };
+  let stateData: { memberId: string; expiresAt: number; source?: "mobile" };
   try {
     stateData = JSON.parse(stateRow.value);
   } catch {
     return redirect("invalid_state");
   }
+  const { source } = stateData;
 
-  if (Date.now() > stateData.expiresAt) return redirect("expired_state");
+  if (Date.now() > stateData.expiresAt) return redirect("expired_state", stateData.memberId, false, source);
 
   const member = await db.member.findUnique({ where: { id: stateData.memberId } });
-  if (!member) return redirect("member_missing", stateData.memberId);
+  if (!member) return redirect("member_missing", stateData.memberId, false, source);
 
   let tokens: {
     access_token?: string | null;
@@ -58,11 +67,11 @@ export async function GET(req: Request) {
     const res = await client.getToken(code);
     tokens = res.tokens;
   } catch {
-    return redirect("token_exchange_failed", stateData.memberId);
+    return redirect("token_exchange_failed", stateData.memberId, false, source);
   }
 
   if (!tokens.refresh_token) {
-    return redirect("no_refresh_token", stateData.memberId);
+    return redirect("no_refresh_token", stateData.memberId, false, source);
   }
 
   let email: string | undefined;
@@ -94,5 +103,5 @@ export async function GET(req: Request) {
     );
   });
 
-  return redirect("ok", stateData.memberId, true);
+  return redirect("ok", stateData.memberId, true, source);
 }
