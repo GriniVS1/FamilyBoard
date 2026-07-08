@@ -2,24 +2,16 @@
 
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  Calendar,
-  ChefHat,
-  Home,
-  Image as ImageIcon,
-  ListTodo,
-  Settings,
-  Star,
-  StickyNote,
-  type LucideIcon,
-} from "lucide-react";
+import { Home, Settings, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/shared/logo";
+import { NAV_HREF, NAV_ICON } from "@/components/shared/nav-icons";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { ActivationScreen } from "@/components/license/activation-screen";
 import { LicenseBanner } from "@/components/license/license-banner";
 import { useLicense } from "@/components/license/use-license";
 import { UpdateSuccessToast } from "@/components/dashboard/update-success-toast";
+import { useNavConfig } from "./use-nav-config";
 import { NavItem } from "./nav-item";
 import { TopbarClock } from "./topbar-clock";
 
@@ -29,19 +21,8 @@ type NavEntry = {
   icon: LucideIcon;
 };
 
-const PRIMARY_NAV: NavEntry[] = [
-  { href: "/", labelKey: "dashboard", icon: Home },
-  { href: "/calendar", labelKey: "calendar", icon: Calendar },
-  { href: "/meals", labelKey: "meals", icon: ChefHat },
-  { href: "/chores", labelKey: "chores", icon: Star },
-  { href: "/todos", labelKey: "todos", icon: ListTodo },
-  { href: "/notes", labelKey: "notes", icon: StickyNote },
-];
-
-const SECONDARY_NAV: NavEntry[] = [
-  { href: "/photos", labelKey: "photos", icon: ImageIcon },
-  { href: "/settings", labelKey: "settings", icon: Settings },
-];
+const DASHBOARD_ENTRY: NavEntry = { href: "/", labelKey: "dashboard", icon: Home };
+const SETTINGS_ENTRY: NavEntry = { href: "/settings", labelKey: "settings", icon: Settings };
 
 const PAGE_TITLE_KEYS: Record<string, string> = {
   "/": "dashboard",
@@ -70,13 +51,14 @@ export function AppShell({ children }: AppShellProps) {
   const hideChrome =
     pathname.startsWith("/setup") || pathname.startsWith("/screensaver");
 
-  const { data: license, isLoading } = useLicense();
+  const { data: license, isLoading: licenseLoading } = useLicense();
+  const { data: navConfig, isLoading: navLoading } = useNavConfig();
 
   if (hideChrome) {
     return <>{children}</>;
   }
 
-  if (isLoading) {
+  if (licenseLoading || navLoading) {
     return (
       <div className="min-h-dvh bg-bg flex items-center justify-center">
         <Logo />
@@ -88,6 +70,16 @@ export function AppShell({ children }: AppShellProps) {
   if (license?.gate === "hard") {
     return <ActivationScreen />;
   }
+
+  const configuredEntries: NavEntry[] = (navConfig ?? [])
+    .filter((item) => item.enabled)
+    .map((item) => ({
+      href: NAV_HREF[item.key],
+      labelKey: item.key,
+      icon: NAV_ICON[item.key],
+    }));
+  const sidebarEntries = [DASHBOARD_ENTRY, ...configuredEntries];
+  const bottomEntries = [DASHBOARD_ENTRY, ...configuredEntries];
 
   function pageTitleFor(p: string): string {
     const key = PAGE_TITLE_KEYS[p];
@@ -111,7 +103,7 @@ export function AppShell({ children }: AppShellProps) {
           <Logo size={26} />
         </div>
         <nav className="flex flex-col gap-1" aria-label="Sidebar">
-          {PRIMARY_NAV.map((item) => (
+          {sidebarEntries.map((item) => (
             <NavItem
               key={item.href}
               href={item.href}
@@ -122,16 +114,13 @@ export function AppShell({ children }: AppShellProps) {
             />
           ))}
           <div className="my-3 h-px bg-border" aria-hidden />
-          {SECONDARY_NAV.map((item) => (
-            <NavItem
-              key={item.href}
-              href={item.href}
-              label={t(item.labelKey as Parameters<typeof t>[0])}
-              icon={item.icon}
-              active={isActive(pathname, item.href)}
-              variant="sidebar"
-            />
-          ))}
+          <NavItem
+            href={SETTINGS_ENTRY.href}
+            label={t(SETTINGS_ENTRY.labelKey as Parameters<typeof t>[0])}
+            icon={SETTINGS_ENTRY.icon}
+            active={isActive(pathname, SETTINGS_ENTRY.href)}
+            variant="sidebar"
+          />
         </nav>
         <div className="mt-auto flex items-center justify-between gap-2 px-1 pt-4">
           <span className="text-xs text-muted">{tCommon("theme")}</span>
@@ -171,7 +160,7 @@ export function AppShell({ children }: AppShellProps) {
         className="md:hidden glass fixed inset-x-0 bottom-0 z-30 flex items-stretch gap-1 border-t border-border px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]"
         aria-label="Bottom"
       >
-        {PRIMARY_NAV.map((item) => (
+        {bottomEntries.map((item) => (
           <NavItem
             key={item.href}
             href={item.href}
