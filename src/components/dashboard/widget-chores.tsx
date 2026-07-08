@@ -47,6 +47,7 @@ export function WidgetChores({ className, members }: WidgetChoresProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ["chores"],
     queryFn: fetchChores,
+    refetchInterval: 60_000, // kiosk never refocuses — poll for remote changes
   });
 
   const [picker, setPicker] = useState<{ open: boolean; memberId: string | null }>(

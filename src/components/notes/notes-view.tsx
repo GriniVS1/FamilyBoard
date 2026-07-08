@@ -70,6 +70,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
   const { data: notes = [], isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchNotes,
+    refetchInterval: 60_000, // kiosk never refocuses — poll for remote changes
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Note | null>(null);

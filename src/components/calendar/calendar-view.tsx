@@ -89,6 +89,7 @@ export function CalendarView({ initialMembers }: CalendarViewProps) {
     queryKey: ["events", fromIso, toIso, [...selectedMemberIds].sort().join(",")],
     queryFn: () =>
       fetchEvents(fromIso, toIso, selectedMemberIds, initialMembers.length),
+    refetchInterval: 60_000, // kiosk never refocuses — poll for remote changes
   });
 
   const membersById = useMemo(() => {
