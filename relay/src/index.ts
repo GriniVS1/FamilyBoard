@@ -180,15 +180,17 @@ export class TunnelDO implements DurableObject {
     for (const ws of this.ctx.getWebSockets()) ws.close(1012, "replaced");
 
     const pair = new WebSocketPair();
+    // Hibernation API: idle connections keep the DO asleep (cost model). The
+    // Pi disables permessage-deflate — Workers WebSockets don't support it.
     this.ctx.acceptWebSocket(pair[1]);
-    // Heartbeats answered by the runtime without waking the DO.
     this.ctx.setWebSocketAutoResponse(new WebSocketRequestResponsePair("ping", "pong"));
     return new Response(null, { status: 101, webSocket: pair[0] });
   }
 
   private async handleForward(req: Request, url: URL): Promise<Response> {
     const sockets = this.ctx.getWebSockets();
-    if (sockets.length === 0) return json({ error: "device_offline" }, 503);
+    const socket = sockets[0];
+    if (!socket) return json({ error: "device_offline" }, 503);
     if (this.pending.size >= MAX_IN_FLIGHT) return json({ error: "busy" }, 429);
 
     const now = Date.now();
@@ -219,7 +221,7 @@ export class TunnelDO implements DurableObject {
       headers,
       ...(body !== undefined ? { body } : {}),
     };
-    sockets[0].send(JSON.stringify(frame));
+    socket.send(JSON.stringify(frame));
 
     return await new Promise<Response>((resolve) => {
       const timer = setTimeout(() => {
