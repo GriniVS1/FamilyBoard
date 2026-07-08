@@ -486,6 +486,19 @@
       "cancel": "Annuler",
       "couldNotChange": "Impossible de changer le code PIN."
     },
+    "reboot": {
+      "title": "Redémarrage",
+      "description": "Redémarre l'écran mural. Environ une minute pour revenir en ligne.",
+      "button": "Redémarrer…",
+      "confirmTitle": "Redémarrer l'appareil ?",
+      "adminPin": "Code PIN admin",
+      "cancel": "Annuler",
+      "rebooting": "Redémarrage…",
+      "wrongPin": "Code PIN incorrect. Réessayez.",
+      "tooManyAttempts": "Trop de tentatives. Veuillez patienter une minute.",
+      "hostUnavailable": "Impossible de joindre l'appareil.",
+      "failed": "Le redémarrage a échoué."
+    },
     "factoryReset": {
       "title": "Réinitialisation d'usine",
       "description": "Supprime toutes les données familiales — membres, événements, tâches à faire, notes, photos, tâches. Le tableau de bord retourne à l'assistant de configuration.",
@@ -553,6 +566,14 @@
       "minutes": "{n} minutes",
       "minute": "1 minute",
       "never": "Jamais"
+    },
+    "displaySleep": {
+      "title": "Veille de l'écran",
+      "hint": "Éteint l'écran la nuit pour économiser l'énergie et préserver la dalle.",
+      "toggle": "Programmation de veille",
+      "toggleHint": "L'écran s'éteint pendant cette période. Le toucher le réveille brièvement.",
+      "from": "De",
+      "to": "À"
     },
     "caldav": {
       "title": "Apple / CalDAV",

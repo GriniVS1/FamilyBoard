@@ -486,6 +486,19 @@
       "cancel": "Annulla",
       "couldNotChange": "Impossibile cambiare il PIN."
     },
+    "reboot": {
+      "title": "Riavvio",
+      "description": "Riavvia il display a muro. Ci vuole circa un minuto per tornare online.",
+      "button": "Riavvia…",
+      "confirmTitle": "Riavviare il dispositivo?",
+      "adminPin": "PIN amministratore",
+      "cancel": "Annulla",
+      "rebooting": "Riavvio in corso…",
+      "wrongPin": "PIN errato. Riprova.",
+      "tooManyAttempts": "Troppi tentativi. Attendi un minuto.",
+      "hostUnavailable": "Impossibile raggiungere il dispositivo.",
+      "failed": "Riavvio non riuscito."
+    },
     "factoryReset": {
       "title": "Ripristino di fabbrica",
       "description": "Rimuove tutti i dati della famiglia — membri, eventi, attività, note, foto, faccende. La dashboard torna alla procedura guidata di configurazione.",
@@ -553,6 +566,14 @@
       "minutes": "{n} minuti",
       "minute": "1 minuto",
       "never": "Mai"
+    },
+    "displaySleep": {
+      "title": "Spegnimento schermo",
+      "hint": "Spegne lo schermo di notte per risparmiare energia e preservare il pannello.",
+      "toggle": "Orario di spegnimento",
+      "toggleHint": "Lo schermo si spegne in questa fascia oraria. Toccarlo lo riaccende brevemente.",
+      "from": "Dalle",
+      "to": "Alle"
     },
     "caldav": {
       "title": "Apple / CalDAV",

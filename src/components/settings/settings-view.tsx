@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
   RotateCcw,
+  RotateCw,
   ShieldCheck,
   X,
 } from "lucide-react";
@@ -22,6 +23,7 @@ import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { LocalePicker } from "@/components/shared/locale-picker";
 import { MemberAvatar } from "@/components/shared/member-avatar";
+import { DisplaySleepCard } from "./display-sleep-card";
 import { FactoryResetDialog } from "./factory-reset-dialog";
 import { FamilyEditor } from "./family-editor";
 import { CaldavRow } from "./caldav-row";
@@ -34,6 +36,8 @@ import { NetworkSection } from "./network-section";
 import { PinChangeDialog } from "./pin-change-dialog";
 import { GateOverlay, PinGate } from "./pin-gate";
 import { PushToggle } from "./push-toggle";
+import { RebootDialog } from "./reboot-dialog";
+import { RebootOverlay } from "./reboot-overlay";
 import { ScreensaverIdlePicker } from "./screensaver-idle-picker";
 import { LicenseSettingsCard } from "@/components/license/license-settings-card";
 import { UpdatesSettingsCard } from "@/components/settings/updates-settings-card";
@@ -103,6 +107,8 @@ export function SettingsView({
   const [memberDialogOpen, setMemberDialogOpen] = useState(false);
   const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [rebootDialogOpen, setRebootDialogOpen] = useState(false);
+  const [rebooting, setRebooting] = useState(false);
 
   useEffect(() => {
     if (!banner) return;
@@ -264,6 +270,10 @@ export function SettingsView({
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
+        <DisplaySleepCard adminPin={verifiedPin} />
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
         <DevicesRow members={memberList} />
       </GateOverlay>
 
@@ -391,6 +401,31 @@ export function SettingsView({
             </Button>
           </div>
 
+          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="inline-flex size-10 items-center justify-center rounded-full bg-accent-sky/30 text-ink"
+              >
+                <RotateCw className="size-4" />
+              </span>
+              <div>
+                <div className="text-sm font-medium text-ink">{t("reboot.title")}</div>
+                <div className="text-xs text-muted">
+                  {t("reboot.description")}
+                </div>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setRebootDialogOpen(true)}
+              disabled={!unlocked}
+            >
+              {t("reboot.button")}
+            </Button>
+          </div>
+
           <div className="flex flex-col gap-3 rounded-2xl border border-accent-rose/30 bg-accent-rose/10 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span
@@ -442,6 +477,15 @@ export function SettingsView({
         open={resetDialogOpen}
         onOpenChange={setResetDialogOpen}
       />
+      <RebootDialog
+        open={rebootDialogOpen}
+        onOpenChange={setRebootDialogOpen}
+        onConfirmed={() => {
+          setRebootDialogOpen(false);
+          setRebooting(true);
+        }}
+      />
+      {rebooting && <RebootOverlay />}
     </div>
   );
 }
