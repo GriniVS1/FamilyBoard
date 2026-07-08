@@ -132,3 +132,41 @@ jobs:
           $S3 "dist/${CHANNEL}.json.sig" "s3://${R2_BUCKET}/${CHANNEL}.json.sig" \
             --content-type text/plain --cache-control "public, max-age=300"
           echo "Published $VERSION to channel $CHANNEL"
+
+      # Bundles are ~143 MB each and devices only ever download what a channel
+      # manifest currently references (rollback uses the on-device :previous
+      # image, not R2) — old tarballs are dead weight against the storage quota.
+      # Keep the newest RETAIN_BUNDLES by version, plus anything a live manifest
+      # (stable/beta) references, plus the version just published.
+      - name: Prune old bundles from R2
+        run: |
+          VERSION="${{ steps.meta.outputs.version }}"
+          RETAIN="${{ vars.OTA_RETAIN_BUNDLES || 2 }}"
+          JUR="${{ vars.R2_JURISDICTION || 'eu' }}"
+          if [ -n "$JUR" ]; then
+            ENDPOINT="https://${R2_ACCOUNT_ID}.${JUR}.r2.cloudflarestorage.com"
+          else
+            ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+          fi
+
+          ALL="$(aws s3 ls --endpoint-url "$ENDPOINT" "s3://${R2_BUCKET}/app/" \
+            | awk '{print $NF}' | grep -E '^familyboard-v.*\.tar\.gz$' | sort -V)"
+
+          KEEP_FILE="$(mktemp)"
+          printf '%s\n' "$ALL" | tail -n "$RETAIN" > "$KEEP_FILE"
+          echo "familyboard-${VERSION}.tar.gz" >> "$KEEP_FILE"
+          # Never delete a bundle a live channel manifest still points at.
+          for ch in stable beta; do
+            { aws s3 cp --endpoint-url "$ENDPOINT" "s3://${R2_BUCKET}/${ch}.json" - 2>/dev/null || true; } \
+              | jq -r '.appBundleUrl // empty' | sed 's|.*/||' >> "$KEEP_FILE"
+          done
+
+          printf '%s\n' "$ALL" | while read -r f; do
+            [ -z "$f" ] && continue
+            if grep -qxF "$f" "$KEEP_FILE"; then
+              echo "keep   $f"
+            else
+              echo "delete $f"
+              aws s3 rm --endpoint-url "$ENDPOINT" "s3://${R2_BUCKET}/app/$f"
+            fi
+          done
