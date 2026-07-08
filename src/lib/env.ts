@@ -21,6 +21,10 @@ const schema = z.object({
   // isn't configured locally, connect-google routes through this broker and
   // adopts the token via /api/auth/google/adopt. See docs/google-oauth-broker-plan.md.
   OAUTH_BROKER_URL: z.string().url().default("https://familyboard.ch"),
+  // Relay for remote (off-LAN) mobile access. The Pi opens an outbound
+  // WebSocket here; the phone reaches the wall via <https-origin>/f/<id>.
+  // Default points at the vendor relay so shipped devices need zero config.
+  RELAY_URL: z.string().url().default("wss://relay.familyboard.ch"),
   MICROSOFT_CLIENT_ID: z.string().optional(),
   MICROSOFT_CLIENT_SECRET: z.string().optional(),
   MICROSOFT_TENANT: z.string().optional().default("common"),

@@ -24,6 +24,7 @@ type PairCodeResponse = {
   expiresAt: string;
   serverUrl: string | null;
   mdnsUrl: string | null;
+  remoteUrl: string | null;
 };
 
 type PairDeviceDialogProps = {
@@ -50,6 +51,7 @@ export function PairDeviceDialog({
   const [code, setCode] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState<string | null>(null);
   const [mdnsUrl, setMdnsUrl] = useState<string | null>(null);
+  const [remoteUrl, setRemoteUrl] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [copied, setCopied] = useState(false);
@@ -66,6 +68,7 @@ export function PairDeviceDialog({
       setCode(null);
       setServerUrl(null);
       setMdnsUrl(null);
+      setRemoteUrl(null);
       setExpiresAt(null);
       setSecondsLeft(0);
       setCopied(false);
@@ -126,6 +129,7 @@ export function PairDeviceDialog({
       setCode(data.code);
       setServerUrl(data.serverUrl);
       setMdnsUrl(data.mdnsUrl);
+      setRemoteUrl(data.remoteUrl);
       setExpiresAt(new Date(data.expiresAt));
       setStage("code");
     } catch {
@@ -153,11 +157,14 @@ export function PairDeviceDialog({
     serverUrl ??
     (typeof window !== "undefined" ? window.location.origin : null);
   const qrAlt = mdnsUrl && mdnsUrl !== qrOrigin ? mdnsUrl : null;
+  // remoteUrl (relay) lets the app reach the board from outside the LAN; it's
+  // only present once the tunnel is connected. The app verifies it via the
+  // identity endpoint before ever trusting it.
   const qrValue =
     code && qrOrigin
       ? `familyboard://pair?url=${encodeURIComponent(qrOrigin)}${
           qrAlt ? `&alt=${encodeURIComponent(qrAlt)}` : ""
-        }&code=${code}`
+        }${remoteUrl ? `&remote=${encodeURIComponent(remoteUrl)}` : ""}&code=${code}`
       : "";
 
   async function handleCopy() {
@@ -176,6 +183,7 @@ export function PairDeviceDialog({
     setCode(null);
     setServerUrl(null);
     setMdnsUrl(null);
+    setRemoteUrl(null);
     setExpiresAt(null);
     setSecondsLeft(0);
     setPin("");

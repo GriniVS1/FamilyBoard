@@ -720,6 +720,16 @@
       "tooManyAttempts": "Trop de tentatives. Veuillez patienter une minute.",
       "hostUnavailable": "Impossible de joindre l'appareil.",
       "failed": "Échec de l'extinction."
+    },
+    "remoteAccess": {
+      "title": "Accès à distance",
+      "description": "Accédez à FamilyBoard depuis votre téléphone lorsque vous êtes absent.",
+      "toggleAria": "Activer/désactiver l’accès à distance",
+      "status": {
+        "connected": "Accès à distance : connecté",
+        "disconnected": "Accès à distance : connexion…",
+        "disabled": "Accès à distance : désactivé"
+      }
     }
   },
   "meals": {
