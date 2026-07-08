@@ -486,6 +486,19 @@
       "cancel": "Cancel",
       "couldNotChange": "Could not change PIN."
     },
+    "reboot": {
+      "title": "Restart",
+      "description": "Restart the wall display. Takes about a minute to come back up.",
+      "button": "Restart…",
+      "confirmTitle": "Restart the device?",
+      "adminPin": "Admin PIN",
+      "cancel": "Cancel",
+      "rebooting": "Restarting…",
+      "wrongPin": "Wrong PIN. Try again.",
+      "tooManyAttempts": "Too many attempts. Please wait a minute.",
+      "hostUnavailable": "Could not reach the device host.",
+      "failed": "Restart failed."
+    },
     "factoryReset": {
       "title": "Factory reset",
       "description": "Removes all family data — members, events, todos, notes, photos, chores. The dashboard returns to the setup wizard.",
@@ -553,6 +566,14 @@
       "minutes": "{n} minutes",
       "minute": "1 minute",
       "never": "Never"
+    },
+    "displaySleep": {
+      "title": "Display sleep",
+      "hint": "Turn the screen off overnight to save power and the panel.",
+      "toggle": "Screen sleep schedule",
+      "toggleHint": "The screen turns off during this window. Tapping it wakes it up briefly.",
+      "from": "From",
+      "to": "To"
     },
     "caldav": {
       "title": "Apple / CalDAV",

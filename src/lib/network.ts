@@ -196,7 +196,7 @@ function runCommand(
 // cannot run inside this Alpine container, so execute them in the host's
 // namespaces via nsenter. sudo provides the privileges needed to setns; a
 // container sudoers rule (see Dockerfile) lets the app user run nsenter.
-function hostCommand(args: string[], timeoutMs = 25_000) {
+export function hostCommand(args: string[], timeoutMs = 25_000) {
   return runCommand(
     "sudo",
     ["/usr/bin/nsenter", "-t", "1", "-m", "-u", "-i", "-n", "--", ...args],

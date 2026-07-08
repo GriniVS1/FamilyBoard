@@ -486,6 +486,19 @@
       "cancel": "Abbrechen",
       "couldNotChange": "PIN konnte nicht geändert werden."
     },
+    "reboot": {
+      "title": "Neustart",
+      "description": "Startet das Wall-Display neu. Dauert etwa eine Minute, bis es wieder da ist.",
+      "button": "Neustart…",
+      "confirmTitle": "Gerät neu starten?",
+      "adminPin": "Admin-PIN",
+      "cancel": "Abbrechen",
+      "rebooting": "Neustart läuft…",
+      "wrongPin": "Falsche PIN. Bitte erneut versuchen.",
+      "tooManyAttempts": "Zu viele Versuche. Bitte eine Minute warten.",
+      "hostUnavailable": "Gerät konnte nicht erreicht werden.",
+      "failed": "Neustart fehlgeschlagen."
+    },
     "factoryReset": {
       "title": "Werksreset",
       "description": "Entfernt alle Familiendaten — Mitglieder, Ereignisse, To-dos, Notizen, Fotos, Aufgaben. Das Dashboard kehrt zum Setup-Assistenten zurück.",
@@ -553,6 +566,14 @@
       "minutes": "{n} Minuten",
       "minute": "1 Minute",
       "never": "Nie"
+    },
+    "displaySleep": {
+      "title": "Bildschirm-Ruhezeit",
+      "hint": "Schaltet den Bildschirm nachts aus, um Strom und das Display zu schonen.",
+      "toggle": "Bildschirm-Ruhezeit",
+      "toggleHint": "Der Bildschirm schaltet sich in diesem Fenster ab. Antippen weckt ihn kurzzeitig.",
+      "from": "Von",
+      "to": "Bis"
     },
     "caldav": {
       "title": "Apple / CalDAV",

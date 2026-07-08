@@ -103,4 +103,29 @@ export async function register() {
   // Push scheduler runs every 60 s — checks upcoming events and daily digest.
   setTimeout(pushTick, 15_000);
   setInterval(pushTick, 60_000);
+
+  let displayRunning = false;
+  const displayTick = async () => {
+    if (displayRunning) return;
+    displayRunning = true;
+    try {
+      await fetch(`${baseUrl}/api/system/display-tick`, {
+        method: "POST",
+        headers: internalHeaders(),
+        signal: AbortSignal.timeout(60_000),
+      });
+    } catch (err) {
+      console.warn(
+        "[instrumentation] display tick failed",
+        err instanceof Error ? err.message : err,
+      );
+    } finally {
+      displayRunning = false;
+    }
+  };
+
+  // Display sleep window: check once a minute whether the screen should be
+  // dark (drives DPMS on the host — see src/lib/display.ts).
+  setTimeout(displayTick, 20_000);
+  setInterval(displayTick, 60_000);
 }
