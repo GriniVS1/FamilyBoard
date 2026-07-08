@@ -73,6 +73,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
   const { data: todos = [], isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchTodos,
+    refetchInterval: 60_000, // kiosk never refocuses — poll for remote changes
   });
   const [showCompleted, setShowCompleted] = useState(false);
   const [toast, setToast] = useState<string | null>(null);

@@ -96,6 +96,7 @@ export function ChoresView({ initialMembers }: ChoresViewProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchChores,
+    refetchInterval: 60_000, // kiosk never refocuses — poll for remote changes
   });
 
   const [dialog, setDialog] = useState<DialogState>({ open: false, chore: null });
