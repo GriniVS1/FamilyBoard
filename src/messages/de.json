@@ -209,6 +209,11 @@
         "setLocation": "Einen Standort in den Einstellungen festlegen",
         "couldNotLoad": "Wetter konnte nicht geladen werden."
       }
+    },
+    "updateSuccess": {
+      "title": "FamilyBoard erfolgreich aktualisiert",
+      "version": "Version {version}",
+      "ok": "OK"
     }
   },
   "calendar": {
@@ -680,7 +685,32 @@
       "logTitle": "Update-Log",
       "logRefresh": "Aktualisieren",
       "logEmpty": "Noch keine Update-Aktivität.",
-      "logUnavailable": "Update-Logging ist im Basis-Image dieses Geräts noch nicht verfügbar."
+      "logUnavailable": "Update-Logging ist im Basis-Image dieses Geräts noch nicht verfügbar.",
+      "progress": {
+        "checking": "Suche nach Updates…",
+        "downloading": "Update wird heruntergeladen…",
+        "verifying": "Update wird überprüft…",
+        "installing": "Update wird installiert…",
+        "health": "Neue Version wird geprüft…",
+        "done": "Update installiert",
+        "uptodate": "Bereits aktuell",
+        "failed": "Update fehlgeschlagen. Details siehe Log unten.",
+        "rolledback": "Update fehlgeschlagen und automatisch zurückgesetzt. Details siehe Log unten.",
+        "targetVersion": "Aktualisiere auf {version}"
+      }
+    },
+    "shutdown": {
+      "title": "Herunterfahren",
+      "description": "Schaltet das Wall-Display sicher aus. Danach kann es vom Strom getrennt werden.",
+      "button": "Herunterfahren…",
+      "confirmTitle": "Gerät herunterfahren?",
+      "adminPin": "Admin-PIN",
+      "cancel": "Abbrechen",
+      "shuttingDown": "Wird heruntergefahren… Das Gerät kann danach vom Strom getrennt werden.",
+      "wrongPin": "Falsche PIN. Bitte erneut versuchen.",
+      "tooManyAttempts": "Zu viele Versuche. Bitte eine Minute warten.",
+      "hostUnavailable": "Gerät konnte nicht erreicht werden.",
+      "failed": "Herunterfahren fehlgeschlagen."
     }
   },
   "meals": {

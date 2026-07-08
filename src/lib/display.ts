@@ -172,3 +172,7 @@ export async function applyDisplaySleepTick(): Promise<{
 export async function rebootHost(): Promise<void> {
   await hostCommand(["systemctl", "reboot"], 10_000);
 }
+
+export async function shutdownHost(): Promise<void> {
+  await hostCommand(["systemctl", "poweroff"], 10_000);
+}

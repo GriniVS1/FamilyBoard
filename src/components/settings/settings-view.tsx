@@ -11,6 +11,7 @@ import {
   Lock,
   Pencil,
   Plus,
+  Power,
   RotateCcw,
   RotateCw,
   ShieldCheck,
@@ -39,6 +40,8 @@ import { PushToggle } from "./push-toggle";
 import { RebootDialog } from "./reboot-dialog";
 import { RebootOverlay } from "./reboot-overlay";
 import { ScreensaverIdlePicker } from "./screensaver-idle-picker";
+import { ShutdownDialog } from "./shutdown-dialog";
+import { ShutdownOverlay } from "./shutdown-overlay";
 import { LicenseSettingsCard } from "@/components/license/license-settings-card";
 import { UpdatesSettingsCard } from "@/components/settings/updates-settings-card";
 
@@ -109,6 +112,8 @@ export function SettingsView({
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [rebootDialogOpen, setRebootDialogOpen] = useState(false);
   const [rebooting, setRebooting] = useState(false);
+  const [shutdownDialogOpen, setShutdownDialogOpen] = useState(false);
+  const [shuttingDown, setShuttingDown] = useState(false);
 
   useEffect(() => {
     if (!banner) return;
@@ -426,6 +431,31 @@ export function SettingsView({
             </Button>
           </div>
 
+          <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="inline-flex size-10 items-center justify-center rounded-full bg-accent-peach/30 text-ink"
+              >
+                <Power className="size-4" />
+              </span>
+              <div>
+                <div className="text-sm font-medium text-ink">{t("shutdown.title")}</div>
+                <div className="text-xs text-muted">
+                  {t("shutdown.description")}
+                </div>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShutdownDialogOpen(true)}
+              disabled={!unlocked}
+            >
+              {t("shutdown.button")}
+            </Button>
+          </div>
+
           <div className="flex flex-col gap-3 rounded-2xl border border-accent-rose/30 bg-accent-rose/10 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span
@@ -486,6 +516,15 @@ export function SettingsView({
         }}
       />
       {rebooting && <RebootOverlay />}
+      <ShutdownDialog
+        open={shutdownDialogOpen}
+        onOpenChange={setShutdownDialogOpen}
+        onConfirmed={() => {
+          setShutdownDialogOpen(false);
+          setShuttingDown(true);
+        }}
+      />
+      {shuttingDown && <ShutdownOverlay />}
     </div>
   );
 }

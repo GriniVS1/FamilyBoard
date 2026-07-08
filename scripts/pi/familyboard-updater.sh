@@ -37,7 +37,24 @@ log() {
   # Best-effort file mirror — never let logging break an update run.
   echo "$m" >> "$LOG_FILE" 2>/dev/null || true
 }
-die() { log "ERROR: $*"; exit 1; }
+
+# Machine-readable progress for the wall UI (GET /api/settings/update-status
+# reads this file from the bind-mounted data dir). Atomic tmp+mv writes; every
+# write is best-effort — status reporting must never break an update run.
+STATUS_FILE="$DATA_DIR/update-status.json"
+write_status() { # phase [version] [percent] [message]
+  local phase="$1" version="${2:-}" percent="${3:-}" message="${4:-}"
+  {
+    local json="{\"phase\":\"$phase\",\"updatedAt\":\"$(date -u +%FT%TZ)\""
+    [[ -n "$version" ]] && json+=",\"version\":\"$version\""
+    [[ -n "$percent" ]] && json+=",\"percent\":$percent"
+    [[ -n "$message" ]] && json+=",\"message\":\"$message\""
+    json+="}"
+    printf '%s\n' "$json" > "$STATUS_FILE.tmp" && mv -f "$STATUS_FILE.tmp" "$STATUS_FILE"
+  } 2>/dev/null || true
+}
+
+die() { log "ERROR: $*"; write_status failed "${VERSION:-}" "" "$*"; exit 1; }
 
 # Single-flight: the timer and the path unit both call us.
 exec 9>"$STATE_DIR/updater.lock" || die "cannot open lock"
@@ -57,6 +74,7 @@ log "──────── run start ────────"
 # stayed armed and "check for updates" silently did nothing. Removing it here
 # means each run rearms the trigger regardless of outcome.
 rm -f "$DATA_DIR/update-request" 2>/dev/null || true
+write_status checking
 
 command -v docker >/dev/null || die "docker not found"
 command -v openssl >/dev/null || die "openssl not found"
@@ -102,10 +120,12 @@ MIN_BASE="$(jq -r '.minBaseVersion // "v0.0.0"' "$WORK/manifest.json")"
 # --- 2. decide -----------------------------------------------------------------
 CURRENT="$(current_version)"
 if ! is_newer "$VERSION" "$CURRENT"; then
-  log "already up-to-date (manifest=$VERSION, current=$CURRENT)"; exit 0
+  log "already up-to-date (manifest=$VERSION, current=$CURRENT)"
+  write_status uptodate "$CURRENT"; exit 0
 fi
 if [[ -f "$BAD_FILE" ]] && grep -qxF "$VERSION" "$BAD_FILE"; then
-  log "skipping $VERSION — previously failed health check (bad-versions)"; exit 0
+  log "skipping $VERSION — previously failed health check (bad-versions)"
+  write_status uptodate "$CURRENT"; exit 0
 fi
 if is_newer "$MIN_BASE" "$CURRENT"; then
   die "manifest requires base >= $MIN_BASE but device is $CURRENT — cannot chain"
@@ -113,7 +133,23 @@ fi
 log "update available: $CURRENT -> $VERSION"
 
 # --- 3. download + verify bundle ----------------------------------------------
-curl -fsS --max-time 900 "$BUNDLE_URL" -o "$WORK/app.tar.gz" || die "bundle download failed"
+# Download in the background and poll the partial file's size against the
+# object's Content-Length so the wall UI can render a real percentage.
+write_status downloading "$VERSION" 0
+TOTAL_BYTES="$(curl -fsSI --max-time 30 "$BUNDLE_URL" 2>/dev/null | tr -d '\r' \
+  | awk 'tolower($1)=="content-length:"{print $2}' | tail -1)"
+curl -fsS --max-time 900 "$BUNDLE_URL" -o "$WORK/app.tar.gz" &
+CURL_PID=$!
+while kill -0 "$CURL_PID" 2>/dev/null; do
+  if [[ -n "$TOTAL_BYTES" && "$TOTAL_BYTES" -gt 0 && -f "$WORK/app.tar.gz" ]]; then
+    SZ="$(stat -c %s "$WORK/app.tar.gz" 2>/dev/null || echo 0)"
+    write_status downloading "$VERSION" $(( SZ * 100 / TOTAL_BYTES ))
+  fi
+  sleep 2
+done
+wait "$CURL_PID" || die "bundle download failed"
+
+write_status verifying "$VERSION"
 ACTUAL_SHA="$(sha256sum "$WORK/app.tar.gz" | awk '{print $1}')"
 [[ "$ACTUAL_SHA" == "$BUNDLE_SHA" ]] || die "bundle sha256 mismatch (want $BUNDLE_SHA got $ACTUAL_SHA)"
 log "bundle sha256 verified"
@@ -133,6 +169,7 @@ fi
 
 rollback() {
   log "rolling back to $CURRENT"
+  write_status rolledback "$VERSION"
   if docker image inspect "$IMAGE:previous" >/dev/null 2>&1; then
     docker tag "$IMAGE:previous" "$IMAGE:latest"
   fi
@@ -145,6 +182,7 @@ rollback() {
   log "recorded $VERSION as bad; staying on $CURRENT"
 }
 
+write_status installing "$VERSION"
 if ! zcat "$WORK/app.tar.gz" | docker load; then
   rollback; die "docker load failed"
 fi
@@ -155,9 +193,11 @@ fi
 
 # --- 5. health check -----------------------------------------------------------
 log "waiting for health (up to ${HEALTH_TIMEOUT}s)"
+write_status health "$VERSION" 0
 ok=0
-for _ in $(seq 1 "$HEALTH_TIMEOUT"); do
+for i in $(seq 1 "$HEALTH_TIMEOUT"); do
   if curl -fsS --max-time 5 "$HEALTH_URL" >/dev/null 2>&1; then ok=1; break; fi
+  (( i % 5 == 0 )) && write_status health "$VERSION" $(( i * 100 / HEALTH_TIMEOUT ))
   sleep 1
 done
 if [[ "$ok" != 1 ]]; then
@@ -166,6 +206,7 @@ fi
 
 # --- 6. commit -----------------------------------------------------------------
 echo "$VERSION" > "$VERSION_FILE"
+write_status done "$VERSION"
 log "update OK: now running $VERSION"
 
 # prune: keep newest N db backups, tidy images (the update-request flag was

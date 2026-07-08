@@ -19,6 +19,7 @@ import { ThemeToggle } from "@/components/shared/theme-toggle";
 import { ActivationScreen } from "@/components/license/activation-screen";
 import { LicenseBanner } from "@/components/license/license-banner";
 import { useLicense } from "@/components/license/use-license";
+import { UpdateSuccessToast } from "@/components/dashboard/update-success-toast";
 import { NavItem } from "./nav-item";
 import { TopbarClock } from "./topbar-clock";
 
@@ -160,6 +161,7 @@ export function AppShell({ children }: AppShellProps) {
       </header>
 
       <LicenseBanner />
+      <UpdateSuccessToast />
 
       <main className="md:ml-60 px-4 pt-6 pb-28 md:px-8 md:pb-12">
         {children}

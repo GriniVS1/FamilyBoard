@@ -1,26 +1,26 @@
 "use client";
 
-import { RotateCw } from "lucide-react";
+import { Power } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { SystemActionDialog } from "./system-action-dialog";
 
-type RebootDialogProps = {
+type ShutdownDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onConfirmed: () => void;
 };
 
-export function RebootDialog({ open, onOpenChange, onConfirmed }: RebootDialogProps) {
-  const t = useTranslations("settings.reboot");
+export function ShutdownDialog({ open, onOpenChange, onConfirmed }: ShutdownDialogProps) {
+  const t = useTranslations("settings.shutdown");
 
   return (
     <SystemActionDialog
       open={open}
       onOpenChange={onOpenChange}
       onConfirmed={onConfirmed}
-      endpoint="/api/system/reboot"
-      icon={RotateCw}
-      iconClassName="bg-accent-sky/30 text-ink"
+      endpoint="/api/system/shutdown"
+      icon={Power}
+      iconClassName="bg-accent-peach/30 text-ink"
       strings={{
         confirmTitle: t("confirmTitle"),
         description: t("description"),
