@@ -16,6 +16,8 @@ type EventBlockProps = {
   /** horizontal subdivision when overlapping */
   laneIndex?: number;
   laneCount?: number;
+  /** narrow-lane rendering (week view): give the title every pixel */
+  compact?: boolean;
 };
 
 function resolveColor(event: CalendarEvent, member?: CalendarMember): MemberColor {
@@ -31,12 +33,20 @@ export function EventBlock({
   height,
   laneIndex = 0,
   laneCount = 1,
+  compact = false,
 }: EventBlockProps) {
   const color = resolveColor(event, member);
   const start = new Date(event.startsAt);
   const end = new Date(event.endsAt);
   const widthPct = 100 / laneCount;
   const leftPct = laneIndex * widthPct;
+
+  // Overlapping events share the column width, so every character counts:
+  // wrap the title onto two lines when the block is tall enough, and in
+  // compact (narrow-lane) mode drop the member-name row — the colored stripe
+  // already encodes the member. Keeps a full-hour block (56px) readable at
+  // half or third of a week column.
+  const canWrapTitle = height >= 52;
 
   return (
     <button
@@ -56,16 +66,18 @@ export function EventBlock({
         width: `calc(${widthPct}% - 4px)`,
       }}
     >
-      <div className="font-semibold text-xs text-ink truncate flex items-center gap-1">
-        <span className="truncate">{event.title}</span>
+      <div className="font-semibold text-xs text-ink flex items-start gap-1">
+        <span className={canWrapTitle ? "line-clamp-2 break-words" : "truncate"}>
+          {event.title}
+        </span>
         {event.isRecurring && (
-          <Repeat className="size-3 shrink-0 text-muted" aria-hidden="true" />
+          <Repeat className="mt-0.5 size-3 shrink-0 text-muted" aria-hidden="true" />
         )}
       </div>
       <div className="tabular text-[10px] text-muted truncate">
         {format(start, "HH:mm")} – {format(end, "HH:mm")}
       </div>
-      {member ? (
+      {member && !compact ? (
         <div className="text-[10px] text-muted truncate">{member.name}</div>
       ) : null}
     </button>

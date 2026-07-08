@@ -142,6 +142,7 @@ export function ViewWeek({
                   height={p.height}
                   laneIndex={p.laneIndex}
                   laneCount={p.laneCount}
+                  compact={p.laneCount > 1}
                 />
               ))}
             </div>
