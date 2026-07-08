@@ -580,6 +580,15 @@
       "from": "Dalle",
       "to": "Alle"
     },
+    "navConfig": {
+      "title": "Navigazione",
+      "description": "Scegli quali funzioni compaiono nel menu e in quale ordine.",
+      "alwaysVisibleHint": "Dashboard e Impostazioni sono sempre visibili.",
+      "moveUp": "Sposta {name} in alto",
+      "moveDown": "Sposta {name} in basso",
+      "toggleAria": "Mostra {name} nella navigazione",
+      "saveError": "Impossibile salvare l'ordine di navigazione. Riprova."
+    },
     "caldav": {
       "title": "Apple / CalDAV",
       "description": "Collega Apple iCloud, Fastmail, Nextcloud, Yahoo o qualsiasi server CalDAV.",

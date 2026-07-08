@@ -33,6 +33,7 @@ import { GoogleRow } from "./google-row";
 import { MicrosoftCallbackBanner } from "./microsoft-callback-banner";
 import { MicrosoftRow } from "./microsoft-row";
 import { MemberEditorDialog } from "./member-editor-dialog";
+import { NavConfigCard } from "./nav-config-card";
 import { NetworkSection } from "./network-section";
 import { PinChangeDialog } from "./pin-change-dialog";
 import { GateOverlay, PinGate } from "./pin-gate";
@@ -276,6 +277,10 @@ export function SettingsView({
 
       <GateOverlay locked={!unlocked}>
         <DisplaySleepCard adminPin={verifiedPin} />
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <NavConfigCard adminPin={verifiedPin} />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>

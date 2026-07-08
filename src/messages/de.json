@@ -580,6 +580,15 @@
       "from": "Von",
       "to": "Bis"
     },
+    "navConfig": {
+      "title": "Navigation",
+      "description": "Wähle, welche Funktionen im Menü erscheinen und in welcher Reihenfolge.",
+      "alwaysVisibleHint": "Dashboard und Einstellungen sind immer sichtbar.",
+      "moveUp": "{name} nach oben verschieben",
+      "moveDown": "{name} nach unten verschieben",
+      "toggleAria": "{name} in der Navigation anzeigen",
+      "saveError": "Die Navigationsreihenfolge konnte nicht gespeichert werden. Bitte erneut versuchen."
+    },
     "caldav": {
       "title": "Apple / CalDAV",
       "description": "Verbinde Apple iCloud, Fastmail, Nextcloud, Yahoo oder einen eigenen CalDAV-Server.",
