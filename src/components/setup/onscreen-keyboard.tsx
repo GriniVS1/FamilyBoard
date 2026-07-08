@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Delete } from "lucide-react";
+import { CornerDownLeft, Delete } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type Layer = "lower" | "upper" | "symbols" | "accents";
@@ -62,6 +62,8 @@ type OnScreenKeyboardProps = {
   showAccents?: boolean;
   trailingSlot?: React.ReactNode;
   defaultLayer?: Layer;
+  /** Adds a "new line" key for textarea fields (title/description-style inputs stay single-line without it). */
+  multiline?: boolean;
 };
 
 function preventFocusSteal(e: React.PointerEvent) {
@@ -77,6 +79,7 @@ export function OnScreenKeyboard({
   showAccents = true,
   trailingSlot,
   defaultLayer = "lower",
+  multiline = false,
 }: OnScreenKeyboardProps) {
   const [layer, setLayer] = useState<Layer>(defaultLayer);
   const [capsLocked, setCapsLocked] = useState(false);
@@ -111,6 +114,11 @@ export function OnScreenKeyboard({
   function handleSpace() {
     if (disabled) return;
     onChange(value + " ");
+  }
+
+  function handleNewline() {
+    if (disabled) return;
+    onChange(value + "\n");
   }
 
   const rows = buildRows(layer);
@@ -209,6 +217,20 @@ export function OnScreenKeyboard({
         >
           <span className="sr-only">Space</span>
         </motion.button>
+
+        {multiline && (
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.92 }}
+            onPointerDown={preventFocusSteal}
+            onClick={handleNewline}
+            disabled={disabled}
+            aria-label="New line"
+            className={cn(keyBase, "px-3 min-w-[52px]")}
+          >
+            <CornerDownLeft className="size-4" />
+          </motion.button>
+        )}
 
         {onEnter && (
           <motion.button
