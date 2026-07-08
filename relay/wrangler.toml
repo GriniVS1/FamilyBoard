@@ -1,0 +1,14 @@
+name = "familyboard-relay"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+# Own subdomain (auto-creates the DNS record on the zone): clean origin for
+# WAF/rate rules, no interleaving with the website or /oauth/* broker routes.
+routes = [{ pattern = "relay.familyboard.ch", custom_domain = true }]
+
+[durable_objects]
+bindings = [{ name = "TUNNEL", class_name = "TunnelDO" }]
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["TunnelDO"]
