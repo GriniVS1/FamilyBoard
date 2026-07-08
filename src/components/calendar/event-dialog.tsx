@@ -13,8 +13,12 @@ import {
 import { Input } from "@/components/shared/input";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { MemberColorSwatch } from "@/components/shared/member-color-swatch";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
+import { useOskField } from "@/hooks/use-osk-field";
 import { cn, MEMBER_COLORS, isMemberColor, type MemberColor } from "@/lib/utils";
 import type { CalendarEvent, CalendarMember, EventCreateInput } from "./types";
+
+type EventTextField = "title" | "location" | "description";
 
 type RecurrenceFreq = "none" | "daily" | "weekly" | "monthly";
 
@@ -229,6 +233,7 @@ export function EventDialog({
   const [error, setError] = useState<string | null>(null);
   const [scope, setScope] = useState<EditScope>("instance");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { activeField, bind } = useOskField<EventTextField>();
 
   const isGoogle = event?.source === "GOOGLE";
   const isEdit = Boolean(event);
@@ -429,6 +434,12 @@ export function EventDialog({
                 placeholder={t("whatsHappening")}
                 disabled={isGoogle}
                 required
+                {...bind("title")}
+              />
+              <InlineKeyboardPanel
+                open={activeField === "title"}
+                value={state.title}
+                onChange={(title) => patch({ title })}
               />
             </div>
 
@@ -598,6 +609,12 @@ export function EventDialog({
                 onChange={(e) => patch({ location: e.target.value })}
                 placeholder={t("optional")}
                 disabled={isGoogle}
+                {...bind("location")}
+              />
+              <InlineKeyboardPanel
+                open={activeField === "location"}
+                value={state.location}
+                onChange={(location) => patch({ location })}
               />
             </div>
 
@@ -612,6 +629,13 @@ export function EventDialog({
                 rows={3}
                 className="w-full rounded-2xl border border-border bg-surface px-4 py-3 text-base text-ink placeholder:text-muted focus:ring-2 focus:ring-ink/20 disabled:opacity-50 disabled:pointer-events-none"
                 placeholder={t("optional")}
+                {...bind("description")}
+              />
+              <InlineKeyboardPanel
+                open={activeField === "description"}
+                value={state.description}
+                onChange={(description) => patch({ description })}
+                multiline
               />
             </div>
 

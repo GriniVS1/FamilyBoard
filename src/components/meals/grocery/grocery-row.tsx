@@ -3,8 +3,12 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
+import { useOskField } from "@/hooks/use-osk-field";
 import { cn } from "@/lib/utils";
 import type { GroceryItem, GroceryPatchInput } from "../types";
+
+type GroceryEditField = "name" | "quantity" | "unit";
 
 type GroceryRowProps = {
   item: GroceryItem;
@@ -18,6 +22,7 @@ export function GroceryRow({ item, onToggle, onPatch, onDelete }: GroceryRowProp
   const [editName, setEditName] = useState(item.name);
   const [editQty, setEditQty] = useState(item.quantity ?? "");
   const [editUnit, setEditUnit] = useState(item.unit ?? "");
+  const { activeField, bind } = useOskField<GroceryEditField>();
 
   function commitEdit() {
     if (editName.trim() && editName.trim() !== item.name) {
@@ -32,39 +37,57 @@ export function GroceryRow({ item, onToggle, onPatch, onDelete }: GroceryRowProp
 
   if (editing) {
     return (
-      <motion.div
-        layout
-        className="flex items-center gap-2 rounded-2xl border border-accent-sky/40 bg-surface px-4 py-2"
-      >
-        <input
-          autoFocus
+      <motion.div layout className="flex flex-col gap-2">
+        <div className="flex items-center gap-2 rounded-2xl border border-accent-sky/40 bg-surface px-4 py-2">
+          <input
+            autoFocus
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") commitEdit();
+              if (e.key === "Escape") setEditing(false);
+            }}
+            className="flex-1 bg-transparent text-sm text-ink focus:outline-none"
+            {...bind("name")}
+          />
+          <input
+            value={editQty}
+            onChange={(e) => setEditQty(e.target.value)}
+            placeholder="qty"
+            className="w-14 bg-transparent text-sm text-muted focus:outline-none tabular text-right"
+            {...bind("quantity")}
+          />
+          <input
+            value={editUnit}
+            onChange={(e) => setEditUnit(e.target.value)}
+            placeholder="unit"
+            className="w-14 bg-transparent text-sm text-muted focus:outline-none text-right"
+            {...bind("unit")}
+          />
+          <button
+            type="button"
+            onClick={commitEdit}
+            className="tap-target inline-flex items-center justify-center rounded-full text-muted hover:text-ink transition-colors"
+          >
+            <Check className="size-4" />
+          </button>
+        </div>
+        <InlineKeyboardPanel
+          open={activeField === "name"}
           value={editName}
-          onChange={(e) => setEditName(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") commitEdit();
-            if (e.key === "Escape") setEditing(false);
-          }}
-          className="flex-1 bg-transparent text-sm text-ink focus:outline-none"
+          onChange={setEditName}
         />
-        <input
+        <InlineKeyboardPanel
+          open={activeField === "quantity"}
           value={editQty}
-          onChange={(e) => setEditQty(e.target.value)}
-          placeholder="qty"
-          className="w-14 bg-transparent text-sm text-muted focus:outline-none tabular text-right"
+          onChange={setEditQty}
+          showAccents={false}
         />
-        <input
+        <InlineKeyboardPanel
+          open={activeField === "unit"}
           value={editUnit}
-          onChange={(e) => setEditUnit(e.target.value)}
-          placeholder="unit"
-          className="w-14 bg-transparent text-sm text-muted focus:outline-none text-right"
+          onChange={setEditUnit}
         />
-        <button
-          type="button"
-          onClick={commitEdit}
-          className="tap-target inline-flex items-center justify-center rounded-full text-muted hover:text-ink transition-colors"
-        >
-          <Check className="size-4" />
-        </button>
       </motion.div>
     );
   }

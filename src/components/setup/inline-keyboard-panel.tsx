@@ -9,6 +9,7 @@ type InlineKeyboardPanelProps = {
   onChange: (value: string) => void;
   defaultLayer?: Layer;
   showAccents?: boolean;
+  multiline?: boolean;
 };
 
 export function InlineKeyboardPanel({
@@ -17,6 +18,7 @@ export function InlineKeyboardPanel({
   onChange,
   defaultLayer,
   showAccents,
+  multiline,
 }: InlineKeyboardPanelProps) {
   return (
     <AnimatePresence initial={false}>
@@ -34,6 +36,7 @@ export function InlineKeyboardPanel({
               onChange={onChange}
               defaultLayer={defaultLayer}
               showAccents={showAccents}
+              multiline={multiline}
             />
           </div>
         </motion.div>
