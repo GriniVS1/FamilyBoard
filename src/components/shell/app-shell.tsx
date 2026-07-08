@@ -160,7 +160,11 @@ export function AppShell({ children }: AppShellProps) {
         </div>
       </header>
 
-      <LicenseBanner />
+      {/* Clear the fixed sidebar like <main> does — a full-width banner would
+          start underneath it and hide the beginning of its text. */}
+      <div className="md:ml-60">
+        <LicenseBanner />
+      </div>
       <UpdateSuccessToast />
 
       <main className="md:ml-60 px-4 pt-6 pb-28 md:px-8 md:pb-12">
