@@ -41,3 +41,29 @@ class SecureSessionStore {
     await _storage.delete(key: _sessionKey);
   }
 }
+
+/// Persists the user's optional locale override (a plain language code, e.g.
+/// "de"). Not a credential — reuses [FlutterSecureStorage] purely because
+/// it's already a dependency, avoiding a second local-storage plugin for one
+/// small preference. Null means "follow the OS locale".
+class LocalePrefStore {
+  LocalePrefStore({FlutterSecureStorage? storage})
+      : _storage = storage ?? const FlutterSecureStorage();
+
+  static const String _localeKey = 'familyboard.locale.v1';
+
+  final FlutterSecureStorage _storage;
+
+  Future<String?> read() async {
+    final String? raw = await _storage.read(key: _localeKey);
+    return raw != null && raw.isNotEmpty ? raw : null;
+  }
+
+  Future<void> write(String? languageCode) async {
+    if (languageCode == null) {
+      await _storage.delete(key: _localeKey);
+    } else {
+      await _storage.write(key: _localeKey, value: languageCode);
+    }
+  }
+}

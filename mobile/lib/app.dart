@@ -17,6 +17,7 @@ import 'l10n/generated/app_localizations.dart';
 import 'models/notification_payload.dart';
 import 'services/fcm_service.dart';
 import 'services/write_queue_service.dart';
+import 'state/locale_provider.dart';
 import 'state/session_provider.dart';
 import 'state/write_queue_provider.dart';
 import 'theme.dart';
@@ -189,11 +190,13 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
 
   @override
   Widget build(BuildContext context) {
+    final LocalePrefState localePrefState = ref.watch(localePrefProvider);
     return MaterialApp.router(
       onGenerateTitle: (BuildContext ctx) => AppL10n.of(ctx).appTitle,
       theme: FamilyBoardTheme.light(),
       darkTheme: FamilyBoardTheme.dark(),
       themeMode: ThemeMode.system,
+      locale: localePrefState.locale,
       scaffoldMessengerKey: scaffoldMessengerKey,
       localizationsDelegates: const <LocalizationsDelegate<Object>>[
         AppL10n.delegate,

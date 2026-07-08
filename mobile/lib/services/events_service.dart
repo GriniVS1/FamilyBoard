@@ -23,6 +23,25 @@ class EventsFetchException implements Exception {
   final String message;
 }
 
+/// Error codes the wall's write endpoints return in their
+/// `{ error: { code } }` envelope. [unknown] covers anything else (including
+/// 5xx and network failures).
+enum EventWriteErrorCode {
+  googleReadOnly,
+  microsoftReadOnly,
+  overrideNotSupported,
+  notFound,
+  unknown,
+}
+
+/// Thrown by create/update/delete on a non-2xx response other than 401.
+class EventsWriteException implements Exception {
+  const EventsWriteException(this.code, {this.message});
+
+  final EventWriteErrorCode code;
+  final String? message;
+}
+
 class EventsService {
   EventsService({
     required ApiClientFactory clientFactory,
@@ -97,6 +116,152 @@ class EventsService {
     } catch (e) {
       throw EventsFetchException('Parse error: $e');
     }
+  }
+
+  /// Online-only — unlike the read path above, writes never queue offline
+  /// (there is no sensible replay story for a stale recurrence edit).
+  Future<MobileEvent> createEvent({
+    required Session session,
+    required String memberId,
+    required String title,
+    String? description,
+    String? location,
+    required DateTime startsAt,
+    required DateTime endsAt,
+    bool allDay = false,
+    String? color,
+    String? rrule,
+  }) async {
+    final Response<Object?> response = await _write(
+      session,
+      method: 'POST',
+      path: '',
+      body: <String, Object?>{
+        'memberId': memberId,
+        'title': title,
+        if (description != null && description.isNotEmpty)
+          'description': description,
+        if (location != null && location.isNotEmpty) 'location': location,
+        'startsAt': startsAt.toUtc().toIso8601String(),
+        'endsAt': endsAt.toUtc().toIso8601String(),
+        'allDay': allDay,
+        if (color != null) 'color': color,
+        if (rrule != null) 'rrule': rrule,
+      },
+    );
+    _guardWrite(response, expected: const <int>{200, 201});
+    return MobileEvent.fromJson(_extractEventMap(response));
+  }
+
+  /// [patch] is sent verbatim as the PATCH body — callers decide which subset
+  /// of fields to include (e.g. only `memberId`/`color` for a read-only
+  /// synced event).
+  Future<void> updateEvent({
+    required Session session,
+    required String id,
+    required String scope,
+    required Map<String, Object?> patch,
+  }) async {
+    final Response<Object?> response = await _write(
+      session,
+      method: 'PATCH',
+      path: '/${Uri.encodeComponent(id)}',
+      query: <String, Object?>{'scope': scope},
+      body: patch,
+    );
+    _guardWrite(response, expected: const <int>{200});
+  }
+
+  Future<void> deleteEvent({
+    required Session session,
+    required String id,
+    required String scope,
+  }) async {
+    final Response<Object?> response = await _write(
+      session,
+      method: 'DELETE',
+      path: '/${Uri.encodeComponent(id)}',
+      query: <String, Object?>{'scope': scope},
+    );
+    _guardWrite(response, expected: const <int>{200});
+  }
+
+  Future<Response<Object?>> _write(
+    Session session, {
+    required String method,
+    required String path,
+    Map<String, Object?>? query,
+    Map<String, Object?>? body,
+  }) async {
+    final Dio dio = _clientFactory.authenticated(session);
+    try {
+      return await dio.request<Object?>(
+        '/api/mobile/events$path',
+        data: body,
+        queryParameters: query,
+        options: Options(method: method),
+      );
+    } on DioException catch (e) {
+      throw EventsWriteException(
+        EventWriteErrorCode.unknown,
+        message: 'Network error: ${e.message}',
+      );
+    }
+  }
+
+  void _guardWrite(Response<Object?> response, {required Set<int> expected}) {
+    final int status = response.statusCode ?? 0;
+    if (status == 401) {
+      throw const EventsSessionRevokedException();
+    }
+    if (expected.contains(status)) {
+      return;
+    }
+    final String code = _errorCodeFromResponse(response);
+    switch (code) {
+      case 'GOOGLE_EVENT_READ_ONLY':
+        throw const EventsWriteException(EventWriteErrorCode.googleReadOnly);
+      case 'MICROSOFT_EVENT_READ_ONLY':
+        throw const EventsWriteException(EventWriteErrorCode.microsoftReadOnly);
+      case 'OVERRIDE_NOT_SUPPORTED':
+        throw const EventsWriteException(
+            EventWriteErrorCode.overrideNotSupported);
+      case 'EVENT_NOT_FOUND':
+        throw const EventsWriteException(EventWriteErrorCode.notFound);
+      default:
+        throw EventsWriteException(
+          EventWriteErrorCode.unknown,
+          message: '$status $code',
+        );
+    }
+  }
+
+  String _errorCodeFromResponse(Response<Object?> response) {
+    final Object? data = response.data;
+    if (data is Map) {
+      final Object? error = (data as Map<Object?, Object?>)['error'];
+      if (error is Map) {
+        final Object? code = (error as Map<Object?, Object?>)['code'];
+        if (code is String) {
+          return code;
+        }
+      }
+    }
+    return 'UNKNOWN';
+  }
+
+  Map<String, Object?> _extractEventMap(Response<Object?> response) {
+    final Object? data = response.data;
+    if (data is! Map) {
+      throw const EventsWriteException(EventWriteErrorCode.unknown);
+    }
+    final Map<String, Object?> body =
+        (data as Map<Object?, Object?>).cast<String, Object?>();
+    final Object? eventRaw = body['event'];
+    if (eventRaw is! Map) {
+      throw const EventsWriteException(EventWriteErrorCode.unknown);
+    }
+    return (eventRaw as Map<Object?, Object?>).cast<String, Object?>();
   }
 }
 

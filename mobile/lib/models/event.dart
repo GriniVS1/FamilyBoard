@@ -77,6 +77,10 @@ class MobileEvent {
 
   final EventMember member;
 
+  /// Synthetic ids for recurring instances are `masterId__recurrenceId`.
+  /// Editing/deleting such an id requires a `scope=instance|series` choice.
+  bool get isRecurringInstance => id.contains('__');
+
   /// The day key used for grouping: local date at midnight derived from startsAt.
   /// Events with no startsAt are grouped under DateTime(0) (treated as all-day today).
   DateTime get groupDay {
