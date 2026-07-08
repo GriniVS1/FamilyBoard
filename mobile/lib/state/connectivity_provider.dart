@@ -16,3 +16,18 @@ final StreamProvider<bool> connectivityProvider = StreamProvider<bool>(
     );
   },
 );
+
+/// Emits `true` when Wi-Fi is one of the active connectivity transports.
+///
+/// Used by [SessionNotifier] to trigger a silent probe back to the wall's
+/// LAN address when the device reconnects to Wi-Fi after having been pinned
+/// to the cloud relay.
+final StreamProvider<bool> wifiConnectivityProvider = StreamProvider<bool>(
+  (StreamProviderRef<bool> ref) {
+    final Connectivity connectivity = Connectivity();
+    return connectivity.onConnectivityChanged.map(
+      (List<ConnectivityResult> results) =>
+          results.contains(ConnectivityResult.wifi),
+    );
+  },
+);

@@ -529,5 +529,7 @@
   "languageItalian": "Italiano",
   "@languageItalian": {},
   "pairLanguageTooltip": "Sprache wählen",
-  "@pairLanguageTooltip": {}
+  "@pairLanguageTooltip": {},
+  "remoteConnectionTooltip": "Verbunden über den Cloud-Relay (unterwegs, nicht im Heim-WLAN)",
+  "@remoteConnectionTooltip": {}
 }

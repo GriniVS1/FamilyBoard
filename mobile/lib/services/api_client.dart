@@ -46,7 +46,7 @@ class ApiClientFactory {
   }
 
   Dio authenticated(Session session) {
-    final Dio dio = Dio(_baseOptions(session.serverUrl));
+    final Dio dio = Dio(_baseOptions(session.effectiveUrl));
     dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (RequestOptions options, RequestInterceptorHandler handler) {
@@ -100,7 +100,11 @@ class ApiClientFactory {
   }) {
     return BaseOptions(
       baseUrl: _normalize(baseUrl),
-      connectTimeout: connectTimeout ?? const Duration(seconds: 10),
+      // Short on purpose: off-LAN, the first request against a stale LAN
+      // `serverUrl` must fail fast so the recovery ladder in
+      // `ConnectionRecoveryService` can fall through to the cloud relay
+      // without a long user-visible stall.
+      connectTimeout: connectTimeout ?? const Duration(seconds: 4),
       receiveTimeout: receiveTimeout ?? const Duration(seconds: 15),
       sendTimeout: const Duration(seconds: 10),
       contentType: 'application/json',

@@ -58,6 +58,8 @@ class Session {
     required this.family,
     this.altUrl,
     this.installationId,
+    this.remoteUrl,
+    this.activeUrl,
   });
 
   factory Session.fromJson(Map<String, Object?> json) {
@@ -67,6 +69,8 @@ class Session {
         (json['family']! as Map<Object?, Object?>).cast<String, Object?>();
     final Object? altUrlRaw = json['altUrl'];
     final Object? installationIdRaw = json['installationId'];
+    final Object? remoteUrlRaw = json['remoteUrl'];
+    final Object? activeUrlRaw = json['activeUrl'];
     return Session(
       serverUrl: json['serverUrl']! as String,
       token: json['token']! as String,
@@ -78,6 +82,12 @@ class Session {
           installationIdRaw is String && installationIdRaw.isNotEmpty
               ? installationIdRaw
               : null,
+      remoteUrl: remoteUrlRaw is String && remoteUrlRaw.isNotEmpty
+          ? remoteUrlRaw
+          : null,
+      activeUrl: activeUrlRaw is String && activeUrlRaw.isNotEmpty
+          ? activeUrlRaw
+          : null,
     );
   }
 
@@ -107,6 +117,21 @@ class Session {
   /// until the first successful identity fetch.
   final String? installationId;
 
+  /// The wall's cloud-relay base URL (`https://relay.familyboard.ch/f/<id>`),
+  /// carried by the QR code's `remote` parameter or backfilled from
+  /// `GET /api/mobile/identity` fetched over the LAN. Null for pairings that
+  /// predate the relay feature or whose wall has no relay configured.
+  final String? remoteUrl;
+
+  /// The base URL actually in use for API calls, when it differs from
+  /// [serverUrl] — set by [ConnectionRecoveryService] when the LAN address
+  /// (and its `altUrl` fallback) are unreachable and [remoteUrl] answered
+  /// instead. Null means "use [serverUrl]"; see [effectiveUrl].
+  final String? activeUrl;
+
+  /// The base URL [ApiClientFactory.authenticated] should actually dial.
+  String get effectiveUrl => activeUrl ?? serverUrl;
+
   Map<String, Object?> toJson() => <String, Object?>{
         'serverUrl': serverUrl,
         'token': token,
@@ -115,12 +140,24 @@ class Session {
         'family': family.toJson(),
         if (altUrl != null) 'altUrl': altUrl,
         if (installationId != null) 'installationId': installationId,
+        if (remoteUrl != null) 'remoteUrl': remoteUrl,
+        if (activeUrl != null) 'activeUrl': activeUrl,
       };
 
   String encode() => jsonEncode(toJson());
 
-  Session copyWith(
-      {String? serverUrl, String? altUrl, String? installationId}) {
+  /// Sentinel distinguishing "leave [activeUrl] unchanged" (the default, an
+  /// omitted argument) from "explicitly set it to null" (flipping back to
+  /// [serverUrl]) — the only field that needs a real tri-state update.
+  static const Object _unset = Object();
+
+  Session copyWith({
+    String? serverUrl,
+    String? altUrl,
+    String? installationId,
+    String? remoteUrl,
+    Object? activeUrl = _unset,
+  }) {
     return Session(
       serverUrl: serverUrl ?? this.serverUrl,
       token: token,
@@ -129,6 +166,9 @@ class Session {
       family: family,
       altUrl: altUrl ?? this.altUrl,
       installationId: installationId ?? this.installationId,
+      remoteUrl: remoteUrl ?? this.remoteUrl,
+      activeUrl:
+          identical(activeUrl, _unset) ? this.activeUrl : activeUrl as String?,
     );
   }
 }

@@ -10,6 +10,7 @@ class ScannedPairPayload {
     required this.serverUrl,
     required this.code,
     this.altUrl,
+    this.remoteUrl,
   });
 
   final String serverUrl;
@@ -18,6 +19,11 @@ class ScannedPairPayload {
   /// Optional fallback URL (typically an mDNS hostname) carried by newer QR
   /// codes as the `alt` query parameter. Null for older QR codes.
   final String? altUrl;
+
+  /// Optional cloud-relay base URL carried by newer QR codes as the `remote`
+  /// query parameter (percent-encoded). Null for older QR codes or walls
+  /// without a relay configured.
+  final String? remoteUrl;
 }
 
 class QrScannerView extends StatefulWidget {
@@ -116,10 +122,13 @@ class _QrScannerViewState extends State<QrScannerView> {
       return null;
     }
     final String? alt = uri.queryParameters['alt'];
+    // Uri.queryParameters already percent-decodes values.
+    final String? remote = uri.queryParameters['remote'];
     return ScannedPairPayload(
       serverUrl: url,
       code: code,
       altUrl: alt != null && alt.isNotEmpty ? alt : null,
+      remoteUrl: remote != null && remote.isNotEmpty ? remote : null,
     );
   }
 }

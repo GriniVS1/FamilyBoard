@@ -87,6 +87,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       appBar: AppBar(
         title: const FamilyBoardLogo(fontSize: 18),
         actions: <Widget>[
+          if (session.activeUrl != null &&
+              session.activeUrl == session.remoteUrl)
+            Tooltip(
+              message: l10n.remoteConnectionTooltip,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(Icons.cloud_outlined),
+              ),
+            ),
           const QueueBadge(),
           IconButton(
             icon: const Icon(Icons.restaurant_menu_outlined),
