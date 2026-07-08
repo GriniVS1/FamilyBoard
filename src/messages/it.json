@@ -209,6 +209,11 @@
         "setLocation": "Imposta un luogo nelle Impostazioni",
         "couldNotLoad": "Impossibile caricare il meteo."
       }
+    },
+    "updateSuccess": {
+      "title": "FamilyBoard aggiornato con successo",
+      "version": "Versione {version}",
+      "ok": "OK"
     }
   },
   "calendar": {
@@ -680,7 +685,32 @@
       "logTitle": "Log aggiornamenti",
       "logRefresh": "Aggiorna",
       "logEmpty": "Nessuna attività di aggiornamento finora.",
-      "logUnavailable": "Il logging degli aggiornamenti non è ancora disponibile sull'immagine di base di questo dispositivo."
+      "logUnavailable": "Il logging degli aggiornamenti non è ancora disponibile sull'immagine di base di questo dispositivo.",
+      "progress": {
+        "checking": "Ricerca aggiornamenti…",
+        "downloading": "Download dell'aggiornamento…",
+        "verifying": "Verifica dell'aggiornamento…",
+        "installing": "Installazione dell'aggiornamento…",
+        "health": "Verifica della nuova versione…",
+        "done": "Aggiornamento installato",
+        "uptodate": "Già aggiornato",
+        "failed": "Aggiornamento non riuscito. Controlla il log qui sotto.",
+        "rolledback": "Aggiornamento non riuscito ed è stato ripristinato automaticamente. Controlla il log qui sotto.",
+        "targetVersion": "Aggiornamento a {version}"
+      }
+    },
+    "shutdown": {
+      "title": "Spegni",
+      "description": "Spegne il display a muro in modo sicuro. Potrai poi staccarlo dalla corrente.",
+      "button": "Spegni…",
+      "confirmTitle": "Spegnere il dispositivo?",
+      "adminPin": "PIN amministratore",
+      "cancel": "Annulla",
+      "shuttingDown": "Spegnimento in corso… Il dispositivo può poi essere staccato dalla corrente.",
+      "wrongPin": "PIN errato. Riprova.",
+      "tooManyAttempts": "Troppi tentativi. Attendi un minuto.",
+      "hostUnavailable": "Impossibile raggiungere il dispositivo.",
+      "failed": "Spegnimento non riuscito."
     }
   },
   "meals": {

@@ -209,6 +209,11 @@
         "setLocation": "Set a location in Settings",
         "couldNotLoad": "Could not load weather."
       }
+    },
+    "updateSuccess": {
+      "title": "FamilyBoard updated successfully",
+      "version": "Version {version}",
+      "ok": "OK"
     }
   },
   "calendar": {
@@ -680,7 +685,32 @@
       "logTitle": "Update log",
       "logRefresh": "Refresh",
       "logEmpty": "No update activity yet.",
-      "logUnavailable": "Update logging isn't available on this device's base image yet."
+      "logUnavailable": "Update logging isn't available on this device's base image yet.",
+      "progress": {
+        "checking": "Checking for updates…",
+        "downloading": "Downloading update…",
+        "verifying": "Verifying update…",
+        "installing": "Installing update…",
+        "health": "Checking new version…",
+        "done": "Update installed",
+        "uptodate": "Already up to date",
+        "failed": "Update failed. Check the log below for details.",
+        "rolledback": "Update failed and was rolled back automatically. Check the log below for details.",
+        "targetVersion": "Updating to {version}"
+      }
+    },
+    "shutdown": {
+      "title": "Shut down",
+      "description": "Power off the wall display safely. You can then unplug it.",
+      "button": "Shut down…",
+      "confirmTitle": "Shut down the device?",
+      "adminPin": "Admin PIN",
+      "cancel": "Cancel",
+      "shuttingDown": "Shutting down… The device can then be unplugged.",
+      "wrongPin": "Wrong PIN. Try again.",
+      "tooManyAttempts": "Too many attempts. Please wait a minute.",
+      "hostUnavailable": "Could not reach the device host.",
+      "failed": "Shutdown failed."
     }
   },
   "meals": {

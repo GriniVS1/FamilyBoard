@@ -209,6 +209,11 @@
         "setLocation": "Définir un lieu dans les paramètres",
         "couldNotLoad": "Impossible de charger la météo."
       }
+    },
+    "updateSuccess": {
+      "title": "FamilyBoard mis à jour avec succès",
+      "version": "Version {version}",
+      "ok": "OK"
     }
   },
   "calendar": {
@@ -680,7 +685,32 @@
       "logTitle": "Journal des mises à jour",
       "logRefresh": "Actualiser",
       "logEmpty": "Aucune activité de mise à jour pour l'instant.",
-      "logUnavailable": "La journalisation des mises à jour n'est pas encore disponible sur l'image de base de cet appareil."
+      "logUnavailable": "La journalisation des mises à jour n'est pas encore disponible sur l'image de base de cet appareil.",
+      "progress": {
+        "checking": "Recherche de mises à jour…",
+        "downloading": "Téléchargement de la mise à jour…",
+        "verifying": "Vérification de la mise à jour…",
+        "installing": "Installation de la mise à jour…",
+        "health": "Vérification de la nouvelle version…",
+        "done": "Mise à jour installée",
+        "uptodate": "Déjà à jour",
+        "failed": "Échec de la mise à jour. Consultez le journal ci-dessous.",
+        "rolledback": "La mise à jour a échoué et a été annulée automatiquement. Consultez le journal ci-dessous.",
+        "targetVersion": "Mise à jour vers {version}"
+      }
+    },
+    "shutdown": {
+      "title": "Éteindre",
+      "description": "Éteint l'écran mural en toute sécurité. Vous pouvez ensuite le débrancher.",
+      "button": "Éteindre…",
+      "confirmTitle": "Éteindre l'appareil ?",
+      "adminPin": "Code PIN admin",
+      "cancel": "Annuler",
+      "shuttingDown": "Extinction en cours… L'appareil peut ensuite être débranché.",
+      "wrongPin": "Code PIN incorrect. Réessayez.",
+      "tooManyAttempts": "Trop de tentatives. Veuillez patienter une minute.",
+      "hostUnavailable": "Impossible de joindre l'appareil.",
+      "failed": "Échec de l'extinction."
     }
   },
   "meals": {
