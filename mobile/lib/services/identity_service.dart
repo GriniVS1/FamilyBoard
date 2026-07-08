@@ -10,11 +10,17 @@ class IdentityResult {
     required this.installationId,
     this.familyName,
     this.appVersion,
+    this.remoteUrl,
   });
 
   final String installationId;
   final String? familyName;
   final String? appVersion;
+
+  /// The wall's cloud-relay base URL. Only ever present when this result was
+  /// fetched directly over the LAN — a fetch made *through* the relay itself
+  /// redacts this (and [familyName]/[appVersion]) and returns null.
+  final String? remoteUrl;
 }
 
 /// Fetches `GET /api/mobile/identity`.
@@ -80,10 +86,14 @@ class IdentityService {
     }
     final Object? familyNameRaw = payload['familyName'];
     final Object? appVersionRaw = payload['appVersion'];
+    final Object? remoteUrlRaw = payload['remoteUrl'];
     return IdentityResult(
       installationId: idRaw,
       familyName: familyNameRaw is String ? familyNameRaw : null,
       appVersion: appVersionRaw is String ? appVersionRaw : null,
+      remoteUrl: remoteUrlRaw is String && remoteUrlRaw.isNotEmpty
+          ? remoteUrlRaw
+          : null,
     );
   }
 }

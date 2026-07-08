@@ -22,6 +22,7 @@ class PairRequest {
     required this.code,
     required this.deviceName,
     this.altUrl,
+    this.remoteUrl,
   });
 
   final String serverUrl;
@@ -31,6 +32,10 @@ class PairRequest {
   /// Fallback URL scanned from the QR code's `alt` parameter. Carried into
   /// the resulting [Session] but never sent to the server.
   final String? altUrl;
+
+  /// Cloud-relay URL scanned from the QR code's `remote` parameter. Carried
+  /// into the resulting [Session] but never sent to the server.
+  final String? remoteUrl;
 }
 
 class PairService {
@@ -70,6 +75,7 @@ class PairService {
       return Session(
         serverUrl: dio.options.baseUrl,
         altUrl: request.altUrl,
+        remoteUrl: request.remoteUrl,
         token: payload['token']! as String,
         deviceId: payload['deviceId']! as String,
         member: Member.fromJson(

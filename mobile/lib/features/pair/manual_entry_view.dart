@@ -13,6 +13,7 @@ class ManualEntryView extends ConsumerStatefulWidget {
     required this.initialCode,
     required this.initialDeviceName,
     this.initialAltUrl,
+    this.initialRemoteUrl,
   });
 
   final String initialServerUrl;
@@ -23,6 +24,10 @@ class ManualEntryView extends ConsumerStatefulWidget {
   /// Not user-editable — there is no text field for it, it just rides along
   /// to [PairController.submit] so connection recovery has a fallback host.
   final String? initialAltUrl;
+
+  /// Optional cloud-relay URL carried from the QR code's `remote` parameter.
+  /// Not user-editable, same rationale as [initialAltUrl].
+  final String? initialRemoteUrl;
 
   @override
   ConsumerState<ManualEntryView> createState() => _ManualEntryViewState();
@@ -153,6 +158,7 @@ class _ManualEntryViewState extends ConsumerState<ManualEntryView> {
           code: code,
           deviceName: name,
           altUrl: widget.initialAltUrl,
+          remoteUrl: widget.initialRemoteUrl,
         );
   }
 

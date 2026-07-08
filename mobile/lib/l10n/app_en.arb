@@ -548,5 +548,9 @@
   "languageItalian": "Italiano",
   "@languageItalian": {},
   "pairLanguageTooltip": "Choose language",
-  "@pairLanguageTooltip": {}
+  "@pairLanguageTooltip": {},
+  "remoteConnectionTooltip": "Connected via the cloud relay (away from home Wi-Fi)",
+  "@remoteConnectionTooltip": {
+    "description": "Tooltip on the small cloud icon shown in the app bar when the app is talking to the wall through the cloud relay instead of the LAN."
+  }
 }

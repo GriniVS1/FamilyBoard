@@ -529,5 +529,7 @@
   "languageItalian": "Italiano",
   "@languageItalian": {},
   "pairLanguageTooltip": "Scegli la lingua",
-  "@pairLanguageTooltip": {}
+  "@pairLanguageTooltip": {},
+  "remoteConnectionTooltip": "Connesso tramite il relay cloud (fuori dal Wi-Fi di casa)",
+  "@remoteConnectionTooltip": {}
 }
