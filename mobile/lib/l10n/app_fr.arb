@@ -531,5 +531,48 @@
   "pairLanguageTooltip": "Choisir la langue",
   "@pairLanguageTooltip": {},
   "remoteConnectionTooltip": "Connecté via le relais cloud (hors du Wi-Fi domestique)",
-  "@remoteConnectionTooltip": {}
+  "@remoteConnectionTooltip": {},
+  "photosOpenAria": "Ouvrir les photos",
+  "@photosOpenAria": {},
+  "photosEmpty": "Aucune photo pour l'instant",
+  "@photosEmpty": {},
+  "photosEmptySubtitle": "Ajoutez les premières pour l'économiseur d'écran du mur.",
+  "@photosEmptySubtitle": {},
+  "photosUploadTooltip": "Ajouter des photos",
+  "@photosUploadTooltip": {},
+  "photosUploadingProgress": "Envoi de la photo {current} sur {total}…",
+  "@photosUploadingProgress": {
+    "placeholders": {
+      "current": { "type": "int", "example": "1" },
+      "total": { "type": "int", "example": "3" }
+    }
+  },
+  "photosDeleteTooltip": "Supprimer la photo",
+  "@photosDeleteTooltip": {},
+  "photosDeleteConfirm": "Supprimer cette photo ?",
+  "@photosDeleteConfirm": {},
+  "photosErrorGeneric": "Impossible de charger les photos. Réessayez.",
+  "@photosErrorGeneric": {},
+  "photosDeleteErrorGeneric": "Impossible de supprimer cette photo. Réessayez.",
+  "@photosDeleteErrorGeneric": {},
+  "photosImageLoadError": "Impossible de charger l'image",
+  "@photosImageLoadError": {},
+  "photosUploadTooLargeToast": "{count, plural, =1 {1 photo dépasse 8 Mo et n'a pas été envoyée} other {{count} photos dépassent 8 Mo et n'ont pas été envoyées}}",
+  "@photosUploadTooLargeToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+  "photosUploadUnsupportedToast": "{count, plural, =1 {1 photo a un format non pris en charge et n'a pas été envoyée} other {{count} photos ont un format non pris en charge et n'ont pas été envoyées}}",
+  "@photosUploadUnsupportedToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+  "photosUploadGenericToast": "{count, plural, =1 {1 photo n'a pas pu être envoyée} other {{count} photos n'ont pas pu être envoyées}}",
+  "@photosUploadGenericToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  }
 }

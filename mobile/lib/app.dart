@@ -11,6 +11,7 @@ import 'features/home/home_screen.dart';
 import 'features/meal_plan/meal_plan_screen.dart';
 import 'features/notes/notes_screen.dart';
 import 'features/pair/pair_screen.dart';
+import 'features/photos/photos_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'l10n/generated/app_localizations.dart';
@@ -95,6 +96,7 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
             location == '/notes' ||
             location == '/grocery' ||
             location == '/meal-plan' ||
+            location == '/photos' ||
             location == '/settings') {
           return '/pair';
         }
@@ -135,6 +137,11 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           path: '/meal-plan',
           builder: (BuildContext context, GoRouterState routerState) =>
               const MealPlanScreen(),
+        ),
+        GoRoute(
+          path: '/photos',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const PhotosScreen(),
         ),
         GoRoute(
           path: '/settings',

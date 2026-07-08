@@ -118,6 +118,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             onPressed: () => context.push('/grocery'),
           ),
           IconButton(
+            icon: const Icon(Icons.photo_library_outlined),
+            tooltip: l10n.photosOpenAria,
+            onPressed: () => context.push('/photos'),
+          ),
+          IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: l10n.settingsOpenAria,
             onPressed: () => context.push('/settings'),

@@ -18,6 +18,7 @@ import '../services/members_service.dart';
 import '../services/mutations_service.dart';
 import '../services/notes_service.dart';
 import '../services/pair_service.dart';
+import '../services/photos_service.dart';
 import '../services/secure_storage.dart';
 import '../services/today_service.dart';
 import '../services/write_queue_service.dart';
@@ -142,6 +143,11 @@ final Provider<MembersService> membersServiceProvider =
     Provider<MembersService>(
   (Ref ref) =>
       MembersService(clientFactory: ref.watch(apiClientFactoryProvider)),
+);
+
+final Provider<PhotosService> photosServiceProvider = Provider<PhotosService>(
+  (Ref ref) =>
+      PhotosService(clientFactory: ref.watch(apiClientFactoryProvider)),
 );
 
 class SessionState {

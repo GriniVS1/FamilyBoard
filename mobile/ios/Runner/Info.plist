@@ -84,6 +84,8 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>FamilyBoard uses the camera to scan the QR pairing code shown on your FamilyBoard.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>FamilyBoard adds photos from your library to your FamilyBoard's screensaver.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>FamilyBoard looks for your board on the home network so it can reconnect automatically if its address changes.</string>
 	<key>NSBonjourServices</key>

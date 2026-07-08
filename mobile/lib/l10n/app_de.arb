@@ -531,5 +531,48 @@
   "pairLanguageTooltip": "Sprache wählen",
   "@pairLanguageTooltip": {},
   "remoteConnectionTooltip": "Verbunden über den Cloud-Relay (unterwegs, nicht im Heim-WLAN)",
-  "@remoteConnectionTooltip": {}
+  "@remoteConnectionTooltip": {},
+  "photosOpenAria": "Fotos öffnen",
+  "@photosOpenAria": {},
+  "photosEmpty": "Noch keine Fotos",
+  "@photosEmpty": {},
+  "photosEmptySubtitle": "Lade die ersten Fotos für den Bildschirmschoner hoch.",
+  "@photosEmptySubtitle": {},
+  "photosUploadTooltip": "Fotos hinzufügen",
+  "@photosUploadTooltip": {},
+  "photosUploadingProgress": "Lade Foto {current} von {total} hoch…",
+  "@photosUploadingProgress": {
+    "placeholders": {
+      "current": { "type": "int", "example": "1" },
+      "total": { "type": "int", "example": "3" }
+    }
+  },
+  "photosDeleteTooltip": "Foto löschen",
+  "@photosDeleteTooltip": {},
+  "photosDeleteConfirm": "Dieses Foto löschen?",
+  "@photosDeleteConfirm": {},
+  "photosErrorGeneric": "Fotos konnten nicht geladen werden. Versuche es erneut.",
+  "@photosErrorGeneric": {},
+  "photosDeleteErrorGeneric": "Foto konnte nicht gelöscht werden. Versuche es erneut.",
+  "@photosDeleteErrorGeneric": {},
+  "photosImageLoadError": "Bild konnte nicht geladen werden",
+  "@photosImageLoadError": {},
+  "photosUploadTooLargeToast": "{count, plural, =1 {1 Foto ist größer als 8 MB und wurde nicht hochgeladen} other {{count} Fotos sind größer als 8 MB und wurden nicht hochgeladen}}",
+  "@photosUploadTooLargeToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+  "photosUploadUnsupportedToast": "{count, plural, =1 {1 Foto hat ein nicht unterstütztes Format und wurde nicht hochgeladen} other {{count} Fotos haben ein nicht unterstütztes Format und wurden nicht hochgeladen}}",
+  "@photosUploadUnsupportedToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+  "photosUploadGenericToast": "{count, plural, =1 {1 Foto konnte nicht hochgeladen werden} other {{count} Fotos konnten nicht hochgeladen werden}}",
+  "@photosUploadGenericToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  }
 }

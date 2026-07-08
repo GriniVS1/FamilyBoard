@@ -531,5 +531,48 @@
   "pairLanguageTooltip": "Scegli la lingua",
   "@pairLanguageTooltip": {},
   "remoteConnectionTooltip": "Connesso tramite il relay cloud (fuori dal Wi-Fi di casa)",
-  "@remoteConnectionTooltip": {}
+  "@remoteConnectionTooltip": {},
+  "photosOpenAria": "Apri foto",
+  "@photosOpenAria": {},
+  "photosEmpty": "Nessuna foto",
+  "@photosEmpty": {},
+  "photosEmptySubtitle": "Carica le prime foto per il salvaschermo del muro.",
+  "@photosEmptySubtitle": {},
+  "photosUploadTooltip": "Aggiungi foto",
+  "@photosUploadTooltip": {},
+  "photosUploadingProgress": "Caricamento foto {current} di {total}…",
+  "@photosUploadingProgress": {
+    "placeholders": {
+      "current": { "type": "int", "example": "1" },
+      "total": { "type": "int", "example": "3" }
+    }
+  },
+  "photosDeleteTooltip": "Elimina foto",
+  "@photosDeleteTooltip": {},
+  "photosDeleteConfirm": "Eliminare questa foto?",
+  "@photosDeleteConfirm": {},
+  "photosErrorGeneric": "Impossibile caricare le foto. Riprova.",
+  "@photosErrorGeneric": {},
+  "photosDeleteErrorGeneric": "Impossibile eliminare questa foto. Riprova.",
+  "@photosDeleteErrorGeneric": {},
+  "photosImageLoadError": "Impossibile caricare l'immagine",
+  "@photosImageLoadError": {},
+  "photosUploadTooLargeToast": "{count, plural, =1 {1 foto supera 8 MB e non è stata caricata} other {{count} foto superano 8 MB e non sono state caricate}}",
+  "@photosUploadTooLargeToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+  "photosUploadUnsupportedToast": "{count, plural, =1 {1 foto ha un formato non supportato e non è stata caricata} other {{count} foto hanno un formato non supportato e non sono state caricate}}",
+  "@photosUploadUnsupportedToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+  "photosUploadGenericToast": "{count, plural, =1 {1 foto non è stata caricata} other {{count} foto non sono state caricate}}",
+  "@photosUploadGenericToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  }
 }
