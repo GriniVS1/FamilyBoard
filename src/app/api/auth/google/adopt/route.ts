@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { encryptToken } from "@/lib/crypto";
 import { env } from "@/lib/env";
+import { getRequestOrigin } from "@/lib/network";
 import { pullForMember } from "@/lib/sync";
 
 export const runtime = "nodejs";
@@ -12,7 +13,28 @@ export const runtime = "nodejs";
 // we look that secret up by state, decrypt, and store the token as usual.
 // See docs/google-oauth-broker-plan.md.
 
-function redirect(reason: string, memberId?: string, ok = false) {
+// Unlike google/callback and microsoft/callback, this endpoint is reached via
+// the broker's own redirect_uri (not one registered with Google), so the
+// phone's browser is on whatever LAN address it originally dialed (the
+// `returnUrl` connect-google sent the broker) — not necessarily NEXTAUTH_URL.
+// The mobile-source final redirect must stay on that same origin or the
+// phone's browser can't resolve it. Non-mobile (wall) flows still use
+// NEXTAUTH_URL since the wall's own browser is already there.
+function redirect(
+  req: Request,
+  reason: string,
+  memberId?: string,
+  ok = false,
+  source?: "mobile",
+) {
+  if (source === "mobile") {
+    const url = new URL("/calendar-connected", getRequestOrigin(req));
+    url.searchParams.set("provider", "google");
+    url.searchParams.set("status", ok ? "connected" : "error");
+    if (memberId) url.searchParams.set("member", memberId);
+    if (!ok) url.searchParams.set("reason", reason);
+    return NextResponse.redirect(url);
+  }
   const url = new URL("/settings", env.NEXTAUTH_URL);
   url.searchParams.set("google", ok ? "connected" : "error");
   if (memberId) url.searchParams.set("member", memberId);
@@ -36,34 +58,36 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const state = url.searchParams.get("state");
   const payload = url.searchParams.get("payload");
-  if (!state || !payload) return redirect("missing_params");
+  if (!state || !payload) return redirect(req, "missing_params");
 
   // Consume the pending record atomically so a replayed redirect is rejected.
   let row: { value: string };
   try {
     row = await db.setting.delete({ where: { key: `google_adopt_${state}` } });
   } catch {
-    return redirect("invalid_state");
+    return redirect(req, "invalid_state");
   }
 
-  let data: { memberId: string; adoptSecret: string; expiresAt: number };
+  let data: { memberId: string; adoptSecret: string; expiresAt: number; source?: "mobile" };
   try {
     data = JSON.parse(row.value);
   } catch {
-    return redirect("invalid_state");
+    return redirect(req, "invalid_state");
   }
-  if (Date.now() > data.expiresAt) return redirect("expired_state", data.memberId);
+  const { source } = data;
+
+  if (Date.now() > data.expiresAt) return redirect(req, "expired_state", data.memberId, false, source);
 
   const member = await db.member.findUnique({ where: { id: data.memberId } });
-  if (!member) return redirect("member_missing", data.memberId);
+  if (!member) return redirect(req, "member_missing", data.memberId, false, source);
 
   let decoded: { refreshToken: string; email: string | null };
   try {
     decoded = JSON.parse(decryptFromBroker(data.adoptSecret, payload));
   } catch {
-    return redirect("decrypt_failed", data.memberId);
+    return redirect(req, "decrypt_failed", data.memberId, false, source);
   }
-  if (!decoded.refreshToken) return redirect("no_refresh_token", data.memberId);
+  if (!decoded.refreshToken) return redirect(req, "no_refresh_token", data.memberId, false, source);
 
   await db.member.update({
     where: { id: data.memberId },
@@ -81,5 +105,5 @@ export async function GET(req: Request) {
     console.error("[google/adopt] initial sync failed", err instanceof Error ? err.message : err);
   });
 
-  return redirect("ok", data.memberId, true);
+  return redirect(req, "ok", data.memberId, true, source);
 }

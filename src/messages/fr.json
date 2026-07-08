@@ -821,5 +821,18 @@
     "tooShort": "Trop court.",
     "invalidPin": "Code PIN invalide.",
     "rateLimited": "Trop de tentatives. Veuillez patienter."
+  },
+  "calendarConnected": {
+    "title": "Calendrier connecté",
+    "bodyWithProvider": "Ton calendrier {provider} est maintenant connecté à FamilyBoard.",
+    "bodyGeneric": "Ton calendrier est maintenant connecté à FamilyBoard.",
+    "instructions": "Tu peux fermer cet onglet et retourner sur l'application FamilyBoard.",
+    "errorTitle": "Échec de la connexion",
+    "errorBodyWithProvider": "Impossible de connecter ton calendrier {provider} à FamilyBoard.",
+    "errorBodyGeneric": "Impossible de connecter ton calendrier à FamilyBoard.",
+    "errorInstructions": "Ferme cet onglet et réessaie depuis l'application FamilyBoard.",
+    "reasonLabel": "Raison : {reason}",
+    "google": "Google",
+    "microsoft": "Microsoft"
   }
 }

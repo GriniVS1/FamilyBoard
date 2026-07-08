@@ -11,7 +11,6 @@ import '../../models/mutations.dart';
 import '../../models/session.dart';
 import '../../models/today.dart';
 import '../../services/fcm_service.dart';
-import '../../services/heartbeat_service.dart';
 import '../../services/today_service.dart';
 import '../../state/session_provider.dart';
 import '../../state/today_provider.dart';
@@ -19,8 +18,6 @@ import '../../theme.dart';
 import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
 import '../../widgets/queue_badge.dart';
-
-enum _HeartbeatStatus { idle, sending, done }
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -31,9 +28,6 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen>
     with WidgetsBindingObserver {
-  _HeartbeatStatus _status = _HeartbeatStatus.idle;
-  DateTime? _lastSeenAt;
-  String? _errorMessage;
   bool _notificationsEnabled = true;
 
   @override
@@ -97,22 +91,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           IconButton(
             icon: const Icon(Icons.restaurant_menu_outlined),
             tooltip: l10n.mealPlanOpenAria,
-            onPressed: () => context.go('/meal-plan'),
+            onPressed: () => context.push('/meal-plan'),
           ),
           IconButton(
             icon: const Icon(Icons.event_outlined),
             tooltip: l10n.calendarOpenAria,
-            onPressed: () => context.go('/calendar'),
+            onPressed: () => context.push('/calendar'),
           ),
           IconButton(
             icon: const Icon(Icons.sticky_note_2_outlined),
             tooltip: l10n.notesOpenAria,
-            onPressed: () => context.go('/notes'),
+            onPressed: () => context.push('/notes'),
           ),
           IconButton(
             icon: const Icon(Icons.shopping_cart_outlined),
             tooltip: l10n.groceryOpenAria,
-            onPressed: () => context.go('/grocery'),
+            onPressed: () => context.push('/grocery'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            tooltip: l10n.settingsOpenAria,
+            onPressed: () => context.push('/settings'),
           ),
         ],
       ),
@@ -163,122 +162,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     l10n: l10n,
                   ),
                 ),
-                const SizedBox(height: 32),
-                _heartbeatStatusText(l10n),
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  icon: const Icon(Icons.favorite_outline),
-                  label: Text(
-                    _status == _HeartbeatStatus.sending
-                        ? l10n.homeHeartbeatPending
-                        : l10n.homeHeartbeat,
-                  ),
-                  onPressed: _status == _HeartbeatStatus.sending
-                      ? null
-                      : _sendHeartbeat,
-                ),
-                const SizedBox(height: 12),
-                OutlinedButton.icon(
-                  icon: const Icon(Icons.logout),
-                  label: Text(l10n.homeDisconnect),
-                  onPressed: _confirmDisconnect,
-                ),
               ],
             ),
           ),
         ),
       ),
     );
-  }
-
-  Widget _heartbeatStatusText(AppL10n l10n) {
-    if (_errorMessage != null) {
-      return Text(
-        _errorMessage!,
-        style: TextStyle(color: Theme.of(context).colorScheme.error),
-      );
-    }
-    if (_lastSeenAt != null) {
-      final String formatted =
-          DateFormat.Hm(Localizations.localeOf(context).toString())
-              .format(_lastSeenAt!.toLocal());
-      return Text(
-        l10n.homeHeartbeatOk(formatted),
-        style: Theme.of(context).textTheme.bodyMedium,
-      );
-    }
-    return const SizedBox.shrink();
-  }
-
-  Future<void> _sendHeartbeat() async {
-    final SessionState sessionState = ref.read(sessionProvider);
-    final Session? session = sessionState.session;
-    if (session == null) {
-      return;
-    }
-    setState(() {
-      _status = _HeartbeatStatus.sending;
-      _errorMessage = null;
-    });
-    try {
-      final HeartbeatResult result =
-          await ref.read(heartbeatServiceProvider).send(session);
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _status = _HeartbeatStatus.done;
-        _lastSeenAt = result.lastSeenAt;
-      });
-    } on HeartbeatException catch (err) {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _status = _HeartbeatStatus.idle;
-        _errorMessage = _heartbeatErrorMessage(err.kind);
-      });
-      if (err.kind == HeartbeatErrorKind.unauthorized) {
-        await ref.read(sessionProvider.notifier).clear();
-      }
-    }
-  }
-
-  String _heartbeatErrorMessage(HeartbeatErrorKind kind) {
-    final AppL10n l10n = AppL10n.of(context);
-    switch (kind) {
-      case HeartbeatErrorKind.unauthorized:
-        return l10n.disconnectConfirm;
-      case HeartbeatErrorKind.network:
-        return l10n.pairErrorNetwork;
-      case HeartbeatErrorKind.unknown:
-        return l10n.pairErrorNetwork;
-    }
-  }
-
-  Future<void> _confirmDisconnect() async {
-    final AppL10n l10n = AppL10n.of(context);
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          content: Text(l10n.disconnectConfirm),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text(l10n.homeDisconnect),
-            ),
-          ],
-        );
-      },
-    );
-    if (confirmed == true) {
-      await ref.read(sessionProvider.notifier).clear();
-    }
   }
 }
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { withErrorHandling, ok } from "@/lib/api";
-import { requireAdminPin } from "@/lib/admin-pin";
+import { requireMobileAuth } from "@/lib/mobile-auth";
 import { selectCaldavCalendar } from "@/lib/calendar-connect";
 
 export const runtime = "nodejs";
@@ -10,12 +10,9 @@ const bodySchema = z.object({
   calendarName: z.string().min(1),
 });
 
-type Ctx = { params: Promise<{ id: string }> };
-
-export const POST = withErrorHandling<Ctx>(async (req, { params }) => {
-  await requireAdminPin(req);
-  const { id } = await params;
+export const POST = withErrorHandling(async (req) => {
+  const { memberId } = await requireMobileAuth(req);
   const body = bodySchema.parse(await req.json());
-  const result = await selectCaldavCalendar(id, body);
+  const result = await selectCaldavCalendar(memberId, body);
   return ok(result);
 });

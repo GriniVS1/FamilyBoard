@@ -73,6 +73,24 @@ export function getMdnsBaseUrl(): string | null {
   return configured.hostname.endsWith(".local") ? configured.origin : null;
 }
 
+// Origin to hand back to the CALLER of this request — used when an OAuth
+// broker round-trip needs to redirect the initiating browser back to this
+// device (e.g. the mobile app's connect-google, where the phone reached us
+// at whatever LAN address it has, not necessarily env.NEXTAUTH_URL). Only
+// trusts X-Forwarded-* when TRUST_PROXY is on (same trust boundary as
+// getClientIp in rate-limit.ts); otherwise falls back to the raw Host header,
+// which reflects the address/port the client actually dialed.
+export function getRequestOrigin(req: Request): string {
+  const configured = new URL(env.NEXTAUTH_URL);
+  const host =
+    (env.TRUST_PROXY && req.headers.get("x-forwarded-host")) || req.headers.get("host");
+  if (!host) return configured.origin;
+  const proto =
+    (env.TRUST_PROXY && req.headers.get("x-forwarded-proto")) ||
+    configured.protocol.replace(":", "");
+  return `${proto}://${host}`;
+}
+
 export class NetworkError extends Error {
   constructor(
     public readonly code:
