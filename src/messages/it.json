@@ -720,6 +720,16 @@
       "tooManyAttempts": "Troppi tentativi. Attendi un minuto.",
       "hostUnavailable": "Impossibile raggiungere il dispositivo.",
       "failed": "Spegnimento non riuscito."
+    },
+    "remoteAccess": {
+      "title": "Accesso remoto",
+      "description": "Raggiungi FamilyBoard dal telefono quando sei fuori casa.",
+      "toggleAria": "Attiva/disattiva l’accesso remoto",
+      "status": {
+        "connected": "Accesso remoto: connesso",
+        "disconnected": "Accesso remoto: connessione…",
+        "disabled": "Accesso remoto: disattivato"
+      }
     }
   },
   "meals": {

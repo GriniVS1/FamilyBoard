@@ -34,6 +34,7 @@ import { MicrosoftCallbackBanner } from "./microsoft-callback-banner";
 import { MicrosoftRow } from "./microsoft-row";
 import { MemberEditorDialog } from "./member-editor-dialog";
 import { NavConfigCard } from "./nav-config-card";
+import { RemoteAccessCard } from "./remote-access-card";
 import { NetworkSection } from "./network-section";
 import { PinChangeDialog } from "./pin-change-dialog";
 import { GateOverlay, PinGate } from "./pin-gate";
@@ -281,6 +282,10 @@ export function SettingsView({
 
       <GateOverlay locked={!unlocked}>
         <NavConfigCard adminPin={verifiedPin} />
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <RemoteAccessCard adminPin={verifiedPin} />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>

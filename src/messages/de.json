@@ -720,6 +720,16 @@
       "tooManyAttempts": "Zu viele Versuche. Bitte eine Minute warten.",
       "hostUnavailable": "Gerät konnte nicht erreicht werden.",
       "failed": "Herunterfahren fehlgeschlagen."
+    },
+    "remoteAccess": {
+      "title": "Fernzugriff",
+      "description": "Erreiche FamilyBoard vom Handy aus, wenn du unterwegs bist.",
+      "toggleAria": "Fernzugriff umschalten",
+      "status": {
+        "connected": "Fernzugriff: verbunden",
+        "disconnected": "Fernzugriff: verbindet…",
+        "disabled": "Fernzugriff: aus"
+      }
     }
   },
   "meals": {
