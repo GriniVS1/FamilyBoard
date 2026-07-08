@@ -1,12 +1,14 @@
 import "server-only";
 import { db } from "./db";
 import { AppError } from "./api";
+import type { MemberRole } from "./enums";
 import { verifyDeviceToken } from "./mobile-tokens";
 
 export type MobileAuthContext = {
   deviceId: string;
   memberId: string;
   familyId: string;
+  role: MemberRole;
 };
 
 export async function requireMobileAuth(
@@ -24,7 +26,13 @@ export async function requireMobileAuth(
   // acceptable. Revoked devices are excluded before iterating.
   const candidates = await db.mobileDevice.findMany({
     where: { revokedAt: null },
-    select: { id: true, memberId: true, familyId: true, tokenHash: true },
+    select: {
+      id: true,
+      memberId: true,
+      familyId: true,
+      tokenHash: true,
+      member: { select: { role: true } },
+    },
   });
 
   for (const c of candidates) {
@@ -32,7 +40,12 @@ export async function requireMobileAuth(
       void db.mobileDevice
         .update({ where: { id: c.id }, data: { lastSeenAt: new Date() } })
         .catch(() => {});
-      return { deviceId: c.id, memberId: c.memberId, familyId: c.familyId };
+      return {
+        deviceId: c.id,
+        memberId: c.memberId,
+        familyId: c.familyId,
+        role: c.member.role as MemberRole,
+      };
     }
   }
 

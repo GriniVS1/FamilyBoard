@@ -13,6 +13,7 @@ import '../services/grocery_service.dart';
 import '../services/heartbeat_service.dart';
 import '../services/identity_service.dart';
 import '../services/meal_plan_service.dart';
+import '../services/members_service.dart';
 import '../services/mutations_service.dart';
 import '../services/notes_service.dart';
 import '../services/pair_service.dart';
@@ -133,6 +134,12 @@ final Provider<CalendarSetupService> calendarSetupServiceProvider =
     Provider<CalendarSetupService>(
   (Ref ref) =>
       CalendarSetupService(clientFactory: ref.watch(apiClientFactoryProvider)),
+);
+
+final Provider<MembersService> membersServiceProvider =
+    Provider<MembersService>(
+  (Ref ref) =>
+      MembersService(clientFactory: ref.watch(apiClientFactoryProvider)),
 );
 
 class SessionState {
