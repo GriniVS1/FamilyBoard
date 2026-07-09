@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 const bodySchema = z.object({
   code: z.string().min(1).max(10),
   name: z.string().trim().min(1).max(100),
-  platform: z.enum(["ios", "android", "unknown"]),
+  platform: z.enum(["ios", "android", "web", "unknown"]),
 });
 
 export const POST = withErrorHandling(async (req) => {

@@ -729,6 +729,23 @@
         "connected": "Accesso remoto: connesso",
         "disconnected": "Accesso remoto: connessione…",
         "disabled": "Accesso remoto: disattivato"
+      },
+      "web": {
+        "title": "Accesso Web",
+        "description": "Apri FamilyBoard nel browser su qualsiasi dispositivo.",
+        "setup": "Configura",
+        "member": "Per chi?",
+        "generateCode": "Genera codice",
+        "generating": "Generazione…",
+        "scanOrOpen": "Scansiona il codice o apri il link",
+        "linkLabel": "Link",
+        "copyLink": "Copia link",
+        "copied": "Copiato!",
+        "expiresIn": "Scade in {seconds}s",
+        "expired": "Codice scaduto",
+        "generateNew": "Nuovo codice",
+        "error": "Impossibile creare un codice. Riprova.",
+        "unavailable": "L'accesso remoto non è connesso al momento."
       }
     }
   },

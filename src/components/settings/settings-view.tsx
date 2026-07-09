@@ -285,7 +285,7 @@ export function SettingsView({
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
-        <RemoteAccessCard adminPin={verifiedPin} />
+        <RemoteAccessCard adminPin={verifiedPin} members={memberList} />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
