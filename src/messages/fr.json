@@ -729,6 +729,23 @@
         "connected": "Accès à distance : connecté",
         "disconnected": "Accès à distance : connexion…",
         "disabled": "Accès à distance : désactivé"
+      },
+      "web": {
+        "title": "Accès Web",
+        "description": "Ouvrez FamilyBoard dans un navigateur sur n'importe quel appareil.",
+        "setup": "Configurer",
+        "member": "Pour qui ?",
+        "generateCode": "Générer un code",
+        "generating": "Génération…",
+        "scanOrOpen": "Scannez le code ou ouvrez le lien",
+        "linkLabel": "Lien",
+        "copyLink": "Copier le lien",
+        "copied": "Copié !",
+        "expiresIn": "Expire dans {seconds}s",
+        "expired": "Code expiré",
+        "generateNew": "Nouveau code",
+        "error": "Impossible de créer un code. Veuillez réessayer.",
+        "unavailable": "L'accès à distance n'est pas connecté pour le moment."
       }
     }
   },

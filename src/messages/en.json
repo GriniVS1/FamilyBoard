@@ -729,6 +729,23 @@
         "connected": "Remote access: connected",
         "disconnected": "Remote access: connecting…",
         "disabled": "Remote access: off"
+      },
+      "web": {
+        "title": "Web access",
+        "description": "Open FamilyBoard in a browser on any device.",
+        "setup": "Set up",
+        "member": "For whom?",
+        "generateCode": "Generate code",
+        "generating": "Generating…",
+        "scanOrOpen": "Scan the code or open the link",
+        "linkLabel": "Link",
+        "copyLink": "Copy link",
+        "copied": "Copied!",
+        "expiresIn": "Expires in {seconds}s",
+        "expired": "Code expired",
+        "generateNew": "New code",
+        "error": "Could not create a code. Please try again.",
+        "unavailable": "Remote access is not connected right now."
       }
     }
   },

@@ -13,14 +13,23 @@ export const dynamic = "force-dynamic";
 export const GET = withErrorHandling(async (req) => {
   const ctx = await requireMobileAuth(req);
 
-  const members = await db.member.findMany({
-    where: { familyId: ctx.familyId },
-    orderBy: { createdAt: "asc" },
-  });
+  const [members, family] = await Promise.all([
+    db.member.findMany({
+      where: { familyId: ctx.familyId },
+      orderBy: { createdAt: "asc" },
+    }),
+    db.family.findUnique({
+      where: { id: ctx.familyId },
+      select: { name: true },
+    }),
+  ]);
 
+  // Bearer-authenticated (unlike /api/mobile/identity, which redacts this
+  // over the relay), so the paired web SPA can use it for its header.
   return ok({
     members: members.map(serializeMember),
     me: { memberId: ctx.memberId, role: ctx.role },
+    family: { name: family?.name ?? "" },
   });
 });
 

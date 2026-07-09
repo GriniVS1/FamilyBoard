@@ -729,6 +729,23 @@
         "connected": "Fernzugriff: verbunden",
         "disconnected": "Fernzugriff: verbindet…",
         "disabled": "Fernzugriff: aus"
+      },
+      "web": {
+        "title": "Web-Zugriff",
+        "description": "Öffne FamilyBoard im Browser auf jedem Gerät.",
+        "setup": "Einrichten",
+        "member": "Für wen?",
+        "generateCode": "Code generieren",
+        "generating": "Wird generiert…",
+        "scanOrOpen": "Scanne den Code oder öffne den Link",
+        "linkLabel": "Link",
+        "copyLink": "Link kopieren",
+        "copied": "Kopiert!",
+        "expiresIn": "Läuft ab in {seconds}s",
+        "expired": "Code abgelaufen",
+        "generateNew": "Neuer Code",
+        "error": "Code konnte nicht erstellt werden. Bitte versuche es erneut.",
+        "unavailable": "Der Fernzugriff ist momentan nicht verbunden."
       }
     }
   },

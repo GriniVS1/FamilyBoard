@@ -9,6 +9,16 @@ routes = [{ pattern = "relay.familyboard.ch", custom_domain = true }]
 [durable_objects]
 bindings = [{ name = "TUNNEL", class_name = "TunnelDO" }]
 
+# Serves the pairing SPA (built separately into relay/public) from the same
+# origin/domain as the tunnel. run_worker_first keeps the Worker in the loop
+# ONLY for the tunnel's own routes — every other request (including /app and
+# its deep links) is served directly by the platform's Asset Worker, with
+# SPA fallback via not_found_handling so client-side routing works on refresh.
+[assets]
+directory = "public"
+not_found_handling = "single-page-application"
+run_worker_first = ["/connect", "/f/*", "/status/*", "/health"]
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["TunnelDO"]

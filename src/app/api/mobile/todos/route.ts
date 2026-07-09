@@ -13,6 +13,27 @@ const createSchema = z.object({
   dueDate: z.coerce.date().nullable().optional(),
 });
 
+export const GET = withErrorHandling(async (req) => {
+  const ctx = await requireMobileAuth(req);
+
+  const todos = await db.todo.findMany({
+    where: { familyId: ctx.familyId },
+    orderBy: [{ done: "asc" }, { createdAt: "desc" }],
+  });
+
+  return ok({
+    todos: todos.map((todo) => ({
+      id: todo.id,
+      title: todo.title,
+      done: todo.done,
+      dueDate: todo.dueDate ? todo.dueDate.toISOString() : null,
+      memberId: todo.memberId,
+      familyId: todo.familyId,
+      createdAt: todo.createdAt.toISOString(),
+    })),
+  });
+});
+
 export const POST = withErrorHandling(async (req) => {
   const ctx = await requireMobileAuth(req);
   const body = createSchema.parse(await req.json());
