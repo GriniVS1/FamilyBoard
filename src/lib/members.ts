@@ -4,6 +4,9 @@ import { AppError } from "./api";
 import { db } from "./db";
 import { MEMBER_ROLE } from "./enums";
 import { MEMBER_COLORS } from "./utils";
+import { deleteRemoteEvent } from "./sync";
+import { deleteRemoteCaldavEvent } from "./caldav";
+import { deleteRemoteMicrosoftEvent } from "./microsoft";
 
 export const MAX_MEMBERS = 8;
 
@@ -143,6 +146,41 @@ export async function deleteMember(
     });
     if (adminCount <= 1) {
       throw new AppError("Cannot remove the only admin", "LAST_ADMIN", 400);
+    }
+  }
+
+  // LOCAL events we pushed to the member's linked calendars would be orphaned
+  // by the cascade delete — remove the remote copies first, best-effort.
+  // Provider-sourced events (GOOGLE/CALDAV/MICROSOFT) stay on the provider.
+  // Must run BEFORE db.member.delete: the helpers re-read event + member rows
+  // themselves, so after the cascade they'd silently no-op.
+  const pushedEvents = await db.event.findMany({
+    where: {
+      memberId: id,
+      source: "LOCAL",
+      OR: [
+        { googleEventId: { not: null } },
+        { caldavHref: { not: null } },
+        { microsoftEventId: { not: null } },
+      ],
+    },
+    select: {
+      id: true,
+      googleEventId: true,
+      caldavHref: true,
+      microsoftEventId: true,
+    },
+  });
+  for (const event of pushedEvents) {
+    try {
+      if (event.googleEventId) await deleteRemoteEvent(event.id);
+      if (event.caldavHref) await deleteRemoteCaldavEvent(event.id);
+      if (event.microsoftEventId) await deleteRemoteMicrosoftEvent(event.id);
+    } catch (err) {
+      console.warn(
+        `[members] remote cleanup for event ${event.id} failed`,
+        err instanceof Error ? err.message : err,
+      );
     }
   }
 
