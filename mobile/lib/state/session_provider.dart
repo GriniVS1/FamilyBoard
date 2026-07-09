@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../db/cache_db.dart';
@@ -13,12 +14,15 @@ import '../services/grocery_service.dart';
 import '../services/heartbeat_service.dart';
 import '../services/identity_service.dart';
 import '../services/meal_plan_service.dart';
+import '../services/members_service.dart';
 import '../services/mutations_service.dart';
 import '../services/notes_service.dart';
 import '../services/pair_service.dart';
+import '../services/photos_service.dart';
 import '../services/secure_storage.dart';
 import '../services/today_service.dart';
 import '../services/write_queue_service.dart';
+import 'connectivity_provider.dart';
 
 final Provider<SecureSessionStore> sessionStoreProvider =
     Provider<SecureSessionStore>((Ref ref) => SecureSessionStore());
@@ -135,6 +139,17 @@ final Provider<CalendarSetupService> calendarSetupServiceProvider =
       CalendarSetupService(clientFactory: ref.watch(apiClientFactoryProvider)),
 );
 
+final Provider<MembersService> membersServiceProvider =
+    Provider<MembersService>(
+  (Ref ref) =>
+      MembersService(clientFactory: ref.watch(apiClientFactoryProvider)),
+);
+
+final Provider<PhotosService> photosServiceProvider = Provider<PhotosService>(
+  (Ref ref) =>
+      PhotosService(clientFactory: ref.watch(apiClientFactoryProvider)),
+);
+
 class SessionState {
   const SessionState({required this.loaded, required this.session});
 
@@ -154,11 +169,32 @@ class SessionState {
   bool get hasSession => session != null;
 }
 
-class SessionNotifier extends Notifier<SessionState> {
+class SessionNotifier extends Notifier<SessionState>
+    with WidgetsBindingObserver {
   @override
   SessionState build() {
+    WidgetsBinding.instance.addObserver(this);
+    ref.onDispose(() => WidgetsBinding.instance.removeObserver(this));
+    // Return-to-LAN trigger #2: connectivity flips to Wi-Fi while we're
+    // pinned to the relay. Trigger #1 (app resume) is the
+    // didChangeAppLifecycleState override below.
+    ref.listen<AsyncValue<bool>>(wifiConnectivityProvider,
+        (AsyncValue<bool>? previous, AsyncValue<bool> next) {
+      final bool cameOnWifi =
+          next.valueOrNull == true && previous?.valueOrNull != true;
+      if (cameOnWifi) {
+        unawaited(_maybeReturnToLan());
+      }
+    });
     Future<void>.microtask(_load);
     return const SessionState.loading();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_maybeReturnToLan());
+    }
   }
 
   Future<void> _load() async {
@@ -166,19 +202,21 @@ class SessionNotifier extends Notifier<SessionState> {
     state = stored == null
         ? const SessionState.none()
         : SessionState.signedIn(stored);
-    if (stored != null && stored.installationId == null) {
-      // Device paired before the installationId contract existed. Backfill
-      // it opportunistically so connection recovery can verify candidates
-      // by identity instead of falling back to "exactly one host found".
-      unawaited(_backfillInstallationId(stored));
+    if (stored != null &&
+        (stored.installationId == null || stored.remoteUrl == null)) {
+      // Device paired before the installationId/remoteUrl contract existed
+      // (or before the wall had a relay configured). Backfill opportunistically
+      // over the LAN so connection recovery can verify candidates by identity
+      // and fall back to the relay when off-LAN.
+      unawaited(_backfillFromIdentity(stored));
     }
   }
 
-  Future<void> _backfillInstallationId(Session session) async {
+  Future<void> _backfillFromIdentity(Session session) async {
     final IdentityResult? result =
         await ref.read(identityServiceProvider).fetch(session.serverUrl);
     if (result != null) {
-      await updateInstallationId(result.installationId);
+      await applyIdentity(result);
     }
   }
 
@@ -187,32 +225,76 @@ class SessionNotifier extends Notifier<SessionState> {
     state = SessionState.signedIn(session);
   }
 
-  /// Persists a rediscovered `serverUrl` (and its verified `installationId`)
-  /// after the wall's LAN IP changed. No-op if the session was cleared out
-  /// from under a concurrent recovery attempt.
+  /// Persists a rediscovered base URL (and its verified `installationId`)
+  /// after the wall became unreachable at [Session.serverUrl]. No-op if the
+  /// session was cleared out from under a concurrent recovery attempt.
+  ///
+  /// A LAN candidate (`recovered.isRemote == false`) replaces `serverUrl`
+  /// itself and clears `activeUrl` back to null. A relay candidate
+  /// (`isRemote == true`) only sets `activeUrl` — `serverUrl` is left alone
+  /// so the app keeps trying the real LAN address (via [probeLan]) and can
+  /// flip back to it later.
   Future<void> applyRecoveredConnection(RecoveredConnection recovered) async {
     final Session? current = state.session;
     if (current == null) {
       return;
     }
+    final Session updated = recovered.isRemote
+        ? current.copyWith(
+            activeUrl: recovered.serverUrl,
+            installationId: recovered.installationId,
+          )
+        : current.copyWith(
+            serverUrl: recovered.serverUrl,
+            installationId: recovered.installationId,
+            activeUrl: null,
+          );
+    await ref.read(sessionStoreProvider).write(updated);
+    state = SessionState.signedIn(updated);
+  }
+
+  /// Persists `installationId`/`remoteUrl` fetched from `GET
+  /// /api/mobile/identity`, used both right after pairing and to backfill a
+  /// pre-relay pairing. `remoteUrl` is only ever overwritten when [result]
+  /// actually carries one (a fetch made over the relay redacts it).
+  Future<void> applyIdentity(IdentityResult result) async {
+    final Session? current = state.session;
+    if (current == null) {
+      return;
+    }
+    final bool idChanged = current.installationId != result.installationId;
+    final bool remoteChanged =
+        result.remoteUrl != null && current.remoteUrl != result.remoteUrl;
+    if (!idChanged && !remoteChanged) {
+      return;
+    }
     final Session updated = current.copyWith(
-      serverUrl: recovered.serverUrl,
-      installationId: recovered.installationId,
+      installationId: result.installationId,
+      remoteUrl: result.remoteUrl,
     );
     await ref.read(sessionStoreProvider).write(updated);
     state = SessionState.signedIn(updated);
   }
 
-  /// Backfills [Session.installationId] for a pairing that predates this
-  /// field, without touching `serverUrl`.
-  Future<void> updateInstallationId(String installationId) async {
+  /// Called on app resume and on a connectivity flip to Wi-Fi. If the
+  /// session is currently pinned to the relay (`activeUrl == remoteUrl`),
+  /// probes the LAN address (then `altUrl`) and flips back silently on a
+  /// verified match — no user action involved.
+  Future<void> _maybeReturnToLan() async {
     final Session? current = state.session;
-    if (current == null || current.installationId == installationId) {
+    if (current == null || current.activeUrl == null) {
       return;
     }
-    final Session updated = current.copyWith(installationId: installationId);
-    await ref.read(sessionStoreProvider).write(updated);
-    state = SessionState.signedIn(updated);
+    if (current.activeUrl != current.remoteUrl) {
+      // activeUrl is set but isn't the relay — nothing to flip back from.
+      return;
+    }
+    final RecoveredConnection? lan =
+        await ref.read(connectionRecoveryServiceProvider).probeLan(current);
+    if (lan == null) {
+      return;
+    }
+    await applyRecoveredConnection(lan);
   }
 
   Future<void> clear() async {

@@ -1,7 +1,19 @@
 import { z } from "zod";
 import { ok, AppError, withErrorHandling } from "@/lib/api";
 import { requireMobileAuth } from "@/lib/mobile-auth";
-import { db } from "@/lib/db";
+import { fetchExpandedEventRows } from "@/lib/events-read";
+import {
+  createEvent,
+  createEventSchema,
+  getMobileEvent,
+} from "@/lib/events-write";
+
+type MobileEventMember = {
+  id: string;
+  name: string;
+  color: string;
+  emoji: string | null;
+};
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,52 +54,36 @@ export const GET = withErrorHandling(async (req) => {
         .filter(Boolean)
     : null;
 
-  // Count first to enforce cap before fetching full rows + includes.
-  const count = await db.event.count({
-    where: {
-      familyId: ctx.familyId,
-      ...(memberIds ? { memberId: { in: memberIds } } : {}),
-      startsAt: { lt: to },
-      endsAt: { gte: from },
+  const expanded = await fetchExpandedEventRows<{ member: MobileEventMember }>(
+    { from, to, familyId: ctx.familyId, memberIds },
+    {
+      overrides: true,
+      member: { select: { id: true, name: true, color: true, emoji: true } },
     },
-  });
+    EVENT_CAP,
+  );
 
-  if (count > EVENT_CAP) {
-    throw new AppError(
-      `Query would return ${count} events (cap is ${EVENT_CAP}). Narrow the date range.`,
-      "RANGE_TOO_BROAD",
-      400,
-    );
-  }
+  const events = expanded.map((e) => ({
+    id: e.id,
+    title: e.title,
+    description: e.description,
+    location: e.location,
+    startsAt: e.startsAt,
+    endsAt: e.endsAt,
+    allDay: e.allDay,
+    color: e.color,
+    source: e.source,
+    member: e.member,
+  }));
 
-  const rows = await db.event.findMany({
-    where: {
-      familyId: ctx.familyId,
-      ...(memberIds ? { memberId: { in: memberIds } } : {}),
-      startsAt: { lt: to },
-      endsAt: { gte: from },
-    },
-    orderBy: { startsAt: "asc" },
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      location: true,
-      startsAt: true,
-      endsAt: true,
-      allDay: true,
-      color: true,
-      source: true,
-      member: {
-        select: {
-          id: true,
-          name: true,
-          color: true,
-          emoji: true,
-        },
-      },
-    },
-  });
+  return ok({ events });
+});
 
-  return ok({ events: rows });
+export const POST = withErrorHandling(async (req) => {
+  const ctx = await requireMobileAuth(req);
+  const body = createEventSchema.parse(await req.json());
+
+  const event = await createEvent(body, { familyId: ctx.familyId });
+  const mobileEvent = await getMobileEvent(event.id);
+  return ok({ event: mobileEvent }, { status: 201 });
 });

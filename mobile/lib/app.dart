@@ -11,12 +11,14 @@ import 'features/home/home_screen.dart';
 import 'features/meal_plan/meal_plan_screen.dart';
 import 'features/notes/notes_screen.dart';
 import 'features/pair/pair_screen.dart';
+import 'features/photos/photos_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'models/notification_payload.dart';
 import 'services/fcm_service.dart';
 import 'services/write_queue_service.dart';
+import 'state/locale_provider.dart';
 import 'state/session_provider.dart';
 import 'state/write_queue_provider.dart';
 import 'theme.dart';
@@ -94,6 +96,7 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
             location == '/notes' ||
             location == '/grocery' ||
             location == '/meal-plan' ||
+            location == '/photos' ||
             location == '/settings') {
           return '/pair';
         }
@@ -134,6 +137,11 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           path: '/meal-plan',
           builder: (BuildContext context, GoRouterState routerState) =>
               const MealPlanScreen(),
+        ),
+        GoRoute(
+          path: '/photos',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const PhotosScreen(),
         ),
         GoRoute(
           path: '/settings',
@@ -189,11 +197,13 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
 
   @override
   Widget build(BuildContext context) {
+    final LocalePrefState localePrefState = ref.watch(localePrefProvider);
     return MaterialApp.router(
       onGenerateTitle: (BuildContext ctx) => AppL10n.of(ctx).appTitle,
       theme: FamilyBoardTheme.light(),
       darkTheme: FamilyBoardTheme.dark(),
       themeMode: ThemeMode.system,
+      locale: localePrefState.locale,
       scaffoldMessengerKey: scaffoldMessengerKey,
       localizationsDelegates: const <LocalizationsDelegate<Object>>[
         AppL10n.delegate,

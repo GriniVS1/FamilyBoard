@@ -5,6 +5,22 @@ import { verifyAdminPin } from "@/lib/pin";
 import { getClientIp, hitRateLimit } from "@/lib/rate-limit";
 import { generatePairingCode } from "@/lib/mobile-tokens";
 import { getLanBaseUrl, getMdnsBaseUrl } from "@/lib/network";
+import { getOrCreateInstallation } from "@/lib/queries";
+import { remoteUrlFor } from "@/lib/relay-url";
+
+// The relay URL is only useful once the Pi's tunnel is actually up — and
+// publishing it earlier would widen the TOFU window (see relay/src/index.ts).
+async function connectedRemoteUrl(): Promise<string | null> {
+  const row = await db.setting.findUnique({ where: { key: "relay_state" } });
+  if (!row) return null;
+  try {
+    if ((JSON.parse(row.value) as { connected?: boolean }).connected !== true) return null;
+  } catch {
+    return null;
+  }
+  const installation = await getOrCreateInstallation();
+  return remoteUrlFor(installation.id);
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,5 +94,6 @@ export const POST = withErrorHandling(async (req) => {
     expiresAt,
     serverUrl: getLanBaseUrl(),
     mdnsUrl: getMdnsBaseUrl(),
+    remoteUrl: await connectedRemoteUrl(),
   });
 });

@@ -11,6 +11,8 @@ import '../../state/events_provider.dart';
 import '../../state/session_provider.dart';
 import '../../theme.dart';
 import '../../widgets/familyboard_logo.dart';
+import 'event_detail_sheet.dart';
+import 'event_edit_sheet.dart';
 
 /// Maximum days forward from today the user can extend to via "Load more".
 const int _maxExtensionDays = 180;
@@ -96,6 +98,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const FamilyBoardLogo(fontSize: 18),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => showEventEditSheet(context),
+        tooltip: l10n.calendarAddEventAria,
+        child: const Icon(Icons.add),
       ),
       body: SafeArea(
         child: eventsAsync.when(
@@ -583,8 +590,7 @@ class _EventRow extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          // No-op tap for v2 — no detail view yet.
-          onTap: () {},
+          onTap: () => showEventDetailSheet(context, event),
           borderRadius: BorderRadius.circular(12),
           child: Container(
             constraints: const BoxConstraints(minHeight: 64),

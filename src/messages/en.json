@@ -580,6 +580,15 @@
       "from": "From",
       "to": "To"
     },
+    "navConfig": {
+      "title": "Navigation",
+      "description": "Choose which features show up in the menu, and in what order.",
+      "alwaysVisibleHint": "Dashboard and Settings are always visible.",
+      "moveUp": "Move {name} up",
+      "moveDown": "Move {name} down",
+      "toggleAria": "Show {name} in navigation",
+      "saveError": "Could not save the navigation order. Please try again."
+    },
     "caldav": {
       "title": "Apple / CalDAV",
       "description": "Connect Apple iCloud, Fastmail, Nextcloud, Yahoo, or any CalDAV server.",
@@ -711,6 +720,33 @@
       "tooManyAttempts": "Too many attempts. Please wait a minute.",
       "hostUnavailable": "Could not reach the device host.",
       "failed": "Shutdown failed."
+    },
+    "remoteAccess": {
+      "title": "Remote access",
+      "description": "Reach FamilyBoard from your phone when you are away from home.",
+      "toggleAria": "Toggle remote access",
+      "status": {
+        "connected": "Remote access: connected",
+        "disconnected": "Remote access: connecting…",
+        "disabled": "Remote access: off"
+      },
+      "web": {
+        "title": "Web access",
+        "description": "Open FamilyBoard in a browser on any device.",
+        "setup": "Set up",
+        "member": "For whom?",
+        "generateCode": "Generate code",
+        "generating": "Generating…",
+        "scanOrOpen": "Scan the code or open the link",
+        "linkLabel": "Link",
+        "copyLink": "Copy link",
+        "copied": "Copied!",
+        "expiresIn": "Expires in {seconds}s",
+        "expired": "Code expired",
+        "generateNew": "New code",
+        "error": "Could not create a code. Please try again.",
+        "unavailable": "Remote access is not connected right now."
+      }
     }
   },
   "meals": {

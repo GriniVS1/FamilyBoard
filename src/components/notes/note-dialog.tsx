@@ -11,6 +11,8 @@ import {
 } from "@/components/shared/dialog";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { MemberColorSwatch } from "@/components/shared/member-color-swatch";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
+import { useOskField } from "@/hooks/use-osk-field";
 import { MEMBER_COLORS, cn, isMemberColor, type MemberColor } from "@/lib/utils";
 import type { Note, NoteCreateInput, NoteMember, NotePatchInput } from "./types";
 
@@ -65,12 +67,16 @@ export function NoteDialog({
   const [state, setState] = useState<FormState>(() => makeState(note));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { activeField, bind, close: closeKeyboard } = useOskField<"body">();
 
   useEffect(() => {
     if (open) {
       setState(makeState(note));
       setError(null);
+    } else {
+      closeKeyboard();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, note]);
 
   const isEdit = Boolean(note);
@@ -150,6 +156,13 @@ export function NoteDialog({
                 "placeholder:text-muted resize-none",
                 "focus:outline-none focus:ring-2 focus:ring-ink/20",
               )}
+              {...bind("body")}
+            />
+            <InlineKeyboardPanel
+              open={activeField === "body"}
+              value={state.body}
+              onChange={(body) => patch({ body })}
+              multiline
             />
           </div>
 

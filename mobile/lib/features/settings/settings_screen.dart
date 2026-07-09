@@ -12,6 +12,8 @@ import '../../services/heartbeat_service.dart';
 import '../../state/calendar_setup_provider.dart';
 import '../../state/session_provider.dart';
 import '../../widgets/familyboard_logo.dart';
+import 'language_section.dart';
+import 'members_section.dart';
 
 enum _HeartbeatStatus { idle, sending, done }
 
@@ -90,11 +92,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
               _buildDeviceCard(l10n),
               const SizedBox(height: 24),
               Text(
+                l10n.settingsSectionMembers,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              const MembersSection(),
+              const SizedBox(height: 24),
+              Text(
                 l10n.settingsSectionCalendar,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 12),
               _buildCalendarCard(l10n),
+              const SizedBox(height: 24),
+              Text(
+                l10n.settingsSectionLanguage,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 12),
+              const LanguageSection(),
             ],
           ),
         ),

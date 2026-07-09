@@ -580,6 +580,15 @@
       "from": "Dalle",
       "to": "Alle"
     },
+    "navConfig": {
+      "title": "Navigazione",
+      "description": "Scegli quali funzioni compaiono nel menu e in quale ordine.",
+      "alwaysVisibleHint": "Dashboard e Impostazioni sono sempre visibili.",
+      "moveUp": "Sposta {name} in alto",
+      "moveDown": "Sposta {name} in basso",
+      "toggleAria": "Mostra {name} nella navigazione",
+      "saveError": "Impossibile salvare l'ordine di navigazione. Riprova."
+    },
     "caldav": {
       "title": "Apple / CalDAV",
       "description": "Collega Apple iCloud, Fastmail, Nextcloud, Yahoo o qualsiasi server CalDAV.",
@@ -711,6 +720,33 @@
       "tooManyAttempts": "Troppi tentativi. Attendi un minuto.",
       "hostUnavailable": "Impossibile raggiungere il dispositivo.",
       "failed": "Spegnimento non riuscito."
+    },
+    "remoteAccess": {
+      "title": "Accesso remoto",
+      "description": "Raggiungi FamilyBoard dal telefono quando sei fuori casa.",
+      "toggleAria": "Attiva/disattiva l’accesso remoto",
+      "status": {
+        "connected": "Accesso remoto: connesso",
+        "disconnected": "Accesso remoto: connessione…",
+        "disabled": "Accesso remoto: disattivato"
+      },
+      "web": {
+        "title": "Accesso Web",
+        "description": "Apri FamilyBoard nel browser su qualsiasi dispositivo.",
+        "setup": "Configura",
+        "member": "Per chi?",
+        "generateCode": "Genera codice",
+        "generating": "Generazione…",
+        "scanOrOpen": "Scansiona il codice o apri il link",
+        "linkLabel": "Link",
+        "copyLink": "Copia link",
+        "copied": "Copiato!",
+        "expiresIn": "Scade in {seconds}s",
+        "expired": "Codice scaduto",
+        "generateNew": "Nuovo codice",
+        "error": "Impossibile creare un codice. Riprova.",
+        "unavailable": "L'accesso remoto non è connesso al momento."
+      }
     }
   },
   "meals": {

@@ -29,6 +29,9 @@ export function WidgetNotes({ className }: WidgetNotesProps) {
     queryKey: QUERY_KEY,
     queryFn: fetchNotes,
     staleTime: 60_000,
+    // The kiosk mounts this once and never refocuses — poll so phone-made
+    // changes appear without waiting for a screensaver cycle.
+    refetchInterval: 60_000,
   });
 
   const pinned = notes

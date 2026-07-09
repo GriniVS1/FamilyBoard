@@ -128,4 +128,13 @@ export async function register() {
   // dark (drives DPMS on the host — see src/lib/display.ts).
   setTimeout(displayTick, 20_000);
   setInterval(displayTick, 60_000);
+
+  // Remote access: hold an outbound WebSocket to the relay so the phone can
+  // reach the mobile API from outside the LAN. Dev-only when RELAY_URL is set
+  // explicitly; the client self-skips until an installation + enabled flag
+  // exist. Imported dynamically to keep this module's light-import discipline.
+  if (process.env.NODE_ENV === "production" || process.env.RELAY_URL) {
+    const { startRelayClient } = await import("@/lib/relay-client");
+    startRelayClient({ baseUrl, internalHeaders });
+  }
 }

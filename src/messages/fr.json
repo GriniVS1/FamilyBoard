@@ -580,6 +580,15 @@
       "from": "De",
       "to": "À"
     },
+    "navConfig": {
+      "title": "Navigation",
+      "description": "Choisissez les fonctionnalités qui apparaissent dans le menu, et dans quel ordre.",
+      "alwaysVisibleHint": "Le tableau de bord et les réglages sont toujours visibles.",
+      "moveUp": "Déplacer {name} vers le haut",
+      "moveDown": "Déplacer {name} vers le bas",
+      "toggleAria": "Afficher {name} dans la navigation",
+      "saveError": "Impossible d'enregistrer l'ordre de navigation. Veuillez réessayer."
+    },
     "caldav": {
       "title": "Apple / CalDAV",
       "description": "Connecte Apple iCloud, Fastmail, Nextcloud, Yahoo ou tout serveur CalDAV.",
@@ -711,6 +720,33 @@
       "tooManyAttempts": "Trop de tentatives. Veuillez patienter une minute.",
       "hostUnavailable": "Impossible de joindre l'appareil.",
       "failed": "Échec de l'extinction."
+    },
+    "remoteAccess": {
+      "title": "Accès à distance",
+      "description": "Accédez à FamilyBoard depuis votre téléphone lorsque vous êtes absent.",
+      "toggleAria": "Activer/désactiver l’accès à distance",
+      "status": {
+        "connected": "Accès à distance : connecté",
+        "disconnected": "Accès à distance : connexion…",
+        "disabled": "Accès à distance : désactivé"
+      },
+      "web": {
+        "title": "Accès Web",
+        "description": "Ouvrez FamilyBoard dans un navigateur sur n'importe quel appareil.",
+        "setup": "Configurer",
+        "member": "Pour qui ?",
+        "generateCode": "Générer un code",
+        "generating": "Génération…",
+        "scanOrOpen": "Scannez le code ou ouvrez le lien",
+        "linkLabel": "Lien",
+        "copyLink": "Copier le lien",
+        "copied": "Copié !",
+        "expiresIn": "Expire dans {seconds}s",
+        "expired": "Code expiré",
+        "generateNew": "Nouveau code",
+        "error": "Impossible de créer un code. Veuillez réessayer.",
+        "unavailable": "L'accès à distance n'est pas connecté pour le moment."
+      }
     }
   },
   "meals": {

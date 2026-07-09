@@ -101,6 +101,8 @@ export function WidgetWeather({ className, location }: WidgetWeatherProps) {
     queryKey: ["weather"],
     queryFn: fetchWeather,
     staleTime: 5 * 60_000,
+    // Kiosk never refocuses — poll (weather changes slowly, 10 min is plenty).
+    refetchInterval: 10 * 60_000,
     retry: false,
   });
 

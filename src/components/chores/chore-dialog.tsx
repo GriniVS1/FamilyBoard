@@ -11,6 +11,8 @@ import {
 } from "@/components/shared/dialog";
 import { Input } from "@/components/shared/input";
 import { MemberAvatar } from "@/components/shared/member-avatar";
+import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
+import { useOskField } from "@/hooks/use-osk-field";
 import { cn } from "@/lib/utils";
 import { CHORE_ICONS } from "./types";
 import type { Chore, ChoreInput, ChoreMember } from "./types";
@@ -65,11 +67,14 @@ export function ChoreDialog({
   const [state, setState] = useState<FormState>(() => makeState(chore, initial));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { activeField, bind, close: closeKeyboard } = useOskField<"title">();
 
   useEffect(() => {
     if (open) {
       setState(makeState(chore, initial));
       setError(null);
+    } else {
+      closeKeyboard();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, chore?.id, initial?.memberId]);
@@ -138,6 +143,12 @@ export function ChoreDialog({
               placeholder="e.g. Empty the dishwasher"
               required
               autoFocus
+              {...bind("title")}
+            />
+            <InlineKeyboardPanel
+              open={activeField === "title"}
+              value={state.title}
+              onChange={(title) => patch({ title })}
             />
           </div>
 

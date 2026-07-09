@@ -14,6 +14,10 @@ const nextConfig: NextConfig = {
     "@prisma/client",
     ".prisma/client",
     "bcryptjs",
+    // Keep ws unbundled: webpack breaks its graceful optional-require of the
+    // native bufferutil accelerator, leaving a stub whose .mask throws. As an
+    // external, ws resolves at runtime and falls back to pure-JS masking.
+    "ws",
   ],
   images: {
     remotePatterns: [],

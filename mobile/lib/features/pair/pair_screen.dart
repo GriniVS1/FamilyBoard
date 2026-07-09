@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../state/locale_provider.dart';
 import '../../state/pair_controller.dart';
 import '../../widgets/familyboard_logo.dart';
 import 'manual_entry_view.dart';
@@ -23,6 +24,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
   String _initialServerUrl = '';
   String _initialCode = '';
   String? _initialAltUrl;
+  String? _initialRemoteUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -36,6 +38,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
                 onPressed: _goBackToChooser,
               ),
         title: const FamilyBoardLogo(fontSize: 18),
+        actions: const <Widget>[_LanguageMenuButton()],
       ),
       body: SafeArea(
         child: Padding(
@@ -88,6 +91,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
                 initialCode: _initialCode,
                 initialDeviceName: _defaultDeviceName(),
                 initialAltUrl: _initialAltUrl,
+                initialRemoteUrl: _initialRemoteUrl,
               ),
             ],
           ),
@@ -107,6 +111,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
       _initialServerUrl = payload.serverUrl;
       _initialCode = payload.code;
       _initialAltUrl = payload.altUrl;
+      _initialRemoteUrl = payload.remoteUrl;
       _mode = _PairMode.manual;
     });
   }
@@ -157,6 +162,48 @@ class _Chooser extends StatelessWidget {
         ),
         const SizedBox(height: 24),
       ],
+    );
+  }
+}
+
+class _LanguageMenuButton extends ConsumerWidget {
+  const _LanguageMenuButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AppL10n l10n = AppL10n.of(context);
+    final LocalePrefState state = ref.watch(localePrefProvider);
+    final String? current = state.locale?.languageCode;
+
+    return PopupMenuButton<String?>(
+      icon: const Icon(Icons.language),
+      tooltip: l10n.pairLanguageTooltip,
+      onSelected: (String? code) => ref
+          .read(localePrefProvider.notifier)
+          .setLocale(code == null ? null : Locale(code)),
+      itemBuilder: (BuildContext ctx) => <PopupMenuEntry<String?>>[
+        _item(null, l10n.languageSystem, current == null),
+        _item('en', l10n.languageEnglish, current == 'en'),
+        _item('de', l10n.languageGerman, current == 'de'),
+        _item('fr', l10n.languageFrench, current == 'fr'),
+        _item('it', l10n.languageItalian, current == 'it'),
+      ],
+    );
+  }
+
+  PopupMenuItem<String?> _item(String? code, String label, bool selected) {
+    return PopupMenuItem<String?>(
+      value: code,
+      child: Row(
+        children: <Widget>[
+          SizedBox(
+            width: 24,
+            child: selected ? const Icon(Icons.check, size: 18) : null,
+          ),
+          const SizedBox(width: 8),
+          Text(label),
+        ],
+      ),
     );
   }
 }

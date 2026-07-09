@@ -39,6 +39,7 @@ class PairController extends Notifier<PairFormState> {
     required String code,
     required String deviceName,
     String? altUrl,
+    String? remoteUrl,
   }) async {
     state = const PairFormState.submitting();
     final PairService pairService = ref.read(pairServiceProvider);
@@ -49,6 +50,7 @@ class PairController extends Notifier<PairFormState> {
           code: code,
           deviceName: deviceName,
           altUrl: altUrl,
+          remoteUrl: remoteUrl,
         ),
       );
       await ref.read(sessionProvider.notifier).adopt(session);
@@ -86,15 +88,13 @@ class PairController extends Notifier<PairFormState> {
     }
   }
 
-  /// Fetches `GET /api/mobile/identity` on the just-paired `serverUrl` and
-  /// persists `installationId` onto the session.
+  /// Fetches `GET /api/mobile/identity` on the just-paired `serverUrl` (LAN)
+  /// and persists `installationId` and `remoteUrl` onto the session.
   Future<void> _fetchIdentity(Session session) async {
     final IdentityService identity = ref.read(identityServiceProvider);
     final IdentityResult? result = await identity.fetch(session.serverUrl);
     if (result != null) {
-      await ref
-          .read(sessionProvider.notifier)
-          .updateInstallationId(result.installationId);
+      await ref.read(sessionProvider.notifier).applyIdentity(result);
     }
   }
 

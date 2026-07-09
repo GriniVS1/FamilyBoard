@@ -87,6 +87,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       appBar: AppBar(
         title: const FamilyBoardLogo(fontSize: 18),
         actions: <Widget>[
+          if (session.activeUrl != null &&
+              session.activeUrl == session.remoteUrl)
+            Tooltip(
+              message: l10n.remoteConnectionTooltip,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8),
+                child: Icon(Icons.cloud_outlined),
+              ),
+            ),
           const QueueBadge(),
           IconButton(
             icon: const Icon(Icons.restaurant_menu_outlined),
@@ -107,6 +116,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
             icon: const Icon(Icons.shopping_cart_outlined),
             tooltip: l10n.groceryOpenAria,
             onPressed: () => context.push('/grocery'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.photo_library_outlined),
+            tooltip: l10n.photosOpenAria,
+            onPressed: () => context.push('/photos'),
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
