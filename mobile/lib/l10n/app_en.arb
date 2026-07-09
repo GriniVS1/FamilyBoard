@@ -552,5 +552,48 @@
   "remoteConnectionTooltip": "Connected via the cloud relay (away from home Wi-Fi)",
   "@remoteConnectionTooltip": {
     "description": "Tooltip on the small cloud icon shown in the app bar when the app is talking to the wall through the cloud relay instead of the LAN."
+  },
+  "photosOpenAria": "Open photos",
+  "@photosOpenAria": {},
+  "photosEmpty": "No photos yet",
+  "@photosEmpty": {},
+  "photosEmptySubtitle": "Upload the first ones for the wall's screensaver.",
+  "@photosEmptySubtitle": {},
+  "photosUploadTooltip": "Add photos",
+  "@photosUploadTooltip": {},
+  "photosUploadingProgress": "Uploading photo {current} of {total}…",
+  "@photosUploadingProgress": {
+    "placeholders": {
+      "current": { "type": "int", "example": "1" },
+      "total": { "type": "int", "example": "3" }
+    }
+  },
+  "photosDeleteTooltip": "Delete photo",
+  "@photosDeleteTooltip": {},
+  "photosDeleteConfirm": "Delete this photo?",
+  "@photosDeleteConfirm": {},
+  "photosErrorGeneric": "Couldn't load photos. Try again.",
+  "@photosErrorGeneric": {},
+  "photosDeleteErrorGeneric": "Couldn't delete this photo. Try again.",
+  "@photosDeleteErrorGeneric": {},
+  "photosImageLoadError": "Couldn't load image",
+  "@photosImageLoadError": {},
+  "photosUploadTooLargeToast": "{count, plural, =1 {1 photo is larger than 8 MB and wasn't uploaded} other {{count} photos are larger than 8 MB and weren't uploaded}}",
+  "@photosUploadTooLargeToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+  "photosUploadUnsupportedToast": "{count, plural, =1 {1 photo has an unsupported format and wasn't uploaded} other {{count} photos have an unsupported format and weren't uploaded}}",
+  "@photosUploadUnsupportedToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
+  },
+  "photosUploadGenericToast": "{count, plural, =1 {1 photo couldn't be uploaded} other {{count} photos couldn't be uploaded}}",
+  "@photosUploadGenericToast": {
+    "placeholders": {
+      "count": { "type": "int", "example": "2" }
+    }
   }
 }

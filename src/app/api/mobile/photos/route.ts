@@ -1,31 +1,33 @@
 import { AppError, ok, withErrorHandling } from "@/lib/api";
-import { db } from "@/lib/db";
+import { requireMobileAuth } from "@/lib/mobile-auth";
 import {
   listPhotosForFamily,
   normalizePhotoCaption,
   saveUploadedPhoto,
+  type PhotoRecord,
 } from "@/lib/photos-store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const GET = withErrorHandling(async () => {
-  const family = await db.family.findFirst();
-  if (!family) return ok([]);
+function serializePhoto(photo: PhotoRecord) {
+  return {
+    id: photo.id,
+    path: photo.path,
+    caption: photo.caption,
+    uploadedAt: photo.uploadedAt.toISOString(),
+  };
+}
 
-  const photos = await listPhotosForFamily(family.id);
-  return ok(photos);
+export const GET = withErrorHandling(async (req) => {
+  const ctx = await requireMobileAuth(req);
+
+  const photos = await listPhotosForFamily(ctx.familyId);
+  return ok({ photos: photos.map(serializePhoto) });
 });
 
 export const POST = withErrorHandling(async (req) => {
-  const family = await db.family.findFirst();
-  if (!family) {
-    throw new AppError(
-      "Create a family before uploading photos",
-      "FAMILY_NOT_FOUND",
-      400,
-    );
-  }
+  const ctx = await requireMobileAuth(req);
 
   const form = await req.formData();
   const file = form.get("file");
@@ -36,10 +38,10 @@ export const POST = withErrorHandling(async (req) => {
   }
 
   const photo = await saveUploadedPhoto({
-    familyId: family.id,
+    familyId: ctx.familyId,
     file,
     caption: normalizePhotoCaption(captionRaw),
   });
 
-  return ok(photo);
+  return ok({ photo: serializePhoto(photo) }, { status: 201 });
 });
