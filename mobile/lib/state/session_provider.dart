@@ -21,6 +21,7 @@ import '../services/pair_service.dart';
 import '../services/photos_service.dart';
 import '../services/secure_storage.dart';
 import '../services/today_service.dart';
+import '../services/todos_service.dart';
 import '../services/write_queue_service.dart';
 import 'connectivity_provider.dart';
 
@@ -113,6 +114,14 @@ final Provider<NotesService> notesServiceProvider = Provider<NotesService>(
     clientFactory: ref.watch(apiClientFactoryProvider),
     cacheDb: ref.watch(cacheDbProvider),
     writeQueueService: ref.watch(writeQueueServiceProvider),
+  ),
+);
+
+/// Read-only — writes for todos go through [mutationsServiceProvider].
+final Provider<TodosService> todosServiceProvider = Provider<TodosService>(
+  (Ref ref) => TodosService(
+    clientFactory: ref.watch(apiClientFactoryProvider),
+    cacheDb: ref.watch(cacheDbProvider),
   ),
 );
 

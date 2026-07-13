@@ -122,6 +122,12 @@
   "@homeLoadError": {},
   "homeSessionExpired": "Your session has expired. Please pair again.",
   "@homeSessionExpired": {},
+  "homeUpcomingHeading": "Upcoming",
+  "@homeUpcomingHeading": {},
+  "homeUpcomingTomorrow": "Tomorrow",
+  "@homeUpcomingTomorrow": {},
+  "homeSeeAll": "See all",
+  "@homeSeeAll": {},
   "pushPermissionAskTitle": "Stay in the loop",
   "@pushPermissionAskTitle": {
     "description": "Title shown when asking for notification permission."

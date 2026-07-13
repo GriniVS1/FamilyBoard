@@ -7,17 +7,55 @@ import 'package:intl/intl.dart';
 
 import '../../app.dart';
 import '../../l10n/generated/app_localizations.dart';
+import '../../models/event.dart';
 import '../../models/mutations.dart';
+import '../../models/note.dart';
 import '../../models/session.dart';
 import '../../models/today.dart';
+import '../../models/todo_item.dart';
+import '../../services/events_service.dart';
 import '../../services/fcm_service.dart';
+import '../../services/notes_service.dart';
 import '../../services/today_service.dart';
+import '../../services/todos_service.dart';
+import '../../state/events_provider.dart';
+import '../../state/notes_provider.dart';
 import '../../state/session_provider.dart';
 import '../../state/today_provider.dart';
+import '../../state/todos_provider.dart';
 import '../../theme.dart';
 import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
 import '../../widgets/queue_badge.dart';
+
+/// Local midnight today on the device.
+DateTime _todayMidnight() {
+  final DateTime now = DateTime.now();
+  return DateTime(now.year, now.month, now.day);
+}
+
+/// Sort comparator for events that already share the same day: all-day
+/// events first, then ascending by start time.
+int _compareEventsWithinDay(MobileEvent a, MobileEvent b) {
+  if (a.allDay && !b.allDay) {
+    return -1;
+  }
+  if (!a.allDay && b.allDay) {
+    return 1;
+  }
+  final DateTime? sa = a.startsAt;
+  final DateTime? sb = b.startsAt;
+  if (sa == null && sb == null) {
+    return 0;
+  }
+  if (sa == null) {
+    return -1;
+  }
+  if (sb == null) {
+    return 1;
+  }
+  return sa.compareTo(sb);
+}
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -69,6 +107,34 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
+  /// Today (inclusive) through +8 days — covers the Heute card (today) and
+  /// the Demnächst card (the 7 days after today) from a single fetch.
+  EventsRange _eventsRange() {
+    final DateTime today = _todayMidnight();
+    return EventsRange(from: today, to: today.add(const Duration(days: 8)));
+  }
+
+  Future<void> _refreshAll() async {
+    final EventsRange range = _eventsRange();
+    ref.invalidate(eventsProvider(range));
+    ref.invalidate(todayProvider);
+    ref.invalidate(todosProvider);
+    ref.invalidate(notesProvider);
+    // Kick every fetch off immediately, then await each independently so one
+    // slow/failing card doesn't block the others from refreshing.
+    final List<Future<void>> pending = <Future<void>>[
+      ref.read(eventsProvider(range).future).then((_) {}),
+      ref.read(todayProvider.future).then((_) {}),
+      ref.read(todosProvider.future).then((_) {}),
+      ref.read(notesProvider.future).then((_) {}),
+    ];
+    for (final Future<void> f in pending) {
+      try {
+        await f;
+      } catch (_) {}
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
@@ -81,7 +147,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     final Color accent = AccentPalette.resolve(session.member.color);
-    final AsyncValue<TodayPayload> todayAsync = ref.watch(todayProvider);
+    final EventsRange range = _eventsRange();
 
     return Scaffold(
       appBar: AppBar(
@@ -131,12 +197,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
       ),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(todayProvider);
-            try {
-              await ref.read(todayProvider.future);
-            } catch (_) {}
-          },
+          onRefresh: _refreshAll,
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             padding: const EdgeInsets.all(24),
@@ -155,27 +216,15 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   _NotificationsDeniedHint(l10n: l10n),
                 ],
                 const SizedBox(height: 24),
-                todayAsync.when(
-                  loading: () => const Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(vertical: 48),
-                      child: CircularProgressIndicator(),
-                    ),
-                  ),
-                  error: (Object err, StackTrace _) => _ErrorBody(
-                    error: err,
-                    l10n: l10n,
-                    onRetry: () => ref.invalidate(todayProvider),
-                    onSessionExpired: () async {
-                      await ref.read(sessionProvider.notifier).clear();
-                    },
-                  ),
-                  data: (TodayPayload payload) => _TodayBody(
-                    payload: payload,
-                    session: session,
-                    l10n: l10n,
-                  ),
-                ),
+                _HeuteCard(range: range, l10n: l10n),
+                const SizedBox(height: 12),
+                _DemnaechstCard(range: range, l10n: l10n),
+                const SizedBox(height: 12),
+                _ChoresCard(session: session, l10n: l10n),
+                const SizedBox(height: 12),
+                _TodosCard(session: session, l10n: l10n),
+                const SizedBox(height: 12),
+                _NotesCard(l10n: l10n),
               ],
             ),
           ),
@@ -186,25 +235,40 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 }
 
 // ---------------------------------------------------------------------------
-// Error state
+// Shared per-card loading / error states
 // ---------------------------------------------------------------------------
 
-class _ErrorBody extends StatelessWidget {
-  const _ErrorBody({
-    required this.error,
+class _CardLoading extends StatelessWidget {
+  const _CardLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Card(
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: Center(child: CircularProgressIndicator()),
+      ),
+    );
+  }
+}
+
+class _CardError extends StatelessWidget {
+  const _CardError({
+    required this.isSessionExpired,
+    required this.message,
     required this.l10n,
     required this.onRetry,
     required this.onSessionExpired,
   });
 
-  final Object error;
+  final bool isSessionExpired;
+  final String message;
   final AppL10n l10n;
   final VoidCallback onRetry;
   final VoidCallback onSessionExpired;
 
   @override
   Widget build(BuildContext context) {
-    final bool isSessionError = error is TodaySessionRevokedException;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -212,14 +276,14 @@ class _ErrorBody extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
             Text(
-              isSessionError ? l10n.homeSessionExpired : l10n.homeLoadError,
+              isSessionExpired ? l10n.homeSessionExpired : message,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Theme.of(context).colorScheme.error,
                   ),
             ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: isSessionError ? onSessionExpired : onRetry,
+              onPressed: isSessionExpired ? onSessionExpired : onRetry,
               child: Text(l10n.homeRetry),
             ),
           ],
@@ -230,98 +294,109 @@ class _ErrorBody extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Data body — three real cards
+// Heute card — family events happening today (read-only, tap → /calendar)
 // ---------------------------------------------------------------------------
 
-class _TodayBody extends ConsumerWidget {
-  const _TodayBody({
-    required this.payload,
-    required this.session,
-    required this.l10n,
-  });
+class _HeuteCard extends ConsumerWidget {
+  const _HeuteCard({required this.range, required this.l10n});
 
-  final TodayPayload payload;
-  final Session session;
+  final EventsRange range;
   final AppL10n l10n;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        if (payload.staleAt != null) ...<Widget>[
-          CachedAtPill(staleAt: payload.staleAt),
-          const SizedBox(height: 8),
-        ],
-        _EventsCard(payload: payload, l10n: l10n),
-        const SizedBox(height: 12),
-        _ChoresCard(payload: payload, session: session, l10n: l10n),
-        const SizedBox(height: 12),
-        _TodosCard(payload: payload, session: session, l10n: l10n),
-      ],
+    final AsyncValue<EventsResult> eventsAsync =
+        ref.watch(eventsProvider(range));
+    return eventsAsync.when(
+      loading: () => const _CardLoading(),
+      error: (Object err, StackTrace _) => _CardError(
+        isSessionExpired: err is EventsSessionRevokedException,
+        message: err is EventsRangeTooBroadException
+            ? l10n.calendarErrorRangeTooBroad
+            : l10n.homeLoadError,
+        l10n: l10n,
+        onRetry: () => ref.invalidate(eventsProvider(range)),
+        onSessionExpired: () async {
+          await ref.read(sessionProvider.notifier).clear();
+        },
+      ),
+      data: (EventsResult result) {
+        final DateTime today = _todayMidnight();
+        final List<MobileEvent> todays = result.events
+            .where((MobileEvent e) => e.groupDay == today)
+            .toList()
+          ..sort(_compareEventsWithinDay);
+        return _HeuteCardBody(
+          events: todays,
+          staleAt: result.staleAt,
+          l10n: l10n,
+        );
+      },
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Events card (read-only — unchanged from M2.2a)
-// ---------------------------------------------------------------------------
+class _HeuteCardBody extends StatelessWidget {
+  const _HeuteCardBody({
+    required this.events,
+    required this.staleAt,
+    required this.l10n,
+  });
 
-class _EventsCard extends StatelessWidget {
-  const _EventsCard({required this.payload, required this.l10n});
-
-  final TodayPayload payload;
+  final List<MobileEvent> events;
+  final DateTime? staleAt;
   final AppL10n l10n;
 
   @override
   Widget build(BuildContext context) {
     final String locale = Localizations.localeOf(context).toString();
     final String formattedDate =
-        DateFormat.yMMMMEEEEd(locale).format(DateTime.parse(payload.todayIso));
+        DateFormat.yMMMMEEEEd(locale).format(DateTime.now());
 
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text(
-              l10n.homeTodayHeading(formattedDate),
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            if (payload.events.isEmpty)
-              _EmptyState(message: l10n.homeNoEvents)
-            else
-              ...payload.events.map(
-                (TodayEvent event) => _EventRow(
-                  event: event,
-                  fallbackColor: payload.member.color,
-                  l10n: l10n,
-                ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => context.push('/calendar'),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              if (staleAt != null) ...<Widget>[
+                CachedAtPill(staleAt: staleAt),
+                const SizedBox(height: 8),
+              ],
+              Text(
+                l10n.homeTodayHeading(formattedDate),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-          ],
+              const SizedBox(height: 12),
+              if (events.isEmpty)
+                _EmptyState(message: l10n.homeNoEvents)
+              else
+                ...events.map(
+                  (MobileEvent event) =>
+                      _HeuteEventRow(event: event, l10n: l10n),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _EventRow extends StatelessWidget {
-  const _EventRow({
-    required this.event,
-    required this.fallbackColor,
-    required this.l10n,
-  });
+class _HeuteEventRow extends StatelessWidget {
+  const _HeuteEventRow({required this.event, required this.l10n});
 
-  final TodayEvent event;
-  final String fallbackColor;
+  final MobileEvent event;
   final AppL10n l10n;
 
   @override
   Widget build(BuildContext context) {
     final String locale = Localizations.localeOf(context).toString();
-    final Color accent = AccentPalette.resolve(event.color ?? fallbackColor);
+    final Color accent =
+        AccentPalette.resolve(event.color ?? event.member.color);
 
     String timeLabel;
     if (event.allDay) {
@@ -335,6 +410,9 @@ class _EventRow extends StatelessWidget {
           : '';
       timeLabel = '$start–$end';
     }
+
+    final String memberLabel =
+        '${event.member.emoji} ${event.member.name}'.trim();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -385,6 +463,18 @@ class _EventRow extends StatelessWidget {
                                   .withValues(alpha: 0.6),
                             ),
                       ),
+                    if (memberLabel.isNotEmpty) ...<Widget>[
+                      const SizedBox(height: 2),
+                      Text(
+                        memberLabel,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurface
+                                  .withValues(alpha: 0.5),
+                            ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -397,11 +487,229 @@ class _EventRow extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Chores card — interactive
+// Demnächst card — next 7 days, up to 5 entries, hidden when empty
+// ---------------------------------------------------------------------------
+
+class _DemnaechstCard extends ConsumerWidget {
+  const _DemnaechstCard({required this.range, required this.l10n});
+
+  final EventsRange range;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<EventsResult> eventsAsync =
+        ref.watch(eventsProvider(range));
+    return eventsAsync.when(
+      loading: () => const _CardLoading(),
+      error: (Object err, StackTrace _) => _CardError(
+        isSessionExpired: err is EventsSessionRevokedException,
+        message: err is EventsRangeTooBroadException
+            ? l10n.calendarErrorRangeTooBroad
+            : l10n.homeLoadError,
+        l10n: l10n,
+        onRetry: () => ref.invalidate(eventsProvider(range)),
+        onSessionExpired: () async {
+          await ref.read(sessionProvider.notifier).clear();
+        },
+      ),
+      data: (EventsResult result) {
+        final DateTime today = _todayMidnight();
+        final List<MobileEvent> upcoming = result.events
+            .where((MobileEvent e) => e.groupDay.isAfter(today))
+            .toList()
+          ..sort((MobileEvent a, MobileEvent b) {
+            final int dayCompare = a.groupDay.compareTo(b.groupDay);
+            if (dayCompare != 0) {
+              return dayCompare;
+            }
+            return _compareEventsWithinDay(a, b);
+          });
+        final List<MobileEvent> capped = upcoming.take(5).toList();
+        if (capped.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return _DemnaechstCardBody(events: capped, today: today, l10n: l10n);
+      },
+    );
+  }
+}
+
+class _DemnaechstCardBody extends StatelessWidget {
+  const _DemnaechstCardBody({
+    required this.events,
+    required this.today,
+    required this.l10n,
+  });
+
+  final List<MobileEvent> events;
+  final DateTime today;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final String locale = Localizations.localeOf(context).toString();
+    final DateTime tomorrow = today.add(const Duration(days: 1));
+
+    // Group while preserving chronological order (events already sorted).
+    final List<DateTime> orderedDays = <DateTime>[];
+    final Map<DateTime, List<MobileEvent>> byDay =
+        <DateTime, List<MobileEvent>>{};
+    for (final MobileEvent e in events) {
+      final DateTime day = e.groupDay;
+      if (!byDay.containsKey(day)) {
+        orderedDays.add(day);
+        byDay[day] = <MobileEvent>[];
+      }
+      byDay[day]!.add(e);
+    }
+
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => context.push('/calendar'),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    l10n.homeUpcomingHeading,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      minimumSize: const Size(48, 48),
+                    ),
+                    onPressed: () => context.push('/calendar'),
+                    child: Text(l10n.homeSeeAll),
+                  ),
+                ],
+              ),
+              for (final DateTime day in orderedDays) ...<Widget>[
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, bottom: 4),
+                  child: Text(
+                    day == tomorrow
+                        ? l10n.homeUpcomingTomorrow
+                        : DateFormat('EEE, d.M.', locale).format(day),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onSurface
+                              .withValues(alpha: 0.6),
+                        ),
+                  ),
+                ),
+                ...byDay[day]!.map(
+                  (MobileEvent e) => _UpcomingEventRow(event: e, l10n: l10n),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _UpcomingEventRow extends StatelessWidget {
+  const _UpcomingEventRow({required this.event, required this.l10n});
+
+  final MobileEvent event;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final String locale = Localizations.localeOf(context).toString();
+    final Color accent =
+        AccentPalette.resolve(event.color ?? event.member.color);
+    final String timeLabel = event.allDay
+        ? l10n.homeAllDay
+        : (event.startsAt != null
+            ? DateFormat.Hm(locale).format(event.startsAt!.toLocal())
+            : '');
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: accent, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 56,
+            child: Text(
+              timeLabel,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: accent,
+                fontWeight: FontWeight.w600,
+                fontFeatures: const <FontFeature>[
+                  FontFeature.tabularFigures(),
+                ],
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              event.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
+          if (event.member.emoji.isNotEmpty) ...<Widget>[
+            const SizedBox(width: 6),
+            Text(event.member.emoji, style: const TextStyle(fontSize: 14)),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Chores card — interactive (Ämtli stays personal to the signed-in member)
 // ---------------------------------------------------------------------------
 
 class _ChoresCard extends ConsumerWidget {
-  const _ChoresCard({
+  const _ChoresCard({required this.session, required this.l10n});
+
+  final Session session;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<TodayPayload> todayAsync = ref.watch(todayProvider);
+    return todayAsync.when(
+      loading: () => const _CardLoading(),
+      error: (Object err, StackTrace _) => _CardError(
+        isSessionExpired: err is TodaySessionRevokedException,
+        message: l10n.homeLoadError,
+        l10n: l10n,
+        onRetry: () => ref.invalidate(todayProvider),
+        onSessionExpired: () async {
+          await ref.read(sessionProvider.notifier).clear();
+        },
+      ),
+      data: (TodayPayload payload) => _ChoresCardBody(
+        payload: payload,
+        session: session,
+        l10n: l10n,
+      ),
+    );
+  }
+}
+
+class _ChoresCardBody extends ConsumerWidget {
+  const _ChoresCardBody({
     required this.payload,
     required this.session,
     required this.l10n,
@@ -423,6 +731,10 @@ class _ChoresCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            if (payload.staleAt != null) ...<Widget>[
+              CachedAtPill(staleAt: payload.staleAt),
+              const SizedBox(height: 8),
+            ],
             Text(
               l10n.homeChoresHeading(done, total),
               style: Theme.of(context).textTheme.titleMedium,
@@ -828,25 +1140,61 @@ class _StarBurstWidgetState extends State<_StarBurstWidget>
 }
 
 // ---------------------------------------------------------------------------
-// Todos card — interactive
+// Todos card — family-wide (interactive), member chip per row
 // ---------------------------------------------------------------------------
 
-class _TodosCard extends ConsumerStatefulWidget {
-  const _TodosCard({
-    required this.payload,
-    required this.session,
-    required this.l10n,
-  });
+class _TodosCard extends ConsumerWidget {
+  const _TodosCard({required this.session, required this.l10n});
 
-  final TodayPayload payload;
   final Session session;
   final AppL10n l10n;
 
   @override
-  ConsumerState<_TodosCard> createState() => _TodosCardState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<TodosResult> todosAsync = ref.watch(todosProvider);
+    return todosAsync.when(
+      loading: () => const _CardLoading(),
+      error: (Object err, StackTrace _) => _CardError(
+        isSessionExpired: err is TodosSessionRevokedException,
+        message: l10n.homeLoadError,
+        l10n: l10n,
+        onRetry: () => ref.invalidate(todosProvider),
+        onSessionExpired: () async {
+          await ref.read(sessionProvider.notifier).clear();
+        },
+      ),
+      data: (TodosResult result) => _TodosCardBody(
+        todos: result.todos,
+        staleAt: result.staleAt,
+        session: session,
+        l10n: l10n,
+      ),
+    );
+  }
 }
 
-class _TodosCardState extends ConsumerState<_TodosCard> {
+/// Todos beyond this count are hidden — there is no dedicated `/todos` screen
+/// to link out to yet (see mobile M3.4/backend follow-ups).
+const int _todosCardCap = 8;
+
+class _TodosCardBody extends ConsumerStatefulWidget {
+  const _TodosCardBody({
+    required this.todos,
+    required this.staleAt,
+    required this.session,
+    required this.l10n,
+  });
+
+  final List<TodoItem> todos;
+  final DateTime? staleAt;
+  final Session session;
+  final AppL10n l10n;
+
+  @override
+  ConsumerState<_TodosCardBody> createState() => _TodosCardBodyState();
+}
+
+class _TodosCardBodyState extends ConsumerState<_TodosCardBody> {
   final TextEditingController _addController = TextEditingController();
   bool _addBusy = false;
 
@@ -872,7 +1220,7 @@ class _TodosCardState extends ConsumerState<_TodosCard> {
         return;
       }
       _addController.clear();
-      ref.invalidate(todayProvider);
+      ref.invalidate(todosProvider);
     } on MutationSessionRevokedException {
       if (!mounted) {
         return;
@@ -907,8 +1255,8 @@ class _TodosCardState extends ConsumerState<_TodosCard> {
 
   @override
   Widget build(BuildContext context) {
-    final int open =
-        widget.payload.todos.where((TodayTodo t) => !t.done).length;
+    final int open = widget.todos.where((TodoItem t) => !t.done).length;
+    final List<TodoItem> visible = widget.todos.take(_todosCardCap).toList();
 
     return Card(
       child: Padding(
@@ -916,16 +1264,20 @@ class _TodosCardState extends ConsumerState<_TodosCard> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
+            if (widget.staleAt != null) ...<Widget>[
+              CachedAtPill(staleAt: widget.staleAt),
+              const SizedBox(height: 8),
+            ],
             Text(
               widget.l10n.homeTodosHeading(open),
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 12),
-            if (widget.payload.todos.isEmpty)
+            if (visible.isEmpty)
               _EmptyState(message: widget.l10n.homeNoTodos)
             else
-              ...widget.payload.todos.map(
-                (TodayTodo todo) => _TodoRow(
+              ...visible.map(
+                (TodoItem todo) => _TodoRow(
                   todo: todo,
                   session: widget.session,
                   l10n: widget.l10n,
@@ -1006,7 +1358,7 @@ class _TodoRow extends ConsumerStatefulWidget {
     required this.l10n,
   });
 
-  final TodayTodo todo;
+  final TodoItem todo;
   final Session session;
   final AppL10n l10n;
 
@@ -1051,7 +1403,7 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
         });
         return;
       }
-      ref.invalidate(todayProvider);
+      ref.invalidate(todosProvider);
     } on MutationSessionRevokedException {
       if (!mounted) {
         return;
@@ -1066,7 +1418,7 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
         return;
       }
       // Silently drop.
-      ref.invalidate(todayProvider);
+      ref.invalidate(todosProvider);
     } on MutationFetchException {
       if (!mounted) {
         return;
@@ -1117,7 +1469,7 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
       if (!mounted) {
         return;
       }
-      ref.invalidate(todayProvider);
+      ref.invalidate(todosProvider);
     } on MutationSessionRevokedException {
       if (!mounted) {
         return;
@@ -1127,7 +1479,7 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
       if (!mounted) {
         return;
       }
-      ref.invalidate(todayProvider);
+      ref.invalidate(todosProvider);
     } on MutationFetchException {
       if (!mounted) {
         return;
@@ -1206,6 +1558,10 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
                     ),
                   ),
                 ),
+                if (widget.todo.member != null) ...<Widget>[
+                  _TodoMemberChip(member: widget.todo.member!),
+                  const SizedBox(width: 8),
+                ],
                 Expanded(
                   child: Text(
                     widget.todo.title,
@@ -1276,6 +1632,34 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
   }
 }
 
+class _TodoMemberChip extends StatelessWidget {
+  const _TodoMemberChip({required this.member});
+
+  final TodoMember member;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color accent = AccentPalette.resolve(member.color);
+    final String label = member.emoji.isNotEmpty
+        ? member.emoji
+        : (member.name.isNotEmpty ? member.name[0].toUpperCase() : '?');
+    return Tooltip(
+      message: member.name,
+      child: Container(
+        width: 24,
+        height: 24,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.25),
+          shape: BoxShape.circle,
+          border: Border.all(color: accent, width: 1.5),
+        ),
+        child: Text(label, style: const TextStyle(fontSize: 12)),
+      ),
+    );
+  }
+}
+
 class _DuePill extends StatelessWidget {
   const _DuePill({required this.label, required this.overdue});
 
@@ -1304,6 +1688,136 @@ class _DuePill extends StatelessWidget {
               fontWeight: FontWeight.w600,
               fontSize: 12,
             ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Notizen card — latest 3 sticky notes, hidden when empty (tap → /notes)
+// ---------------------------------------------------------------------------
+
+class _NotesCard extends ConsumerWidget {
+  const _NotesCard({required this.l10n});
+
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final AsyncValue<NotesResult> notesAsync = ref.watch(notesProvider);
+    return notesAsync.when(
+      loading: () => const _CardLoading(),
+      error: (Object err, StackTrace _) => _CardError(
+        isSessionExpired: err is NoteSessionRevokedException,
+        message: l10n.homeLoadError,
+        l10n: l10n,
+        onRetry: () => ref.invalidate(notesProvider),
+        onSessionExpired: () async {
+          await ref.read(sessionProvider.notifier).clear();
+        },
+      ),
+      data: (NotesResult result) {
+        final List<Note> sorted = <Note>[...result.notes]
+          ..sort((Note a, Note b) => b.createdAt.compareTo(a.createdAt));
+        final List<Note> latest = sorted.take(3).toList();
+        if (latest.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        return _NotesCardBody(notes: latest, l10n: l10n);
+      },
+    );
+  }
+}
+
+class _NotesCardBody extends StatelessWidget {
+  const _NotesCardBody({required this.notes, required this.l10n});
+
+  final List<Note> notes;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => context.push('/notes'),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Text(
+                    l10n.notesTitle,
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.4),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              ...notes.map(
+                (Note note) => _HomeNoteRow(note: note, l10n: l10n),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeNoteRow extends StatelessWidget {
+  const _HomeNoteRow({required this.note, required this.l10n});
+
+  final Note note;
+  final AppL10n l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color accent = AccentPalette.resolve(note.color);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 48),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: accent.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border(
+            left: BorderSide(color: accent, width: 4),
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: <Widget>[
+            Text(
+              note.body,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            if (note.author != null) ...<Widget>[
+              const SizedBox(height: 4),
+              Text(
+                l10n.notesByAuthor(note.author!.name),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.5),
+                    ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
