@@ -6,6 +6,7 @@ import { getMessages } from "next-intl/server";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ServiceWorkerRegister } from "@/components/providers/sw-register";
 import { IdleScreensaver } from "@/components/shell/idle-screensaver";
+import { LocaleGuard } from "@/components/shell/locale-guard";
 import { getCurrentLocale } from "@/i18n/locale";
 import { getScreensaverIdleMinutes } from "@/lib/queries";
 import "./globals.css";
@@ -75,6 +76,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <QueryProvider>
               <ServiceWorkerRegister />
               <IdleScreensaver minutes={idleMinutes} />
+              <LocaleGuard />
               {children}
             </QueryProvider>
           </ThemeProvider>
