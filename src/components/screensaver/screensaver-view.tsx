@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { endOfDay, format, startOfDay } from "date-fns";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { CalendarEvent } from "@/components/calendar/types";
 import type { Photo } from "@/components/photos/types";
 import { cn } from "@/lib/utils";
@@ -37,12 +37,15 @@ function formatTime(d: Date): string {
   return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
-function formatLongDate(d: Date): string {
-  return d.toLocaleDateString(undefined, {
+// Locale must come from the app (useLocale), not the browser: the kiosk's
+// Chromium runs with the OS locale (English on the shipped image), so an
+// undefined locale rendered English dates regardless of the app language.
+function formatLongDate(d: Date, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     weekday: "long",
     month: "long",
     day: "numeric",
-  });
+  }).format(d);
 }
 
 function randomOrigin(): Origin {
@@ -53,6 +56,7 @@ function randomOrigin(): Origin {
 }
 
 export function ScreensaverView() {
+  const locale = useLocale();
   const t = useTranslations("screensaver");
   const tCommon = useTranslations("common");
   const router = useRouter();
@@ -195,7 +199,7 @@ export function ScreensaverView() {
               className="mt-3 font-display text-lg text-white/80"
               suppressHydrationWarning
             >
-              {now ? formatLongDate(now) : ""}
+              {now ? formatLongDate(now, locale) : ""}
             </div>
           </div>
           {photos.length === 0 && (
