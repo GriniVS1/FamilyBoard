@@ -8,8 +8,14 @@ import { defaultLocale, isLocale, type Locale } from "./config";
 // (field bug after reboot/update, when Prisma is cold and the Pi is under
 // boot load). Retry with backoff before falling back to the default; the
 // fallback remains for genuinely-uninitialized first-boot databases.
-const READ_ATTEMPTS = 3;
-const BACKOFF_MS = [300, 800];
+//
+// The budget is deliberately generous (~5s worst case): after an OTA update
+// Next's version-skew handling reloads the kiosk page the moment the NEW
+// server starts listening — before the updater's health gate has even passed —
+// so this read races a stone-cold Prisma engine under docker-load pressure.
+// LocaleGuard (client) is the second net if we still lose that race.
+const READ_ATTEMPTS = 5;
+const BACKOFF_MS = [300, 800, 1500, 2500];
 
 export async function getCurrentLocale(): Promise<Locale> {
   for (let attempt = 0; attempt < READ_ATTEMPTS; attempt++) {
