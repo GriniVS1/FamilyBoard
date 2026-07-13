@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Cloud,
   CloudFog,
@@ -155,14 +155,17 @@ export function WidgetWeather({ className, location }: WidgetWeatherProps) {
 }
 
 function WeatherContent({ data }: { data: WeatherPayload }) {
+  const locale = useLocale();
   const t = useTranslations("dashboard.widgets.weather");
   const NowIcon = iconForCode(data.now.code, data.now.isDay);
   const hourly = data.hourly.slice(0, 6);
   const daily = data.daily.slice(0, 3);
 
+  // App locale, not browser locale — the kiosk's Chromium runs English.
   function shortDay(iso: string): string {
-    const d = new Date(iso);
-    return d.toLocaleDateString(undefined, { weekday: "short" });
+    return new Intl.DateTimeFormat(locale, { weekday: "short" }).format(
+      new Date(iso),
+    );
   }
 
   return (
