@@ -19,6 +19,9 @@ export const GET = withErrorHandling(async (req) => {
   const todos = await db.todo.findMany({
     where: { familyId: ctx.familyId },
     orderBy: [{ done: "asc" }, { createdAt: "desc" }],
+    include: {
+      member: { select: { id: true, name: true, color: true, emoji: true } },
+    },
   });
 
   return ok({
@@ -30,6 +33,7 @@ export const GET = withErrorHandling(async (req) => {
       memberId: todo.memberId,
       familyId: todo.familyId,
       createdAt: todo.createdAt.toISOString(),
+      member: todo.member,
     })),
   });
 });
