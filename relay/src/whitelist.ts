@@ -20,13 +20,8 @@ export function isAllowedRemotePath(method: string, path: string): boolean {
     return true;
   }
 
-  // Web pairing: the SPA served from this same Worker (relay/public) has no
-  // LAN access, so it must be able to redeem a pairing code remotely. Safe to
-  // allow because the code is short-lived + admin-PIN-gated at creation time,
-  // and the relay's own rate limit (120 req/min/DO) makes brute force of the
-  // code space impractical.
-  if (method === "POST" && path === "/api/devices/pair") return true;
-
+  // NOTE: /api/devices/pair is deliberately NOT allowed remotely — pairing
+  // happens at home on the LAN (QR scan), and remote access is app-only.
   // Explicitly NOT: every other route (wall UI API, settings, system,
   // network, sync, ...).
   return false;
