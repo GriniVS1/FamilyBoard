@@ -7,7 +7,7 @@ import { QueryProvider } from "@/components/providers/query-provider";
 import { ServiceWorkerRegister } from "@/components/providers/sw-register";
 import { IdleScreensaver } from "@/components/shell/idle-screensaver";
 import { LocaleGuard } from "@/components/shell/locale-guard";
-import { getCurrentLocale } from "@/i18n/locale";
+import { resolveLocaleForRequest } from "@/i18n/locale";
 import { getScreensaverIdleMinutes } from "@/lib/queries";
 import "./globals.css";
 
@@ -63,7 +63,7 @@ export const viewport: Viewport = {
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const [locale, messages, idleMinutes] = await Promise.all([
-    getCurrentLocale(),
+    resolveLocaleForRequest(),
     getMessages(),
     getScreensaverIdleMinutes(),
   ]);
