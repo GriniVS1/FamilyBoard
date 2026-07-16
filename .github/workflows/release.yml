@@ -28,7 +28,10 @@ permissions:
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    # Native arm64 runner (free for public repos, GA since 2025). Builds the
+    # Pi image on real arm64 hardware — no QEMU. The former ubuntu-latest +
+    # setup-qemu cross-build reliably hung in `npm ci` under emulation.
+    runs-on: ubuntu-24.04-arm
     env:
       # Overridable floor for which base image may apply this update.
       MIN_BASE_VERSION: ${{ vars.OTA_MIN_BASE_VERSION || 'v1.1.0' }}
@@ -71,13 +74,14 @@ jobs:
             exit 1
           fi
 
-      - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
 
-      - name: Cross-build arm64 app image → tarball
+      - name: Build arm64 app image → tarball
         run: |
+          # Native arm64 build on an arm64 runner — no --platform/QEMU. buildx
+          # is kept only for the docker-load tarball export (-o type=docker).
           mkdir -p dist
-          docker buildx build --platform linux/arm64 \
+          docker buildx build \
             --build-arg APP_VERSION="${{ steps.meta.outputs.version }}" \
             -t familyboard:latest \
             -o "type=docker,dest=dist/app.tar" \
