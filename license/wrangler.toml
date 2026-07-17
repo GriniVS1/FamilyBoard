@@ -29,3 +29,8 @@ LICENSE_PUBLIC_KEY = "MCowBQYDK2VwAyEA2oiYWdeW6EYxXTirsMfiWZJIr+PppNNZGDrcdKqsnv
 #   wrangler secret put LICENSE_PRIVATE_KEY
 # Derive the value from tool/.license-private.pem (strip the -----BEGIN/END-----
 # lines and newlines; the remaining base64 IS the PKCS8 DER).
+
+# Secret (never committed) — gates the vendor admin surface (/admin console +
+# /license/issue, /license/lookup, /license/revoke, /license/restore). Generate
+# a strong random value and set it with:
+#   openssl rand -base64 32 | tr -d '\n' | wrangler secret put LICENSE_ADMIN_TOKEN

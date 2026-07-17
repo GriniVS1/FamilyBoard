@@ -29,5 +29,36 @@ wrangler kv key put --namespace-id <id> key:<sha256url(licenseKey)> '{"status":"
    newlines; the remaining base64 IS the DER. (The signing key stays offline
    otherwise; only the Worker holds this copy.)
 4. `wrangler deploy` (creates the `license.familyboard.ch` custom domain).
+5. Set the vendor-console secret:
+   `openssl rand -base64 32 | tr -d '\n' | wrangler secret put LICENSE_ADMIN_TOKEN`.
 
-Endpoints: `POST /license/checkin`, `GET /health`.
+## Vendor console (`/admin`)
+
+Because every sold device passes through the workshop, keys are minted from a
+small web console served by the Worker at `https://license.familyboard.ch/admin`.
+It is gated by `LICENSE_ADMIN_TOKEN` (entered once, kept in the browser's
+localStorage; every API call carries it as a Bearer header).
+
+Workflow per device: assemble → boot → read the device's `deviceId` (Pi serial)
+with `curl http://<board-ip>:3000/api/license` → paste it into the console with
+the customer → **Key erzeugen**. Include the printed `FB1…` key with the device;
+if a customer loses it, search by name or deviceId to re-find and resend it.
+
+Keys are **perpetual and device-bound** (no expiry in the key; the lease is the
+expiry/revocation surface). Issuing is idempotent per `deviceId` — re-scanning a
+device returns its existing key unless you tick *reissue*.
+
+Admin endpoints (all require `Authorization: Bearer <LICENSE_ADMIN_TOKEN>`):
+
+```
+POST /license/issue    {deviceId, customer?, plan?, reissue?}  → mints/returns FB1 key + stores record
+GET  /license/lookup   ?deviceId=… | ?q=<customer|device>       → records (+ live revocation status)
+POST /license/revoke   {deviceId}                               → revokes the record's key
+POST /license/restore  {deviceId}                               → un-revokes
+```
+
+Records are stored under `rec:<deviceId>` in the same KV namespace; revocation
+reuses the `key:<sha256url(key)>` entries above, so a revoked key stops getting
+fresh leases and the device lapses into grace → soft → hard.
+
+Public endpoints: `POST /license/checkin`, `GET /health`.
