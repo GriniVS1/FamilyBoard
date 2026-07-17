@@ -4,6 +4,7 @@ import { randomUUID, createPublicKey, verify as cryptoVerify } from "node:crypto
 import { readFile } from "node:fs/promises";
 import { db } from "./db";
 import { AppError } from "./api";
+import { env } from "./env";
 import type { LicenseStatus } from "./enums";
 
 // Baked-in dev public key — generated once by `tool/sign-license.mjs keygen`.
@@ -456,6 +457,11 @@ export async function activateLicense(key: string): Promise<LicenseSnapshot> {
     },
   });
 
+  // Best-effort: pull the first lease immediately so the gate runs off it right
+  // away. Offline activation still succeeds if the server is unreachable — the
+  // key alone keeps the device active until the next check-in mints a lease.
+  await checkInWithLicenseServer().catch(() => {});
+
   return getLicenseSnapshot();
 }
 
@@ -466,7 +472,56 @@ export async function requireActiveLicense(): Promise<void> {
   }
 }
 
-// No-op until v3 remote check-in is wired.
+/**
+ * Check in with the license server to renew the device lease. Called on a slow
+ * timer (instrumentation.ts) and best-effort right after activation.
+ *
+ * Failure modes are deliberately soft so a transient server/network problem
+ * never locks a paid device:
+ * - no activated key            → nothing to renew, return.
+ * - network error / timeout / 5xx → keep the cached lease (offline grace runway).
+ * - 403 revoked                 → do NOT renew; the device rides the current
+ *                                 lease until it lapses into grace→soft→hard.
+ * - 200 with a valid lease      → store it + stamp lastLicenseCheckAt.
+ */
 export async function checkInWithLicenseServer(): Promise<void> {
-  return;
+  const installation = await getOrCreateInstallation();
+  if (!installation.licenseKey) return;
+
+  const deviceId = await getDeviceId();
+
+  let res: Response;
+  try {
+    res = await fetch(`${env.LICENSE_SERVER_URL}/license/checkin`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ deviceId, key: installation.licenseKey }),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch {
+    // Offline or timeout — keep riding the cached lease.
+    return;
+  }
+
+  // Revoked or any non-OK response: leave the stored lease untouched. A revoked
+  // key stops getting fresh leases, so the current one simply ages out.
+  if (!res.ok) return;
+
+  let body: { lease?: unknown };
+  try {
+    body = (await res.json()) as { lease?: unknown };
+  } catch {
+    return;
+  }
+  if (typeof body.lease !== "string") return;
+
+  // Never store a lease we can't verify against our own public key.
+  const lease = verifyLease(body.lease, deviceId);
+  if (!lease.valid) return;
+
+  await storeLease(body.lease);
+  await db.installation.update({
+    where: { id: installation.id },
+    data: { lastLicenseCheckAt: new Date() },
+  });
 }
