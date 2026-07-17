@@ -1,0 +1,29 @@
+name = "familyboard-license"
+main = "src/index.ts"
+compatibility_date = "2026-07-01"
+
+# Dedicated subdomain (auto-creates DNS on the zone) — clean origin for
+# rate-limit/WAF rules, no interleaving with the website / /oauth/* broker.
+routes = [{ pattern = "license.familyboard.ch", custom_domain = true }]
+
+[[kv_namespaces]]
+# Revocation / override list only — created once with:
+#   wrangler kv namespace create LICENSE_KV
+# then paste the returned id here. The happy path needs NO entry: a validly
+# signed, device-bound key is trusted by its signature. Entries exist only to
+# revoke or override: key:<sha256(key)> -> {"status":"revoked"} etc.
+binding = "LICENSE_KV"
+id = "REPLACE_WITH_KV_ID"
+
+[vars]
+# How long a minted lease is valid — the device's offline runway before it
+# must reach the server again (plus license_grace/soft_days on the device).
+LEASE_DAYS = "30"
+# Ed25519 public key (base64 SPKI DER) — same key the device bakes in as
+# LICENSE_PUBLIC_KEY. Used to verify presented FB1 license keys. NOT secret.
+LICENSE_PUBLIC_KEY = "REPLACE_WITH_BASE64_SPKI_DER"
+
+# Secret (never committed) — the Ed25519 signing key, base64 of the PKCS8 DER:
+#   wrangler secret put LICENSE_PRIVATE_KEY
+# Derive the value from tool/.license-private.pem (strip the -----BEGIN/END-----
+# lines and newlines; the remaining base64 IS the PKCS8 DER).

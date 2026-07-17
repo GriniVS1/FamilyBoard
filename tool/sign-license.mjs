@@ -111,12 +111,47 @@ function signLicense(args) {
   process.stdout.write(licenseKey + "\n");
 }
 
+// Mint an FBL1 lease directly (what the license Worker issues on check-in).
+// For local testing of the device-side verifyLease without the Worker.
+function signLease(args) {
+  const device = args["device"];
+  const plan = args["plan"] === "pro" ? "pro" : "home";
+  const days = Number(args["days"]) || 30;
+
+  if (!device || typeof device !== "string" || device === "true") {
+    process.stderr.write("Error: --device <serial> is required\n");
+    process.exit(1);
+  }
+  if (!existsSync(PRIVATE_KEY_PATH)) {
+    process.stderr.write(
+      "Error: tool/.license-private.pem not found. Run `node tool/sign-license.mjs keygen` first.\n",
+    );
+    process.exit(1);
+  }
+
+  const payload = {
+    v: 1,
+    deviceId: device,
+    plan,
+    status: "active",
+    issuedAt: new Date().toISOString(),
+    leaseUntil: new Date(Date.now() + days * 86_400_000).toISOString(),
+  };
+  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  const privateKey = createPrivateKey(readFileSync(PRIVATE_KEY_PATH, "utf-8"));
+  const sigB64 = cryptoSign(null, Buffer.from(payloadB64, "utf-8"), privateKey).toString("base64url");
+
+  process.stdout.write(`FBL1.${payloadB64}.${sigB64}\n`);
+}
+
 const [, , command, ...rest] = process.argv;
 
 if (command === "keygen") {
   keygen();
 } else if (command === "sign") {
   signLicense(parseArgs(rest));
+} else if (command === "lease") {
+  signLease(parseArgs(rest));
 } else {
   printUsage();
   process.exit(command ? 1 : 0);
