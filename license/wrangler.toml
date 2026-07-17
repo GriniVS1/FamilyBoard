@@ -1,6 +1,8 @@
 name = "familyboard-license"
 main = "src/index.ts"
 compatibility_date = "2026-07-01"
+# Same account as the familyboard.ch zone + the LICENSE_KV namespace.
+account_id = "c81ffd8c79ed3bbc7e0684a0423474e7"
 
 # Dedicated subdomain (auto-creates DNS on the zone) — clean origin for
 # rate-limit/WAF rules, no interleaving with the website / /oauth/* broker.
@@ -13,7 +15,7 @@ routes = [{ pattern = "license.familyboard.ch", custom_domain = true }]
 # signed, device-bound key is trusted by its signature. Entries exist only to
 # revoke or override: key:<sha256(key)> -> {"status":"revoked"} etc.
 binding = "LICENSE_KV"
-id = "REPLACE_WITH_KV_ID"
+id = "89747bbf22684c1093b7484102c6d088"
 
 [vars]
 # How long a minted lease is valid — the device's offline runway before it
@@ -21,7 +23,7 @@ id = "REPLACE_WITH_KV_ID"
 LEASE_DAYS = "30"
 # Ed25519 public key (base64 SPKI DER) — same key the device bakes in as
 # LICENSE_PUBLIC_KEY. Used to verify presented FB1 license keys. NOT secret.
-LICENSE_PUBLIC_KEY = "REPLACE_WITH_BASE64_SPKI_DER"
+LICENSE_PUBLIC_KEY = "MCowBQYDK2VwAyEA2oiYWdeW6EYxXTirsMfiWZJIr+PppNNZGDrcdKqsnvM="
 
 # Secret (never committed) — the Ed25519 signing key, base64 of the PKCS8 DER:
 #   wrangler secret put LICENSE_PRIVATE_KEY

@@ -19,6 +19,13 @@ FROM base AS runner
 # synced into Installation.appVersion at app boot for the OTA updater.
 ARG APP_VERSION=dev
 ENV APP_VERSION=${APP_VERSION}
+# Vendor Ed25519 license public key (base64 SPKI DER) — the trust anchor for
+# offline license-key + lease verification (src/lib/license.ts). NOT secret: it
+# only verifies signatures. Baked into the image so every device (including
+# already-shipped ones, on the next OTA) verifies against the production key
+# instead of falling back to the dev key. Rotate by bumping this default.
+ARG LICENSE_PUBLIC_KEY=MCowBQYDK2VwAyEA2oiYWdeW6EYxXTirsMfiWZJIr+PppNNZGDrcdKqsnvM=
+ENV LICENSE_PUBLIC_KEY=${LICENSE_PUBLIC_KEY}
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
