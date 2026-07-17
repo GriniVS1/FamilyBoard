@@ -47,6 +47,10 @@ const schema = z.object({
   // When unset, the baked-in dev key from src/lib/license.ts is used — safe for
   // development/testing but the matching private key must never be committed.
   LICENSE_PUBLIC_KEY: z.string().optional(),
+  // License server for device check-in (mints the signed lease). Default points
+  // at the vendor Worker so shipped devices need zero config; override to a
+  // local `wrangler dev` when testing the check-in loop.
+  LICENSE_SERVER_URL: z.string().url().default("https://license.familyboard.ch"),
 });
 
 export const env = schema.parse(process.env);

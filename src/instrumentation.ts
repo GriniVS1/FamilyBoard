@@ -12,6 +12,7 @@ export async function register() {
   let caldavRunning = false;
   let microsoftRunning = false;
   let pushRunning = false;
+  let licenseRunning = false;
 
   const googleSyncTick = async () => {
     if (googleRunning) return;
@@ -89,6 +90,25 @@ export async function register() {
     }
   };
 
+  const licenseCheckinTick = async () => {
+    if (licenseRunning) return;
+    licenseRunning = true;
+    try {
+      await fetch(`${baseUrl}/api/license/checkin`, {
+        method: "POST",
+        headers: internalHeaders(),
+        signal: AbortSignal.timeout(60_000),
+      });
+    } catch (err) {
+      console.warn(
+        "[instrumentation] license check-in tick failed",
+        err instanceof Error ? err.message : err,
+      );
+    } finally {
+      licenseRunning = false;
+    }
+  };
+
   setTimeout(googleSyncTick, 10_000);
   setInterval(googleSyncTick, intervalMs);
 
@@ -128,6 +148,12 @@ export async function register() {
   // dark (drives DPMS on the host — see src/lib/display.ts).
   setTimeout(displayTick, 20_000);
   setInterval(displayTick, 60_000);
+
+  // License lease renewal: check in 30 s after boot, then every 12 h. The lease
+  // is valid for ~30 days, so this is deliberately slow — it just keeps the
+  // offline runway topped up (see checkInWithLicenseServer in src/lib/license.ts).
+  setTimeout(licenseCheckinTick, 30_000);
+  setInterval(licenseCheckinTick, 12 * 60 * 60 * 1000);
 
   // Remote access: hold an outbound WebSocket to the relay so the phone can
   // reach the mobile API from outside the LAN. Dev-only when RELAY_URL is set
