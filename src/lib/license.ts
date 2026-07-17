@@ -29,6 +29,10 @@ type VerifyResult =
   | { valid: true; plan: string; validUntil: Date | null }
   | { valid: false; reason: string };
 
+type LeaseVerifyResult =
+  | { valid: true; plan: string; leaseUntil: Date }
+  | { valid: false; reason: string };
+
 let _deviceIdCache: string | undefined;
 
 async function readPiSerial(): Promise<string | null> {
@@ -155,6 +159,85 @@ export function verifyLicenseKey(key: string, deviceId: string): VerifyResult {
   return { valid: true, plan: payload.plan, validUntil };
 }
 
+/**
+ * Verify a lease token (`FBL1.<payloadB64url>.<sig>`) minted by the license
+ * server. Mirror of {@link verifyLicenseKey}, signed by the SAME vendor keypair
+ * and verified with the SAME baked/`LICENSE_PUBLIC_KEY` — no new key material.
+ *
+ * Unlike a license key, an expired lease is NOT rejected here: the caller needs
+ * `leaseUntil` even in the past so {@link computeGateFromLease} can decide
+ * grace/soft/hard. Signature and device binding are still hard requirements.
+ */
+export function verifyLease(token: string, deviceId: string): LeaseVerifyResult {
+  const parts = token.split(".");
+  if (parts.length !== 3 || parts[0] !== "FBL1") {
+    return { valid: false, reason: "MALFORMED" };
+  }
+
+  const [, payloadB64, sigB64] = parts as [string, string, string];
+
+  let payload: {
+    v: number;
+    deviceId: string;
+    plan: string;
+    status: string;
+    issuedAt: string;
+    leaseUntil: string;
+  };
+  try {
+    payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString("utf-8")) as typeof payload;
+  } catch {
+    return { valid: false, reason: "MALFORMED" };
+  }
+
+  if (
+    typeof payload !== "object" ||
+    payload.v !== 1 ||
+    typeof payload.deviceId !== "string" ||
+    typeof payload.plan !== "string" ||
+    typeof payload.leaseUntil !== "string"
+  ) {
+    return { valid: false, reason: "MALFORMED" };
+  }
+
+  let sigBuf: Buffer;
+  try {
+    sigBuf = Buffer.from(sigB64, "base64url");
+  } catch {
+    return { valid: false, reason: "MALFORMED" };
+  }
+
+  let publicKey: ReturnType<typeof createPublicKey>;
+  try {
+    publicKey = getPublicKeyObject();
+  } catch {
+    return { valid: false, reason: "PUBKEY_CONFIG" };
+  }
+
+  const signedData = Buffer.from(payloadB64, "utf-8");
+  let sigOk: boolean;
+  try {
+    sigOk = cryptoVerify(null, signedData, publicKey, sigBuf);
+  } catch {
+    sigOk = false;
+  }
+
+  if (!sigOk) {
+    return { valid: false, reason: "BAD_SIGNATURE" };
+  }
+
+  if (payload.deviceId !== deviceId) {
+    return { valid: false, reason: "DEVICE_MISMATCH" };
+  }
+
+  const leaseUntil = new Date(payload.leaseUntil);
+  if (Number.isNaN(leaseUntil.getTime())) {
+    return { valid: false, reason: "MALFORMED" };
+  }
+
+  return { valid: true, plan: payload.plan, leaseUntil };
+}
+
 async function getGraceDays(): Promise<{ graceDays: number; softDays: number }> {
   const [graceRow, softRow] = await Promise.all([
     db.setting.findUnique({ where: { key: "license_grace_days" } }),
@@ -190,6 +273,55 @@ export function computeGate(
   return { gate: "hard", status: "UNLICENSED", isActive: false, graceEndsAt, softEndsAt };
 }
 
+/**
+ * Pure gate computation from a verified lease — the online-license counterpart
+ * of {@link computeGate} (which drives the offline trial-from-createdAt path).
+ *
+ * A licensed device runs on the lease. As long as it is within `leaseUntil` the
+ * gate is fully active. Past `leaseUntil` the device is presumed offline and
+ * gets `graceDays` at full function to reconnect, then `softDays` of nagging
+ * degraded access, then a hard lock — the generous offline runway.
+ */
+export function computeGateFromLease(
+  leaseUntil: Date,
+  graceDays: number,
+  softDays: number,
+  now: Date,
+): { gate: LicenseGate; status: LicenseStatus; isActive: boolean; graceEndsAt: Date; softEndsAt: Date } {
+  const graceEndsAt = new Date(leaseUntil.getTime() + graceDays * 86_400_000);
+  const softEndsAt = new Date(graceEndsAt.getTime() + softDays * 86_400_000);
+
+  if (now < leaseUntil) {
+    return { gate: "active", status: "ACTIVE", isActive: true, graceEndsAt, softEndsAt };
+  }
+  if (now < graceEndsAt) {
+    return { gate: "grace", status: "ACTIVE", isActive: true, graceEndsAt, softEndsAt };
+  }
+  if (now < softEndsAt) {
+    return { gate: "soft", status: "EXPIRED", isActive: false, graceEndsAt, softEndsAt };
+  }
+  return { gate: "hard", status: "UNLICENSED", isActive: false, graceEndsAt, softEndsAt };
+}
+
+const LICENSE_LEASE_KEY = "license_lease";
+
+async function getStoredLease(): Promise<string | null> {
+  const row = await db.setting.findUnique({ where: { key: LICENSE_LEASE_KEY } });
+  return row?.value ?? null;
+}
+
+/**
+ * Persist the latest lease token issued by the license server. Called by the
+ * check-in flow (PR3); read back here to drive the gate.
+ */
+export async function storeLease(token: string): Promise<void> {
+  await db.setting.upsert({
+    where: { key: LICENSE_LEASE_KEY },
+    create: { key: LICENSE_LEASE_KEY, value: token },
+    update: { value: token },
+  });
+}
+
 async function getOrCreateInstallation() {
   const existing = await db.installation.findFirst();
   if (existing) return existing;
@@ -208,37 +340,84 @@ export async function getLicenseSnapshot(): Promise<LicenseSnapshot> {
 
   const deviceId = await getDeviceId();
   const { graceDays, softDays } = await getGraceDays();
+  const now = new Date();
 
-  let hasValidKey = false;
-  let plan: string | null = installation.licensePlan;
-  let validUntil: Date | null = installation.licenseValidUntil;
+  // No key at all → unlicensed trial, gated off the install's createdAt. This is
+  // the shipped/paired-but-not-activated path and stays exactly as before.
+  if (!installation.licenseKey) {
+    const { gate, status, isActive, graceEndsAt, softEndsAt } = computeGate(
+      installation.createdAt,
+      false,
+      graceDays,
+      softDays,
+      now,
+    );
+    return {
+      status,
+      gate,
+      plan: null,
+      validUntil: null,
+      isActive,
+      deviceId,
+      graceEndsAt,
+      softEndsAt,
+    };
+  }
 
-  if (installation.licenseKey) {
-    const result = verifyLicenseKey(installation.licenseKey, deviceId);
-    if (result.valid) {
-      hasValidKey = true;
-      plan = result.plan;
-      validUntil = result.validUntil;
+  const keyResult = verifyLicenseKey(installation.licenseKey, deviceId);
+
+  // A key is present. The gate now lives off the lease (or the key itself),
+  // NOT the write-mostly `licenseStatus` columns — those can go stale.
+  const leaseToken = await getStoredLease();
+  if (leaseToken) {
+    const lease = verifyLease(leaseToken, deviceId);
+    if (lease.valid) {
+      const { gate, status, isActive, graceEndsAt, softEndsAt } = computeGateFromLease(
+        lease.leaseUntil,
+        graceDays,
+        softDays,
+        now,
+      );
+      return {
+        status,
+        gate,
+        plan: lease.plan,
+        validUntil: lease.leaseUntil,
+        isActive,
+        deviceId,
+        graceEndsAt,
+        softEndsAt,
+      };
     }
   }
 
-  const { gate, status, isActive, graceEndsAt, softEndsAt } = computeGate(
-    installation.createdAt,
-    hasValidKey,
-    graceDays,
-    softDays,
-    new Date(),
-  );
+  // No verifiable lease yet (never checked in, or lease for another device).
+  // Fall back to the key: a valid, device-bound key means offline activation
+  // succeeded and the device is active until its first check-in mints a lease.
+  if (keyResult.valid) {
+    return {
+      status: "ACTIVE",
+      gate: "active",
+      plan: keyResult.plan,
+      validUntil: keyResult.validUntil,
+      isActive: true,
+      deviceId,
+      graceEndsAt: null,
+      softEndsAt: null,
+    };
+  }
 
+  // Key present but no longer verifies (revoked-and-re-signed, tampered, expired,
+  // or bound to a different device) and no valid lease → hard lock.
   return {
-    status,
-    gate,
-    plan: hasValidKey ? plan : null,
-    validUntil: hasValidKey ? validUntil : null,
-    isActive,
+    status: "UNLICENSED",
+    gate: "hard",
+    plan: null,
+    validUntil: null,
+    isActive: false,
     deviceId,
-    graceEndsAt,
-    softEndsAt,
+    graceEndsAt: null,
+    softEndsAt: null,
   };
 }
 
