@@ -205,5 +205,5 @@ Central Cloudflare Worker at `familyboard.ch/oauth/*` (dir `broker/`), so shippe
 ### Recurring field-bug patterns
 
 - **API ↔ widget field-name drift** → `NaN`/blank UI (weather widget expected `ts`/`maxC`/`minC` vs API `time`/`tempMaxC`). Keep response shape and consumer in sync.
-- **Kiosk has no system on-screen keyboard** — our React OSK can't cover third-party pages (e.g. Google's login). Needs an X11-wide OSK (`onboard`) baked into the image.
+- **Kiosk on-screen keyboard** — our React OSK can't cover third-party pages (e.g. Google's login), so `onboard` (X11-wide OSK) is wired into both kiosk paths: pi-gen `.xinitrc` (base image, wrapped in `dbus-run-session`, auto-show via AT-SPI, Chromium gets `--force-renderer-accessibility`) and `chromium-kiosk.service` (DIY install). Binaries (`onboard at-spi2-core dbus-x11`) ride the host-payload OTA; the launch wiring only reaches a device via a **new base image** (`.xinitrc` is written at image build, not OTA-updated). **Auto-show behaviour still needs field-verification on hardware** — X11/AT-SPI/onboard integration is finicky; the wiring is defensive so the kiosk always boots even if the OSK fails to appear.
 - **Pi has a single WiFi radio** → phone-based WiFi setup has a ~5-min timeout; don't assume simultaneous AP + client.
