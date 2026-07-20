@@ -30,6 +30,10 @@ const LICENSE_WHITELIST_PREFIXES = [
   "/api/devices/pair",
   "/api/settings/pin",
   "/api/settings/factory-reset",
+  // Trigger an OTA update check (writes the update-request flag). A locked
+  // device must be able to pull the fix/license-key OTA from the UI, not only
+  // via the nightly host timer — the recovery path, same rationale as above.
+  "/api/settings/update-status",
 ];
 
 const MUTATION_METHODS = new Set(["POST", "PATCH", "PUT", "DELETE"]);
