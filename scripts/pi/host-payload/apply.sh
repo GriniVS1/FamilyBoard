@@ -76,7 +76,12 @@ else
 fi
 
 # --- host packages (extend per release; guarded so re-runs are cheap) -----------
-PACKAGES=()
+# onboard = X11-wide on-screen keyboard for third-party pages (Google login)
+# our in-app React keyboard can't reach; at-spi2-core lets it detect focused
+# text fields in Chromium; dbus-x11 provides the session-bus launcher the
+# minimal openbox session needs. Binaries ride the OTA; the .xinitrc wiring
+# that launches onboard ships in the base image (see pi-gen 00-run.sh).
+PACKAGES=(onboard at-spi2-core dbus-x11)
 MISSING=()
 for p in "${PACKAGES[@]}"; do
   dpkg -s "$p" >/dev/null 2>&1 || MISSING+=("$p")
