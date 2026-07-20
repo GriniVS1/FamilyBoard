@@ -1,6 +1,5 @@
 "use client";
 
-import { format, parseISO } from "date-fns";
 import { KeyRound, ShieldCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
@@ -35,10 +34,6 @@ export function LicenseSettingsCard() {
         ? "text-accent-sun"
         : "text-accent-rose";
 
-  const validUntilLabel = license.validUntil
-    ? format(parseISO(license.validUntil), "PP")
-    : null;
-
   return (
     <>
       <GlassCard className="flex flex-col gap-4 p-6">
@@ -57,7 +52,7 @@ export function LicenseSettingsCard() {
         </div>
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="rounded-2xl border border-border bg-bg/40 px-4 py-3">
+          <div className="rounded-2xl border border-border bg-bg/40 px-4 py-3 sm:col-span-2">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">
               {t("statusLabel")}
             </div>
@@ -65,26 +60,6 @@ export function LicenseSettingsCard() {
               {t(STATUS_KEY_MAP[license.status])}
             </div>
           </div>
-
-          {license.plan && (
-            <div className="rounded-2xl border border-border bg-bg/40 px-4 py-3">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-                {t("planLabel")}
-              </div>
-              <div className="text-sm font-medium text-ink">{license.plan}</div>
-            </div>
-          )}
-
-          {validUntilLabel && (
-            <div className="rounded-2xl border border-border bg-bg/40 px-4 py-3">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">
-                {t("validUntilLabel")}
-              </div>
-              <div className="text-sm font-medium text-ink">
-                {validUntilLabel}
-              </div>
-            </div>
-          )}
 
           <div className="rounded-2xl border border-border bg-bg/40 px-4 py-3 sm:col-span-2">
             <div className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">
