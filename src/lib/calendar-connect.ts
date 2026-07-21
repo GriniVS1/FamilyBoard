@@ -5,7 +5,7 @@ import { AppError } from "./api";
 import { db } from "./db";
 import { buildAuthorizeUrl, getOAuth2Client } from "./google";
 import { decryptToken, encryptToken } from "./crypto";
-import { env, googleConfigured } from "./env";
+import { env, googleConfigured, brokerConfigured } from "./env";
 import { getAuthorizeUrlAsync, isMicrosoftConfigured } from "./microsoft";
 import {
   CALDAV_PRESETS,
@@ -173,9 +173,34 @@ export async function disconnectGoogle(memberId: string): Promise<void> {
 
 export async function startMicrosoftConnect(
   memberId: string,
-  opts: { source?: ConnectSource } = {},
+  opts: { returnUrl?: string; source?: ConnectSource } = {},
 ): Promise<{ authorizeUrl: string }> {
-  if (!isMicrosoftConfigured()) {
+  const member = await findMemberOrThrow(memberId);
+  assertNoProviderConflict(member, "microsoft");
+
+  // Self-hosted with local Azure credentials → direct OAuth via MSAL (unchanged).
+  if (isMicrosoftConfigured()) {
+    const stateToken = randomBytes(32).toString("hex");
+    const payload = JSON.stringify({
+      memberId,
+      expiresAt: Date.now() + STATE_TTL_MS,
+      source: opts.source,
+    });
+
+    await db.setting.upsert({
+      where: { key: `microsoft_oauth_state:${stateToken}` },
+      update: { value: payload },
+      create: { key: `microsoft_oauth_state:${stateToken}`, value: payload },
+    });
+
+    const authorizeUrl = await getAuthorizeUrlAsync(stateToken);
+    return { authorizeUrl };
+  }
+
+  // Shipped device → route through the OAuth broker (mirror of the Google path).
+  // The device holds the adoptSecret; the broker encrypts the refresh token with
+  // it and redirects back to /api/auth/microsoft/adopt on this device.
+  if (!brokerConfigured) {
     throw new AppError(
       "Microsoft OAuth is not configured on this server",
       "MICROSOFT_NOT_CONFIGURED",
@@ -183,23 +208,39 @@ export async function startMicrosoftConnect(
     );
   }
 
-  const member = await findMemberOrThrow(memberId);
-  assertNoProviderConflict(member, "microsoft");
+  const adoptSecret = randomBytes(32).toString("hex");
+  const returnUrl = opts.returnUrl ?? `${env.NEXTAUTH_URL}/api/auth/microsoft/adopt`;
 
-  const stateToken = randomBytes(32).toString("hex");
-  const payload = JSON.stringify({
+  let res: Response;
+  try {
+    res = await fetch(`${env.OAUTH_BROKER_URL}/oauth/microsoft/start`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ memberId, adoptSecret, returnUrl }),
+    });
+  } catch {
+    throw new AppError("OAuth broker unreachable", "BROKER_UNREACHABLE", 502);
+  }
+  if (!res.ok) {
+    throw new AppError("OAuth broker unreachable", "BROKER_UNREACHABLE", 502);
+  }
+  const { authorizeUrl, state } = (await res.json()) as {
+    authorizeUrl: string;
+    state: string;
+  };
+
+  const value = JSON.stringify({
     memberId,
+    adoptSecret,
     expiresAt: Date.now() + STATE_TTL_MS,
     source: opts.source,
   });
-
   await db.setting.upsert({
-    where: { key: `microsoft_oauth_state:${stateToken}` },
-    update: { value: payload },
-    create: { key: `microsoft_oauth_state:${stateToken}`, value: payload },
+    where: { key: `microsoft_adopt_${state}` },
+    update: { value },
+    create: { key: `microsoft_adopt_${state}`, value },
   });
 
-  const authorizeUrl = await getAuthorizeUrlAsync(stateToken);
   return { authorizeUrl };
 }
 

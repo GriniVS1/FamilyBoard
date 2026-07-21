@@ -2,10 +2,14 @@ name = "familyboard-oauth-broker"
 main = "src/index.ts"
 compatibility_date = "2026-07-01"
 
-# Non-secret. Secrets (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET) are set with
-# `wrangler secret put …` — never committed.
+# Non-secret. Secrets (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, MS_CLIENT_ID,
+# MS_CLIENT_SECRET) are set with `wrangler secret put …` — never committed.
+# Azure AD app redirect URI to register: https://familyboard.ch/oauth/microsoft/callback
 [vars]
 BROKER_BASE_URL = "https://familyboard.ch"
+# Microsoft tenant: "common" = personal + work/school accounts. Override to a
+# specific tenant id or "organizations" if you only support work/school.
+MS_TENANT = "common"
 
 # Created once with: wrangler kv namespace create OAUTH_KV
 # then paste the returned id here.

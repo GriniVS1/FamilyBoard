@@ -9,7 +9,7 @@ import { Client as GraphClient } from "@microsoft/microsoft-graph-client";
 import { AppError } from "./api";
 import { db } from "./db";
 import { decryptToken, encryptToken } from "./crypto";
-import { env, microsoftConfigured } from "./env";
+import { env, microsoftConfigured, brokerConfigured } from "./env";
 import type { SyncCounts } from "./sync";
 import { rruleToGraphRecurrence } from "./microsoft-recurrence";
 
@@ -34,6 +34,54 @@ function addCounts(a: SyncCounts, b: SyncCounts): SyncCounts {
 
 export function isMicrosoftConfigured(): boolean {
   return microsoftConfigured;
+}
+
+// Broker mode: shipped device with no local Azure secret, but the OAuth broker
+// (which holds it) is reachable. Connect + token refresh go through the broker,
+// mirroring the Google broker path. See src/lib/calendar-connect.ts.
+function microsoftBrokerMode(): boolean {
+  return !microsoftConfigured && brokerConfigured;
+}
+
+// Whether Microsoft sync can run at all on this install (local creds OR broker).
+function microsoftSyncPossible(): boolean {
+  return microsoftConfigured || brokerConfigured;
+}
+
+// Mint a Microsoft access token from a refresh token via the broker. The refresh
+// grant needs the vendor client secret (broker-only). Microsoft rotates the
+// refresh token on refresh, so the broker returns the new one; the caller must
+// persist it or the next refresh fails.
+async function refreshMicrosoftViaBroker(refreshToken: string): Promise<{
+  accessToken: string;
+  expiresAt: Date;
+  refreshToken?: string;
+}> {
+  const res = await fetch(`${env.OAUTH_BROKER_URL}/oauth/microsoft/refresh`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ refreshToken }),
+  });
+  if (!res.ok) {
+    throw new AppError(
+      `Broker Microsoft token refresh failed (${res.status})`,
+      "MICROSOFT_REFRESH_FAILED",
+      res.status === 401 ? 401 : 502,
+    );
+  }
+  const data = (await res.json()) as {
+    access_token?: string;
+    expires_in?: number;
+    refresh_token?: string;
+  };
+  if (!data.access_token) {
+    throw new AppError("Broker returned no access token", "MICROSOFT_REFRESH_FAILED", 502);
+  }
+  return {
+    accessToken: data.access_token,
+    expiresAt: new Date(Date.now() + (data.expires_in ?? 3600) * 1000),
+    refreshToken: data.refresh_token,
+  };
 }
 
 let _msalClient: ConfidentialClientApplication | null = null;
@@ -181,6 +229,28 @@ export async function getGraphClientForMember(memberId: string): Promise<GraphCl
     return {
       client: buildGraphClient(accessToken),
       accessToken,
+    };
+  }
+
+  // Broker mode: refresh through the broker (no local Azure secret to run the
+  // refresh grant here). Persist the rotated refresh token Microsoft returns.
+  if (microsoftBrokerMode()) {
+    const refreshed = await refreshMicrosoftViaBroker(refreshToken);
+    const brokerUpdate: {
+      microsoftAccessToken: string;
+      microsoftAccessExpiresAt: Date;
+      microsoftRefreshTokenEnc?: string;
+    } = {
+      microsoftAccessToken: refreshed.accessToken,
+      microsoftAccessExpiresAt: refreshed.expiresAt,
+    };
+    if (refreshed.refreshToken && refreshed.refreshToken !== refreshToken) {
+      brokerUpdate.microsoftRefreshTokenEnc = encryptToken(refreshed.refreshToken);
+    }
+    await db.member.update({ where: { id: memberId }, data: brokerUpdate });
+    return {
+      client: buildGraphClient(refreshed.accessToken),
+      accessToken: refreshed.accessToken,
     };
   }
 
@@ -540,7 +610,7 @@ export async function pushOverrideToMicrosoft(
   masterId: string,
   recurrenceId: string,
 ): Promise<void> {
-  if (!microsoftConfigured) return;
+  if (!microsoftSyncPossible()) return;
 
   const master = await db.event.findUnique({ where: { id: masterId } });
   if (!master || master.source !== "LOCAL" || !master.microsoftEventId) return;
@@ -635,7 +705,7 @@ function isNotFoundLike(err: unknown): boolean {
 }
 
 export async function runMicrosoftSyncForAllMembers(): Promise<SyncCounts> {
-  if (!microsoftConfigured) return ZERO;
+  if (!microsoftSyncPossible()) return ZERO;
 
   const members = await db.member.findMany({
     where: {
