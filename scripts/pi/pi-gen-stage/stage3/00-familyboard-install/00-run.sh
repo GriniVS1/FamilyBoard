@@ -137,30 +137,11 @@ BASHPROFILE
 # manager, then Chromium kiosk once the app health endpoint responds.
 cat > /etc/skel/.xinitrc << 'XINITRC'
 #!/bin/sh
-# Re-run under a D-Bus session bus so the on-screen keyboard (onboard), AT-SPI
-# accessibility and gsettings work in this minimal openbox session. Guarded so
-# the kiosk still boots if dbus-run-session is somehow absent.
-if [ -z "${DBUS_SESSION_BUS_ADDRESS:-}" ] && command -v dbus-run-session >/dev/null 2>&1; then
-  exec dbus-run-session -- "$0"
-fi
 xset s off
 xset -dpms
 xset s noblank
 unclutter -idle 0.5 -root &
 openbox-session &
-
-# On-screen keyboard for pages our in-app React keyboard can't reach (e.g. the
-# Google OAuth login form). onboard auto-shows over focused text fields via
-# AT-SPI; Chromium exposes that tree because --force-renderer-accessibility is
-# set below and at-spi2-core is running. All best-effort — never block the
-# kiosk if the OSK stack is missing.
-if command -v onboard >/dev/null 2>&1; then
-  gsettings set org.onboard auto-show.enabled true 2>/dev/null || true
-  gsettings set org.onboard.window.docking enabled true 2>/dev/null || true
-  gsettings set org.onboard start-minimized true 2>/dev/null || true
-  onboard &
-fi
-
 while ! curl -fsS http://localhost:3000/api/health >/dev/null 2>&1; do
   sleep 2
 done
@@ -168,7 +149,6 @@ exec chromium-browser --kiosk --noerrdialogs --disable-infobars \
   --disable-session-crashed-bubble --disable-translate --no-first-run \
   --start-fullscreen --check-for-update-interval=31536000 \
   --autoplay-policy=no-user-gesture-required --overscroll-history-navigation=0 \
-  --force-renderer-accessibility \
   http://localhost:3000
 XINITRC
 
