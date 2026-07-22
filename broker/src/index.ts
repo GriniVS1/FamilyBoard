@@ -19,12 +19,25 @@ export interface Env {
   GOOGLE_CLIENT_ID: string;
   GOOGLE_CLIENT_SECRET: string;
   BROKER_BASE_URL: string; // e.g. https://familyboard.ch
+  // Microsoft (Azure AD app) — same broker, same redirect-adopt flow as Google.
+  // Secret lives only here; devices never hold it.
+  MS_CLIENT_ID: string;
+  MS_CLIENT_SECRET: string;
+  MS_TENANT?: string; // "common" (default) = personal + work/school accounts
 }
 
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
 const GOOGLE_SCOPES = "openid email https://www.googleapis.com/auth/calendar.events";
 const STATE_TTL_S = 600;
+
+// Microsoft v2.0 endpoints (tenant filled in per request). offline_access yields
+// the refresh token; the calendar/user scopes match src/lib/microsoft.ts.
+const MS_SCOPES = "openid email offline_access Calendars.ReadWrite User.Read";
+const msAuthUrl = (tenant: string) =>
+  `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/authorize`;
+const msTokenUrl = (tenant: string) =>
+  `https://login.microsoftonline.com/${tenant}/oauth2/v2.0/token`;
 
 type Pending = {
   memberId: string;
@@ -42,7 +55,7 @@ function json(data: unknown, status = 200): Response {
 // The broker only ever redirects a token payload to the device on its own LAN.
 // Restrict to familyboard.local or RFC1918 IPs over http, on the adopt path —
 // never an attacker-supplied external URL (no open redirect).
-function isAllowedReturnUrl(raw: string): boolean {
+function isAllowedReturnUrl(raw: string, adoptPath: string): boolean {
   let u: URL;
   try {
     u = new URL(raw);
@@ -50,7 +63,7 @@ function isAllowedReturnUrl(raw: string): boolean {
     return false;
   }
   if (u.protocol !== "http:") return false;
-  if (u.pathname !== "/api/auth/google/adopt") return false;
+  if (u.pathname !== adoptPath) return false;
   const h = u.hostname;
   if (h === "familyboard.local" || h === "localhost") return true;
   if (/^10\.\d+\.\d+\.\d+$/.test(h)) return true;
@@ -120,7 +133,7 @@ async function handleStart(req: Request, env: Env): Promise<Response> {
   if (!adoptSecret || !/^[0-9a-f]{64}$/i.test(adoptSecret)) {
     return json({ error: "adoptSecret_must_be_64_hex" }, 400);
   }
-  if (!returnUrl || !isAllowedReturnUrl(returnUrl)) {
+  if (!returnUrl || !isAllowedReturnUrl(returnUrl, "/api/auth/google/adopt")) {
     return json({ error: "returnUrl_not_allowed" }, 400);
   }
 
@@ -242,6 +255,150 @@ async function handleRefresh(req: Request, env: Env): Promise<Response> {
   return json({ access_token: t.access_token, expires_in: t.expires_in ?? 3600 });
 }
 
+// --- Microsoft (Azure AD) — mirror of the Google redirect-adopt flow ----------
+
+async function handleMsStart(req: Request, env: Env): Promise<Response> {
+  let body: Partial<Pending>;
+  try {
+    body = (await req.json()) as Partial<Pending>;
+  } catch {
+    return json({ error: "invalid_json" }, 400);
+  }
+  const { memberId, adoptSecret, returnUrl } = body;
+  if (!memberId || typeof memberId !== "string") return json({ error: "memberId_required" }, 400);
+  if (!adoptSecret || !/^[0-9a-f]{64}$/i.test(adoptSecret)) {
+    return json({ error: "adoptSecret_must_be_64_hex" }, 400);
+  }
+  if (!returnUrl || !isAllowedReturnUrl(returnUrl, "/api/auth/microsoft/adopt")) {
+    return json({ error: "returnUrl_not_allowed" }, 400);
+  }
+
+  const tenant = env.MS_TENANT || "common";
+  const state = b64urlFromBytes(crypto.getRandomValues(new Uint8Array(32)));
+  const pending: Pending = { memberId, adoptSecret, returnUrl };
+  await env.OAUTH_KV.put(`microsoft:${state}`, JSON.stringify(pending), {
+    expirationTtl: STATE_TTL_S,
+  });
+
+  const authorizeUrl = new URL(msAuthUrl(tenant));
+  authorizeUrl.searchParams.set("client_id", env.MS_CLIENT_ID);
+  authorizeUrl.searchParams.set("redirect_uri", `${env.BROKER_BASE_URL}/oauth/microsoft/callback`);
+  authorizeUrl.searchParams.set("response_type", "code");
+  authorizeUrl.searchParams.set("response_mode", "query");
+  authorizeUrl.searchParams.set("scope", MS_SCOPES);
+  authorizeUrl.searchParams.set("prompt", "select_account");
+  authorizeUrl.searchParams.set("state", state);
+
+  return json({ authorizeUrl: authorizeUrl.toString(), state });
+}
+
+async function handleMsCallback(req: Request, env: Env): Promise<Response> {
+  const url = new URL(req.url);
+  const code = url.searchParams.get("code");
+  const state = url.searchParams.get("state");
+  const oauthError = url.searchParams.get("error");
+  if (oauthError) return errorPage(`Microsoft sign-in was cancelled (${oauthError}).`);
+  if (!code || !state) return errorPage("Missing code or state.");
+
+  const raw = await env.OAUTH_KV.get(`microsoft:${state}`);
+  if (!raw) return errorPage("This sign-in link has expired. Please try again from the device.");
+  await env.OAUTH_KV.delete(`microsoft:${state}`);
+  const pending = JSON.parse(raw) as Pending;
+
+  const tenant = env.MS_TENANT || "common";
+  const tokenRes = await fetch(msTokenUrl(tenant), {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      code,
+      client_id: env.MS_CLIENT_ID,
+      client_secret: env.MS_CLIENT_SECRET,
+      redirect_uri: `${env.BROKER_BASE_URL}/oauth/microsoft/callback`,
+      grant_type: "authorization_code",
+      scope: MS_SCOPES,
+    }),
+  });
+  if (!tokenRes.ok) return errorPage("Token exchange with Microsoft failed. Please try again.", 502);
+  const tokens = (await tokenRes.json()) as {
+    refresh_token?: string;
+    access_token?: string;
+  };
+  if (!tokens.refresh_token) {
+    return errorPage("Microsoft did not return a refresh token. Please try again.");
+  }
+
+  let email: string | null = null;
+  if (tokens.access_token) {
+    const info = await fetch("https://graph.microsoft.com/v1.0/me", {
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
+    });
+    if (info.ok) {
+      const me = (await info.json()) as { mail?: string; userPrincipalName?: string };
+      email = me.mail ?? me.userPrincipalName ?? null;
+    }
+  }
+
+  const payload = await encryptForDevice(
+    pending.adoptSecret,
+    JSON.stringify({ refreshToken: tokens.refresh_token, email }),
+  );
+
+  const dest = new URL(pending.returnUrl);
+  dest.searchParams.set("state", state);
+  dest.searchParams.set("payload", payload);
+  return Response.redirect(dest.toString(), 302);
+}
+
+// Mint a fresh Microsoft access token from a device's refresh token. Like
+// Google, the refresh grant needs the vendor client secret (broker-only).
+// Microsoft ROTATES the refresh token on every refresh, so we return the new
+// one too — the device must persist it or the next refresh fails.
+async function handleMsRefresh(req: Request, env: Env): Promise<Response> {
+  let body: { refreshToken?: string };
+  try {
+    body = (await req.json()) as { refreshToken?: string };
+  } catch {
+    return json({ error: "invalid_json" }, 400);
+  }
+  const refreshToken = body.refreshToken;
+  if (!refreshToken || typeof refreshToken !== "string") {
+    return json({ error: "refreshToken_required" }, 400);
+  }
+
+  const rlKey = `rl:msrefresh:${await sha256B64url(refreshToken)}`;
+  const count = parseInt((await env.OAUTH_KV.get(rlKey)) ?? "0", 10);
+  if (count >= 30) return json({ error: "rate_limited" }, 429);
+  await env.OAUTH_KV.put(rlKey, String(count + 1), { expirationTtl: 60 });
+
+  const tenant = env.MS_TENANT || "common";
+  const res = await fetch(msTokenUrl(tenant), {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: env.MS_CLIENT_ID,
+      client_secret: env.MS_CLIENT_SECRET,
+      refresh_token: refreshToken,
+      grant_type: "refresh_token",
+      scope: MS_SCOPES,
+    }),
+  });
+  if (!res.ok) {
+    const status = res.status === 400 || res.status === 401 ? 401 : 502;
+    return json({ error: "refresh_failed" }, status);
+  }
+  const t = (await res.json()) as {
+    access_token?: string;
+    expires_in?: number;
+    refresh_token?: string;
+  };
+  if (!t.access_token) return json({ error: "no_access_token" }, 502);
+  return json({
+    access_token: t.access_token,
+    expires_in: t.expires_in ?? 3600,
+    refresh_token: t.refresh_token,
+  });
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
@@ -253,6 +410,15 @@ export default {
     }
     if (req.method === "POST" && url.pathname === "/oauth/google/refresh") {
       return handleRefresh(req, env);
+    }
+    if (req.method === "POST" && url.pathname === "/oauth/microsoft/start") {
+      return handleMsStart(req, env);
+    }
+    if (req.method === "GET" && url.pathname === "/oauth/microsoft/callback") {
+      return handleMsCallback(req, env);
+    }
+    if (req.method === "POST" && url.pathname === "/oauth/microsoft/refresh") {
+      return handleMsRefresh(req, env);
     }
     if (url.pathname === "/health") return json({ ok: true });
     return new Response("Not found", { status: 404 });
