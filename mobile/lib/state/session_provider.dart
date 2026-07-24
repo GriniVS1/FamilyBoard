@@ -92,6 +92,7 @@ final Provider<MutationsService> mutationsServiceProvider =
     Provider<MutationsService>(
   (Ref ref) => MutationsService(
     writeQueueService: ref.watch(writeQueueServiceProvider),
+    clientFactory: ref.watch(apiClientFactoryProvider),
   ),
 );
 
