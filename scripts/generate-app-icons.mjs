@@ -18,17 +18,23 @@
  *
  *   mobile/android/app/src/main/res/mipmap-{mdpi..xxxhdpi}/ic_launcher.png
  *   mobile/android/app/src/main/res/drawable-{mdpi..xxxhdpi}/ic_launcher_foreground.png
+ *   mobile/android/app/src/main/res/drawable-{mdpi..xxxhdpi}/launch_image.png       (light launch bullseye, transparent)
+ *   mobile/android/app/src/main/res/drawable-night-{mdpi..xxxhdpi}/launch_image.png (dark launch bullseye, transparent)
  *
- * iOS is intentionally skipped — `mobile/ios/Runner/Assets.xcassets/`
- * doesn't exist in this checkout (a full `flutter create` was never
- * completed on iOS). Once it does, add an `ios` section to this script
- * pointing at the AppIcon.appiconset sizes.
+ *   mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage[@2x/@3x].png       (light)
+ *   mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/LaunchImage-dark[@2x/@3x].png  (dark)
+ *   mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/Contents.json
+ *
+ * The AppIcon.appiconset sections (iOS icons) and the LaunchImage.imageset
+ * section (iOS launch screen) are both gated on their asset-catalog
+ * directory existing — safe to run on checkouts where `flutter create` for
+ * iOS hasn't been completed yet.
  *
  * Run with `node scripts/generate-app-icons.mjs` from the repo root.
  */
 
 import sharp from "sharp";
-import { access, mkdir } from "node:fs/promises";
+import { access, mkdir, writeFile } from "node:fs/promises";
 import { constants as fsConstants } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -86,6 +92,10 @@ const SVG = {
   light: withBg({ bg: CREAM, ring: INK }),
   dark: withBg({ bg: INK, ring: CREAM }),
   fg: transparent({ ring: INK }),
+  // Ring-only-on-transparent, light ring for dark backgrounds — used by the
+  // launch screen where the background flips CREAM (day) / near-black (night)
+  // and an INK ring would nearly vanish on the dark bg (both are near-black).
+  fgDark: transparent({ ring: CREAM }),
   iosLight: squareWithBg({ bg: CREAM, ring: INK }),
 };
 
@@ -125,6 +135,27 @@ const ANDROID_FOREGROUND = [
   { density: "xxhdpi", size: 324 },
   { density: "xxxhdpi", size: 432 },
 ];
+
+// Android launch-screen bullseye — centered over the launch_background
+// layer-list, at each density bucket. Logical size 168dp (mdpi baseline),
+// matching the iOS launch image's 168pt logical size.
+const ANDROID_LAUNCH = [
+  { density: "mdpi", size: 168 },
+  { density: "hdpi", size: 252 },
+  { density: "xhdpi", size: 336 },
+  { density: "xxhdpi", size: 504 },
+  { density: "xxxhdpi", size: 672 },
+];
+
+// iOS LaunchImage.imageset — logical size 168pt (matches the storyboard's
+// declared image size). Light + dark variants, selected automatically by
+// the asset catalog based on the system appearance.
+const IOS_LAUNCH = [
+  { suffix: "", scale: 1 },
+  { suffix: "@2x", scale: 2 },
+  { suffix: "@3x", scale: 3 },
+];
+const IOS_LAUNCH_POINT_SIZE = 168;
 
 // iOS AppIcon.appiconset — 15 sizes covering iPhone + iPad + App Store
 // marketing. Filenames match the default Flutter `flutter create` output
@@ -179,6 +210,24 @@ async function main() {
     );
   }
 
+  // Android — launch screen bullseye (bullseye on transparent). Light in
+  // drawable-<density>, dark in drawable-night-<density> — Android's
+  // resource resolution swaps the file at runtime based on system theme,
+  // both referenced from the same `@drawable/launch_image` in
+  // launch_background.xml.
+  for (const { density, size } of ANDROID_LAUNCH) {
+    await writePng(
+      SVG.fg,
+      resolve(ROOT, `mobile/android/app/src/main/res/drawable-${density}/launch_image.png`),
+      size,
+    );
+    await writePng(
+      SVG.fgDark,
+      resolve(ROOT, `mobile/android/app/src/main/res/drawable-night-${density}/launch_image.png`),
+      size,
+    );
+  }
+
   // iOS — AppIcon.appiconset (15 sizes, all light variant, no alpha).
   // Skip silently if the asset catalog doesn't exist yet — keeps the script
   // safe to run on checkouts where `flutter create -t app .` hasn't been run.
@@ -196,6 +245,47 @@ async function main() {
     console.log("⚠  iOS AppIcon.appiconset not found — skipping iOS icons.");
     console.log("   Run `cd mobile && flutter create -t app --platforms=ios .`");
     console.log("   to scaffold it, then re-run this script.");
+  }
+
+  // iOS — LaunchImage.imageset (light + dark, transparent, gated the same
+  // way as AppIcon above).
+  const iosLaunchDir = resolve(
+    ROOT,
+    "mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset",
+  );
+  try {
+    await access(iosLaunchDir, fsConstants.F_OK);
+    const images = [];
+    for (const { suffix, scale } of IOS_LAUNCH) {
+      const size = IOS_LAUNCH_POINT_SIZE * scale;
+      const lightName = `LaunchImage${suffix}.png`;
+      const darkName = `LaunchImage-dark${suffix}.png`;
+      await writePng(SVG.fg, resolve(iosLaunchDir, lightName), size);
+      await writePng(SVG.fgDark, resolve(iosLaunchDir, darkName), size);
+      images.push({
+        idiom: "universal",
+        filename: lightName,
+        scale: `${scale}x`,
+      });
+      images.push({
+        idiom: "universal",
+        filename: darkName,
+        scale: `${scale}x`,
+        appearances: [{ appearance: "luminosity", value: "dark" }],
+      });
+    }
+    const contents = {
+      images,
+      info: { version: 1, author: "xcode" },
+    };
+    await writeFile(
+      resolve(iosLaunchDir, "Contents.json"),
+      `${JSON.stringify(contents, null, 2)}\n`,
+    );
+    console.log(`  ✓ ios/.../LaunchImage.imageset/Contents.json`);
+  } catch {
+    console.log("");
+    console.log("⚠  iOS LaunchImage.imageset not found — skipping iOS launch images.");
   }
 
   console.log("\nDone.");
