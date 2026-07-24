@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../models/family_member.dart';
+import '../models/session.dart';
 import '../models/setup_member_draft.dart';
 import '../models/setup_status.dart';
+import '../services/device_info.dart';
 import '../services/identity_service.dart';
-import '../services/pair_service.dart';
 import '../services/setup_service.dart';
-import 'pair_controller.dart';
+import 'pairing_adoption.dart';
 import 'session_provider.dart';
 
 /// Which screen the app-first onboarding flow is currently showing.
@@ -39,11 +39,22 @@ enum OnboardingPhase {
 /// PIN before weather locks itself out of `POST /api/setup/weather` the
 /// moment the PIN call succeeds (it would 403 `SETUP_ALREADY_COMPLETE` from
 /// then on). Ordering weather ahead of PIN sidesteps that trap entirely.
-enum WizardStep { family, members, weather, pin, whoAreYou }
+///
+/// `pin` is the terminal step: `POST /api/setup/pin` pairs the finishing
+/// phone to the admin member in the same call (see the route's doc comment),
+/// so there is no separate "who are you?" step — the app is signed in the
+/// moment the PIN is set.
+enum WizardStep { family, members, weather, pin }
 
 /// Computes the first step to show for a given `/api/setup/status` snapshot,
 /// skipping whatever the wall (or a previous app session) already completed.
 /// See [WizardStep] for why weather is checked before pin.
+///
+/// A snapshot with `pinSet: true` also has `setupComplete: true` (pin is the
+/// last thing `setupComplete` requires), which `SetupOnboardingController.
+/// _loadStatus` checks *before* calling this — so that case never reaches
+/// here in practice. `pin` is still the correct fallback: there is nothing
+/// left to resume into.
 WizardStep resolveInitialStep(SetupStatus status) {
   if (!status.familyCreated) {
     return WizardStep.family;
@@ -54,10 +65,7 @@ WizardStep resolveInitialStep(SetupStatus status) {
   if (!status.weatherSet) {
     return WizardStep.weather;
   }
-  if (!status.pinSet) {
-    return WizardStep.pin;
-  }
-  return WizardStep.whoAreYou;
+  return WizardStep.pin;
 }
 
 class SetupOnboardingState {
@@ -65,22 +73,20 @@ class SetupOnboardingState {
     required this.phase,
     this.baseUrl,
     this.altUrl,
+    this.installationId,
     this.step = WizardStep.family,
     this.submitting = false,
     this.error,
-    this.members = const <FamilyMember>[],
-    this.pin,
   });
 
   const SetupOnboardingState.verifying()
       : phase = OnboardingPhase.verifying,
         baseUrl = null,
         altUrl = null,
+        installationId = null,
         step = WizardStep.family,
         submitting = false,
-        error = null,
-        members = const <FamilyMember>[],
-        pin = null;
+        error = null;
 
   final OnboardingPhase phase;
 
@@ -88,20 +94,20 @@ class SetupOnboardingState {
   /// QR's `url` or its `alt`, whichever answered with a matching identity).
   final String? baseUrl;
 
-  /// The QR's `alt` fallback, carried into the final pairing step so the
-  /// resulting [Session] gets the same recovery fallback a normal pair QR
-  /// would provide.
+  /// The QR's `alt` fallback, carried into the final [Session] the same way
+  /// a normal pair QR's `alt` parameter would be.
   final String? altUrl;
+
+  /// The QR's `installationId`, already verified in [SetupOnboardingController
+  /// .start] against whichever of `url`/`alt` answered. Carried into the
+  /// final [Session] so it doesn't need a redundant identity round-trip
+  /// before connection recovery can trust it — `remoteUrl` still gets
+  /// backfilled by the post-pair identity fetch, same as normal pairing.
+  final String? installationId;
 
   final WizardStep step;
   final bool submitting;
   final SetupErrorKind? error;
-  final List<FamilyMember> members;
-
-  /// The admin PIN entered in the pin step, held only in memory for the rest
-  /// of this onboarding session — used once, to request a pairing code in
-  /// the final step. Never persisted, never logged.
-  final String? pin;
 
   static const Object _unset = Object();
 
@@ -109,21 +115,19 @@ class SetupOnboardingState {
     OnboardingPhase? phase,
     String? baseUrl,
     String? altUrl,
+    String? installationId,
     WizardStep? step,
     bool? submitting,
     Object? error = _unset,
-    List<FamilyMember>? members,
-    Object? pin = _unset,
   }) {
     return SetupOnboardingState(
       phase: phase ?? this.phase,
       baseUrl: baseUrl ?? this.baseUrl,
       altUrl: altUrl ?? this.altUrl,
+      installationId: installationId ?? this.installationId,
       step: step ?? this.step,
       submitting: submitting ?? this.submitting,
       error: identical(error, _unset) ? this.error : error as SetupErrorKind?,
-      members: members ?? this.members,
-      pin: identical(pin, _unset) ? this.pin : pin as String?,
     );
   }
 }
@@ -163,10 +167,14 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
       return;
     }
 
-    await _loadStatus(verified, altUrl);
+    await _loadStatus(verified, altUrl, installationId);
   }
 
-  Future<void> _loadStatus(String baseUrl, String? altUrl) async {
+  Future<void> _loadStatus(
+    String baseUrl,
+    String? altUrl,
+    String installationId,
+  ) async {
     try {
       final SetupStatus status =
           await ref.read(setupServiceProvider).fetchStatus(baseUrl);
@@ -181,6 +189,7 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
         phase: OnboardingPhase.wizard,
         baseUrl: baseUrl,
         altUrl: altUrl,
+        installationId: installationId,
         step: resolveInitialStep(status),
         error: null,
       );
@@ -195,10 +204,10 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
       });
 
   Future<bool> submitMembers(List<SetupMemberDraft> drafts) => _run(() async {
-        final List<FamilyMember> created = await ref
+        await ref
             .read(setupServiceProvider)
             .createMembers(state.baseUrl!, drafts);
-        state = state.copyWith(step: WizardStep.weather, members: created);
+        state = state.copyWith(step: WizardStep.weather);
       });
 
   Future<bool> submitWeather({
@@ -222,61 +231,37 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
     state = state.copyWith(step: WizardStep.pin);
   }
 
+  /// Sets the admin PIN and, in the same call, pairs this phone to the
+  /// admin member (`POST /api/setup/pin` with `device`). Builds the final
+  /// [Session] exactly the way `PairService.pair` does after
+  /// `POST /api/devices/pair`: `serverUrl`/`altUrl`/`installationId` come
+  /// from this onboarding session, `token`/`deviceId`/`member`/`family` come
+  /// from the response. `remoteUrl` is left null — the wall's setup/pin
+  /// response doesn't carry one — and gets backfilled by the same post-pair
+  /// identity fetch [adoptPairedSession] runs for normal pairing.
   Future<bool> submitPin(String pin) => _run(() async {
-        await ref.read(setupServiceProvider).setPin(state.baseUrl!, pin);
-        final List<FamilyMember> members =
-            await ref.read(setupServiceProvider).fetchMembers(state.baseUrl!);
-        state = state.copyWith(
-            step: WizardStep.whoAreYou, pin: pin, members: members);
-      });
-
-  /// Requests a pairing code for [memberId] with the PIN captured in the pin
-  /// step, then hands off to [PairController.submit] — the exact same
-  /// `POST /api/devices/pair` + session-adopt + FCM-enrollment path the
-  /// normal Settings-screen QR uses.
-  Future<bool> completePairing({
-    required String memberId,
-    required String deviceName,
-  }) =>
-      _run(() async {
-        final String? pin = state.pin;
         final String? baseUrl = state.baseUrl;
-        if (pin == null || baseUrl == null) {
+        if (baseUrl == null) {
           throw const SetupException(SetupErrorKind.unknown);
         }
-        final PairCodeResult code =
-            await ref.read(setupServiceProvider).requestPairCode(
+        final SetupPinSession result =
+            await ref.read(setupServiceProvider).setPin(
                   baseUrl,
-                  memberId: memberId,
-                  pin: pin,
+                  pin,
+                  deviceName: defaultDeviceName(),
+                  devicePlatform: detectDevicePlatform(),
                 );
-        final bool paired =
-            await ref.read(pairControllerProvider.notifier).submit(
-                  serverUrl: code.serverUrl,
-                  code: code.code,
-                  deviceName: deviceName,
-                  altUrl: code.mdnsUrl ?? state.altUrl,
-                  remoteUrl: code.remoteUrl,
-                );
-        if (!paired) {
-          throw SetupException(
-              _mapPairError(ref.read(pairControllerProvider).error));
-        }
+        final Session session = Session(
+          serverUrl: baseUrl,
+          altUrl: state.altUrl,
+          installationId: state.installationId,
+          token: result.token,
+          deviceId: result.deviceId,
+          member: result.member,
+          family: result.family,
+        );
+        await adoptPairedSession(ref, session);
       });
-
-  SetupErrorKind _mapPairError(PairErrorKind? kind) {
-    switch (kind) {
-      case PairErrorKind.network:
-        return SetupErrorKind.network;
-      case PairErrorKind.tooManyAttempts:
-        return SetupErrorKind.tooManyAttempts;
-      case PairErrorKind.invalidCode:
-      case PairErrorKind.badServer:
-      case PairErrorKind.unknown:
-      case null:
-        return SetupErrorKind.unknown;
-    }
-  }
 
   Future<bool> _run(Future<void> Function() body) async {
     state = state.copyWith(submitting: true, error: null);

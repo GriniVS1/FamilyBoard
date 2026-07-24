@@ -100,7 +100,7 @@ class _StepPinViewState extends ConsumerState<StepPinView> {
                     height: 22,
                     child: CircularProgressIndicator(strokeWidth: 2.5),
                   )
-                : Text(l10n.setupStepNext),
+                : Text(l10n.setupStepFinish),
           ),
         ],
       ),

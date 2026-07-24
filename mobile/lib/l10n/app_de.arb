@@ -668,11 +668,5 @@
   "setupPinMismatch": "PINs stimmen nicht überein",
   "@setupPinMismatch": {},
   "setupPinInvalid": "Gib genau 6 Ziffern ein",
-  "@setupPinInvalid": {},
-  "setupWhoAreYouTitle": "Wer bist du?",
-  "@setupWhoAreYouTitle": {},
-  "setupWhoAreYouDescription": "Wähle dein Profil, um dieses Handy zu koppeln.",
-  "@setupWhoAreYouDescription": {},
-  "setupWhoAreYouEmptyMembers": "Keine Familienmitglieder gefunden. Gehe zurück und füge jemanden hinzu.",
-  "@setupWhoAreYouEmptyMembers": {}
+  "@setupPinInvalid": {}
 }

@@ -10,7 +10,6 @@ import 'step_family_view.dart';
 import 'step_members_view.dart';
 import 'step_pin_view.dart';
 import 'step_weather_view.dart';
-import 'step_who_are_you_view.dart';
 
 /// App-first onboarding: driven entirely from a scanned `familyboard://setup`
 /// QR code. See `SetupOnboardingController` for the verification + wizard
@@ -93,8 +92,6 @@ class _WizardBody extends StatelessWidget {
         return const StepWeatherView();
       case WizardStep.pin:
         return const StepPinView();
-      case WizardStep.whoAreYou:
-        return const StepWhoAreYouView();
     }
   }
 }

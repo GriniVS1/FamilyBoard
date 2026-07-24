@@ -668,11 +668,5 @@
   "setupPinMismatch": "I PIN non corrispondono",
   "@setupPinMismatch": {},
   "setupPinInvalid": "Inserisci esattamente 6 cifre",
-  "@setupPinInvalid": {},
-  "setupWhoAreYouTitle": "Chi sei?",
-  "@setupWhoAreYouTitle": {},
-  "setupWhoAreYouDescription": "Scegli il tuo profilo per completare l'associazione di questo telefono.",
-  "@setupWhoAreYouDescription": {},
-  "setupWhoAreYouEmptyMembers": "Nessun membro della famiglia trovato. Torna indietro e aggiungine uno.",
-  "@setupWhoAreYouEmptyMembers": {}
+  "@setupPinInvalid": {}
 }

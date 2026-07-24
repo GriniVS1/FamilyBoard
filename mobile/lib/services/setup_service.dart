@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 
 import '../models/family_member.dart';
 import '../models/geocode_result.dart';
+import '../models/session.dart';
 import '../models/setup_member_draft.dart';
 import '../models/setup_status.dart';
 import 'api_client.dart';
@@ -25,30 +26,48 @@ class SetupException implements Exception {
   String toString() => 'SetupException($kind)';
 }
 
-/// Result of `POST /api/settings/pair-code` — a short-lived pairing code plus
-/// the same LAN/mDNS/relay URLs the normal Settings-screen QR carries, so the
-/// final onboarding step can hand off to the existing [PairService] instead
-/// of re-implementing `POST /api/devices/pair`.
-class PairCodeResult {
-  const PairCodeResult({
-    required this.code,
-    required this.serverUrl,
-    this.mdnsUrl,
-    this.remoteUrl,
+/// Parsed `session` payload from `POST /api/setup/pin` (only present when the
+/// request included `device` — see [SetupService.setPin]). Deliberately
+/// narrower than [Session]: it carries only what the wall's response knows
+/// about (`token`/`deviceId`/`member`/`family`), not the caller-side fields
+/// (`serverUrl`/`altUrl`/`installationId`) the onboarding controller already
+/// holds and must merge in itself, mirroring how `PairService.pair` builds
+/// its `Session`.
+class SetupPinSession {
+  const SetupPinSession({
+    required this.token,
+    required this.deviceId,
+    required this.member,
+    required this.family,
   });
 
-  final String code;
-  final String serverUrl;
-  final String? mdnsUrl;
-  final String? remoteUrl;
+  /// Parses the `session` object nested in `POST /api/setup/pin`'s response
+  /// (not the whole response body).
+  factory SetupPinSession.fromJson(Map<String, Object?> json) {
+    return SetupPinSession(
+      token: json['token']! as String,
+      deviceId: json['deviceId']! as String,
+      member: Member.fromJson(
+        (json['member']! as Map<Object?, Object?>).cast<String, Object?>(),
+      ),
+      family: Family.fromJson(
+        (json['family']! as Map<Object?, Object?>).cast<String, Object?>(),
+      ),
+    );
+  }
+
+  final String token;
+  final String deviceId;
+  final Member member;
+  final Family family;
 }
 
 /// Talks to the wall's unauthenticated `/api/setup/*` mutation routes (plus
-/// `/api/geocode` and `/api/settings/pair-code`) during app-first onboarding —
-/// there is no paired [Session] yet, so every call here goes through
-/// [ApiClientFactory.unauthenticated] pointed at the setup base URL the
-/// `familyboard://setup` QR carried (verified via `GET /api/mobile/identity`
-/// before any of this is called — see `SetupOnboardingController.start`).
+/// `/api/geocode`) during app-first onboarding — there is no paired [Session]
+/// yet, so every call here goes through [ApiClientFactory.unauthenticated]
+/// pointed at the setup base URL the `familyboard://setup` QR carried
+/// (verified via `GET /api/mobile/identity` before any of this is called —
+/// see `SetupOnboardingController.start`).
 class SetupService {
   SetupService({ApiClientFactory? clientFactory})
       : _clientFactory = clientFactory ?? const ApiClientFactory();
@@ -83,23 +102,35 @@ class SetupService {
     return _memberList(response);
   }
 
-  /// `GET /api/setup/members` — unauthenticated, only answers pre-pairing
-  /// (see the route's guard). Used to populate the "who are you?" member
-  /// picker in the final onboarding step.
-  Future<List<FamilyMember>> fetchMembers(String baseUrl) async {
-    final Response<Object?> response =
-        await _get(baseUrl, '/api/setup/members');
-    _guard(response);
-    return _memberList(response);
-  }
-
-  Future<void> setPin(String baseUrl, String pin) async {
+  /// `POST /api/setup/pin` — always sends `device`, so the app-first wizard
+  /// finishes onboarding already paired to the admin member (see the route's
+  /// doc comment on `src/app/api/setup/pin/route.ts`). The on-wall wizard has
+  /// no mobile equivalent of this call.
+  Future<SetupPinSession> setPin(
+    String baseUrl,
+    String pin, {
+    required String deviceName,
+    required String devicePlatform,
+  }) async {
     final Response<Object?> response = await _post(
       baseUrl,
       '/api/setup/pin',
-      <String, Object?>{'pin': pin},
+      <String, Object?>{
+        'pin': pin,
+        'device': <String, Object?>{
+          'name': deviceName,
+          'platform': devicePlatform,
+        },
+      },
     );
     _guard(response);
+    final Object? sessionRaw = _map(response)['session'];
+    if (sessionRaw is! Map) {
+      throw const SetupException(SetupErrorKind.unknown);
+    }
+    return SetupPinSession.fromJson(
+      (sessionRaw as Map<Object?, Object?>).cast<String, Object?>(),
+    );
   }
 
   Future<void> setWeather(
@@ -139,26 +170,6 @@ class SetupService {
         .map((Map<Object?, Object?> m) =>
             GeocodeResult.fromJson(m.cast<String, Object?>()))
         .toList();
-  }
-
-  Future<PairCodeResult> requestPairCode(
-    String baseUrl, {
-    required String memberId,
-    required String pin,
-  }) async {
-    final Response<Object?> response = await _post(
-      baseUrl,
-      '/api/settings/pair-code',
-      <String, Object?>{'memberId': memberId, 'pin': pin},
-    );
-    _guard(response);
-    final Map<String, Object?> map = _map(response);
-    return PairCodeResult(
-      code: map['code']! as String,
-      serverUrl: map['serverUrl']! as String,
-      mdnsUrl: map['mdnsUrl'] is String ? map['mdnsUrl'] as String : null,
-      remoteUrl: map['remoteUrl'] is String ? map['remoteUrl'] as String : null,
-    );
   }
 
   // --------------------------------------------------------------------------

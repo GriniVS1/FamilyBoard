@@ -1,9 +1,8 @@
-import 'dart:io' show Platform;
-
 import 'package:dio/dio.dart';
 
 import '../models/session.dart';
 import 'api_client.dart';
+import 'device_info.dart';
 
 enum PairErrorKind { invalidCode, tooManyAttempts, network, badServer, unknown }
 
@@ -57,7 +56,7 @@ class PairService {
         data: <String, Object?>{
           'code': request.code.toUpperCase(),
           'name': request.deviceName,
-          'platform': _detectPlatform(),
+          'platform': detectDevicePlatform(),
         },
       );
     } on DioException {
@@ -106,16 +105,6 @@ class PairService {
       return false;
     }
     return parsed.host.isNotEmpty;
-  }
-
-  String _detectPlatform() {
-    if (Platform.isIOS) {
-      return 'ios';
-    }
-    if (Platform.isAndroid) {
-      return 'android';
-    }
-    return 'unknown';
   }
 
   String? _extractErrorCode(Object? body) {
