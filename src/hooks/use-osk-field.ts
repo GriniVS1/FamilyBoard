@@ -6,10 +6,9 @@ type OskFieldEvent = FocusEvent<HTMLInputElement | HTMLTextAreaElement>;
 
 /**
  * Tracks which text field in a multi-field form currently owns the
- * on-screen keyboard panel. Third repeat of the setup/settings
- * onFocus/onBlur pattern (see caldav-connect-dialog.tsx) — extracted here
- * so kiosk dialogs don't hand-roll it again. Existing setup/settings
- * call sites keep their inline useState version untouched.
+ * on-screen keyboard panel — the recurring setup/settings onFocus/onBlur
+ * pattern, extracted here so kiosk dialogs don't hand-roll it again.
+ * Existing setup/settings call sites keep their inline useState version.
  */
 export function useOskField<TField extends string>() {
   const [activeField, setActiveField] = useState<TField | null>(null);

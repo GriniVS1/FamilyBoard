@@ -455,9 +455,9 @@
       "noMembers": "Noch keine Mitglieder.",
       "editMember": "{name} bearbeiten"
     },
+    "calendarConnectViaApp": "Kalender (Google, Outlook, CalDAV) werden über die FamilyBoard-App auf deinem Handy verbunden.",
     "google": {
       "title": "Google Kalender",
-      "connect": "Google verbinden",
       "disconnect": "Trennen",
       "connected": "Verbunden",
       "lastSync": "letzte Sync. {when}",
@@ -467,11 +467,9 @@
       "checking": "Wird geprüft…",
       "notConnected": "Nicht verbunden",
       "statusFailed": "Status konnte nicht geladen werden.",
-      "connectFailed": "OAuth konnte nicht gestartet werden.",
       "disconnectFailed": "Trennen fehlgeschlagen.",
       "syncFailed": "Synchronisierung fehlgeschlagen.",
-      "notConfigured": "Google Kalender nicht verfügbar",
-      "notConfiguredHelp": "Die Google-Kalender-Verknüpfung ist auf diesem Gerät noch nicht verfügbar."
+      "notConfigured": "Google Kalender nicht verfügbar"
     },
     "pin": {
       "title": "Sicherheit",
@@ -627,14 +625,10 @@
     "microsoft": {
       "title": "Microsoft Outlook",
       "description": "Verbinde dich mit deinem Outlook-Kalender (Microsoft 365).",
-      "connect": "Outlook verbinden",
-      "connecting": "Wird verbunden…",
       "disconnect": "Trennen",
       "syncNow": "Jetzt synchronisieren",
       "syncing": "Wird synchronisiert…",
       "notConfigured": "Microsoft-Synchronisierung nicht konfiguriert",
-      "notConfiguredHelp": "Die Microsoft-Synchronisierung ist auf diesem Server nicht konfiguriert. Setze MICROSOFT_CLIENT_ID und MICROSOFT_CLIENT_SECRET in der .env-Datei, um sie zu aktivieren.",
-      "providerConflict": "Bereits mit einem anderen Kalenderanbieter verknüpft. Trenne ihn zuerst.",
       "connected": "Verbunden",
       "email": "Konto",
       "lastSynced": "Zuletzt synchronisiert",

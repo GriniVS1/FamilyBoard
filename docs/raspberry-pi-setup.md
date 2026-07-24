@@ -235,13 +235,9 @@ journalctl --user -u chromium-kiosk.service -f
 - Run `bash /opt/familyboard/scripts/pi/disable-blanking.sh` then reboot
 - Also check `~/.config/lxsession/LXDE-pi/autostart` contains the three `@xset` lines
 
-**On-screen keyboard doesn't appear on the Google login page**
+**How do I connect a Google / Outlook / CalDAV calendar?**
 
-- The OSK is `onboard`, auto-shown over focused text fields via AT-SPI. Confirm it's installed: `command -v onboard` (it ships via the host-payload OTA).
-- The launch wiring lives in `~/.xinitrc` (base-image path) or `chromium-kiosk.service` (DIY). `.xinitrc` is written at image build, so a device flashed from an **older base image won't have it** until re-flashed with a current image.
-- Check onboard is running: `pgrep -a onboard`. If not, verify a D-Bus session exists (`echo $DBUS_SESSION_BUS_ADDRESS`) — the base-image `.xinitrc` wraps the session in `dbus-run-session`.
-- If it runs but never pops up, Chromium may not be exposing accessibility: confirm `--force-renderer-accessibility` is in the launch command, and that `at-spi2-core` is installed.
-- Manual fallback to test: `onboard &` from an SSH-into-the-X-session shell (`DISPLAY=:0 onboard &`).
+- Calendars are connected from the **FamilyBoard mobile app**, not the wall. Pair the app (Settings → the pairing QR on the wall), then connect calendars from the app — phone keyboards, password managers and passkeys make OAuth login far easier than a wall touchscreen, and credentials never get typed on the shared display. The wall shows connection status and can sync/disconnect, but does not initiate a connect.
 
 **`avahi-daemon` not resolving `familyboard.local`**
 

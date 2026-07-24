@@ -455,9 +455,9 @@
       "noMembers": "Nessun membro ancora.",
       "editMember": "Modifica {name}"
     },
+    "calendarConnectViaApp": "Collega i calendari (Google, Outlook, CalDAV) dall'app FamilyBoard sul tuo telefono.",
     "google": {
       "title": "Google Calendar",
-      "connect": "Connetti Google",
       "disconnect": "Disconnetti",
       "connected": "Connesso",
       "lastSync": "ultima sinc. {when}",
@@ -467,11 +467,9 @@
       "checking": "Verifica in corso…",
       "notConnected": "Non connesso",
       "statusFailed": "Impossibile caricare lo stato.",
-      "connectFailed": "Impossibile avviare OAuth.",
       "disconnectFailed": "Disconnessione fallita.",
       "syncFailed": "Sincronizzazione fallita.",
-      "notConfigured": "Google Calendar non disponibile",
-      "notConfiguredHelp": "Il collegamento a Google Calendar non è ancora disponibile su questo dispositivo."
+      "notConfigured": "Google Calendar non disponibile"
     },
     "pin": {
       "title": "Sicurezza",
@@ -627,14 +625,10 @@
     "microsoft": {
       "title": "Microsoft Outlook",
       "description": "Collega il tuo calendario Outlook (Microsoft 365).",
-      "connect": "Collega Outlook",
-      "connecting": "Connessione…",
       "disconnect": "Disconnetti",
       "syncNow": "Sincronizza ora",
       "syncing": "Sincronizzazione…",
       "notConfigured": "Sincronizzazione Microsoft non configurata",
-      "notConfiguredHelp": "La sincronizzazione Microsoft non è configurata su questo server. Imposta MICROSOFT_CLIENT_ID e MICROSOFT_CLIENT_SECRET nel file .env per abilitarla.",
-      "providerConflict": "Già collegato a un altro provider di calendario. Disconnettilo prima.",
       "connected": "Connesso",
       "email": "Account",
       "lastSynced": "Ultima sinc.",

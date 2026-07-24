@@ -455,9 +455,9 @@
       "noMembers": "Aucun membre pour l'instant.",
       "editMember": "Modifier {name}"
     },
+    "calendarConnectViaApp": "Connectez vos calendriers (Google, Outlook, CalDAV) depuis l'application FamilyBoard sur votre téléphone.",
     "google": {
       "title": "Google Agenda",
-      "connect": "Connecter Google",
       "disconnect": "Déconnecter",
       "connected": "Connecté",
       "lastSync": "dernière sync. {when}",
@@ -467,11 +467,9 @@
       "checking": "Vérification…",
       "notConnected": "Non connecté",
       "statusFailed": "Impossible de charger le statut.",
-      "connectFailed": "Impossible de démarrer OAuth.",
       "disconnectFailed": "Déconnexion échouée.",
       "syncFailed": "Synchronisation échouée.",
-      "notConfigured": "Google Agenda indisponible",
-      "notConfiguredHelp": "La connexion à Google Agenda n'est pas encore disponible sur cet appareil."
+      "notConfigured": "Google Agenda indisponible"
     },
     "pin": {
       "title": "Sécurité",
@@ -627,14 +625,10 @@
     "microsoft": {
       "title": "Microsoft Outlook",
       "description": "Connecte-toi à ton agenda Outlook (Microsoft 365).",
-      "connect": "Connecter Outlook",
-      "connecting": "Connexion…",
       "disconnect": "Déconnecter",
       "syncNow": "Synchroniser maintenant",
       "syncing": "Synchronisation…",
       "notConfigured": "Synchronisation Microsoft non configurée",
-      "notConfiguredHelp": "La synchronisation Microsoft n'est pas configurée sur ce serveur. Définis MICROSOFT_CLIENT_ID et MICROSOFT_CLIENT_SECRET dans le fichier .env pour l'activer.",
-      "providerConflict": "Déjà lié à un autre fournisseur de calendrier. Déconnecte-le d'abord.",
       "connected": "Connecté",
       "email": "Compte",
       "lastSynced": "Dernière sync.",
