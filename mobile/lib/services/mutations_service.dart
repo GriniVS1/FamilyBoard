@@ -2,9 +2,33 @@ import 'package:dio/dio.dart';
 
 import '../models/mutations.dart';
 import '../models/session.dart';
+import 'api_client.dart';
 import 'write_queue_service.dart';
 
-/// Executes the five write-side endpoints for todos and chores.
+/// Builds the JSON body for `POST /api/mobile/chores`.
+///
+/// Exposed at library level (rather than buried in [MutationsService]) so the
+/// mapping from form state to wire payload can be unit-tested without a
+/// network stack: `memberId` is always sent explicitly (including `null` for
+/// "Nobody" — the route's zod schema accepts either), while `rrule` is
+/// omitted entirely for "no recurrence" rather than sent as `null`.
+Map<String, Object?> buildCreateChorePayload({
+  required String title,
+  required String? memberId,
+  required int points,
+  String? icon,
+  String? rrule,
+}) {
+  return <String, Object?>{
+    'memberId': memberId,
+    'title': title,
+    if (icon != null && icon.isNotEmpty) 'icon': icon,
+    'points': points,
+    if (rrule != null) 'rrule': rrule,
+  };
+}
+
+/// Executes the write-side endpoints for todos and chores.
 ///
 /// On network / 5xx failures, mutations are transparently queued via
 /// [WriteQueueService] and replayed when connectivity returns. On 4xx,
@@ -12,11 +36,20 @@ import 'write_queue_service.dart';
 ///
 /// [WriteQueueFullException] is translated to [MutationFetchException] with
 /// code `QUEUE_FULL` — callers should surface `queueFull` in the UI.
+///
+/// [createChore] is the exception: it's an admin-only, online-only action
+/// (like [MembersService]'s CRUD) with no sensible offline-replay story, so
+/// it talks to [ApiClientFactory] directly instead of going through
+/// [WriteQueueService].
 class MutationsService {
-  MutationsService({required WriteQueueService writeQueueService})
-      : _queue = writeQueueService;
+  MutationsService({
+    required WriteQueueService writeQueueService,
+    required ApiClientFactory clientFactory,
+  })  : _queue = writeQueueService,
+        _clientFactory = clientFactory;
 
   final WriteQueueService _queue;
+  final ApiClientFactory _clientFactory;
 
   // --------------------------------------------------------------------------
   // Todos
@@ -147,6 +180,40 @@ class MutationsService {
 
     final Map<String, Object?> data = _extractMap(response.data);
     return data['undone'] == true;
+  }
+
+  /// Admin-only. Creates a chore directly on the wall (no offline queueing —
+  /// see the class doc). Throws [MutationNotAdminException] on 403.
+  Future<ChoreMutation> createChore({
+    required Session session,
+    required String title,
+    String? memberId,
+    String? icon,
+    int points = 1,
+    String? rrule,
+  }) async {
+    final Map<String, Object?> body = buildCreateChorePayload(
+      title: title,
+      memberId: memberId,
+      points: points,
+      icon: icon,
+      rrule: rrule,
+    );
+    final Dio dio = _clientFactory.authenticated(session);
+    final Response<Object?> response;
+    try {
+      response = await dio.post<Object?>('/api/mobile/chores', data: body);
+    } on DioException catch (e) {
+      throw MutationFetchException('Network error: ${e.message}');
+    }
+
+    final int status = response.statusCode ?? 0;
+    if (status == 401) throw const MutationSessionRevokedException();
+    if (status == 403) throw const MutationNotAdminException();
+    if (status != 200) {
+      throw MutationFetchException('$status ${_errorCode(response.data)}');
+    }
+    return ChoreMutation.fromJson(_extractMap(response.data));
   }
 
   // --------------------------------------------------------------------------

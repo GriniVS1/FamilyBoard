@@ -8,6 +8,7 @@ import 'package:intl/intl.dart';
 import '../../app.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/event.dart';
+import '../../models/family_member.dart';
 import '../../models/mutations.dart';
 import '../../models/note.dart';
 import '../../models/session.dart';
@@ -19,6 +20,7 @@ import '../../services/notes_service.dart';
 import '../../services/today_service.dart';
 import '../../services/todos_service.dart';
 import '../../state/events_provider.dart';
+import '../../state/members_provider.dart';
 import '../../state/notes_provider.dart';
 import '../../state/session_provider.dart';
 import '../../state/today_provider.dart';
@@ -27,6 +29,7 @@ import '../../theme.dart';
 import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
 import '../../widgets/queue_badge.dart';
+import '../chores/chore_create_sheet.dart';
 
 /// Local midnight today on the device.
 DateTime _todayMidnight() {
@@ -724,6 +727,8 @@ class _ChoresCardBody extends ConsumerWidget {
     final int done =
         payload.chores.where((TodayChore c) => c.completedToday).length;
     final int total = payload.chores.length;
+    final AsyncValue<MembersResult> membersAsync = ref.watch(membersProvider);
+    final bool isAdmin = membersAsync.valueOrNull?.isAdmin ?? false;
 
     return Card(
       child: Padding(
@@ -735,9 +740,26 @@ class _ChoresCardBody extends ConsumerWidget {
               CachedAtPill(staleAt: payload.staleAt),
               const SizedBox(height: 8),
             ],
-            Text(
-              l10n.homeChoresHeading(done, total),
-              style: Theme.of(context).textTheme.titleMedium,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    l10n.homeChoresHeading(done, total),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                if (isAdmin)
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      icon: const Icon(Icons.add_circle_outline),
+                      tooltip: l10n.choresAddAria,
+                      onPressed: () => showChoreCreateSheet(context),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: 12),
             if (payload.chores.isEmpty)
