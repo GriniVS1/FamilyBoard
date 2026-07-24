@@ -1,10 +1,9 @@
-import 'dart:io' show Platform;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../l10n/generated/app_localizations.dart';
+import '../../services/device_info.dart';
 import '../../state/locale_provider.dart';
 import '../../state/pair_controller.dart';
 import '../../widgets/familyboard_logo.dart';
@@ -90,7 +89,7 @@ class _PairScreenState extends ConsumerState<PairScreen> {
               ManualEntryView(
                 initialServerUrl: _initialServerUrl,
                 initialCode: _initialCode,
-                initialDeviceName: _defaultDeviceName(),
+                initialDeviceName: defaultDeviceName(),
                 initialAltUrl: _initialAltUrl,
                 initialRemoteUrl: _initialRemoteUrl,
               ),
@@ -123,16 +122,6 @@ class _PairScreenState extends ConsumerState<PairScreen> {
         _mode = _PairMode.manual;
       });
     }
-  }
-
-  String _defaultDeviceName() {
-    if (Platform.isIOS) {
-      return 'iPhone';
-    }
-    if (Platform.isAndroid) {
-      return 'Android phone';
-    }
-    return 'Phone';
   }
 }
 

@@ -56,10 +56,11 @@ void main() {
   });
 
   test(
-    'skips family + members + weather + pin, resumes at whoAreYou '
+    'skips family + members + weather + pin, resumes at pin '
     '(this state is never actually reachable in practice — pinSet true '
     'implies setupComplete true, which the controller checks first — but '
-    'resolveInitialStep itself must still degrade gracefully)',
+    'resolveInitialStep itself must still degrade gracefully by falling '
+    'back to the terminal step)',
     () {
       expect(
         resolveInitialStep(
@@ -70,7 +71,7 @@ void main() {
             pinSet: true,
           ),
         ),
-        equals(WizardStep.whoAreYou),
+        equals(WizardStep.pin),
       );
     },
   );

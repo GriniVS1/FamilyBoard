@@ -689,11 +689,5 @@
   "setupPinMismatch": "PINs don't match",
   "@setupPinMismatch": {},
   "setupPinInvalid": "Enter exactly 6 digits",
-  "@setupPinInvalid": {},
-  "setupWhoAreYouTitle": "Which one are you?",
-  "@setupWhoAreYouTitle": {},
-  "setupWhoAreYouDescription": "Pick your profile to finish pairing this phone.",
-  "@setupWhoAreYouDescription": {},
-  "setupWhoAreYouEmptyMembers": "No family members found. Go back and add someone.",
-  "@setupWhoAreYouEmptyMembers": {}
+  "@setupPinInvalid": {}
 }
