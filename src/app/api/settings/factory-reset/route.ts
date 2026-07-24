@@ -7,6 +7,7 @@ import { getPhotosDir } from "@/lib/photos";
 import { verifyAdminPin } from "@/lib/pin";
 import { getClientIp, hitRateLimit } from "@/lib/rate-limit";
 import { invalidateVapidCache } from "@/lib/notifications";
+import { forgetWifi } from "@/lib/network";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -95,6 +96,16 @@ export const POST = withErrorHandling(async (req) => {
   invalidateVapidCache();
 
   await clearPhotosDir();
+
+  // Forget saved WiFi last so a re-sold board drops the previous owner's
+  // network. Best-effort: the DB wipe already succeeded, and the kiosk reloads
+  // /setup over localhost, so a WiFi hiccup here must not fail the reset.
+  await forgetWifi().catch((err) => {
+    console.warn(
+      "[factory-reset] failed to forget WiFi",
+      err instanceof Error ? err.message : err,
+    );
+  });
 
   return ok({ ok: true });
 });

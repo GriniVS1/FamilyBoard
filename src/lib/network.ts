@@ -436,6 +436,44 @@ export async function disconnectWifi(): Promise<void> {
   await hostCommand(["/usr/bin/nmcli", "device", "disconnect", "wlan0"], 10_000);
 }
 
+// Delete every saved WiFi profile so the device won't auto-reconnect — used by
+// factory reset so a re-sold/handed-on board drops the previous owner's network
+// and the next owner sets up WiFi fresh. Best-effort and idempotent: deleting
+// the active profile drops the WiFi link, but the kiosk serves /setup over
+// localhost, so the reset flow itself is unaffected. Delete by UUID (no colons)
+// to avoid the SSID-contains-":" ambiguity of nmcli -t name parsing.
+export async function forgetWifi(): Promise<void> {
+  if (isDev()) {
+    try {
+      await runCommand("/usr/bin/nmcli", ["--version"], 2_000);
+    } catch (err) {
+      if (err instanceof NetworkError && err.code === "NMCLI_MISSING") {
+        emitDevWarn();
+        return;
+      }
+    }
+  }
+
+  const { stdout } = await hostCommand(
+    ["/usr/bin/nmcli", "-t", "-f", "UUID,TYPE", "connection", "show"],
+    10_000,
+  );
+  const uuids = stdout
+    .split("\n")
+    .map((line) => line.split(":"))
+    .filter(([, type]) => type?.includes("wireless"))
+    .map(([uuid]) => uuid)
+    .filter(Boolean);
+
+  for (const uuid of uuids) {
+    // One bad profile shouldn't abort the rest; the reset must still complete.
+    await hostCommand(
+      ["/usr/bin/nmcli", "connection", "delete", "uuid", uuid],
+      10_000,
+    ).catch(() => {});
+  }
+}
+
 // ---------------------------------------------------------------------------
 // startHotspot
 // ---------------------------------------------------------------------------
