@@ -10,6 +10,12 @@ BROKER_BASE_URL = "https://familyboard.ch"
 # Microsoft tenant: "common" = personal + work/school accounts. Override to a
 # specific tenant id or "organizations" if you only support work/school.
 MS_TENANT = "common"
+# App-download redirect targets for the QR codes on the wall's setup screen
+# (familyboard.ch/app/ios|android — the QRs on devices never change; swap these
+# and redeploy when the store listings go live). Empty string = branded
+# "coming soon" page instead of a redirect.
+APP_IOS_URL = "https://testflight.apple.com/join/8kQz3XyP"
+APP_ANDROID_URL = ""
 
 # Created once with: wrangler kv namespace create OAUTH_KV
 # then paste the returned id here.
@@ -17,7 +23,12 @@ MS_TENANT = "common"
 binding = "OAUTH_KV"
 id = "08c8577b8f314d81baf72a7527073151"
 
-# Serve only the /oauth/* path on the zone (leaves the website + updates.* alone).
+# Serve only the /oauth/* and /app/* paths on the zone (leaves the website +
+# updates.* alone). /app/* = the app-download QR redirects.
 [[routes]]
 pattern = "familyboard.ch/oauth/*"
+zone_name = "familyboard.ch"
+
+[[routes]]
+pattern = "familyboard.ch/app/*"
 zone_name = "familyboard.ch"

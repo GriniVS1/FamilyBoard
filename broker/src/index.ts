@@ -24,6 +24,10 @@ export interface Env {
   MS_CLIENT_ID: string;
   MS_CLIENT_SECRET: string;
   MS_TENANT?: string; // "common" (default) = personal + work/school accounts
+  // App-download redirect targets (familyboard.ch/app/ios|android — QR codes on
+  // the wall's setup screen). Empty/unset = branded "coming soon" page.
+  APP_IOS_URL?: string;
+  APP_ANDROID_URL?: string;
 }
 
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -399,9 +403,44 @@ async function handleMsRefresh(req: Request, env: Env): Promise<Response> {
   });
 }
 
+// --- App-download redirects (QR codes on the wall's setup screen) -------------
+
+function comingSoonPage(storeName: string): Response {
+  return new Response(
+    `<!doctype html><html lang="de"><meta charset="utf-8">` +
+      `<meta name="viewport" content="width=device-width,initial-scale=1">` +
+      `<title>FamilyBoard App</title>` +
+      `<body style="margin:0;font:17px/1.6 system-ui,-apple-system,sans-serif;` +
+      `display:flex;min-height:100vh;align-items:center;justify-content:center;` +
+      `background:#faf6f1;color:#2b2622;text-align:center">` +
+      `<div style="padding:2rem;max-width:26rem">` +
+      `<div style="font-size:2.5rem">📱</div>` +
+      `<h1 style="font-size:1.4rem;margin:.6rem 0">FamilyBoard für ${storeName}</h1>` +
+      `<p style="color:#7a716a">Bald verfügbar — die App ist gerade in Vorbereitung.<br>` +
+      `Coming soon — the app is on its way.</p>` +
+      `</div></body></html>`,
+    { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } },
+  );
+}
+
+function handleAppDownload(url: URL, env: Env): Response {
+  if (url.pathname === "/app/ios") {
+    const target = (env.APP_IOS_URL || "").trim();
+    return target ? Response.redirect(target, 302) : comingSoonPage("iOS");
+  }
+  if (url.pathname === "/app/android") {
+    const target = (env.APP_ANDROID_URL || "").trim();
+    return target ? Response.redirect(target, 302) : comingSoonPage("Android");
+  }
+  return new Response("Not found", { status: 404 });
+}
+
 export default {
   async fetch(req: Request, env: Env): Promise<Response> {
     const url = new URL(req.url);
+    if (req.method === "GET" && url.pathname.startsWith("/app/")) {
+      return handleAppDownload(url, env);
+    }
     if (req.method === "POST" && url.pathname === "/oauth/google/start") {
       return handleStart(req, env);
     }
