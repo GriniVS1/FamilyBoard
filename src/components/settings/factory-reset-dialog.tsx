@@ -12,6 +12,9 @@ import {
 import { Input } from "@/components/shared/input";
 import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
 import { postJson } from "@/components/setup/types";
+import { PinDots, PinKeypad } from "./pin-keypad";
+
+const PIN_LENGTH = 6;
 
 type FactoryResetDialogProps = {
   open: boolean;
@@ -47,7 +50,7 @@ export function FactoryResetDialog({
       setError(t("typeResetError"));
       return;
     }
-    if (pin.length !== 6) {
+    if (pin.length !== PIN_LENGTH) {
       setError(t("pinRequired"));
       return;
     }
@@ -84,22 +87,21 @@ export function FactoryResetDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label
-              htmlFor="reset-pin"
-              className="text-xs font-semibold uppercase tracking-wider text-muted"
-            >
+          <div className="space-y-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted">
               {t("adminPin")}
-            </label>
-            <Input
-              id="reset-pin"
-              type="password"
-              inputMode="numeric"
-              value={pin}
-              onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-              maxLength={6}
-              placeholder="••••"
-              className="tabular"
+            </span>
+            {/* The kiosk has no system keyboard — PIN entry must be the shared
+                numeric pad (see pin-keypad.tsx), not a bare text input. */}
+            <PinDots length={PIN_LENGTH} filled={pin.length} />
+            <PinKeypad
+              onPress={(value) =>
+                setPin((prev) =>
+                  prev.length < PIN_LENGTH ? prev + value : prev,
+                )
+              }
+              onBackspace={() => setPin((prev) => prev.slice(0, -1))}
+              disabled={submitting}
             />
           </div>
 
@@ -145,7 +147,7 @@ export function FactoryResetDialog({
             <Button
               type="button"
               onClick={handleReset}
-              disabled={submitting || confirm !== "RESET" || pin.length !== 6}
+              disabled={submitting || confirm !== "RESET" || pin.length !== PIN_LENGTH}
               className="bg-accent-rose text-bg hover:bg-accent-rose/90"
             >
               {submitting ? t("resetting") : t("confirm")}
