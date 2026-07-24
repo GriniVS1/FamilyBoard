@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
+import { assertSetupIncomplete } from "@/lib/setup-guard";
 import { db } from "@/lib/db";
 import { MEMBER_ROLE } from "@/lib/enums";
 import { listMembers } from "@/lib/queries";
@@ -25,6 +26,7 @@ export const GET = withErrorHandling(async () => {
 });
 
 export const POST = withErrorHandling(async (req) => {
+  await assertSetupIncomplete();
   const json = await req.json();
   const { members } = bodySchema.parse(json);
 

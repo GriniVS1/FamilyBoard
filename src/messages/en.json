@@ -64,6 +64,19 @@
       "bullet3Desc": "A friendly forecast on the dashboard.",
       "welcome": "Welcome"
     },
+    "app": {
+      "title": "Continue setup on your phone",
+      "subtitle": "Scan a QR code to download the FamilyBoard app, then connect it to this board.",
+      "downloadTitle": "Step 1 · download the app",
+      "iosLabel": "iOS",
+      "androidLabel": "Android",
+      "connectTitle": "Step 2 · connect the app",
+      "connectHint": "Open the FamilyBoard app and scan this code to find this board.",
+      "waitingForApp": "Waiting for the app…",
+      "fallbackLink": "Set up on this screen instead",
+      "loadFailed": "Couldn't load setup info. Check your connection and try again.",
+      "retry": "Retry"
+    },
     "family": {
       "title": "Name your family",
       "label": "Family name",
