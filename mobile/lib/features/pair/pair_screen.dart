@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/locale_provider.dart';
@@ -106,14 +107,22 @@ class _PairScreenState extends ConsumerState<PairScreen> {
     });
   }
 
-  void _onScanned(ScannedPairPayload payload) {
-    setState(() {
-      _initialServerUrl = payload.serverUrl;
-      _initialCode = payload.code;
-      _initialAltUrl = payload.altUrl;
-      _initialRemoteUrl = payload.remoteUrl;
-      _mode = _PairMode.manual;
-    });
+  void _onScanned(ScannedQrPayload payload) {
+    if (payload is ScannedSetupPayload) {
+      // App-first onboarding: the wall hasn't finished setup yet, so hand
+      // off to the setup wizard instead of the normal manual-entry step.
+      context.push('/setup-onboarding', extra: payload);
+      return;
+    }
+    if (payload is ScannedPairPayload) {
+      setState(() {
+        _initialServerUrl = payload.serverUrl;
+        _initialCode = payload.code;
+        _initialAltUrl = payload.altUrl;
+        _initialRemoteUrl = payload.remoteUrl;
+        _mode = _PairMode.manual;
+      });
+    }
   }
 
   String _defaultDeviceName() {
