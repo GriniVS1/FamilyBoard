@@ -11,8 +11,10 @@ import 'features/home/home_screen.dart';
 import 'features/meal_plan/meal_plan_screen.dart';
 import 'features/notes/notes_screen.dart';
 import 'features/pair/pair_screen.dart';
+import 'features/pair/qr_scanner_view.dart';
 import 'features/photos/photos_screen.dart';
 import 'features/settings/settings_screen.dart';
+import 'features/setup_onboarding/setup_onboarding_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'models/notification_payload.dart';
@@ -85,7 +87,9 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           return location == '/splash' ? null : '/splash';
         }
         if (sessionState.hasSession) {
-          if (location == '/splash' || location == '/pair') {
+          if (location == '/splash' ||
+              location == '/pair' ||
+              location == '/setup-onboarding') {
             return '/home';
           }
           return null;
@@ -112,6 +116,19 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           path: '/pair',
           builder: (BuildContext context, GoRouterState routerState) =>
               const PairScreen(),
+        ),
+        GoRoute(
+          path: '/setup-onboarding',
+          // Only reachable by pushing with a scanned setup QR as `extra` —
+          // bounce back to normal pairing if that's missing (hot restart,
+          // deep link, anything that skipped the scanner).
+          redirect: (BuildContext context, GoRouterState routerState) {
+            return routerState.extra is ScannedSetupPayload ? null : '/pair';
+          },
+          builder: (BuildContext context, GoRouterState routerState) =>
+              SetupOnboardingScreen(
+            payload: routerState.extra! as ScannedSetupPayload,
+          ),
         ),
         GoRoute(
           path: '/home',

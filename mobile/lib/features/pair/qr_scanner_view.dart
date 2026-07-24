@@ -5,7 +5,12 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 
-class ScannedPairPayload {
+/// Either shape of FamilyBoard's `familyboard://` QR codes.
+sealed class ScannedQrPayload {
+  const ScannedQrPayload();
+}
+
+class ScannedPairPayload extends ScannedQrPayload {
   const ScannedPairPayload({
     required this.serverUrl,
     required this.code,
@@ -26,10 +31,86 @@ class ScannedPairPayload {
   final String? remoteUrl;
 }
 
+/// `familyboard://setup?url=<lanUrl>&alt=<mdnsUrl>&installation=<id>` — shown
+/// by the wall while first-run setup is still incomplete, handing the whole
+/// wizard (family, members, admin PIN, weather, pairing) over to the app.
+class ScannedSetupPayload extends ScannedQrPayload {
+  const ScannedSetupPayload({
+    required this.url,
+    required this.installationId,
+    this.altUrl,
+  });
+
+  /// LAN base URL to verify (via `GET /api/mobile/identity`) and drive setup
+  /// against.
+  final String url;
+
+  /// The wall's `Installation.id` — verified against the identity endpoint
+  /// BEFORE any setup request is sent, so a spoofed/wrong host is never
+  /// trusted.
+  final String installationId;
+
+  /// Optional mDNS fallback tried when [url] is unreachable.
+  final String? altUrl;
+}
+
+/// Parses a scanned QR value against both `familyboard://` formats: `pair`
+/// (normal pairing, from the wall's Settings screen) and `setup` (app-first
+/// onboarding, from the first-run wizard). Returns null for anything else,
+/// including malformed URIs or unrecognised hosts.
+ScannedQrPayload? parseFamilyBoardQr(String raw) {
+  final Uri? uri = Uri.tryParse(raw);
+  if (uri == null || uri.scheme != 'familyboard') {
+    return null;
+  }
+  switch (uri.host) {
+    case 'pair':
+      return _parsePair(uri);
+    case 'setup':
+      return _parseSetup(uri);
+    default:
+      return null;
+  }
+}
+
+ScannedPairPayload? _parsePair(Uri uri) {
+  final String? code = uri.queryParameters['code'];
+  final String? url = uri.queryParameters['url'];
+  if (code == null || code.isEmpty || url == null || url.isEmpty) {
+    return null;
+  }
+  final String? alt = uri.queryParameters['alt'];
+  // Uri.queryParameters already percent-decodes values.
+  final String? remote = uri.queryParameters['remote'];
+  return ScannedPairPayload(
+    serverUrl: url,
+    code: code,
+    altUrl: alt != null && alt.isNotEmpty ? alt : null,
+    remoteUrl: remote != null && remote.isNotEmpty ? remote : null,
+  );
+}
+
+ScannedSetupPayload? _parseSetup(Uri uri) {
+  final String? url = uri.queryParameters['url'];
+  final String? installation = uri.queryParameters['installation'];
+  if (url == null ||
+      url.isEmpty ||
+      installation == null ||
+      installation.isEmpty) {
+    return null;
+  }
+  final String? alt = uri.queryParameters['alt'];
+  return ScannedSetupPayload(
+    url: url,
+    installationId: installation,
+    altUrl: alt != null && alt.isNotEmpty ? alt : null,
+  );
+}
+
 class QrScannerView extends StatefulWidget {
   const QrScannerView({super.key, required this.onScanned});
 
-  final void Function(ScannedPairPayload payload) onScanned;
+  final void Function(ScannedQrPayload payload) onScanned;
 
   @override
   State<QrScannerView> createState() => _QrScannerViewState();
@@ -98,7 +179,7 @@ class _QrScannerViewState extends State<QrScannerView> {
       if (raw == null || raw.isEmpty) {
         continue;
       }
-      final ScannedPairPayload? parsed = _parse(raw);
+      final ScannedQrPayload? parsed = parseFamilyBoardQr(raw);
       if (parsed != null) {
         _handled = true;
         unawaited(_controller.stop());
@@ -106,29 +187,5 @@ class _QrScannerViewState extends State<QrScannerView> {
         return;
       }
     }
-  }
-
-  ScannedPairPayload? _parse(String raw) {
-    final Uri? uri = Uri.tryParse(raw);
-    if (uri == null) {
-      return null;
-    }
-    if (uri.scheme != 'familyboard' || uri.host != 'pair') {
-      return null;
-    }
-    final String? code = uri.queryParameters['code'];
-    final String? url = uri.queryParameters['url'];
-    if (code == null || code.isEmpty || url == null || url.isEmpty) {
-      return null;
-    }
-    final String? alt = uri.queryParameters['alt'];
-    // Uri.queryParameters already percent-decodes values.
-    final String? remote = uri.queryParameters['remote'];
-    return ScannedPairPayload(
-      serverUrl: url,
-      code: code,
-      altUrl: alt != null && alt.isNotEmpty ? alt : null,
-      remoteUrl: remote != null && remote.isNotEmpty ? remote : null,
-    );
   }
 }
