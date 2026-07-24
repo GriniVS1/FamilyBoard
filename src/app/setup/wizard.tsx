@@ -16,6 +16,15 @@ import { Logo } from "@/components/shared/logo";
 import { ThemeToggle } from "@/components/shared/theme-toggle";
 import type { SetupStatus, StepKey } from "@/components/setup/types";
 
+// Weather comes BEFORE pin (mirrors the mobile app-first wizard's
+// WizardStep order, see mobile/lib/state/setup_onboarding_controller.dart).
+// getSetupStatus().setupComplete is familyCreated && memberCount>=1 && pinSet
+// (weatherSet is NOT included — see queries.ts) and every /api/setup/*
+// mutation, including weather, 403s once setupComplete flips. Setting the PIN
+// before weather would permanently lock this wizard out of saving weather the
+// instant the PIN call succeeds. Ordering weather ahead of pin sidesteps the
+// trap entirely instead of changing setupComplete's semantics (which other
+// call sites — e.g. requireAdminPin's no-op-until-complete gate — depend on).
 const STEP_ORDER: StepKey[] = [
   "language",
   "network",
@@ -23,8 +32,8 @@ const STEP_ORDER: StepKey[] = [
   "welcome",
   "family",
   "members",
-  "pin",
   "weather",
+  "pin",
   "done",
 ];
 
@@ -36,8 +45,8 @@ type WizardProps = {
 function nextMissingStep(status: SetupStatus): StepKey {
   if (!status.familyCreated) return "family";
   if (status.memberCount === 0) return "members";
-  if (!status.pinSet) return "pin";
   if (!status.weatherSet) return "weather";
+  if (!status.pinSet) return "pin";
   return "done";
 }
 
@@ -133,23 +142,23 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
       case "members":
         return (
           <StepMembers
-            onComplete={() => goTo("pin")}
-            onBack={() => goTo("family")}
-          />
-        );
-      case "pin":
-        return (
-          <StepPin
             onComplete={() => goTo("weather")}
-            onBack={() => goTo("members")}
+            onBack={() => goTo("family")}
           />
         );
       case "weather":
         return (
           <StepWeather
+            onComplete={() => goTo("pin")}
+            onSkip={() => goTo("pin")}
+            onBack={() => goTo("members")}
+          />
+        );
+      case "pin":
+        return (
+          <StepPin
             onComplete={() => goTo("done")}
-            onSkip={() => goTo("done")}
-            onBack={() => goTo("pin")}
+            onBack={() => goTo("weather")}
           />
         );
       case "done":
