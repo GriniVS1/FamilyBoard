@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ProgressDots } from "@/components/setup/progress-dots";
 import { StepLanguage } from "@/components/setup/step-language";
 import { StepNetwork } from "@/components/setup/step-network";
+import { StepApp } from "@/components/setup/step-app";
 import { StepWelcome } from "@/components/setup/step-welcome";
 import { StepFamily } from "@/components/setup/step-family";
 import { StepMembers } from "@/components/setup/step-members";
@@ -18,6 +19,7 @@ import type { SetupStatus, StepKey } from "@/components/setup/types";
 const STEP_ORDER: StepKey[] = [
   "language",
   "network",
+  "app",
   "welcome",
   "family",
   "members",
@@ -63,10 +65,15 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
   // Language is always the very first step until one has been chosen, so a user
   // who doesn't read the default language isn't lost. Once chosen the page
   // reloads with localeChosen=true and we drop into the normal first step.
+  // Onboarding is app-first: once connected, we land on the "app" step (QR
+  // handoff to the phone) instead of the classic "welcome" wizard intro, for
+  // both a brand-new setup and a resumed one — the fallback link on that step
+  // is the only way back into the on-wall wizard, and that choice isn't
+  // persisted across reloads.
   const initialStep: StepKey = !initialStatus.localeChosen
     ? "language"
     : networkConnected
-      ? "welcome"
+      ? "app"
       : "network";
   const [step, setStep] = useState<StepKey>(initialStep);
 
@@ -74,13 +81,14 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
   // network step but turn out to be connected, jump past it automatically.
   useEffect(() => {
     if (networkChecked && networkConnected && step === "network") {
-      setStep("welcome");
+      setStep("app");
     }
   }, [networkChecked, networkConnected, step]);
 
   const stepIndex = STEP_ORDER.indexOf(step);
   const showProgress =
     step !== "language" &&
+    step !== "app" &&
     step !== "welcome" &&
     step !== "done" &&
     step !== "network";
@@ -98,6 +106,13 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
           <StepNetwork
             onComplete={() => goTo("welcome")}
             onSkip={() => goTo("welcome")}
+          />
+        );
+      case "app":
+        return (
+          <StepApp
+            onFallback={() => goTo("welcome")}
+            onComplete={() => goTo("done")}
           />
         );
       case "welcome":

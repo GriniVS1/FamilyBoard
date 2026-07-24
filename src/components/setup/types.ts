@@ -26,6 +26,7 @@ export type DraftMember = {
 export type StepKey =
   | "language"
   | "network"
+  | "app"
   | "welcome"
   | "family"
   | "members"

@@ -64,6 +64,19 @@
       "bullet3Desc": "Eine freundliche Vorhersage auf dem Dashboard.",
       "welcome": "Willkommen"
     },
+    "app": {
+      "title": "Einrichtung auf dem Handy fortsetzen",
+      "subtitle": "Scanne einen QR-Code, um die FamilyBoard-App herunterzuladen, und verbinde sie dann mit diesem Board.",
+      "downloadTitle": "Schritt 1 · App herunterladen",
+      "iosLabel": "iOS",
+      "androidLabel": "Android",
+      "connectTitle": "Schritt 2 · App verbinden",
+      "connectHint": "Öffne die FamilyBoard-App und scanne diesen Code, um dieses Board zu finden.",
+      "waitingForApp": "Warte auf die App…",
+      "fallbackLink": "Stattdessen auf diesem Bildschirm einrichten",
+      "loadFailed": "Einrichtungsinfo konnte nicht geladen werden. Verbindung prüfen und erneut versuchen.",
+      "retry": "Erneut versuchen"
+    },
     "family": {
       "title": "Gib deiner Familie einen Namen",
       "label": "Familienname",

@@ -64,6 +64,19 @@
       "bullet3Desc": "Une prévision conviviale sur le tableau de bord.",
       "welcome": "Bienvenue"
     },
+    "app": {
+      "title": "Continue la configuration sur ton téléphone",
+      "subtitle": "Scanne un code QR pour télécharger l'application FamilyBoard, puis connecte-la à cet écran.",
+      "downloadTitle": "Étape 1 · télécharger l'application",
+      "iosLabel": "iOS",
+      "androidLabel": "Android",
+      "connectTitle": "Étape 2 · connecter l'application",
+      "connectHint": "Ouvre l'application FamilyBoard et scanne ce code pour trouver cet écran.",
+      "waitingForApp": "En attente de l'application…",
+      "fallbackLink": "Configurer sur cet écran à la place",
+      "loadFailed": "Impossible de charger les infos de configuration. Vérifie ta connexion et réessaie.",
+      "retry": "Réessayer"
+    },
     "family": {
       "title": "Donne un nom à ta famille",
       "label": "Nom de famille",

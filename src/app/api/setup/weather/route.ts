@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
+import { assertSetupIncomplete } from "@/lib/setup-guard";
 import { db } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -12,6 +13,7 @@ const bodySchema = z.object({
 });
 
 export const POST = withErrorHandling(async (req) => {
+  await assertSetupIncomplete();
   const json = await req.json();
   const { lat, lon, label } = bodySchema.parse(json);
 

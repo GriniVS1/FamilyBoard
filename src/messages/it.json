@@ -64,6 +64,19 @@
       "bullet3Desc": "Le previsioni del giorno sulla dashboard.",
       "welcome": "Benvenuto"
     },
+    "app": {
+      "title": "Continua la configurazione sul telefono",
+      "subtitle": "Scansiona un codice QR per scaricare l'app FamilyBoard, poi collegala a questo schermo.",
+      "downloadTitle": "Passo 1 · scarica l'app",
+      "iosLabel": "iOS",
+      "androidLabel": "Android",
+      "connectTitle": "Passo 2 · collega l'app",
+      "connectHint": "Apri l'app FamilyBoard e scansiona questo codice per trovare questo schermo.",
+      "waitingForApp": "In attesa dell'app…",
+      "fallbackLink": "Configura invece su questo schermo",
+      "loadFailed": "Impossibile caricare le informazioni di configurazione. Controlla la connessione e riprova.",
+      "retry": "Riprova"
+    },
     "family": {
       "title": "Dai un nome alla tua famiglia",
       "label": "Nome della famiglia",

@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ok, withErrorHandling } from "@/lib/api";
+import { assertSetupIncomplete } from "@/lib/setup-guard";
 import { setAdminPin } from "@/lib/pin";
 
 export const runtime = "nodejs";
@@ -10,6 +11,7 @@ const bodySchema = z.object({
 });
 
 export const POST = withErrorHandling(async (req) => {
+  await assertSetupIncomplete();
   const json = await req.json();
   const { pin } = bodySchema.parse(json);
   await setAdminPin(pin);

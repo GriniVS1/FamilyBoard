@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ok, withErrorHandling } from "@/lib/api";
+import { assertSetupIncomplete } from "@/lib/setup-guard";
 import { createFamilyIfMissing } from "@/lib/queries";
 
 export const runtime = "nodejs";
@@ -14,6 +15,7 @@ const bodySchema = z.object({
 });
 
 export const POST = withErrorHandling(async (req) => {
+  await assertSetupIncomplete();
   const json = await req.json();
   const { name } = bodySchema.parse(json);
   const family = await createFamilyIfMissing(name);
