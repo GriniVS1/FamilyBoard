@@ -321,6 +321,10 @@ export function SettingsView({
             </p>
           )}
 
+          <p className="rounded-2xl border border-border bg-bg/30 p-3 text-sm text-muted">
+            {t("calendarConnectViaApp")}
+          </p>
+
           <ul className="flex flex-col gap-4">
             {memberList.map((m) => (
               <li

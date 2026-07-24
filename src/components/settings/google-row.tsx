@@ -40,41 +40,6 @@ export function GoogleRow({ member, adminPin }: GoogleRowProps) {
     queryFn: () => fetchStatus(member.id),
   });
 
-  const connectMutation = useMutation({
-    mutationFn: async () => {
-      const res = await fetch(`/api/members/${member.id}/connect-google`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Admin-Pin": adminPin },
-      });
-      if (!res.ok) {
-        let message = `Connect failed (${res.status})`;
-        try {
-          const data = (await res.json()) as {
-            error?: { code?: string; message?: string };
-          };
-          // Show a clear, localized hint when the server has no Google OAuth
-          // configured (the case on shipped devices until the OAuth broker ships)
-          // rather than the raw server string.
-          if (data?.error?.code === "GOOGLE_NOT_CONFIGURED") {
-            message = t("notConfiguredHelp");
-          } else if (data?.error?.message) {
-            message = data.error.message;
-          }
-        } catch {
-          // ignore
-        }
-        throw new Error(message);
-      }
-      return (await res.json()) as { authorizeUrl: string };
-    },
-    onSuccess: (data) => {
-      window.location.href = data.authorizeUrl;
-    },
-    onError: (err) => {
-      setActionError(err instanceof Error ? err.message : t("connectFailed"));
-    },
-  });
-
   const disconnectMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch(`/api/members/${member.id}/connect-google`, {
@@ -168,19 +133,7 @@ export function GoogleRow({ member, adminPin }: GoogleRowProps) {
               <span className="hidden sm:inline">{t("disconnect")}</span>
             </Button>
           </>
-        ) : (
-          <Button
-            type="button"
-            variant="primary"
-            onClick={() => connectMutation.mutate()}
-            disabled={connectMutation.isPending}
-          >
-            {connectMutation.isPending && (
-              <Loader2 className="size-4 animate-spin" />
-            )}
-            {t("connect")}
-          </Button>
-        )}
+        ) : null}
       </div>
 
       {actionError && (

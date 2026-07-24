@@ -455,9 +455,9 @@
       "noMembers": "No members yet.",
       "editMember": "Edit {name}"
     },
+    "calendarConnectViaApp": "Connect calendars (Google, Outlook, CalDAV) from the FamilyBoard app on your phone.",
     "google": {
       "title": "Google Calendar",
-      "connect": "Connect Google",
       "disconnect": "Disconnect",
       "connected": "Connected",
       "lastSync": "last sync {when}",
@@ -467,11 +467,9 @@
       "checking": "Checking…",
       "notConnected": "Not connected",
       "statusFailed": "Could not load status.",
-      "connectFailed": "Could not start OAuth.",
       "disconnectFailed": "Could not disconnect.",
       "syncFailed": "Sync failed.",
-      "notConfigured": "Google Calendar not available",
-      "notConfiguredHelp": "Google Calendar linking isn't available on this device yet."
+      "notConfigured": "Google Calendar not available"
     },
     "pin": {
       "title": "Security",
@@ -627,14 +625,10 @@
     "microsoft": {
       "title": "Microsoft Outlook",
       "description": "Connect your Outlook calendar (Microsoft 365).",
-      "connect": "Connect Outlook",
-      "connecting": "Connecting…",
       "disconnect": "Disconnect",
       "syncNow": "Sync now",
       "syncing": "Syncing…",
       "notConfigured": "Microsoft sync not configured",
-      "notConfiguredHelp": "Microsoft sync isn't configured on this server. Set MICROSOFT_CLIENT_ID and MICROSOFT_CLIENT_SECRET in .env to enable.",
-      "providerConflict": "Already linked to another calendar provider. Disconnect it first.",
       "connected": "Connected",
       "email": "Account",
       "lastSynced": "Last synced",
