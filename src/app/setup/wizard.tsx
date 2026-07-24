@@ -111,10 +111,13 @@ export function Wizard({ initialStatus, initiallyConnected = false }: WizardProp
       case "language":
         return <StepLanguage />;
       case "network":
+        // App-first: after WiFi, hand off to the phone (the "app" step), NOT
+        // the classic on-wall "welcome" wizard. The only route to "welcome" is
+        // the app step's fallback link.
         return (
           <StepNetwork
-            onComplete={() => goTo("welcome")}
-            onSkip={() => goTo("welcome")}
+            onComplete={() => goTo("app")}
+            onSkip={() => goTo("app")}
           />
         );
       case "app":
