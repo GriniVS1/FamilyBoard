@@ -81,6 +81,20 @@ fi
 # autologins on tty1 and never needs it.
 FIRST_USER_PASS="${FAMILYBOARD_PI_PASS:-$(openssl rand -base64 12)}"
 
+# SSH is key-only: bake in the operator's public key and disable password auth
+# (PUBKEY_ONLY_SSH). The account password above still exists for the local TTY
+# and sudo — it just can't be used over SSH. Override the key path with
+# FAMILYBOARD_PI_PUBKEY_FILE. Fail hard if the key is missing: a key-only image
+# with no key would lock every unit out of SSH with no recovery.
+PI_SSH_PUBKEY_FILE="${FAMILYBOARD_PI_PUBKEY_FILE:-$HOME/.ssh/id_ed25519.pub}"
+if [[ ! -f "$PI_SSH_PUBKEY_FILE" ]]; then
+  echo "ERROR: SSH public key not found at $PI_SSH_PUBKEY_FILE." >&2
+  echo "       Set FAMILYBOARD_PI_PUBKEY_FILE=/path/to/key.pub, or generate one" >&2
+  echo "       with: ssh-keygen -t ed25519" >&2
+  exit 1
+fi
+PI_SSH_PUBKEY="$(cat "$PI_SSH_PUBKEY_FILE")"
+
 cat > "$PI_GEN_DIR/config" << EOF
 IMG_NAME="familyboard-${VERSION}"
 RELEASE="bookworm"
@@ -93,6 +107,8 @@ TIMEZONE_DEFAULT="Europe/Zurich"
 FIRST_USER_NAME="familyboard"
 FIRST_USER_PASS="${FIRST_USER_PASS}"
 ENABLE_SSH=1
+PUBKEY_SSH_FIRST_USER="${PI_SSH_PUBKEY}"
+PUBKEY_ONLY_SSH=1
 DISABLE_FIRST_BOOT_USER_RENAME=1
 # Build only the lite base — our stage2 substage adds docker + the kiosk stack.
 # stage3 and above are desktop environments we do not need.
@@ -202,7 +218,8 @@ echo "  screen is black meanwhile), then shows the WiFi-onboarding step at"
 echo "  http://familyboard.local:3000/setup/network. Later boots start in ~60-90 s."
 echo "  No network is needed until the user configures WiFi in the app."
 echo ""
-echo "Debug / SSH login for this image:"
-echo "  user: familyboard   password: ${FIRST_USER_PASS}"
-echo "  (random per build unless FAMILYBOARD_PI_PASS=... was set; the tty1 kiosk"
-echo "   autologin does not need it. SSH works once the device has network.)"
+echo "SSH login for this image (key-only, password auth disabled):"
+echo "  ssh familyboard@familyboard.local   (uses $PI_SSH_PUBKEY_FILE)"
+echo "  Local TTY / sudo password: ${FIRST_USER_PASS}"
+echo "  (password random per build unless FAMILYBOARD_PI_PASS=... was set; it is"
+echo "   NOT accepted over SSH — key only. SSH works once the device has network.)"
