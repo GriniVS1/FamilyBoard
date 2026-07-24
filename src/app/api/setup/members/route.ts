@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
-import { assertSetupIncomplete } from "@/lib/setup-guard";
+import { assertMemberListReadable, assertSetupIncomplete } from "@/lib/setup-guard";
 import { db } from "@/lib/db";
 import { MEMBER_ROLE } from "@/lib/enums";
 import { listMembers } from "@/lib/queries";
@@ -21,6 +21,7 @@ const bodySchema = z.object({
 });
 
 export const GET = withErrorHandling(async () => {
+  await assertMemberListReadable();
   const members = await listMembers();
   return ok(members);
 });
