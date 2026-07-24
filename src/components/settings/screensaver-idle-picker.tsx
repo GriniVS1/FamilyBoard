@@ -4,17 +4,21 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import { Monitor } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
 
 type IdleOption = {
   value: number;
-  labelKey: "never" | "minute" | "minutes";
+  labelKey: "never" | "seconds" | "minute" | "minutes";
   n?: number;
 };
 
+// value is in MINUTES (0.5 = 30 s). Kept in minutes so existing stored values
+// (e.g. "3") keep meaning 3 minutes — do not switch the unit to seconds.
 const OPTIONS: IdleOption[] = [
   { value: 0, labelKey: "never" },
+  { value: 0.5, labelKey: "seconds", n: 30 },
   { value: 1, labelKey: "minute" },
   { value: 3, labelKey: "minutes", n: 3 },
   { value: 5, labelKey: "minutes", n: 5 },
@@ -49,6 +53,7 @@ export function ScreensaverIdlePicker({ adminPin }: ScreensaverIdlePickerProps) 
   const t = useTranslations("settings.screensaver");
   const tSettings = useTranslations("settings");
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const { data: current = 3 } = useQuery({
     queryKey: ["screensaver-idle"],
@@ -59,11 +64,16 @@ export function ScreensaverIdlePicker({ adminPin }: ScreensaverIdlePickerProps) 
     mutationFn: (minutes: number) => patchIdleMinutes(minutes, adminPin),
     onSuccess: (minutes) => {
       queryClient.setQueryData(["screensaver-idle"], minutes);
+      // IdleScreensaver reads its delay from a server-rendered layout prop;
+      // refresh so the new value takes effect immediately instead of only after
+      // a full reload (otherwise the screensaver keeps using the old delay).
+      router.refresh();
     },
   });
 
   function labelFor(opt: IdleOption): string {
     if (opt.labelKey === "never") return t("never");
+    if (opt.labelKey === "seconds") return t("seconds", { n: opt.n ?? opt.value });
     if (opt.labelKey === "minute") return t("minute");
     return t("minutes", { n: opt.n ?? opt.value });
   }

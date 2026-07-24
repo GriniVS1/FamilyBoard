@@ -580,6 +580,7 @@
       "idle": "Wartezeit",
       "idleHint": "Zeigt eine Fotoshow, wenn niemand den Bildschirm berührt hat.",
       "minutes": "{n} Minuten",
+      "seconds": "{n} Sekunden",
       "minute": "1 Minute",
       "never": "Nie"
     },
