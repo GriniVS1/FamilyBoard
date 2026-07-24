@@ -580,6 +580,7 @@
       "idle": "Délai d'inactivité",
       "idleHint": "Affiche un diaporama de photos quand personne n'a touché l'écran depuis un moment.",
       "minutes": "{n} minutes",
+      "seconds": "{n} secondes",
       "minute": "1 minute",
       "never": "Jamais"
     },

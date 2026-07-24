@@ -580,6 +580,7 @@
       "idle": "Timeout inattività",
       "idleHint": "Mostra un diaporama di foto quando nessuno ha toccato lo schermo per un po'.",
       "minutes": "{n} minuti",
+      "seconds": "{n} secondi",
       "minute": "1 minuto",
       "never": "Mai"
     },

@@ -67,6 +67,10 @@ export function ScreensaverView() {
   const { data: photos = [] } = useQuery({
     queryKey: ["photos"],
     queryFn: fetchPhotos,
+    // The screensaver runs for hours; poll so photos added/removed (from the
+    // app or the wall) show up in the slideshow without a reload.
+    refetchInterval: 20_000,
+    refetchOnWindowFocus: true,
   });
 
   const { data: events = [] } = useQuery({

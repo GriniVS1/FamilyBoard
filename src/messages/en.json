@@ -580,6 +580,7 @@
       "idle": "Idle timeout",
       "idleHint": "Show photo slideshow when no one has touched the wall for a while.",
       "minutes": "{n} minutes",
+      "seconds": "{n} seconds",
       "minute": "1 minute",
       "never": "Never"
     },
