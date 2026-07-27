@@ -24,6 +24,9 @@ import '../services/today_service.dart';
 import '../services/todos_service.dart';
 import '../services/write_queue_service.dart';
 import 'connectivity_provider.dart';
+import 'data_refresh.dart';
+import 'foreground_poll_controller.dart';
+import 'home_range_provider.dart';
 
 final Provider<SecureSessionStore> sessionStoreProvider =
     Provider<SecureSessionStore>((Ref ref) => SecureSessionStore());
@@ -181,10 +184,31 @@ class SessionState {
 
 class SessionNotifier extends Notifier<SessionState>
     with WidgetsBindingObserver {
+  /// Whether the app is currently in the foreground — tracked ourselves
+  /// (rather than reading `WidgetsBinding.instance.lifecycleState`) so
+  /// [_load]/[adopt] can gate the initial poll start the same way
+  /// [didChangeAppLifecycleState] does. Defaults to true: Flutter doesn't
+  /// fire a `resumed` lifecycle event on cold start, the app simply begins
+  /// in the foreground.
+  bool _foreground = true;
+
+  /// Refreshes [visibleHomeProviders] every 30s while the app is foreground
+  /// and signed in. Started on resume/app start, stopped on
+  /// pause/inactive/detached/hidden and on sign-out — see
+  /// [didChangeAppLifecycleState] and [clear].
+  late final ForegroundPollController _pollController =
+      ForegroundPollController(
+    interval: const Duration(seconds: 30),
+    onTick: _pollTick,
+  );
+
   @override
   SessionState build() {
     WidgetsBinding.instance.addObserver(this);
-    ref.onDispose(() => WidgetsBinding.instance.removeObserver(this));
+    ref.onDispose(() {
+      WidgetsBinding.instance.removeObserver(this);
+      _pollController.stop();
+    });
     // Return-to-LAN trigger #2: connectivity flips to Wi-Fi while we're
     // pinned to the relay. Trigger #1 (app resume) is the
     // didChangeAppLifecycleState override below.
@@ -200,10 +224,56 @@ class SessionNotifier extends Notifier<SessionState>
     return const SessionState.loading();
   }
 
+  void _pollTick() {
+    if (!state.hasSession) {
+      return;
+    }
+    // Read (not recompute) the current range — must target whatever
+    // instance HomeScreen is actually watching, see home_range_provider.dart.
+    invalidateVisibleHomeProviders(
+      range: ref.read(currentHomeRangeProvider),
+      invalidate: ref.invalidate,
+    );
+  }
+
+  /// Starts the foreground poll if a session is signed in and the app is
+  /// currently foreground. Safe to call from multiple places — [start] is a
+  /// no-op when already running.
+  void _maybeStartPoll() {
+    if (state.hasSession && _foreground) {
+      _pollController.start();
+    }
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      unawaited(_maybeReturnToLan());
+    switch (state) {
+      case AppLifecycleState.resumed:
+        _foreground = true;
+        unawaited(_onResumed());
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        _foreground = false;
+        _pollController.stop();
+        break;
+    }
+  }
+
+  /// Order matters: the return-to-LAN probe may rewrite the session's base
+  /// URL, so the refresh below must run after it completes — otherwise a
+  /// resume right after a relay→LAN flip would refetch against the stale
+  /// (about to be replaced) URL.
+  Future<void> _onResumed() async {
+    await _maybeReturnToLan();
+    if (state.hasSession) {
+      invalidateVisibleHomeProviders(
+        range: ref.read(currentHomeRangeProvider),
+        invalidate: ref.invalidate,
+      );
+      _pollController.start();
     }
   }
 
@@ -212,6 +282,7 @@ class SessionNotifier extends Notifier<SessionState>
     state = stored == null
         ? const SessionState.none()
         : SessionState.signedIn(stored);
+    _maybeStartPoll();
     if (stored != null &&
         (stored.installationId == null || stored.remoteUrl == null)) {
       // Device paired before the installationId/remoteUrl contract existed
@@ -233,6 +304,7 @@ class SessionNotifier extends Notifier<SessionState>
   Future<void> adopt(Session session) async {
     await ref.read(sessionStoreProvider).write(session);
     state = SessionState.signedIn(session);
+    _maybeStartPoll();
   }
 
   /// Persists a rediscovered base URL (and its verified `installationId`)
@@ -313,6 +385,7 @@ class SessionNotifier extends Notifier<SessionState>
     // the next pairing on the same install.
     await ref.read(cacheDbProvider).clearAll();
     state = const SessionState.none();
+    _pollController.stop();
   }
 }
 
