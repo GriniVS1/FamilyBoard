@@ -8,6 +8,21 @@
   "@moreTitle": {
     "description": "Label of the fifth bottom-nav tab and title of the screen it opens, listing Notes/Photos/Settings."
   },
+  "tasksTitle": "Tasks & Chores",
+  "@tasksTitle": {
+    "description": "Label of the Tasks & Chores row in the More screen, and the app bar title of the screen it opens (/tasks)."
+  },
+  "tasksChoreCompletedBy": "Done by {name}",
+  "@tasksChoreCompletedBy": {
+    "description": "Shown under a completed chore on the Tasks screen, naming who completed it today.",
+    "placeholders": {
+      "name": { "type": "String", "example": "Mia" }
+    }
+  },
+  "tasksChoreUnassigned": "Everyone",
+  "@tasksChoreUnassigned": {
+    "description": "Neutral chip label shown on an unassigned chore (Home Ämtli card + Tasks screen)."
+  },
   "splashLoading": "Loading…",
   "@splashLoading": {},
   "pairTitle": "Pair this device",
@@ -519,6 +534,18 @@
   "@calendarErrorEventNotFound": {},
   "calendarErrorSaveGeneric": "Couldn't save the event. Try again.",
   "@calendarErrorSaveGeneric": {},
+  "calendarEventCloseTooltip": "Close",
+  "@calendarEventCloseTooltip": {
+    "description": "Tooltip on the close (X) button in the event editor/detail sheet header."
+  },
+  "calendarDiscardConfirm": "Discard your changes?",
+  "@calendarDiscardConfirm": {
+    "description": "Confirmation dialog shown when closing the event editor with unsaved changes."
+  },
+  "calendarDiscardKeepEditing": "Keep editing",
+  "@calendarDiscardKeepEditing": {},
+  "calendarDiscardButton": "Discard",
+  "@calendarDiscardButton": {},
   "settingsSectionMembers": "Family members",
   "@settingsSectionMembers": {},
   "membersRoleAdmin": "Admin",

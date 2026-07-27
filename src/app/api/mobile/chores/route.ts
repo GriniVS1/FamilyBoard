@@ -2,9 +2,16 @@ import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { requireMobileAuth } from "@/lib/mobile-auth";
+import { getChoresForFamily } from "@/lib/queries";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+export const GET = withErrorHandling(async (req) => {
+  const ctx = await requireMobileAuth(req);
+  const chores = await getChoresForFamily(ctx.familyId);
+  return ok({ chores });
+});
 
 // Mirrors the wall's POST /api/chores create shape. memberId may be any family
 // member (e.g. a child) — that's the point: a parent assigns chores to the kids

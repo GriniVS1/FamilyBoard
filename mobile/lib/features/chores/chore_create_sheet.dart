@@ -6,6 +6,7 @@ import '../../l10n/generated/app_localizations.dart';
 import '../../models/family_member.dart';
 import '../../models/mutations.dart';
 import '../../models/session.dart';
+import '../../state/chores_provider.dart';
 import '../../state/members_provider.dart';
 import '../../state/session_provider.dart';
 import '../../state/today_provider.dart';
@@ -116,6 +117,7 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
         return;
       }
       ref.invalidate(todayProvider);
+      ref.invalidate(choresProvider);
       Navigator.of(context).pop();
     } on MutationSessionRevokedException {
       if (!mounted) {

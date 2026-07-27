@@ -72,15 +72,25 @@ class TodayChore {
     required this.icon,
     required this.points,
     required this.completedToday,
+    this.memberId,
+    this.member,
   });
 
   factory TodayChore.fromJson(Map<String, Object?> json) {
+    final Object? memberIdRaw = json['memberId'];
+    final Object? memberRaw = json['member'];
     return TodayChore(
       id: json['id']! as String,
       title: json['title']! as String,
       icon: json['icon'] is String ? json['icon']! as String : null,
       points: json['points'] is int ? json['points']! as int : 0,
       completedToday: json['completedToday'] == true,
+      memberId: memberIdRaw is String ? memberIdRaw : null,
+      member: memberRaw is Map
+          ? TodayMember.fromJson(
+              (memberRaw as Map<Object?, Object?>).cast<String, Object?>(),
+            )
+          : null,
     );
   }
 
@@ -91,6 +101,12 @@ class TodayChore {
   final String? icon;
   final int points;
   final bool completedToday;
+
+  /// Null when the chore is unassigned (open to the whole family). Absent
+  /// entirely on responses from walls that predate this field — tolerated
+  /// the same as null.
+  final String? memberId;
+  final TodayMember? member;
 }
 
 class TodayTodo {

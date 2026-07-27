@@ -21,6 +21,12 @@ class MoreScreen extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           children: <Widget>[
             _MoreRow(
+              icon: Icons.checklist_outlined,
+              label: l10n.tasksTitle,
+              onTap: () => context.push('/tasks'),
+            ),
+            const SizedBox(height: 12),
+            _MoreRow(
               icon: Icons.sticky_note_2_outlined,
               label: l10n.notesTitle,
               onTap: () => context.push('/notes'),

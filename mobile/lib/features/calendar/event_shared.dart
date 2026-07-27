@@ -61,6 +61,31 @@ String eventWriteErrorMessage(AppL10n l10n, EventWriteErrorCode code) {
   }
 }
 
+/// Asks the user to confirm discarding unsaved changes before closing the
+/// event editor. Returns `true` when the user chose to discard.
+Future<bool> confirmDiscardEventChanges(
+  BuildContext context,
+  AppL10n l10n,
+) async {
+  final bool? discard = await showDialog<bool>(
+    context: context,
+    builder: (BuildContext ctx) => AlertDialog(
+      content: Text(l10n.calendarDiscardConfirm),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => Navigator.of(ctx).pop(false),
+          child: Text(l10n.calendarDiscardKeepEditing),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.of(ctx).pop(true),
+          child: Text(l10n.calendarDiscardButton),
+        ),
+      ],
+    ),
+  );
+  return discard == true;
+}
+
 /// Asks the user whether a recurring-event edit/delete should apply to just
 /// this occurrence or the whole series. Returns `'instance'`, `'series'`, or
 /// null if cancelled.
