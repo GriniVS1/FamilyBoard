@@ -156,36 +156,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
               ),
             ),
           const QueueBadge(),
-          IconButton(
-            icon: const Icon(Icons.restaurant_menu_outlined),
-            tooltip: l10n.mealPlanOpenAria,
-            onPressed: () => context.push('/meal-plan'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.event_outlined),
-            tooltip: l10n.calendarOpenAria,
-            onPressed: () => context.push('/calendar'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.sticky_note_2_outlined),
-            tooltip: l10n.notesOpenAria,
-            onPressed: () => context.push('/notes'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            tooltip: l10n.groceryOpenAria,
-            onPressed: () => context.push('/grocery'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.photo_library_outlined),
-            tooltip: l10n.photosOpenAria,
-            onPressed: () => context.push('/photos'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            tooltip: l10n.settingsOpenAria,
-            onPressed: () => context.push('/settings'),
-          ),
         ],
       ),
       body: SafeArea(

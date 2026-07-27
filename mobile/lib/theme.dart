@@ -138,6 +138,33 @@ class FamilyBoardTheme {
         elevation: 0,
         centerTitle: false,
       ),
+      navigationBarTheme: NavigationBarThemeData(
+        backgroundColor: scheme.surface,
+        surfaceTintColor: Colors.transparent,
+        indicatorColor: scheme.primary.withValues(alpha: 0.16),
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (Set<WidgetState> states) => TextStyle(
+            fontSize: 12,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+            color: states.contains(WidgetState.selected)
+                ? scheme.primary
+                : mutedText,
+          ),
+        ),
+        iconTheme: WidgetStateProperty.resolveWith(
+          (Set<WidgetState> states) => IconThemeData(
+            size: 24,
+            color: states.contains(WidgetState.selected)
+                ? scheme.primary
+                : mutedText,
+          ),
+        ),
+      ),
     );
   }
 }
