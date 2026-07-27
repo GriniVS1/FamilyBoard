@@ -111,15 +111,11 @@ class CacheDb {
 
   Future<void> write(String key, String body) async {
     final Database db = await _open();
-    await db.insert(
-      'cache_read',
-      <String, Object?>{
-        'key': key,
-        'body': body,
-        'fetched_at': DateTime.now().millisecondsSinceEpoch,
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('cache_read', <String, Object?>{
+      'key': key,
+      'body': body,
+      'fetched_at': DateTime.now().millisecondsSinceEpoch,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<({String body, DateTime fetchedAt})?> read(String key) async {
@@ -159,20 +155,17 @@ class CacheDb {
     if (count >= _maxQueuePerMember) {
       throw const QueueFullException();
     }
-    return db.insert(
-      'write_queue',
-      <String, Object?>{
-        'member_id': memberId,
-        'method': method,
-        'path': path,
-        'body': body,
-        'temp_id': tempId,
-        'created_at': DateTime.now().millisecondsSinceEpoch,
-        'retry_count': 0,
-        'next_attempt_at': 0,
-        'last_error': null,
-      },
-    );
+    return db.insert('write_queue', <String, Object?>{
+      'member_id': memberId,
+      'method': method,
+      'path': path,
+      'body': body,
+      'temp_id': tempId,
+      'created_at': DateTime.now().millisecondsSinceEpoch,
+      'retry_count': 0,
+      'next_attempt_at': 0,
+      'last_error': null,
+    });
   }
 
   /// Returns up to [limit] rows whose `next_attempt_at` is in the past,

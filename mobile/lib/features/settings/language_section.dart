@@ -32,7 +32,9 @@ class LanguageSection extends ConsumerWidget {
               _LanguageTile(
                 option: option,
                 selected: state.locale?.languageCode == option.languageCode,
-                onTap: () => ref.read(localePrefProvider.notifier).setLocale(
+                onTap: () => ref
+                    .read(localePrefProvider.notifier)
+                    .setLocale(
                       option.languageCode == null
                           ? null
                           : Locale(option.languageCode!),

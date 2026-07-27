@@ -9,9 +9,7 @@ final Provider<LocalePrefStore> localePrefStoreProvider =
 class LocalePrefState {
   const LocalePrefState({required this.loaded, required this.locale});
 
-  const LocalePrefState.loading()
-      : loaded = false,
-        locale = null;
+  const LocalePrefState.loading() : loaded = false, locale = null;
 
   final bool loaded;
 
@@ -46,4 +44,5 @@ class LocalePrefNotifier extends Notifier<LocalePrefState> {
 
 final NotifierProvider<LocalePrefNotifier, LocalePrefState> localePrefProvider =
     NotifierProvider<LocalePrefNotifier, LocalePrefState>(
-        LocalePrefNotifier.new);
+      LocalePrefNotifier.new,
+    );

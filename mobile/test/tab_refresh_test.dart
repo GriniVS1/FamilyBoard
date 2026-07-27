@@ -24,43 +24,54 @@ void main() {
 
   group('providersToInvalidateForTab', () {
     test('Heute invalidates the full visible-home-provider set', () {
-      final List<Object> providers =
-          providersToInvalidateForTab(homeTabIndex, range);
+      final List<Object> providers = providersToInvalidateForTab(
+        homeTabIndex,
+        range,
+      );
 
       expect(
-          providers,
-          containsAll(<Object>[
-            eventsProvider(range),
-            todayProvider,
-            todosProvider,
-            notesProvider,
-          ]));
+        providers,
+        containsAll(<Object>[
+          eventsProvider(range),
+          todayProvider,
+          todosProvider,
+          notesProvider,
+        ]),
+      );
     });
 
     test('Kalender invalidates the eventsProvider family as a whole', () {
-      final List<Object> providers =
-          providersToInvalidateForTab(calendarTabIndex, range);
+      final List<Object> providers = providersToInvalidateForTab(
+        calendarTabIndex,
+        range,
+      );
 
       expect(providers, equals(<Object>[eventsProvider]));
     });
 
     test('Essensplan invalidates mealPlanProvider', () {
-      final List<Object> providers =
-          providersToInvalidateForTab(mealPlanTabIndex, range);
+      final List<Object> providers = providersToInvalidateForTab(
+        mealPlanTabIndex,
+        range,
+      );
 
       expect(providers, equals(<Object>[mealPlanProvider]));
     });
 
     test('Einkauf invalidates groceryProvider', () {
-      final List<Object> providers =
-          providersToInvalidateForTab(groceryTabIndex, range);
+      final List<Object> providers = providersToInvalidateForTab(
+        groceryTabIndex,
+        range,
+      );
 
       expect(providers, equals(<Object>[groceryProvider]));
     });
 
     test('Mehr has no primary data of its own to refresh', () {
-      final List<Object> providers =
-          providersToInvalidateForTab(moreTabIndex, range);
+      final List<Object> providers = providersToInvalidateForTab(
+        moreTabIndex,
+        range,
+      );
 
       expect(providers, isEmpty);
     });

@@ -102,7 +102,9 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
     final AppL10n l10n = AppL10n.of(context);
 
     try {
-      await ref.read(mutationsServiceProvider).createChore(
+      await ref
+          .read(mutationsServiceProvider)
+          .createChore(
             session: session,
             title: title,
             memberId: _memberId,
@@ -140,7 +142,7 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
     final AppL10n l10n = AppL10n.of(context);
     final AsyncValue<MembersResult> membersAsync = ref.watch(membersProvider);
     final List<FamilyMember> members =
-        membersAsync.valueOrNull?.members ?? const <FamilyMember>[];
+        membersAsync.value?.members ?? const <FamilyMember>[];
 
     return Padding(
       padding: EdgeInsets.only(
@@ -165,8 +167,9 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
               maxLength: 100,
               textCapitalization: TextCapitalization.sentences,
               onChanged: (String _) => setState(() {}),
-              decoration:
-                  InputDecoration(labelText: l10n.calendarEventTitleLabel),
+              decoration: InputDecoration(
+                labelText: l10n.calendarEventTitleLabel,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
@@ -178,9 +181,7 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
               initialValue: _memberId,
               isExpanded: true,
               items: <DropdownMenuItem<String?>>[
-                DropdownMenuItem<String?>(
-                  child: Text(l10n.choresMemberNone),
-                ),
+                DropdownMenuItem<String?>(child: Text(l10n.choresMemberNone)),
                 ...members.map(
                   (FamilyMember m) => DropdownMenuItem<String?>(
                     value: m.id,
@@ -188,8 +189,9 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
                   ),
                 ),
               ],
-              onChanged:
-                  _busy ? null : (String? id) => setState(() => _memberId = id),
+              onChanged: _busy
+                  ? null
+                  : (String? id) => setState(() => _memberId = id),
             ),
             const SizedBox(height: 16),
             Text(
@@ -201,9 +203,8 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
               selected: _emoji,
               onChanged: _busy
                   ? null
-                  : (String? e) => setState(
-                        () => _emoji = e == _emoji ? null : e,
-                      ),
+                  : (String? e) =>
+                        setState(() => _emoji = e == _emoji ? null : e),
             ),
             const SizedBox(height: 16),
             Row(
@@ -217,8 +218,8 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
                 Text(
                   l10n.homePointsLabel(_points),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -257,7 +258,7 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
               onSelectionChanged: _busy
                   ? null
                   : (Set<_ChoreRecurrence> sel) =>
-                      setState(() => _recurrence = sel.first),
+                        setState(() => _recurrence = sel.first),
             ),
             const SizedBox(height: 20),
             Row(

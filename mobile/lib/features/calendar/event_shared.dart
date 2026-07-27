@@ -34,9 +34,9 @@ class EventReadOnlyBanner extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.calendarEventReadOnlyBanner(provider),
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: cs.onSecondaryContainer,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: cs.onSecondaryContainer),
             ),
           ),
         ],

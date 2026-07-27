@@ -19,7 +19,7 @@ class HeartbeatResult {
 
 class HeartbeatService {
   HeartbeatService({ApiClientFactory? clientFactory})
-      : _clientFactory = clientFactory ?? const ApiClientFactory();
+    : _clientFactory = clientFactory ?? const ApiClientFactory();
 
   final ApiClientFactory _clientFactory;
 
@@ -44,8 +44,8 @@ class HeartbeatService {
     if (data is! Map) {
       throw const HeartbeatException(HeartbeatErrorKind.unknown);
     }
-    final Map<String, Object?> payload =
-        (data as Map<Object?, Object?>).cast<String, Object?>();
+    final Map<String, Object?> payload = (data as Map<Object?, Object?>)
+        .cast<String, Object?>();
     final Object? raw = payload['lastSeenAt'];
     final DateTime? parsed = raw is String ? DateTime.tryParse(raw) : null;
     if (parsed == null) {

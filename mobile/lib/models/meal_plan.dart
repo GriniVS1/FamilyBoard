@@ -72,16 +72,19 @@ class MealPlan {
       id: json['id']! as String,
       date: DateTime.parse(json['date']! as String),
       slot: MealSlot.fromRaw(json['slot']! as String),
-      customName:
-          json['customName'] is String ? json['customName']! as String : null,
+      customName: json['customName'] is String
+          ? json['customName']! as String
+          : null,
       notes: json['notes'] is String ? json['notes']! as String : null,
       recipe: recipeRaw is Map
           ? MealPlanRecipe.fromJson(
-              (recipeRaw as Map<Object?, Object?>).cast<String, Object?>())
+              (recipeRaw as Map<Object?, Object?>).cast<String, Object?>(),
+            )
           : null,
       member: memberRaw is Map
           ? MealPlanMember.fromJson(
-              (memberRaw as Map<Object?, Object?>).cast<String, Object?>())
+              (memberRaw as Map<Object?, Object?>).cast<String, Object?>(),
+            )
           : null,
     );
   }

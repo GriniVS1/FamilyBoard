@@ -26,7 +26,7 @@ class DiscoveredHost {
 /// the platform's own reliability rather than reimplementing mDNS in Dart.
 class MdnsDiscoveryService {
   MdnsDiscoveryService({Duration? scanDuration})
-      : _scanDuration = scanDuration ?? const Duration(seconds: 4);
+    : _scanDuration = scanDuration ?? const Duration(seconds: 4);
 
   static const String _serviceType = '_familyboard._tcp';
 

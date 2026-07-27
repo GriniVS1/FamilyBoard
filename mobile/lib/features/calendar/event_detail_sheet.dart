@@ -45,8 +45,9 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
 
   Future<void> _edit() async {
     final AppL10n l10n = AppL10n.of(context);
-    final String? scope =
-        _isRecurring ? await askEventScope(context, l10n) : 'series';
+    final String? scope = _isRecurring
+        ? await askEventScope(context, l10n)
+        : 'series';
     if (scope == null || !mounted) {
       return;
     }
@@ -99,11 +100,9 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
 
     setState(() => _busy = true);
     try {
-      await ref.read(eventsServiceProvider).deleteEvent(
-            session: session,
-            id: widget.event.id,
-            scope: scope,
-          );
+      await ref
+          .read(eventsServiceProvider)
+          .deleteEvent(session: session, id: widget.event.id, scope: scope);
       if (!mounted) {
         return;
       }
@@ -138,8 +137,9 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
     final AppL10n l10n = AppL10n.of(context);
     final MobileEvent event = widget.event;
     final String locale = Localizations.localeOf(context).toString();
-    final Color accent =
-        AccentPalette.resolve(event.color ?? event.member.color);
+    final Color accent = AccentPalette.resolve(
+      event.color ?? event.member.color,
+    );
 
     final String timeLabel;
     if (event.allDay) {
@@ -173,8 +173,10 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
                 child: Container(
                   width: 12,
                   height: 12,
-                  decoration:
-                      BoxDecoration(color: accent, shape: BoxShape.circle),
+                  decoration: BoxDecoration(
+                    color: accent,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
@@ -188,9 +190,9 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
                 Icon(
                   Icons.repeat,
                   size: 20,
-                  color: Theme.of(context).colorScheme.onSurface.withValues(
-                        alpha: 0.4,
-                      ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
             ],
           ),

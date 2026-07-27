@@ -32,7 +32,9 @@ class _SetupOnboardingScreenState extends ConsumerState<SetupOnboardingScreen> {
   }
 
   Future<void> _startVerification() async {
-    await ref.read(setupOnboardingControllerProvider.notifier).start(
+    await ref
+        .read(setupOnboardingControllerProvider.notifier)
+        .start(
           url: widget.payload.url,
           installationId: widget.payload.installationId,
           altUrl: widget.payload.altUrl,
@@ -42,8 +44,9 @@ class _SetupOnboardingScreenState extends ConsumerState<SetupOnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final SetupOnboardingState state =
-        ref.watch(setupOnboardingControllerProvider);
+    final SetupOnboardingState state = ref.watch(
+      setupOnboardingControllerProvider,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -62,7 +65,10 @@ class _SetupOnboardingScreenState extends ConsumerState<SetupOnboardingScreen> {
   }
 
   Widget _buildBody(
-      BuildContext context, AppL10n l10n, SetupOnboardingState state) {
+    BuildContext context,
+    AppL10n l10n,
+    SetupOnboardingState state,
+  ) {
     switch (state.phase) {
       case OnboardingPhase.verifying:
         return _VerifyingView(l10n: l10n);
@@ -109,8 +115,10 @@ class _VerifyingView extends StatelessWidget {
         children: <Widget>[
           const CircularProgressIndicator(),
           const SizedBox(height: 24),
-          Text(l10n.setupOnboardingVerifyingTitle,
-              style: Theme.of(context).textTheme.bodyLarge),
+          Text(
+            l10n.setupOnboardingVerifyingTitle,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
         ],
       ),
     );
@@ -129,8 +137,11 @@ class _UnreachableView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(Icons.wifi_off,
-              size: 48, color: Theme.of(context).colorScheme.error),
+          Icon(
+            Icons.wifi_off,
+            size: 48,
+            color: Theme.of(context).colorScheme.error,
+          ),
           const SizedBox(height: 16),
           Text(
             l10n.setupOnboardingUnreachableTitle,
@@ -165,8 +176,11 @@ class _AlreadyConfiguredView extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(Icons.check_circle_outline,
-              size: 48, color: Theme.of(context).colorScheme.primary),
+          Icon(
+            Icons.check_circle_outline,
+            size: 48,
+            color: Theme.of(context).colorScheme.primary,
+          ),
           const SizedBox(height: 16),
           Text(
             l10n.setupOnboardingAlreadyTitle,

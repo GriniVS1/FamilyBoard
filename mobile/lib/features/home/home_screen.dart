@@ -131,9 +131,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     final SessionState sessionState = ref.watch(sessionProvider);
     final Session? session = sessionState.session;
     if (session == null) {
-      return Scaffold(
-        body: Center(child: Text(l10n.splashLoading)),
-      );
+      return Scaffold(body: Center(child: Text(l10n.splashLoading)));
     }
 
     final Color accent = AccentPalette.resolve(session.member.color);
@@ -241,8 +239,8 @@ class _CardError extends StatelessWidget {
             Text(
               isSessionExpired ? l10n.homeSessionExpired : message,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
             const SizedBox(height: 12),
             FilledButton(
@@ -268,8 +266,9 @@ class _HeuteCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<EventsResult> eventsAsync =
-        ref.watch(eventsProvider(range));
+    final AsyncValue<EventsResult> eventsAsync = ref.watch(
+      eventsProvider(range),
+    );
     return eventsAsync.when(
       loading: () => const _CardLoading(),
       error: (Object err, StackTrace _) => _CardError(
@@ -285,10 +284,9 @@ class _HeuteCard extends ConsumerWidget {
       ),
       data: (EventsResult result) {
         final DateTime today = _todayMidnight();
-        final List<MobileEvent> todays = result.events
-            .where((MobileEvent e) => e.groupDay == today)
-            .toList()
-          ..sort(_compareEventsWithinDay);
+        final List<MobileEvent> todays =
+            result.events.where((MobileEvent e) => e.groupDay == today).toList()
+              ..sort(_compareEventsWithinDay);
         return _HeuteCardBody(
           events: todays,
           staleAt: result.staleAt,
@@ -313,8 +311,9 @@ class _HeuteCardBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String locale = Localizations.localeOf(context).toString();
-    final String formattedDate =
-        DateFormat.yMMMMEEEEd(locale).format(DateTime.now());
+    final String formattedDate = DateFormat.yMMMMEEEEd(
+      locale,
+    ).format(DateTime.now());
 
     return Card(
       child: InkWell(
@@ -358,8 +357,9 @@ class _HeuteEventRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String locale = Localizations.localeOf(context).toString();
-    final Color accent =
-        AccentPalette.resolve(event.color ?? event.member.color);
+    final Color accent = AccentPalette.resolve(
+      event.color ?? event.member.color,
+    );
 
     String timeLabel;
     if (event.allDay) {
@@ -374,8 +374,8 @@ class _HeuteEventRow extends StatelessWidget {
       timeLabel = '$start–$end';
     }
 
-    final String memberLabel =
-        '${event.member.emoji} ${event.member.name}'.trim();
+    final String memberLabel = '${event.member.emoji} ${event.member.name}'
+        .trim();
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -384,9 +384,7 @@ class _HeuteEventRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: accent.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
-          border: Border(
-            left: BorderSide(color: accent, width: 4),
-          ),
+          border: Border(left: BorderSide(color: accent, width: 4)),
         ),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -413,29 +411,27 @@ class _HeuteEventRow extends StatelessWidget {
                     Text(
                       event.title,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     if (event.location != null && event.location!.isNotEmpty)
                       Text(
                         event.location!,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.6),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
                       ),
                     if (memberLabel.isNotEmpty) ...<Widget>[
                       const SizedBox(height: 2),
                       Text(
                         memberLabel,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .onSurface
-                                  .withValues(alpha: 0.5),
-                            ),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.5),
+                        ),
                       ),
                     ],
                   ],
@@ -461,8 +457,9 @@ class _DemnaechstCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final AsyncValue<EventsResult> eventsAsync =
-        ref.watch(eventsProvider(range));
+    final AsyncValue<EventsResult> eventsAsync = ref.watch(
+      eventsProvider(range),
+    );
     return eventsAsync.when(
       loading: () => const _CardLoading(),
       error: (Object err, StackTrace _) => _CardError(
@@ -478,16 +475,17 @@ class _DemnaechstCard extends ConsumerWidget {
       ),
       data: (EventsResult result) {
         final DateTime today = _todayMidnight();
-        final List<MobileEvent> upcoming = result.events
-            .where((MobileEvent e) => e.groupDay.isAfter(today))
-            .toList()
-          ..sort((MobileEvent a, MobileEvent b) {
-            final int dayCompare = a.groupDay.compareTo(b.groupDay);
-            if (dayCompare != 0) {
-              return dayCompare;
-            }
-            return _compareEventsWithinDay(a, b);
-          });
+        final List<MobileEvent> upcoming =
+            result.events
+                .where((MobileEvent e) => e.groupDay.isAfter(today))
+                .toList()
+              ..sort((MobileEvent a, MobileEvent b) {
+                final int dayCompare = a.groupDay.compareTo(b.groupDay);
+                if (dayCompare != 0) {
+                  return dayCompare;
+                }
+                return _compareEventsWithinDay(a, b);
+              });
         final List<MobileEvent> capped = upcoming.take(5).toList();
         if (capped.isEmpty) {
           return const SizedBox.shrink();
@@ -560,12 +558,11 @@ class _DemnaechstCardBody extends StatelessWidget {
                         ? l10n.homeUpcomingTomorrow
                         : DateFormat('EEE, d.M.', locale).format(day),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.6),
-                        ),
+                      fontWeight: FontWeight.w600,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
+                    ),
                   ),
                 ),
                 ...byDay[day]!.map(
@@ -589,13 +586,14 @@ class _UpcomingEventRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String locale = Localizations.localeOf(context).toString();
-    final Color accent =
-        AccentPalette.resolve(event.color ?? event.member.color);
+    final Color accent = AccentPalette.resolve(
+      event.color ?? event.member.color,
+    );
     final String timeLabel = event.allDay
         ? l10n.homeAllDay
         : (event.startsAt != null
-            ? DateFormat.Hm(locale).format(event.startsAt!.toLocal())
-            : '');
+              ? DateFormat.Hm(locale).format(event.startsAt!.toLocal())
+              : '');
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -614,9 +612,7 @@ class _UpcomingEventRow extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 color: accent,
                 fontWeight: FontWeight.w600,
-                fontFeatures: const <FontFeature>[
-                  FontFeature.tabularFigures(),
-                ],
+                fontFeatures: const <FontFeature>[FontFeature.tabularFigures()],
               ),
             ),
           ),
@@ -662,11 +658,8 @@ class _ChoresCard extends ConsumerWidget {
           await ref.read(sessionProvider.notifier).clear();
         },
       ),
-      data: (TodayPayload payload) => _ChoresCardBody(
-        payload: payload,
-        session: session,
-        l10n: l10n,
-      ),
+      data: (TodayPayload payload) =>
+          _ChoresCardBody(payload: payload, session: session, l10n: l10n),
     );
   }
 }
@@ -684,11 +677,12 @@ class _ChoresCardBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final int done =
-        payload.chores.where((TodayChore c) => c.completedToday).length;
+    final int done = payload.chores
+        .where((TodayChore c) => c.completedToday)
+        .length;
     final int total = payload.chores.length;
     final AsyncValue<MembersResult> membersAsync = ref.watch(membersProvider);
-    final bool isAdmin = membersAsync.valueOrNull?.isAdmin ?? false;
+    final bool isAdmin = membersAsync.value?.isAdmin ?? false;
 
     return Card(
       child: Padding(
@@ -726,11 +720,8 @@ class _ChoresCardBody extends ConsumerWidget {
               _EmptyState(message: l10n.homeNoChores)
             else
               ...payload.chores.map(
-                (TodayChore chore) => _ChoreRow(
-                  chore: chore,
-                  session: session,
-                  l10n: l10n,
-                ),
+                (TodayChore chore) =>
+                    _ChoreRow(chore: chore, session: session, l10n: l10n),
               ),
           ],
         ),
@@ -790,11 +781,9 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
     StarBurstOverlay.show(context, center);
 
     try {
-      final ChoreCompletionResult result =
-          await ref.read(mutationsServiceProvider).completeChore(
-                session: widget.session,
-                id: widget.chore.id,
-              );
+      final ChoreCompletionResult result = await ref
+          .read(mutationsServiceProvider)
+          .completeChore(session: widget.session, id: widget.chore.id);
       if (!mounted) {
         return;
       }
@@ -873,10 +862,9 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
     });
 
     try {
-      await ref.read(mutationsServiceProvider).undoChoreCompletion(
-            session: widget.session,
-            id: widget.chore.id,
-          );
+      await ref
+          .read(mutationsServiceProvider)
+          .undoChoreCompletion(session: widget.session, id: widget.chore.id);
       if (!mounted) {
         return;
       }
@@ -915,8 +903,9 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
   @override
   Widget build(BuildContext context) {
     final bool done = _isDone;
-    final Color mutedColor =
-        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
+    final Color mutedColor = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.4);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -931,9 +920,7 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
             ),
             child: Row(
               children: <Widget>[
@@ -949,10 +936,10 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
                   child: Text(
                     widget.chore.title,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: done ? mutedColor : null,
-                          decoration: done ? TextDecoration.lineThrough : null,
-                          decorationColor: mutedColor,
-                        ),
+                      color: done ? mutedColor : null,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                      decorationColor: mutedColor,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -966,10 +953,9 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
                   Icon(
                     Icons.schedule,
                     size: 18,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.4),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
                   )
                 else
                   Text(
@@ -978,36 +964,34 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
                       fontSize: 20,
                       color: done
                           ? const Color(0xFFFFD166)
-                          : Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.3),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                   ),
                 const SizedBox(width: 8),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: done
-                        ? Theme.of(context)
-                            .colorScheme
-                            .outline
-                            .withValues(alpha: 0.3)
+                        ? Theme.of(
+                            context,
+                          ).colorScheme.outline.withValues(alpha: 0.3)
                         : Theme.of(context).colorScheme.primaryContainer,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     widget.l10n.homePointsLabel(widget.chore.points),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: done
-                              ? mutedColor
-                              : Theme.of(context)
-                                  .colorScheme
-                                  .onPrimaryContainer,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12,
-                        ),
+                      color: done
+                          ? mutedColor
+                          : Theme.of(context).colorScheme.onPrimaryContainer,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
                   ),
                 ),
               ],
@@ -1030,10 +1014,8 @@ class StarBurstOverlay {
     final OverlayState overlay = Overlay.of(context);
     late OverlayEntry entry;
     entry = OverlayEntry(
-      builder: (BuildContext ctx) => _StarBurstWidget(
-        center: center,
-        onDone: () => entry.remove(),
-      ),
+      builder: (BuildContext ctx) =>
+          _StarBurstWidget(center: center, onDone: () => entry.remove()),
     );
     overlay.insert(entry);
   }
@@ -1068,14 +1050,16 @@ class _StarBurstWidgetState extends State<_StarBurstWidget>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 600),
-    )..forward().whenComplete(() {
-        if (mounted) {
-          widget.onDone();
-        }
-      });
+    _controller =
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 600),
+          )
+          ..forward().whenComplete(() {
+            if (mounted) {
+              widget.onDone();
+            }
+          });
   }
 
   @override
@@ -1194,10 +1178,9 @@ class _TodosCardBodyState extends ConsumerState<_TodosCardBody> {
     setState(() => _addBusy = true);
 
     try {
-      await ref.read(mutationsServiceProvider).createTodo(
-            session: widget.session,
-            title: title,
-          );
+      await ref
+          .read(mutationsServiceProvider)
+          .createTodo(session: widget.session, title: title);
       if (!mounted) {
         return;
       }
@@ -1305,8 +1288,10 @@ class _AddTodoRow extends StatelessWidget {
             decoration: InputDecoration(
               hintText: l10n.todosAddPlaceholder,
               isDense: true,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 10,
+              ),
             ),
           ),
         ),
@@ -1368,12 +1353,13 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
     });
 
     try {
-      final TodoMutation result =
-          await ref.read(mutationsServiceProvider).toggleTodo(
-                session: widget.session,
-                id: widget.todo.id,
-                done: newDone,
-              );
+      final TodoMutation result = await ref
+          .read(mutationsServiceProvider)
+          .toggleTodo(
+            session: widget.session,
+            id: widget.todo.id,
+            done: newDone,
+          );
       if (!mounted) {
         return;
       }
@@ -1444,10 +1430,9 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
     }
 
     try {
-      await ref.read(mutationsServiceProvider).deleteTodo(
-            session: widget.session,
-            id: widget.todo.id,
-          );
+      await ref
+          .read(mutationsServiceProvider)
+          .deleteTodo(session: widget.session, id: widget.todo.id);
       if (!mounted) {
         return;
       }
@@ -1478,8 +1463,9 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
   @override
   Widget build(BuildContext context) {
     final bool done = _isDone;
-    final Color mutedColor =
-        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
+    final Color mutedColor = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.4);
     final String? duePill = _duePill(widget.todo.dueDate, widget.l10n);
 
     return Padding(
@@ -1496,9 +1482,7 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
             decoration: BoxDecoration(
               color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline,
-              ),
+              border: Border.all(color: Theme.of(context).colorScheme.outline),
             ),
             child: Row(
               children: <Widget>[
@@ -1515,28 +1499,28 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
                               child: SizedBox(
                                 width: 18,
                                 height: 18,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             )
                           : _isQueued
-                              ? Icon(
-                                  Icons.schedule,
-                                  size: 20,
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
-                                      .withValues(alpha: 0.4),
-                                )
-                              : Icon(
-                                  done
-                                      ? Icons.check_circle_rounded
-                                      : Icons.radio_button_unchecked_rounded,
-                                  color: done
-                                      ? mutedColor
-                                      : Theme.of(context).colorScheme.primary,
-                                  size: 24,
-                                ),
+                          ? Icon(
+                              Icons.schedule,
+                              size: 20,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.4),
+                            )
+                          : Icon(
+                              done
+                                  ? Icons.check_circle_rounded
+                                  : Icons.radio_button_unchecked_rounded,
+                              color: done
+                                  ? mutedColor
+                                  : Theme.of(context).colorScheme.primary,
+                              size: 24,
+                            ),
                     ),
                   ),
                 ),
@@ -1548,10 +1532,10 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
                   child: Text(
                     widget.todo.title,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          color: done ? mutedColor : null,
-                          decoration: done ? TextDecoration.lineThrough : null,
-                          decorationColor: mutedColor,
-                        ),
+                      color: done ? mutedColor : null,
+                      decoration: done ? TextDecoration.lineThrough : null,
+                      decorationColor: mutedColor,
+                    ),
                   ),
                 ),
                 if (_isQueued) ...<Widget>[
@@ -1559,12 +1543,11 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
                   Text(
                     AppL10n.of(context).queuedRow,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context)
-                              .colorScheme
-                              .onSurface
-                              .withValues(alpha: 0.4),
-                          fontSize: 11,
-                        ),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.4),
+                      fontSize: 11,
+                    ),
                   ),
                 ] else if (duePill != null) ...<Widget>[
                   const SizedBox(width: 8),
@@ -1596,9 +1579,7 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
       return l10n.homeDueTomorrow;
     }
     if (diff < 0) {
-      return l10n.homeOverdue(
-        DateFormat('EEE d.M').format(dueDate.toLocal()),
-      );
+      return l10n.homeOverdue(DateFormat('EEE d.M').format(dueDate.toLocal()));
     }
     return l10n.homeDueOn(DateFormat('EEE d.M').format(dueDate.toLocal()));
   }
@@ -1666,10 +1647,10 @@ class _DuePill extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: fg,
-              fontWeight: FontWeight.w600,
-              fontSize: 12,
-            ),
+          color: fg,
+          fontWeight: FontWeight.w600,
+          fontSize: 12,
+        ),
       ),
     );
   }
@@ -1737,17 +1718,14 @@ class _NotesCardBody extends StatelessWidget {
                   ),
                   Icon(
                     Icons.chevron_right,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.4),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              ...notes.map(
-                (Note note) => _HomeNoteRow(note: note, l10n: l10n),
-              ),
+              ...notes.map((Note note) => _HomeNoteRow(note: note, l10n: l10n)),
             ],
           ),
         ),
@@ -1773,9 +1751,7 @@ class _HomeNoteRow extends StatelessWidget {
         decoration: BoxDecoration(
           color: accent.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
-          border: Border(
-            left: BorderSide(color: accent, width: 4),
-          ),
+          border: Border(left: BorderSide(color: accent, width: 4)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1791,11 +1767,10 @@ class _HomeNoteRow extends StatelessWidget {
               Text(
                 l10n.notesByAuthor(note.author!.name),
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
               ),
             ],
           ],
@@ -1831,9 +1806,7 @@ class _Greeting extends StatelessWidget {
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.18),
         borderRadius: BorderRadius.circular(24),
-        border: Border(
-          left: BorderSide(color: accent, width: 4),
-        ),
+        border: Border(left: BorderSide(color: accent, width: 4)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1846,11 +1819,10 @@ class _Greeting extends StatelessWidget {
           Text(
             l10n.homeFamily(family),
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: Theme.of(context)
-                      .colorScheme
-                      .onSurface
-                      .withValues(alpha: 0.7),
-                ),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
@@ -1870,11 +1842,8 @@ class _EmptyState extends StatelessWidget {
       child: Text(
         message,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.6),
-            ),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+        ),
       ),
     );
   }
@@ -1898,11 +1867,10 @@ class _NotificationsDeniedHint extends StatelessWidget {
         Text(
           l10n.pushPermissionDeniedHint,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.4),
-              ),
+            color: Theme.of(
+              context,
+            ).colorScheme.onSurface.withValues(alpha: 0.4),
+          ),
         ),
       ],
     );

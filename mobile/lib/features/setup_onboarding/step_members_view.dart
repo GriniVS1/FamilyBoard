@@ -40,19 +40,18 @@ const List<String> _kAccentNames = <String>[
 const int _kMaxMembers = 8;
 
 class _MemberDraftFields {
-  _MemberDraftFields(
-      {required String name, required this.color, required this.emoji})
-      : nameController = TextEditingController(text: name);
+  _MemberDraftFields({
+    required String name,
+    required this.color,
+    required this.emoji,
+  }) : nameController = TextEditingController(text: name);
 
   final TextEditingController nameController;
   String color;
   String emoji;
 
-  SetupMemberDraft toDraft() => SetupMemberDraft(
-        name: nameController.text,
-        color: color,
-        emoji: emoji,
-      );
+  SetupMemberDraft toDraft() =>
+      SetupMemberDraft(name: nameController.text, color: color, emoji: emoji);
 
   void dispose() => nameController.dispose();
 }
@@ -121,20 +120,26 @@ class _StepMembersViewState extends ConsumerState<StepMembersView> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final SetupOnboardingState state =
-        ref.watch(setupOnboardingControllerProvider);
-    final bool hasAnyName = _rows
-        .any((_MemberDraftFields r) => r.nameController.text.trim().isNotEmpty);
+    final SetupOnboardingState state = ref.watch(
+      setupOnboardingControllerProvider,
+    );
+    final bool hasAnyName = _rows.any(
+      (_MemberDraftFields r) => r.nameController.text.trim().isNotEmpty,
+    );
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(l10n.setupMembersTitle,
-              style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            l10n.setupMembersTitle,
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.setupMembersDescription,
-              style: Theme.of(context).textTheme.bodyLarge),
+          Text(
+            l10n.setupMembersDescription,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           const SizedBox(height: 24),
           for (int i = 0; i < _rows.length; i++) ...<Widget>[
             _MemberRow(
@@ -156,10 +161,9 @@ class _StepMembersViewState extends ConsumerState<StepMembersView> {
             const SizedBox(height: 8),
             Text(
               l10n.setupMembersMinError,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: Theme.of(context).colorScheme.error),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           ],
           if (state.error != null) ...<Widget>[
@@ -233,8 +237,10 @@ class _MemberRow extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            Text(l10n.membersEmojiLabel,
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.membersEmojiLabel,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -254,9 +260,9 @@ class _MemberRow extends StatelessWidget {
                       shape: BoxShape.circle,
                       color: selected
                           ? Theme.of(context).colorScheme.primaryContainer
-                          : Theme.of(context)
-                              .colorScheme
-                              .surfaceContainerHighest,
+                          : Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
                       border: Border.all(
                         color: selected
                             ? Theme.of(context).colorScheme.primary
@@ -265,15 +271,17 @@ class _MemberRow extends StatelessWidget {
                       ),
                     ),
                     child: Center(
-                        child:
-                            Text(emoji, style: const TextStyle(fontSize: 20))),
+                      child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                    ),
                   ),
                 );
               }).toList(),
             ),
             const SizedBox(height: 8),
-            Text(l10n.membersColorLabel,
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              l10n.membersColorLabel,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,

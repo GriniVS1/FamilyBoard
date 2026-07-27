@@ -18,10 +18,7 @@ void main() {
         'color': 'sky',
         'emoji': '🧑',
       },
-      'family': <String, Object?>{
-        'id': 'family_1',
-        'name': 'The Family',
-      },
+      'family': <String, Object?>{'id': 'family_1', 'name': 'The Family'},
     });
 
     expect(result.token, equals('raw-device-token'));
@@ -38,11 +35,7 @@ void main() {
     final SetupPinSession result = SetupPinSession.fromJson(<String, Object?>{
       'token': 't',
       'deviceId': 'd',
-      'member': <String, Object?>{
-        'id': 'm',
-        'name': 'Sam',
-        'color': 'mint',
-      },
+      'member': <String, Object?>{'id': 'm', 'name': 'Sam', 'color': 'mint'},
       'family': <String, Object?>{'id': 'f', 'name': 'Fam'},
     });
     expect(result.member.emoji, equals(''));

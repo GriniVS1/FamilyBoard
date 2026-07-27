@@ -39,7 +39,7 @@ class PairRequest {
 
 class PairService {
   PairService({ApiClientFactory? clientFactory})
-      : _clientFactory = clientFactory ?? const ApiClientFactory();
+    : _clientFactory = clientFactory ?? const ApiClientFactory();
 
   final ApiClientFactory _clientFactory;
 
@@ -69,8 +69,8 @@ class PairService {
       if (data is! Map) {
         throw const PairException(PairErrorKind.unknown);
       }
-      final Map<String, Object?> payload =
-          (data as Map<Object?, Object?>).cast<String, Object?>();
+      final Map<String, Object?> payload = (data as Map<Object?, Object?>)
+          .cast<String, Object?>();
       return Session(
         serverUrl: dio.options.baseUrl,
         altUrl: request.altUrl,

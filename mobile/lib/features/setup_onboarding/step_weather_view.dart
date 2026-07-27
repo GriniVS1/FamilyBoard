@@ -52,8 +52,10 @@ class _StepWeatherViewState extends ConsumerState<StepWeatherView> {
       });
       return;
     }
-    _debounce =
-        Timer(const Duration(milliseconds: 350), () => _search(trimmed));
+    _debounce = Timer(
+      const Duration(milliseconds: 350),
+      () => _search(trimmed),
+    );
   }
 
   Future<void> _search(String query) async {
@@ -62,8 +64,9 @@ class _StepWeatherViewState extends ConsumerState<StepWeatherView> {
       _searching = true;
       _searchFailed = false;
     });
-    final SetupOnboardingState state =
-        ref.read(setupOnboardingControllerProvider);
+    final SetupOnboardingState state = ref.read(
+      setupOnboardingControllerProvider,
+    );
     final String? baseUrl = state.baseUrl;
     if (baseUrl == null) {
       return;
@@ -71,8 +74,9 @@ class _StepWeatherViewState extends ConsumerState<StepWeatherView> {
     final String lang =
         ref.read(localePrefProvider).locale?.languageCode ?? 'en';
     try {
-      final List<GeocodeResult> results =
-          await ref.read(setupServiceProvider).geocode(baseUrl, query, lang);
+      final List<GeocodeResult> results = await ref
+          .read(setupServiceProvider)
+          .geocode(baseUrl, query, lang);
       if (requestId != _requestId || !mounted) {
         return;
       }
@@ -134,11 +138,9 @@ class _StepWeatherViewState extends ConsumerState<StepWeatherView> {
     }
 
     setState(() => _localError = null);
-    await ref.read(setupOnboardingControllerProvider.notifier).submitWeather(
-          lat: lat,
-          lon: lon,
-          label: label,
-        );
+    await ref
+        .read(setupOnboardingControllerProvider.notifier)
+        .submitWeather(lat: lat, lon: lon, label: label);
   }
 
   void _skip() {
@@ -148,18 +150,23 @@ class _StepWeatherViewState extends ConsumerState<StepWeatherView> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final SetupOnboardingState state =
-        ref.watch(setupOnboardingControllerProvider);
+    final SetupOnboardingState state = ref.watch(
+      setupOnboardingControllerProvider,
+    );
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(l10n.setupWeatherTitle,
-              style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            l10n.setupWeatherTitle,
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.setupWeatherDescription,
-              style: Theme.of(context).textTheme.bodyLarge),
+          Text(
+            l10n.setupWeatherDescription,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           const SizedBox(height: 24),
           TextField(
             controller: _searchController,
@@ -186,26 +193,27 @@ class _StepWeatherViewState extends ConsumerState<StepWeatherView> {
             Container(
               margin: const EdgeInsets.only(top: 8),
               decoration: BoxDecoration(
-                border:
-                    Border.all(color: Theme.of(context).colorScheme.outline),
+                border: Border.all(
+                  color: Theme.of(context).colorScheme.outline,
+                ),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: _searchFailed
                   ? ListTile(title: Text(l10n.setupWeatherSearchError))
                   : _results.isEmpty && !_searching
-                      ? ListTile(title: Text(l10n.setupWeatherNoResults))
-                      : Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: _results
-                              .map(
-                                (GeocodeResult r) => ListTile(
-                                  leading: const Icon(Icons.place_outlined),
-                                  title: Text(r.displayLabel),
-                                  onTap: () => _pick(r),
-                                ),
-                              )
-                              .toList(),
-                        ),
+                  ? ListTile(title: Text(l10n.setupWeatherNoResults))
+                  : Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: _results
+                          .map(
+                            (GeocodeResult r) => ListTile(
+                              leading: const Icon(Icons.place_outlined),
+                              title: Text(r.displayLabel),
+                              onTap: () => _pick(r),
+                            ),
+                          )
+                          .toList(),
+                    ),
             ),
           const SizedBox(height: 8),
           TextButton.icon(
@@ -223,12 +231,15 @@ class _StepWeatherViewState extends ConsumerState<StepWeatherView> {
                   child: TextField(
                     controller: _latController,
                     keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true, signed: true),
+                      decimal: true,
+                      signed: true,
+                    ),
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
                     ],
                     decoration: InputDecoration(
-                        labelText: l10n.setupWeatherLatitudeLabel),
+                      labelText: l10n.setupWeatherLatitudeLabel,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -236,12 +247,15 @@ class _StepWeatherViewState extends ConsumerState<StepWeatherView> {
                   child: TextField(
                     controller: _lonController,
                     keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true, signed: true),
+                      decimal: true,
+                      signed: true,
+                    ),
                     inputFormatters: <TextInputFormatter>[
                       FilteringTextInputFormatter.allow(RegExp(r'[0-9.\-]')),
                     ],
                     decoration: InputDecoration(
-                        labelText: l10n.setupWeatherLongitudeLabel),
+                      labelText: l10n.setupWeatherLongitudeLabel,
+                    ),
                   ),
                 ),
               ],

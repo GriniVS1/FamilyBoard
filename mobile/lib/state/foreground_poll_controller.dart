@@ -13,14 +13,15 @@ class ForegroundPollController {
     required this.interval,
     required this.onTick,
     Timer Function(Duration interval, void Function() callback)? timerFactory,
-  }) : _timerFactory = timerFactory ??
-            ((Duration d, void Function() cb) =>
-                Timer.periodic(d, (Timer _) => cb()));
+  }) : _timerFactory =
+           timerFactory ??
+           ((Duration d, void Function() cb) =>
+               Timer.periodic(d, (Timer _) => cb()));
 
   final Duration interval;
   final void Function() onTick;
   final Timer Function(Duration interval, void Function() callback)
-      _timerFactory;
+  _timerFactory;
 
   Timer? _timer;
 

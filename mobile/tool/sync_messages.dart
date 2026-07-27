@@ -35,8 +35,8 @@ void main(List<String> args) {
       stderr.writeln('${f.path}: not a JSON object');
       exit(2);
     }
-    final Map<String, Object?> map =
-        (decoded as Map<Object?, Object?>).cast<String, Object?>();
+    final Map<String, Object?> map = (decoded as Map<Object?, Object?>)
+        .cast<String, Object?>();
     keysByLocale[locale] = <String>{
       for (final String k in map.keys)
         if (!k.startsWith('@')) k,
@@ -51,9 +51,11 @@ void main(List<String> args) {
     final Set<String> extra = here.difference(reference);
     if (missing.isNotEmpty || extra.isNotEmpty) {
       ok = false;
-      stderr.writeln('Locale $locale: '
-          'missing=${missing.toList()..sort()}, '
-          'extra=${extra.toList()..sort()}');
+      stderr.writeln(
+        'Locale $locale: '
+        'missing=${missing.toList()..sort()}, '
+        'extra=${extra.toList()..sort()}',
+      );
     }
   }
 

@@ -24,10 +24,7 @@ class MealPlanScreen extends ConsumerStatefulWidget {
 class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
   bool _generateBusy = false;
 
-  Future<void> _onGenerateGrocery(
-    List<MealPlan> plans,
-    AppL10n l10n,
-  ) async {
+  Future<void> _onGenerateGrocery(List<MealPlan> plans, AppL10n l10n) async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext ctx) => AlertDialog(
@@ -56,8 +53,11 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
     }
 
     final DateTime now = DateTime.now();
-    final DateTime weekStart =
-        DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    final DateTime weekStart = DateTime(
+      now.year,
+      now.month,
+      now.day - (now.weekday - 1),
+    );
 
     setState(() => _generateBusy = true);
     try {
@@ -113,10 +113,11 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final AsyncValue<MealPlanResult> mealPlanAsync =
-        ref.watch(mealPlanProvider);
+    final AsyncValue<MealPlanResult> mealPlanAsync = ref.watch(
+      mealPlanProvider,
+    );
 
-    final List<MealPlan>? plans = mealPlanAsync.valueOrNull?.plans;
+    final List<MealPlan>? plans = mealPlanAsync.value?.plans;
     final bool hasPlans = plans != null && plans.isNotEmpty;
 
     return Scaffold(
@@ -144,7 +145,8 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          final List<MealSlot> todayTaken = plans
+          final List<MealSlot> todayTaken =
+              plans
                   ?.where((MealPlan p) {
                     final DateTime now = DateTime.now();
                     return p.date.year == now.year &&
@@ -233,8 +235,10 @@ class _WeekBody extends StatelessWidget {
       rows.add(_DayHeader(date: day, locale: locale));
 
       final List<MealPlan> sorted = List<MealPlan>.from(dayPlans)
-        ..sort((MealPlan a, MealPlan b) =>
-            slotOrder.indexOf(a.slot.index) - slotOrder.indexOf(b.slot.index));
+        ..sort(
+          (MealPlan a, MealPlan b) =>
+              slotOrder.indexOf(a.slot.index) - slotOrder.indexOf(b.slot.index),
+        );
 
       for (final MealPlan plan in sorted) {
         rows.add(_SlotRow(plan: plan, l10n: l10n, dayPlans: sorted));
@@ -267,14 +271,11 @@ class _DayHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.5),
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
-              letterSpacing: 0.8,
-            ),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+          letterSpacing: 0.8,
+        ),
       ),
     );
   }
@@ -307,11 +308,7 @@ class _SlotRowState extends ConsumerState<_SlotRow> {
         .where((MealPlan p) => p.id != widget.plan.id)
         .map((MealPlan p) => p.slot)
         .toList();
-    await showMealPlanEditSheet(
-      context,
-      plan: widget.plan,
-      takenSlots: taken,
-    );
+    await showMealPlanEditSheet(context, plan: widget.plan, takenSlots: taken);
   }
 
   Future<void> _handleLongPress() async {
@@ -410,9 +407,9 @@ class _SlotRowState extends ConsumerState<_SlotRow> {
                   child: Text(
                     _slotLabel(plan.slot, widget.l10n),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
-                          fontSize: 12,
-                        ),
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontSize: 12,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -475,31 +472,28 @@ class _EmptyState extends StatelessWidget {
             Icon(
               Icons.restaurant_menu_outlined,
               size: 64,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.mealPlanEmpty,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.5),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               l10n.mealPlanEmptySubtitle,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.4),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -539,8 +533,8 @@ class _ErrorBody extends StatelessWidget {
             Text(
               isSessionError ? l10n.homeSessionExpired : l10n.mealPlanLoadError,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                color: Theme.of(context).colorScheme.error,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),

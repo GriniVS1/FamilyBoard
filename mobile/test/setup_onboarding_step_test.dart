@@ -55,26 +55,23 @@ void main() {
     );
   });
 
-  test(
-    'skips family + members + weather + pin, resumes at pin '
-    '(this state is never actually reachable in practice — pinSet true '
-    'implies setupComplete true, which the controller checks first — but '
-    'resolveInitialStep itself must still degrade gracefully by falling '
-    'back to the terminal step)',
-    () {
-      expect(
-        resolveInitialStep(
-          _status(
-            familyCreated: true,
-            memberCount: 2,
-            weatherSet: true,
-            pinSet: true,
-          ),
+  test('skips family + members + weather + pin, resumes at pin '
+      '(this state is never actually reachable in practice — pinSet true '
+      'implies setupComplete true, which the controller checks first — but '
+      'resolveInitialStep itself must still degrade gracefully by falling '
+      'back to the terminal step)', () {
+    expect(
+      resolveInitialStep(
+        _status(
+          familyCreated: true,
+          memberCount: 2,
+          weatherSet: true,
+          pinSet: true,
         ),
-        equals(WizardStep.pin),
-      );
-    },
-  );
+      ),
+      equals(WizardStep.pin),
+    );
+  });
 
   test('memberCount 0 means members is not done even if familyCreated', () {
     expect(

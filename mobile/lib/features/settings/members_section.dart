@@ -62,11 +62,8 @@ class _MembersList extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: <Widget>[
         ...result.members.map(
-          (FamilyMember member) => _MemberRow(
-            member: member,
-            isAdmin: isAdmin,
-            l10n: l10n,
-          ),
+          (FamilyMember member) =>
+              _MemberRow(member: member, isAdmin: isAdmin, l10n: l10n),
         ),
         if (isAdmin) ...<Widget>[
           const SizedBox(height: 8),
@@ -80,11 +77,10 @@ class _MembersList extends StatelessWidget {
             Text(
               l10n.membersErrorTooMany,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.5),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
             ),
         ],
       ],
@@ -128,16 +124,18 @@ class _MemberRow extends StatelessWidget {
                 CircleAvatar(
                   radius: 18,
                   backgroundColor: accent.withValues(alpha: 0.3),
-                  child:
-                      Text(member.emoji, style: const TextStyle(fontSize: 18)),
+                  child: Text(
+                    member.emoji,
+                    style: const TextStyle(fontSize: 18),
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     member.name,
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
                 if (member.role == MemberRole.admin) ...<Widget>[
@@ -153,12 +151,10 @@ class _MemberRow extends StatelessWidget {
                     child: Text(
                       l10n.membersRoleAdmin,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onPrimaryContainer,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 12,
-                          ),
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 12,
+                      ),
                     ),
                   ),
                 ],
@@ -166,10 +162,9 @@ class _MemberRow extends StatelessWidget {
                   const SizedBox(width: 4),
                   Icon(
                     Icons.chevron_right,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.4),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ],
               ],

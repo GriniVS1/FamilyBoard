@@ -26,7 +26,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 /// previously denied (handled by [HomeScreen] via WidgetsBindingObserver).
 class FcmService {
   FcmService({ApiClientFactory? clientFactory})
-      : _clientFactory = clientFactory ?? const ApiClientFactory();
+    : _clientFactory = clientFactory ?? const ApiClientFactory();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final ApiClientFactory _clientFactory;
@@ -48,8 +48,8 @@ class FcmService {
 
   /// Returns the current permission status without prompting.
   Future<bool> hasPermission() async {
-    final NotificationSettings settings =
-        await _messaging.getNotificationSettings();
+    final NotificationSettings settings = await _messaging
+        .getNotificationSettings();
     return settings.authorizationStatus == AuthorizationStatus.authorized ||
         settings.authorizationStatus == AuthorizationStatus.provisional;
   }
@@ -107,9 +107,7 @@ class FcmService {
     if (message == null) {
       return null;
     }
-    return NotificationPayload.fromData(
-      message.data.cast<String, String>(),
-    );
+    return NotificationPayload.fromData(message.data.cast<String, String>());
   }
 
   /// Wires a listener for notification taps when the app is in the background
@@ -119,11 +117,7 @@ class FcmService {
     void Function(NotificationPayload payload) onOpen,
   ) {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-      onOpen(
-        NotificationPayload.fromData(
-          message.data.cast<String, String>(),
-        ),
-      );
+      onOpen(NotificationPayload.fromData(message.data.cast<String, String>()));
     });
   }
 }

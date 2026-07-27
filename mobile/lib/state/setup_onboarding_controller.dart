@@ -80,13 +80,13 @@ class SetupOnboardingState {
   });
 
   const SetupOnboardingState.verifying()
-      : phase = OnboardingPhase.verifying,
-        baseUrl = null,
-        altUrl = null,
-        installationId = null,
-        step = WizardStep.family,
-        submitting = false,
-        error = null;
+    : phase = OnboardingPhase.verifying,
+      baseUrl = null,
+      altUrl = null,
+      installationId = null,
+      step = WizardStep.family,
+      submitting = false,
+      error = null;
 
   final OnboardingPhase phase;
 
@@ -176,8 +176,9 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
     String installationId,
   ) async {
     try {
-      final SetupStatus status =
-          await ref.read(setupServiceProvider).fetchStatus(baseUrl);
+      final SetupStatus status = await ref
+          .read(setupServiceProvider)
+          .fetchStatus(baseUrl);
       if (status.setupComplete) {
         state = state.copyWith(
           phase: OnboardingPhase.alreadyConfigured,
@@ -199,31 +200,25 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
   }
 
   Future<bool> submitFamily(String name) => _run(() async {
-        await ref.read(setupServiceProvider).createFamily(state.baseUrl!, name);
-        state = state.copyWith(step: WizardStep.members);
-      });
+    await ref.read(setupServiceProvider).createFamily(state.baseUrl!, name);
+    state = state.copyWith(step: WizardStep.members);
+  });
 
   Future<bool> submitMembers(List<SetupMemberDraft> drafts) => _run(() async {
-        await ref
-            .read(setupServiceProvider)
-            .createMembers(state.baseUrl!, drafts);
-        state = state.copyWith(step: WizardStep.weather);
-      });
+    await ref.read(setupServiceProvider).createMembers(state.baseUrl!, drafts);
+    state = state.copyWith(step: WizardStep.weather);
+  });
 
   Future<bool> submitWeather({
     required double lat,
     required double lon,
     required String label,
-  }) =>
-      _run(() async {
-        await ref.read(setupServiceProvider).setWeather(
-              state.baseUrl!,
-              lat: lat,
-              lon: lon,
-              label: label,
-            );
-        state = state.copyWith(step: WizardStep.pin);
-      });
+  }) => _run(() async {
+    await ref
+        .read(setupServiceProvider)
+        .setWeather(state.baseUrl!, lat: lat, lon: lon, label: label);
+    state = state.copyWith(step: WizardStep.pin);
+  });
 
   /// Mirrors the wall's `StepWeather.onSkip` — weather is optional and does
   /// not gate `setupComplete`.
@@ -240,28 +235,29 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
   /// response doesn't carry one — and gets backfilled by the same post-pair
   /// identity fetch [adoptPairedSession] runs for normal pairing.
   Future<bool> submitPin(String pin) => _run(() async {
-        final String? baseUrl = state.baseUrl;
-        if (baseUrl == null) {
-          throw const SetupException(SetupErrorKind.unknown);
-        }
-        final SetupPinSession result =
-            await ref.read(setupServiceProvider).setPin(
-                  baseUrl,
-                  pin,
-                  deviceName: defaultDeviceName(),
-                  devicePlatform: detectDevicePlatform(),
-                );
-        final Session session = Session(
-          serverUrl: baseUrl,
-          altUrl: state.altUrl,
-          installationId: state.installationId,
-          token: result.token,
-          deviceId: result.deviceId,
-          member: result.member,
-          family: result.family,
+    final String? baseUrl = state.baseUrl;
+    if (baseUrl == null) {
+      throw const SetupException(SetupErrorKind.unknown);
+    }
+    final SetupPinSession result = await ref
+        .read(setupServiceProvider)
+        .setPin(
+          baseUrl,
+          pin,
+          deviceName: defaultDeviceName(),
+          devicePlatform: detectDevicePlatform(),
         );
-        await adoptPairedSession(ref, session);
-      });
+    final Session session = Session(
+      serverUrl: baseUrl,
+      altUrl: state.altUrl,
+      installationId: state.installationId,
+      token: result.token,
+      deviceId: result.deviceId,
+      member: result.member,
+      family: result.family,
+    );
+    await adoptPairedSession(ref, session);
+  });
 
   Future<bool> _run(Future<void> Function() body) async {
     state = state.copyWith(submitting: true, error: null);
@@ -285,7 +281,7 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
 }
 
 final NotifierProvider<SetupOnboardingController, SetupOnboardingState>
-    setupOnboardingControllerProvider =
+setupOnboardingControllerProvider =
     NotifierProvider<SetupOnboardingController, SetupOnboardingState>(
-  SetupOnboardingController.new,
-);
+      SetupOnboardingController.new,
+    );

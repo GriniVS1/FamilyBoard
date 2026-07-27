@@ -45,8 +45,7 @@ class MembersFetchException implements Exception {
 /// [CalendarSetupService] — member administration has no sensible offline
 /// replay story.
 class MembersService {
-  MembersService({required ApiClientFactory clientFactory})
-      : _clientFactory = clientFactory;
+  MembersService({required this._clientFactory});
 
   final ApiClientFactory _clientFactory;
 
@@ -74,7 +73,7 @@ class MembersService {
       body: <String, Object?>{
         'name': name,
         'color': color,
-        if (emoji != null) 'emoji': emoji,
+        'emoji': ?emoji,
         if (role != null) 'role': memberRoleToJson(role),
       },
     );
@@ -95,9 +94,9 @@ class MembersService {
       method: 'PATCH',
       path: '/${Uri.encodeComponent(id)}',
       body: <String, Object?>{
-        if (name != null) 'name': name,
-        if (color != null) 'color': color,
-        if (emoji != null) 'emoji': emoji,
+        'name': ?name,
+        'color': ?color,
+        'emoji': ?emoji,
         if (role != null) 'role': memberRoleToJson(role),
       },
     );

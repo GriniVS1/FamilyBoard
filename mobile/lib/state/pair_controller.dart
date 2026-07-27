@@ -6,22 +6,15 @@ import 'pairing_adoption.dart';
 import 'session_provider.dart';
 
 class PairFormState {
-  const PairFormState({
-    required this.submitting,
-    required this.error,
-  });
+  const PairFormState({required this.submitting, required this.error});
 
-  const PairFormState.idle()
-      : submitting = false,
-        error = null;
+  const PairFormState.idle() : submitting = false, error = null;
 
-  const PairFormState.submitting()
-      : submitting = true,
-        error = null;
+  const PairFormState.submitting() : submitting = true, error = null;
 
   const PairFormState.failed(PairErrorKind kind)
-      : submitting = false,
-        error = kind;
+    : submitting = false,
+      error = kind;
 
   final bool submitting;
   final PairErrorKind? error;

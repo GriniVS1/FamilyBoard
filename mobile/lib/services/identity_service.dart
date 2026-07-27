@@ -39,9 +39,9 @@ class IdentityService {
     ApiClientFactory? clientFactory,
     Duration? connectTimeout,
     Duration? receiveTimeout,
-  })  : _clientFactory = clientFactory ?? const ApiClientFactory(),
-        _connectTimeout = connectTimeout ?? const Duration(seconds: 3),
-        _receiveTimeout = receiveTimeout ?? const Duration(seconds: 3);
+  }) : _clientFactory = clientFactory ?? const ApiClientFactory(),
+       _connectTimeout = connectTimeout ?? const Duration(seconds: 3),
+       _receiveTimeout = receiveTimeout ?? const Duration(seconds: 3);
 
   final ApiClientFactory _clientFactory;
   final Duration _connectTimeout;
@@ -74,8 +74,8 @@ class IdentityService {
     if (body is! Map) {
       return null;
     }
-    final Map<String, Object?> map =
-        (body as Map<Object?, Object?>).cast<String, Object?>();
+    final Map<String, Object?> map = (body as Map<Object?, Object?>)
+        .cast<String, Object?>();
     final Object? nested = map['data'];
     final Map<String, Object?> payload = nested is Map
         ? (nested as Map<Object?, Object?>).cast<String, Object?>()

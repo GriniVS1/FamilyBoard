@@ -11,6 +11,7 @@ import 'dart:async';
 import 'package:familyboard_mobile/state/events_provider.dart';
 import 'package:familyboard_mobile/state/home_range_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeTimer implements Timer {
@@ -109,8 +110,7 @@ void main() {
   });
 
   group('currentHomeRangeProvider midnight rollover', () {
-    test(
-        'watch and read agree before and after a simulated midnight '
+    test('watch and read agree before and after a simulated midnight '
         'rollover — the exact scenario the poll/resume paths depend on', () {
       DateTime now = DateTime(2026, 7, 27, 23, 59);
       void Function()? pendingRollover;
@@ -140,8 +140,9 @@ void main() {
         fireImmediately: true,
       );
 
-      final EventsRange initialWatched =
-          container.read(currentHomeRangeProvider);
+      final EventsRange initialWatched = container.read(
+        currentHomeRangeProvider,
+      );
       expect(initialWatched.from, equals(DateTime(2026, 7, 27)));
 
       // Simulate the poll/resume path: it must read the *same* range the
@@ -155,8 +156,9 @@ void main() {
       expect(pendingRollover, isNotNull);
       pendingRollover!();
 
-      final EventsRange rolledWatched =
-          container.read(currentHomeRangeProvider);
+      final EventsRange rolledWatched = container.read(
+        currentHomeRangeProvider,
+      );
       final EventsRange rolledRead = container.read(currentHomeRangeProvider);
 
       expect(rolledWatched.from, equals(DateTime(2026, 7, 28)));

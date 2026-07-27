@@ -4,23 +4,24 @@ import '../models/session.dart';
 
 class SecureSessionStore {
   SecureSessionStore({FlutterSecureStorage? storage})
-      : _storage = storage ??
-            const FlutterSecureStorage(
-              // `encryptedSharedPreferences` is deprecated in v10 (Jetpack
-              // Security library is deprecated upstream); the plugin's
-              // default AndroidOptions() now uses custom AES-GCM/RSA-OAEP
-              // ciphers and auto-migrates any v9 encryptedSharedPreferences
-              // data in place via `migrateOnAlgorithmChange` (default true)
-              // — no explicit option or code migration needed here.
-              aOptions: AndroidOptions(),
-              iOptions: IOSOptions(
-                // first_unlock_this_device (kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
-                // is non-migratable and excluded from iTunes/Finder backups,
-                // preventing token cloning onto a different device. Background
-                // push/heartbeat still work after first unlock.
-                accessibility: KeychainAccessibility.first_unlock_this_device,
-              ),
-            );
+    : _storage =
+          storage ??
+          const FlutterSecureStorage(
+            // `encryptedSharedPreferences` is deprecated in v10 (Jetpack
+            // Security library is deprecated upstream); the plugin's
+            // default AndroidOptions() now uses custom AES-GCM/RSA-OAEP
+            // ciphers and auto-migrates any v9 encryptedSharedPreferences
+            // data in place via `migrateOnAlgorithmChange` (default true)
+            // — no explicit option or code migration needed here.
+            aOptions: AndroidOptions(),
+            iOptions: IOSOptions(
+              // first_unlock_this_device (kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+              // is non-migratable and excluded from iTunes/Finder backups,
+              // preventing token cloning onto a different device. Background
+              // push/heartbeat still work after first unlock.
+              accessibility: KeychainAccessibility.first_unlock_this_device,
+            ),
+          );
 
   static const String _sessionKey = 'familyboard.session.v1';
 
@@ -54,7 +55,7 @@ class SecureSessionStore {
 /// small preference. Null means "follow the OS locale".
 class LocalePrefStore {
   LocalePrefStore({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   static const String _localeKey = 'familyboard.locale.v1';
 

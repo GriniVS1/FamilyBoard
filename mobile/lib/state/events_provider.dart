@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show FutureProviderFamily;
 
 import '../services/events_service.dart';
 import 'session_provider.dart';
@@ -29,17 +30,17 @@ class EventsRange {
 ///
 /// Returns an [EventsResult] whose [EventsResult.staleAt] is non-null when the
 /// data was served from the disk cache (offline scenario).
-final AutoDisposeFutureProviderFamily<EventsResult, EventsRange>
-    eventsProvider = FutureProvider.autoDispose
-        .family<EventsResult, EventsRange>((Ref ref, EventsRange range) async {
-  final SessionState sessionState = ref.watch(sessionProvider);
-  final session = sessionState.session;
-  if (session == null) {
-    throw const EventsFetchException('No active session');
-  }
-  return ref.watch(eventsServiceProvider).fetchEvents(
-        session: session,
-        from: range.from,
-        to: range.to,
-      );
-});
+final FutureProviderFamily<EventsResult, EventsRange> eventsProvider =
+    FutureProvider.autoDispose.family<EventsResult, EventsRange>((
+      Ref ref,
+      EventsRange range,
+    ) async {
+      final SessionState sessionState = ref.watch(sessionProvider);
+      final session = sessionState.session;
+      if (session == null) {
+        throw const EventsFetchException('No active session');
+      }
+      return ref
+          .watch(eventsServiceProvider)
+          .fetchEvents(session: session, from: range.from, to: range.to);
+    });

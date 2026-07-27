@@ -5,10 +5,10 @@ import 'session_provider.dart';
 
 final FutureProvider<MealPlanResult> mealPlanProvider =
     FutureProvider<MealPlanResult>((Ref ref) async {
-  final SessionState sessionState = ref.watch(sessionProvider);
-  final session = sessionState.session;
-  if (session == null) {
-    throw const MealPlanFetchException('No active session');
-  }
-  return ref.watch(mealPlanServiceProvider).fetchWeek(session);
-});
+      final SessionState sessionState = ref.watch(sessionProvider);
+      final session = sessionState.session;
+      if (session == null) {
+        throw const MealPlanFetchException('No active session');
+      }
+      return ref.watch(mealPlanServiceProvider).fetchWeek(session);
+    });

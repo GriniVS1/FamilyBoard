@@ -61,8 +61,10 @@ class _PairScreenState extends ConsumerState<PairScreen> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: <Widget>[
-            Text(l10n.pairTitle,
-                style: Theme.of(context).textTheme.displaySmall),
+            Text(
+              l10n.pairTitle,
+              style: Theme.of(context).textTheme.displaySmall,
+            ),
             const SizedBox(height: 24),
             QrScannerView(onScanned: _onScanned),
             const Spacer(),
@@ -78,8 +80,10 @@ class _PairScreenState extends ConsumerState<PairScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Text(l10n.pairTitle,
-                  style: Theme.of(context).textTheme.displaySmall),
+              Text(
+                l10n.pairTitle,
+                style: Theme.of(context).textTheme.displaySmall,
+              ),
               const SizedBox(height: 8),
               Text(
                 l10n.pairSubtitle,

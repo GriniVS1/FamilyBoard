@@ -62,7 +62,9 @@ void main() {
       expect(photo.path, equals('/api/photos-stream/p1.jpg'));
       expect(photo.caption, equals('Beach day'));
       expect(
-          photo.uploadedAt, equals(DateTime.parse('2026-07-01T12:00:00.000Z')));
+        photo.uploadedAt,
+        equals(DateTime.parse('2026-07-01T12:00:00.000Z')),
+      );
     });
 
     test('treats an empty caption as null', () {

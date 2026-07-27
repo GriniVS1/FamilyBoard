@@ -42,8 +42,9 @@ class TodayEvent {
     return TodayEvent(
       id: json['id']! as String,
       title: json['title']! as String,
-      description:
-          json['description'] is String ? json['description']! as String : null,
+      description: json['description'] is String
+          ? json['description']! as String
+          : null,
       location: json['location'] is String ? json['location']! as String : null,
       startsAt: startsRaw is String ? DateTime.parse(startsRaw) : null,
       endsAt: endsRaw is String ? DateTime.parse(endsRaw) : null,
@@ -136,30 +137,39 @@ class TodayPayload {
     final Map<String, Object?> todayJson =
         (json['today']! as Map<Object?, Object?>).cast<String, Object?>();
 
-    final List<Object?> eventsRaw =
-        json['events'] is List ? json['events']! as List<Object?> : <Object?>[];
-    final List<Object?> choresRaw =
-        json['chores'] is List ? json['chores']! as List<Object?> : <Object?>[];
-    final List<Object?> todosRaw =
-        json['todos'] is List ? json['todos']! as List<Object?> : <Object?>[];
+    final List<Object?> eventsRaw = json['events'] is List
+        ? json['events']! as List<Object?>
+        : <Object?>[];
+    final List<Object?> choresRaw = json['chores'] is List
+        ? json['chores']! as List<Object?>
+        : <Object?>[];
+    final List<Object?> todosRaw = json['todos'] is List
+        ? json['todos']! as List<Object?>
+        : <Object?>[];
 
     return TodayPayload(
       member: TodayMember.fromJson(memberJson),
       todayIso: todayJson['iso']! as String,
       events: eventsRaw
           .whereType<Map<Object?, Object?>>()
-          .map((Map<Object?, Object?> e) =>
-              TodayEvent.fromJson(e.cast<String, Object?>()))
+          .map(
+            (Map<Object?, Object?> e) =>
+                TodayEvent.fromJson(e.cast<String, Object?>()),
+          )
           .toList(),
       chores: choresRaw
           .whereType<Map<Object?, Object?>>()
-          .map((Map<Object?, Object?> c) =>
-              TodayChore.fromJson(c.cast<String, Object?>()))
+          .map(
+            (Map<Object?, Object?> c) =>
+                TodayChore.fromJson(c.cast<String, Object?>()),
+          )
           .toList(),
       todos: todosRaw
           .whereType<Map<Object?, Object?>>()
-          .map((Map<Object?, Object?> t) =>
-              TodayTodo.fromJson(t.cast<String, Object?>()))
+          .map(
+            (Map<Object?, Object?> t) =>
+                TodayTodo.fromJson(t.cast<String, Object?>()),
+          )
           .toList(),
       staleAt: staleAt,
     );

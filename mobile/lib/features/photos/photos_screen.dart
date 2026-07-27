@@ -66,7 +66,9 @@ class _PhotosScreenState extends ConsumerState<PhotosScreen> {
         _currentFileProgress = 0;
       });
       try {
-        final Photo photo = await ref.read(photosServiceProvider).uploadPhoto(
+        final Photo photo = await ref
+            .read(photosServiceProvider)
+            .uploadPhoto(
               session: session,
               filePath: file.path,
               onSendProgress: (int sent, int total) {
@@ -104,7 +106,10 @@ class _PhotosScreenState extends ConsumerState<PhotosScreen> {
     ref.invalidate(photosProvider);
     _optimisticUploaded.clear();
     _reportFailures(
-        tooLarge: tooLarge, unsupported: unsupported, generic: generic);
+      tooLarge: tooLarge,
+      unsupported: unsupported,
+      generic: generic,
+    );
   }
 
   void _reportFailures({
@@ -227,8 +232,9 @@ class _PhotosScreenState extends ConsumerState<PhotosScreen> {
                       data: (List<Photo> photos) {
                         final List<Photo> merged = <Photo>[
                           ...photos,
-                          ..._optimisticUploaded.where((Photo p) =>
-                              !photos.any((Photo q) => q.id == p.id)),
+                          ..._optimisticUploaded.where(
+                            (Photo p) => !photos.any((Photo q) => q.id == p.id),
+                          ),
                         ];
                         return _PhotosBody(
                           photos: merged,
@@ -391,27 +397,26 @@ class _PhotoTile extends StatelessWidget {
               fit: BoxFit.cover,
               loadingBuilder:
                   (BuildContext ctx, Widget child, ImageChunkEvent? progress) {
-                if (progress == null) {
-                  return child;
-                }
-                return const Center(
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                );
-              },
+                    if (progress == null) {
+                      return child;
+                    }
+                    return const Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      ),
+                    );
+                  },
               errorBuilder: (BuildContext ctx, Object error, StackTrace? st) {
                 return Center(
                   child: Tooltip(
                     message: l10n.photosImageLoadError,
                     child: Icon(
                       Icons.broken_image_outlined,
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.3),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.3),
                     ),
                   ),
                 );
@@ -458,31 +463,28 @@ class _EmptyState extends StatelessWidget {
             Icon(
               Icons.photo_library_outlined,
               size: 64,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.photosEmpty,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.5),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               l10n.photosEmptySubtitle,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.4),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -524,8 +526,8 @@ class _ErrorBody extends StatelessWidget {
                   ? l10n.homeSessionExpired
                   : l10n.photosErrorGeneric,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                color: Theme.of(context).colorScheme.error,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),

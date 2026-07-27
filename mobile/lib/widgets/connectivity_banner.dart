@@ -51,9 +51,9 @@ class _OfflineBanner extends StatelessWidget {
       child: Text(
         AppL10n.of(context).offlineBanner,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: colors.onErrorContainer,
-              fontWeight: FontWeight.w600,
-            ),
+          color: colors.onErrorContainer,
+          fontWeight: FontWeight.w600,
+        ),
         textAlign: TextAlign.center,
       ),
     );

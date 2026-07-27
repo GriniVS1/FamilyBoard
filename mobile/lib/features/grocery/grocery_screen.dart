@@ -107,8 +107,9 @@ class _GroceryScreenState extends ConsumerState<GroceryScreen> {
       return;
     }
     try {
-      final int deleted =
-          await ref.read(groceryServiceProvider).clearChecked(session);
+      final int deleted = await ref
+          .read(groceryServiceProvider)
+          .clearChecked(session);
       if (!mounted) {
         return;
       }
@@ -148,8 +149,7 @@ class _GroceryScreenState extends ConsumerState<GroceryScreen> {
     final AsyncValue<GroceryResult> groceryAsync = ref.watch(groceryProvider);
 
     final bool hasChecked =
-        groceryAsync.valueOrNull?.items.any((GroceryItem i) => i.checked) ??
-            false;
+        groceryAsync.value?.items.any((GroceryItem i) => i.checked) ?? false;
 
     return Scaffold(
       appBar: AppBar(
@@ -308,8 +308,9 @@ class _GroceryBody extends StatelessWidget {
       grouped.putIfAbsent(item.category, () => <GroceryItem>[]).add(item);
     }
 
-    final List<GroceryCategory> presentCategories =
-        _categoryOrder.where(grouped.containsKey).toList();
+    final List<GroceryCategory> presentCategories = _categoryOrder
+        .where(grouped.containsKey)
+        .toList();
 
     return RefreshIndicator(
       onRefresh: onRefresh,
@@ -408,14 +409,11 @@ class _CategoryHeader extends StatelessWidget {
       child: Text(
         _label(l10n).toUpperCase(),
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.5),
-              fontWeight: FontWeight.w700,
-              fontSize: 11,
-              letterSpacing: 0.8,
-            ),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+          fontWeight: FontWeight.w700,
+          fontSize: 11,
+          letterSpacing: 0.8,
+        ),
       ),
     );
   }
@@ -459,11 +457,9 @@ class _GroceryRowState extends ConsumerState<_GroceryRow> {
       _optimisticOverride = true;
     });
     try {
-      await ref.read(groceryServiceProvider).patch(
-            session,
-            id: widget.item.id,
-            checked: newChecked,
-          );
+      await ref
+          .read(groceryServiceProvider)
+          .patch(session, id: widget.item.id, checked: newChecked);
       if (!mounted) {
         return;
       }
@@ -563,8 +559,9 @@ class _GroceryRowState extends ConsumerState<_GroceryRow> {
   @override
   Widget build(BuildContext context) {
     final bool checked = _isChecked;
-    final Color mutedColor =
-        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.4);
+    final Color mutedColor = Theme.of(
+      context,
+    ).colorScheme.onSurface.withValues(alpha: 0.4);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
@@ -578,9 +575,7 @@ class _GroceryRowState extends ConsumerState<_GroceryRow> {
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            border: Border.all(color: Theme.of(context).colorScheme.outline),
           ),
           child: Row(
             children: <Widget>[
@@ -616,10 +611,10 @@ class _GroceryRowState extends ConsumerState<_GroceryRow> {
                 child: Text(
                   widget.item.displayLabel,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: checked ? mutedColor : null,
-                        decoration: checked ? TextDecoration.lineThrough : null,
-                        decorationColor: mutedColor,
-                      ),
+                    color: checked ? mutedColor : null,
+                    decoration: checked ? TextDecoration.lineThrough : null,
+                    decorationColor: mutedColor,
+                  ),
                 ),
               ),
             ],
@@ -650,31 +645,28 @@ class _EmptyState extends StatelessWidget {
             Icon(
               Icons.shopping_cart_outlined,
               size: 64,
-              color: Theme.of(context)
-                  .colorScheme
-                  .onSurface
-                  .withValues(alpha: 0.2),
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 16),
             Text(
               l10n.groceryEmpty,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.5),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.5),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               l10n.groceryEmptySubtitle,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .onSurface
-                        .withValues(alpha: 0.4),
-                  ),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -714,8 +706,8 @@ class _ErrorBody extends StatelessWidget {
             Text(
               isSessionError ? l10n.homeSessionExpired : l10n.homeLoadError,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                color: Theme.of(context).colorScheme.error,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 16),

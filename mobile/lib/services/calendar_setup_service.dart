@@ -51,7 +51,7 @@ CalendarSetupErrorCode _mapErrorCode(String? code) {
 /// calls never queue offline (there is nothing sensible to replay).
 class CalendarSetupService {
   CalendarSetupService({ApiClientFactory? clientFactory})
-      : _clientFactory = clientFactory ?? const ApiClientFactory();
+    : _clientFactory = clientFactory ?? const ApiClientFactory();
 
   final ApiClientFactory _clientFactory;
 
@@ -66,8 +66,10 @@ class CalendarSetupService {
   }
 
   Future<String> connectMicrosoft(Session session) async {
-    final Response<Object?> response =
-        await _post(session, '/connect-microsoft');
+    final Response<Object?> response = await _post(
+      session,
+      '/connect-microsoft',
+    );
     return _extractAuthorizeUrl(response);
   }
 
@@ -95,8 +97,10 @@ class CalendarSetupService {
     }
     return calendarsRaw
         .whereType<Map<Object?, Object?>>()
-        .map((Map<Object?, Object?> m) =>
-            CaldavCalendarOption.fromJson(m.cast<String, Object?>()))
+        .map(
+          (Map<Object?, Object?> m) =>
+              CaldavCalendarOption.fromJson(m.cast<String, Object?>()),
+        )
         .toList();
   }
 

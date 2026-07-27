@@ -24,7 +24,7 @@ Map<String, Object?> buildCreateChorePayload({
     'title': title,
     if (icon != null && icon.isNotEmpty) 'icon': icon,
     'points': points,
-    if (rrule != null) 'rrule': rrule,
+    'rrule': ?rrule,
   };
 }
 
@@ -44,9 +44,8 @@ Map<String, Object?> buildCreateChorePayload({
 class MutationsService {
   MutationsService({
     required WriteQueueService writeQueueService,
-    required ApiClientFactory clientFactory,
-  })  : _queue = writeQueueService,
-        _clientFactory = clientFactory;
+    required this._clientFactory,
+  }) : _queue = writeQueueService;
 
   final WriteQueueService _queue;
   final ApiClientFactory _clientFactory;

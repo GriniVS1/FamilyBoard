@@ -162,9 +162,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       );
     }
     if (_lastSeenAt != null) {
-      final String formatted =
-          DateFormat.Hm(Localizations.localeOf(context).toString())
-              .format(_lastSeenAt!.toLocal());
+      final String formatted = DateFormat.Hm(
+        Localizations.localeOf(context).toString(),
+      ).format(_lastSeenAt!.toLocal());
       return Text(
         l10n.homeHeartbeatOk(formatted),
         style: Theme.of(context).textTheme.bodyMedium,
@@ -183,8 +183,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       _heartbeatError = null;
     });
     try {
-      final HeartbeatResult result =
-          await ref.read(heartbeatServiceProvider).send(session);
+      final HeartbeatResult result = await ref
+          .read(heartbeatServiceProvider)
+          .send(session);
       if (!mounted) {
         return;
       }
@@ -241,8 +242,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   // ---------------------------------------------------------------------------
 
   Widget _buildCalendarCard(AppL10n l10n) {
-    final AsyncValue<CalendarStatus> statusAsync =
-        ref.watch(calendarStatusProvider);
+    final AsyncValue<CalendarStatus> statusAsync = ref.watch(
+      calendarStatusProvider,
+    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -265,9 +267,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
   Widget _buildCalendarError(AppL10n l10n, Object error) {
     if (error is CalendarSetupSessionRevokedException) {
       // Rebuilds will resolve to /pair once the session provider updates.
-      Future<void>.microtask(
-        () => ref.read(sessionProvider.notifier).clear(),
-      );
+      Future<void>.microtask(() => ref.read(sessionProvider.notifier).clear());
       return const SizedBox.shrink();
     }
     return Column(
@@ -409,8 +409,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
         ],
         const SizedBox(height: 16),
         FilledButton(
-          onPressed:
-              _caldavBusy || !_caldavFormValid() ? null : _submitCaldavForm,
+          onPressed: _caldavBusy || !_caldavFormValid()
+              ? null
+              : _submitCaldavForm,
           child: _caldavBusy
               ? const SizedBox(
                   width: 20,
@@ -476,8 +477,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     }
     setState(() => _providerActionBusy = true);
     try {
-      final String url =
-          await ref.read(calendarSetupServiceProvider).connectGoogle(session);
+      final String url = await ref
+          .read(calendarSetupServiceProvider)
+          .connectGoogle(session);
       await _launchAuthorizeUrl(url);
     } on CalendarSetupSessionRevokedException {
       await ref.read(sessionProvider.notifier).clear();
@@ -542,16 +544,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
       _caldavError = null;
     });
     try {
-      final List<CaldavCalendarOption> calendars =
-          await ref.read(calendarSetupServiceProvider).connectCaldav(
-                session,
-                serverUrl: _preset == CaldavPreset.custom
-                    ? _serverUrlController.text.trim()
-                    : null,
-                username: _usernameController.text.trim(),
-                password: _passwordController.text,
-                preset: _preset,
-              );
+      final List<CaldavCalendarOption> calendars = await ref
+          .read(calendarSetupServiceProvider)
+          .connectCaldav(
+            session,
+            serverUrl: _preset == CaldavPreset.custom
+                ? _serverUrlController.text.trim()
+                : null,
+            username: _usernameController.text.trim(),
+            password: _passwordController.text,
+            preset: _preset,
+          );
       if (!mounted) {
         return;
       }
@@ -577,7 +580,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen>
     }
     setState(() => _caldavBusy = true);
     try {
-      await ref.read(calendarSetupServiceProvider).selectCaldavCalendar(
+      await ref
+          .read(calendarSetupServiceProvider)
+          .selectCaldavCalendar(
             session,
             calendarUrl: option.url,
             calendarName: option.name,
