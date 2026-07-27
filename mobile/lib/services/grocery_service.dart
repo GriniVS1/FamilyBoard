@@ -45,12 +45,11 @@ class GroceryResult {
 /// [WriteQueueService] so they queue on network failure and replay on reconnect.
 class GroceryService {
   GroceryService({
-    required ApiClientFactory clientFactory,
+    required this._clientFactory,
     required CacheDb cacheDb,
     required WriteQueueService writeQueueService,
-  })  : _clientFactory = clientFactory,
-        _cached = CachedGet(cacheDb),
-        _queue = writeQueueService;
+  }) : _cached = CachedGet(cacheDb),
+       _queue = writeQueueService;
 
   final ApiClientFactory _clientFactory;
   final CachedGet _cached;
@@ -75,8 +74,10 @@ class GroceryService {
     }
     final List<GroceryItem> items = rawItems
         .whereType<Map<Object?, Object?>>()
-        .map((Map<Object?, Object?> m) =>
-            GroceryItem.fromJson(m.cast<String, Object?>()))
+        .map(
+          (Map<Object?, Object?> m) =>
+              GroceryItem.fromJson(m.cast<String, Object?>()),
+        )
         .toList();
     return GroceryResult(items: items, staleAt: result.cachedAt);
   }
@@ -91,7 +92,7 @@ class GroceryService {
   }) async {
     final Map<String, Object?> body = <String, Object?>{
       'name': name,
-      if (quantity != null) 'quantity': quantity,
+      'quantity': ?quantity,
       if (unit != null && unit.isNotEmpty) 'unit': unit,
       if (category != null && category != GroceryCategory.uncategorized)
         'category': category.name,
@@ -135,10 +136,10 @@ class GroceryService {
     GroceryCategory? category,
   }) async {
     final Map<String, Object?> body = <String, Object?>{
-      if (checked != null) 'checked': checked,
-      if (name != null) 'name': name,
-      if (quantity != null) 'quantity': quantity,
-      if (unit != null) 'unit': unit,
+      'checked': ?checked,
+      'name': ?name,
+      'quantity': ?quantity,
+      'unit': ?unit,
       if (category != null && category != GroceryCategory.uncategorized)
         'category': category.name,
     };

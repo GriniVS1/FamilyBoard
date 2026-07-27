@@ -49,8 +49,9 @@ class MobileEvent {
     return MobileEvent(
       id: json['id']! as String,
       title: json['title']! as String,
-      description:
-          json['description'] is String ? json['description']! as String : null,
+      description: json['description'] is String
+          ? json['description']! as String
+          : null,
       location: json['location'] is String ? json['location']! as String : null,
       startsAt: startsRaw is String ? DateTime.parse(startsRaw) : null,
       endsAt: endsRaw is String ? DateTime.parse(endsRaw) : null,

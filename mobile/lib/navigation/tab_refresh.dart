@@ -12,7 +12,7 @@
 // — invalidation is a no-op until something re-reads the provider — and
 // targeted: only the tab actually being switched *to* gets refreshed, not
 // every branch on every switch.
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show ProviderOrFamily;
 
 import '../state/data_refresh.dart';
 import '../state/events_provider.dart';

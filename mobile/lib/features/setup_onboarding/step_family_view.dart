@@ -34,19 +34,24 @@ class _StepFamilyViewState extends ConsumerState<StepFamilyView> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final SetupOnboardingState state =
-        ref.watch(setupOnboardingControllerProvider);
+    final SetupOnboardingState state = ref.watch(
+      setupOnboardingControllerProvider,
+    );
     final bool canSubmit = _nameController.text.trim().isNotEmpty;
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(l10n.setupFamilyTitle,
-              style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            l10n.setupFamilyTitle,
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.setupFamilyDescription,
-              style: Theme.of(context).textTheme.bodyLarge),
+          Text(
+            l10n.setupFamilyDescription,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           const SizedBox(height: 24),
           TextField(
             controller: _nameController,

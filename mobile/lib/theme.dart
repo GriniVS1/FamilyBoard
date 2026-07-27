@@ -56,8 +56,11 @@ class FamilyBoardTheme {
       brightness: Brightness.dark,
       surface: _surfaceDark,
     ).copyWith(onSurface: _inkDark, outline: const Color(0xFF2A2E40));
-    return _base(scheme,
-        background: _bgDark, mutedText: const Color(0xFF9CA3AF));
+    return _base(
+      scheme,
+      background: _bgDark,
+      mutedText: const Color(0xFF9CA3AF),
+    );
   }
 
   static ThemeData _base(
@@ -75,17 +78,11 @@ class FamilyBoardTheme {
           fontWeight: FontWeight.w700,
           letterSpacing: -0.5,
         ),
-        headlineSmall: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w600,
-        ),
+        headlineSmall: TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
         titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         bodyLarge: TextStyle(fontSize: 16, height: 1.4),
         bodyMedium: TextStyle(fontSize: 14, height: 1.4),
-      ).apply(
-        bodyColor: scheme.onSurface,
-        displayColor: scheme.onSurface,
-      ),
+      ).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface),
       cardTheme: CardThemeData(
         elevation: 0,
         color: scheme.surface,
@@ -116,8 +113,10 @@ class FamilyBoardTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: scheme.surface,
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: scheme.outline),

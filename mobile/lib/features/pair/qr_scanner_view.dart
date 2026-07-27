@@ -142,21 +142,19 @@ class _QrScannerViewState extends State<QrScannerView> {
             child: MobileScanner(
               controller: _controller,
               onDetect: _onDetect,
-              errorBuilder: (
-                BuildContext context,
-                MobileScannerException error,
-              ) {
-                return Container(
-                  color: Theme.of(context).colorScheme.errorContainer,
-                  padding: const EdgeInsets.all(16),
-                  child: Center(
-                    child: Text(
-                      error.errorDetails?.message ?? 'Scanner error',
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                );
-              },
+              errorBuilder:
+                  (BuildContext context, MobileScannerException error) {
+                    return Container(
+                      color: Theme.of(context).colorScheme.errorContainer,
+                      padding: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Text(
+                          error.errorDetails?.message ?? 'Scanner error',
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    );
+                  },
             ),
           ),
         ),

@@ -7,8 +7,9 @@ import 'session_provider.dart';
 /// item). Distinct from [todayProvider]'s member-scoped `todos`.
 ///
 /// Callers can trigger a manual refresh via `ref.invalidate(todosProvider)`.
-final FutureProvider<TodosResult> todosProvider =
-    FutureProvider<TodosResult>((Ref ref) async {
+final FutureProvider<TodosResult> todosProvider = FutureProvider<TodosResult>((
+  Ref ref,
+) async {
   final SessionState sessionState = ref.watch(sessionProvider);
   final session = sessionState.session;
   if (session == null) {

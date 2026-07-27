@@ -45,12 +45,11 @@ class NotesResult {
 /// [WriteQueueService] so they queue on network failure and replay on reconnect.
 class NotesService {
   NotesService({
-    required ApiClientFactory clientFactory,
+    required this._clientFactory,
     required CacheDb cacheDb,
     required WriteQueueService writeQueueService,
-  })  : _clientFactory = clientFactory,
-        _cached = CachedGet(cacheDb),
-        _queue = writeQueueService;
+  }) : _cached = CachedGet(cacheDb),
+       _queue = writeQueueService;
 
   final ApiClientFactory _clientFactory;
   final CachedGet _cached;
@@ -75,9 +74,11 @@ class NotesService {
     }
     final List<Note> notes = notesRaw
         .cast<Object?>()
-        .map((Object? e) => Note.fromJson(
-              (e as Map<Object?, Object?>).cast<String, Object?>(),
-            ))
+        .map(
+          (Object? e) => Note.fromJson(
+            (e as Map<Object?, Object?>).cast<String, Object?>(),
+          ),
+        )
         .toList();
     return NotesResult(notes: notes, staleAt: result.cachedAt);
   }
@@ -126,9 +127,9 @@ class NotesService {
     bool? pinned,
   }) async {
     final Map<String, Object?> payload = <String, Object?>{
-      if (body != null) 'body': body,
-      if (color != null) 'color': color,
-      if (pinned != null) 'pinned': pinned,
+      'body': ?body,
+      'color': ?color,
+      'pinned': ?pinned,
     };
     final Response<Object?> response = await _sendOrQueue(
       session: session,

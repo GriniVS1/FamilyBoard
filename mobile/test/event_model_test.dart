@@ -6,11 +6,11 @@ import 'package:familyboard_mobile/models/event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Map<String, Object?> _memberJson() => <String, Object?>{
-      'id': 'm1',
-      'name': 'Mia',
-      'color': 'sky',
-      'emoji': '🦊',
-    };
+  'id': 'm1',
+  'name': 'Mia',
+  'color': 'sky',
+  'emoji': '🦊',
+};
 
 void main() {
   test('MobileEvent.isRecurringInstance detects the synthetic id shape', () {

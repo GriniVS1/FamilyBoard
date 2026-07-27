@@ -18,5 +18,20 @@ void main() async {
   // Must be registered before runApp so the background isolate can find it.
   FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-  runApp(const ProviderScope(child: FamilyBoardApp()));
+  runApp(
+    ProviderScope(
+      // Riverpod 3 auto-retries failed providers by default (exponential
+      // backoff, up to 10 attempts) — see `ProviderContainer.defaultRetry`.
+      // That would silently change our error-card semantics: every
+      // FutureProvider here throws a typed `*FetchException`/`DioException`
+      // when the wall is unreachable, and those aren't `Error`s or
+      // `ProviderException`s, so the default retry would kick in and make
+      // error cards flicker/loop while offline instead of surfacing
+      // immediately and waiting for an explicit `ref.invalidate` (pull to
+      // refresh, tab switch, foreground poll). Disable it globally to keep
+      // the pre-3.0 "fail once, stay failed until invalidated" behavior.
+      retry: (int retryCount, Object error) => null,
+      child: const FamilyBoardApp(),
+    ),
+  );
 }

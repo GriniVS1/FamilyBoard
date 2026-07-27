@@ -37,14 +37,7 @@ final Response<Object?> _queuedResponse = Response<Object?>(
 );
 
 /// Backoff delays in milliseconds, capped at 5 minutes.
-const List<int> _backoffMs = <int>[
-  1000,
-  4000,
-  16000,
-  64000,
-  256000,
-  300000,
-];
+const List<int> _backoffMs = <int>[1000, 4000, 16000, 64000, 256000, 300000];
 
 int _backoffForRetry(int retryCount) {
   final int index = retryCount.clamp(0, _backoffMs.length - 1);
@@ -63,11 +56,7 @@ bool _isNetworkFailure(DioException e) {
 /// Orchestrates the write queue: tries a mutation live; on network failure,
 /// enqueues it; on reconnect, replays queued items FIFO.
 class WriteQueueService {
-  WriteQueueService({
-    required CacheDb db,
-    required ApiClientFactory clientFactory,
-  })  : _db = db,
-        _clientFactory = clientFactory;
+  WriteQueueService({required this._db, required this._clientFactory});
 
   final CacheDb _db;
   final ApiClientFactory _clientFactory;
@@ -134,8 +123,10 @@ class WriteQueueService {
   /// replayed items.
   Future<int> replay(Session session) async {
     final String memberId = session.member.id;
-    final List<QueuedWrite> batch =
-        await _db.nextBatch(memberId: memberId, limit: 20);
+    final List<QueuedWrite> batch = await _db.nextBatch(
+      memberId: memberId,
+      limit: 20,
+    );
     if (batch.isEmpty) return 0;
 
     final Dio dio = _clientFactory.authenticated(session);
@@ -198,10 +189,7 @@ class WriteQueueService {
         // Unexpected Dio error (e.g. bad certificate): treat as permanent.
         await _db.remove(item.id);
         _failureController.add(
-          ReplayFailure(
-            path: item.path,
-            message: e.message ?? 'Unknown error',
-          ),
+          ReplayFailure(path: item.path, message: e.message ?? 'Unknown error'),
         );
       }
     }

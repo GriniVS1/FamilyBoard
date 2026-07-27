@@ -201,10 +201,9 @@ class _MemberEditSheetState extends ConsumerState<MemberEditSheet> {
 
     setState(() => _busy = true);
     try {
-      await ref.read(membersServiceProvider).deleteMember(
-            session: session,
-            id: widget.member!.id,
-          );
+      await ref
+          .read(membersServiceProvider)
+          .deleteMember(session: session, id: widget.member!.id);
       if (!mounted) {
         return;
       }
@@ -295,8 +294,9 @@ class _MemberEditSheetState extends ConsumerState<MemberEditSheet> {
             const SizedBox(height: 8),
             _EmojiGrid(
               selected: _emoji,
-              onChanged:
-                  _busy ? null : (String e) => setState(() => _emoji = e),
+              onChanged: _busy
+                  ? null
+                  : (String e) => setState(() => _emoji = e),
             ),
             const SizedBox(height: 16),
             Text(
@@ -306,8 +306,9 @@ class _MemberEditSheetState extends ConsumerState<MemberEditSheet> {
             const SizedBox(height: 8),
             _ColorRow(
               selected: _color,
-              onChanged:
-                  _busy ? null : (String c) => setState(() => _color = c),
+              onChanged: _busy
+                  ? null
+                  : (String c) => setState(() => _color = c),
             ),
             const SizedBox(height: 16),
             Row(
@@ -333,7 +334,7 @@ class _MemberEditSheetState extends ConsumerState<MemberEditSheet> {
                   onSelectionChanged: _busy
                       ? null
                       : (Set<MemberRole> sel) =>
-                          setState(() => _role = sel.first),
+                            setState(() => _role = sel.first),
                 ),
               ],
             ),

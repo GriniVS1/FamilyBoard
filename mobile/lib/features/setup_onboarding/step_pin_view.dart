@@ -47,8 +47,9 @@ class _StepPinViewState extends ConsumerState<StepPinView> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final SetupOnboardingState state =
-        ref.watch(setupOnboardingControllerProvider);
+    final SetupOnboardingState state = ref.watch(
+      setupOnboardingControllerProvider,
+    );
     final List<TextInputFormatter> digitsOnly = <TextInputFormatter>[
       FilteringTextInputFormatter.digitsOnly,
       LengthLimitingTextInputFormatter(6),
@@ -58,11 +59,15 @@ class _StepPinViewState extends ConsumerState<StepPinView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(l10n.setupPinTitle,
-              style: Theme.of(context).textTheme.displaySmall),
+          Text(
+            l10n.setupPinTitle,
+            style: Theme.of(context).textTheme.displaySmall,
+          ),
           const SizedBox(height: 8),
-          Text(l10n.setupPinDescription,
-              style: Theme.of(context).textTheme.bodyLarge),
+          Text(
+            l10n.setupPinDescription,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
           const SizedBox(height: 24),
           TextField(
             controller: _pinController,
@@ -84,8 +89,10 @@ class _StepPinViewState extends ConsumerState<StepPinView> {
           ),
           if (_localError != null) ...<Widget>[
             const SizedBox(height: 12),
-            Text(_localError!,
-                style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(
+              _localError!,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ],
           if (state.error != null) ...<Widget>[
             const SizedBox(height: 16),

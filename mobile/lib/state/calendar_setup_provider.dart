@@ -6,10 +6,10 @@ import 'session_provider.dart';
 
 final FutureProvider<CalendarStatus> calendarStatusProvider =
     FutureProvider<CalendarStatus>((Ref ref) async {
-  final SessionState sessionState = ref.watch(sessionProvider);
-  final session = sessionState.session;
-  if (session == null) {
-    throw const CalendarSetupSessionRevokedException();
-  }
-  return ref.watch(calendarSetupServiceProvider).fetchStatus(session);
-});
+      final SessionState sessionState = ref.watch(sessionProvider);
+      final session = sessionState.session;
+      if (session == null) {
+        throw const CalendarSetupSessionRevokedException();
+      }
+      return ref.watch(calendarSetupServiceProvider).fetchStatus(session);
+    });

@@ -70,7 +70,7 @@ class SetupPinSession {
 /// see `SetupOnboardingController.start`).
 class SetupService {
   SetupService({ApiClientFactory? clientFactory})
-      : _clientFactory = clientFactory ?? const ApiClientFactory();
+    : _clientFactory = clientFactory ?? const ApiClientFactory();
 
   final ApiClientFactory _clientFactory;
 
@@ -149,7 +149,10 @@ class SetupService {
 
   /// `GET /api/geocode` — the wall's own Open-Meteo proxy, unauthenticated.
   Future<List<GeocodeResult>> geocode(
-      String baseUrl, String query, String lang) async {
+    String baseUrl,
+    String query,
+    String lang,
+  ) async {
     final Dio dio = _clientFactory.unauthenticated(baseUrl);
     final Response<Object?> response;
     try {
@@ -167,8 +170,10 @@ class SetupService {
     }
     return results
         .whereType<Map<Object?, Object?>>()
-        .map((Map<Object?, Object?> m) =>
-            GeocodeResult.fromJson(m.cast<String, Object?>()))
+        .map(
+          (Map<Object?, Object?> m) =>
+              GeocodeResult.fromJson(m.cast<String, Object?>()),
+        )
         .toList();
   }
 
@@ -249,8 +254,10 @@ class SetupService {
     }
     return data
         .whereType<Map<Object?, Object?>>()
-        .map((Map<Object?, Object?> m) =>
-            FamilyMember.fromJson(m.cast<String, Object?>()))
+        .map(
+          (Map<Object?, Object?> m) =>
+              FamilyMember.fromJson(m.cast<String, Object?>()),
+        )
         .toList();
   }
 }

@@ -25,10 +25,7 @@ const List<String> _kAccentNames = <String>[
 /// Opens [NoteEditSheet] as a modal bottom sheet.
 ///
 /// Pass [note] to pre-populate for edit mode; omit (null) for create mode.
-Future<void> showNoteEditSheet(
-  BuildContext context, {
-  Note? note,
-}) {
+Future<void> showNoteEditSheet(BuildContext context, {Note? note}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -175,10 +172,9 @@ class _NoteEditSheetState extends ConsumerState<NoteEditSheet> {
 
     setState(() => _busy = true);
     try {
-      await ref.read(notesServiceProvider).deleteNote(
-            session: session,
-            id: widget.note!.id,
-          );
+      await ref
+          .read(notesServiceProvider)
+          .deleteNote(session: session, id: widget.note!.id);
       if (!mounted) {
         return;
       }
@@ -248,15 +244,10 @@ class _NoteEditSheetState extends ConsumerState<NoteEditSheet> {
             minLines: 3,
             maxLines: 8,
             textInputAction: TextInputAction.newline,
-            decoration: InputDecoration(
-              hintText: l10n.notesBodyPlaceholder,
-            ),
+            decoration: InputDecoration(hintText: l10n.notesBodyPlaceholder),
           ),
           const SizedBox(height: 16),
-          Text(
-            l10n.notesColor,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text(l10n.notesColor, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           _ColorPicker(
             selectedColor: _color,
@@ -274,8 +265,9 @@ class _NoteEditSheetState extends ConsumerState<NoteEditSheet> {
               ),
               Switch(
                 value: _pinned,
-                onChanged:
-                    _busy ? null : (bool v) => setState(() => _pinned = v),
+                onChanged: _busy
+                    ? null
+                    : (bool v) => setState(() => _pinned = v),
               ),
             ],
           ),
@@ -285,8 +277,9 @@ class _NoteEditSheetState extends ConsumerState<NoteEditSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                  child:
-                      Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                  child: Text(
+                    MaterialLocalizations.of(context).cancelButtonLabel,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -302,9 +295,7 @@ class _NoteEditSheetState extends ConsumerState<NoteEditSheet> {
                             color: Colors.white,
                           ),
                         )
-                      : Text(
-                          MaterialLocalizations.of(context).saveButtonLabel,
-                        ),
+                      : Text(MaterialLocalizations.of(context).saveButtonLabel),
                 ),
               ),
             ],

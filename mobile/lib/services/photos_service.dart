@@ -90,8 +90,7 @@ String photoMimeTypeOf(String path) {
 /// `MembersService` — screensaver uploads have no sensible offline replay
 /// story.
 class PhotosService {
-  PhotosService({required ApiClientFactory clientFactory})
-      : _clientFactory = clientFactory;
+  PhotosService({required this._clientFactory});
 
   final ApiClientFactory _clientFactory;
 
@@ -110,8 +109,10 @@ class PhotosService {
     }
     return raw
         .whereType<Map<Object?, Object?>>()
-        .map((Map<Object?, Object?> m) =>
-            Photo.fromJson(m.cast<String, Object?>()))
+        .map(
+          (Map<Object?, Object?> m) =>
+              Photo.fromJson(m.cast<String, Object?>()),
+        )
         .toList();
   }
 
@@ -160,7 +161,8 @@ class PhotosService {
       throw const PhotosFetchException('Unexpected response format');
     }
     return Photo.fromJson(
-        (raw as Map<Object?, Object?>).cast<String, Object?>());
+      (raw as Map<Object?, Object?>).cast<String, Object?>(),
+    );
   }
 
   Future<void> deletePhoto({
@@ -170,8 +172,9 @@ class PhotosService {
     final Dio dio = _clientFactory.authenticated(session);
     final Response<Object?> response;
     try {
-      response = await dio
-          .delete<Object?>('/api/mobile/photos/${Uri.encodeComponent(id)}');
+      response = await dio.delete<Object?>(
+        '/api/mobile/photos/${Uri.encodeComponent(id)}',
+      );
     } on DioException catch (e) {
       throw PhotosFetchException('Network error: ${e.message}');
     }

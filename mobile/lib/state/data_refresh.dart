@@ -3,7 +3,8 @@
 // refresh, and the 30s foreground poll (both in SessionNotifier) all funnel
 // through this file so there is exactly one list to keep in sync.
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart'
+    show ProviderListenable, ProviderOrFamily;
 
 import 'events_provider.dart';
 import 'notes_provider.dart';

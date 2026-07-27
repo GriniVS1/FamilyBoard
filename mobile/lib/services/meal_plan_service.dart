@@ -35,11 +35,8 @@ class MealPlanResult {
 }
 
 class MealPlanService {
-  MealPlanService({
-    required ApiClientFactory clientFactory,
-    required CacheDb cacheDb,
-  })  : _clientFactory = clientFactory,
-        _cached = CachedGet(cacheDb);
+  MealPlanService({required this._clientFactory, required CacheDb cacheDb})
+    : _cached = CachedGet(cacheDb);
 
   final ApiClientFactory _clientFactory;
   final CachedGet _cached;
@@ -71,16 +68,18 @@ class MealPlanService {
     if (data is! Map) {
       throw const MealPlanFetchException('Unexpected response format');
     }
-    final Map<String, Object?> body =
-        (data as Map<Object?, Object?>).cast<String, Object?>();
+    final Map<String, Object?> body = (data as Map<Object?, Object?>)
+        .cast<String, Object?>();
     final Object? rawItems = body['plans'];
     if (rawItems is! List) {
       throw const MealPlanFetchException('Unexpected response format');
     }
     final List<MealPlan> plans = rawItems
         .whereType<Map<Object?, Object?>>()
-        .map((Map<Object?, Object?> m) =>
-            MealPlan.fromJson(m.cast<String, Object?>()))
+        .map(
+          (Map<Object?, Object?> m) =>
+              MealPlan.fromJson(m.cast<String, Object?>()),
+        )
         .toList();
     return MealPlanResult(plans: plans, staleAt: result.cachedAt);
   }
@@ -99,8 +98,8 @@ class MealPlanService {
       'date': dateStr,
       'slot': slot.name.toUpperCase(),
       'customName': customName,
-      if (notes != null) 'notes': notes,
-      if (memberId != null) 'memberId': memberId,
+      'notes': ?notes,
+      'memberId': ?memberId,
     };
     final Dio dio = _clientFactory.authenticated(session);
     final Response<Object?> response;
@@ -133,15 +132,17 @@ class MealPlanService {
         'date':
             '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}',
       if (slot != null) 'slot': slot.name.toUpperCase(),
-      if (customName != null) 'customName': customName,
-      if (notes != null) 'notes': notes,
-      if (memberId != null) 'memberId': memberId,
+      'customName': ?customName,
+      'notes': ?notes,
+      'memberId': ?memberId,
     };
     final Dio dio = _clientFactory.authenticated(session);
     final Response<Object?> response;
     try {
-      response =
-          await dio.patch<Object?>('/api/mobile/meals/$id', data: payload);
+      response = await dio.patch<Object?>(
+        '/api/mobile/meals/$id',
+        data: payload,
+      );
     } on DioException catch (e) {
       throw MealPlanFetchException('Network error: ${e.message}');
     }
@@ -183,8 +184,8 @@ class MealPlanService {
     if (data is! Map) {
       throw const MealPlanFetchException('Unexpected response format');
     }
-    final Map<String, Object?> body =
-        (data as Map<Object?, Object?>).cast<String, Object?>();
+    final Map<String, Object?> body = (data as Map<Object?, Object?>)
+        .cast<String, Object?>();
     return MealPlan.fromJson(body);
   }
 
@@ -228,8 +229,8 @@ class MealPlanService {
     if (data is! Map) {
       throw const MealPlanFetchException('Unexpected response format');
     }
-    final Map<String, Object?> body =
-        (data as Map<Object?, Object?>).cast<String, Object?>();
+    final Map<String, Object?> body = (data as Map<Object?, Object?>)
+        .cast<String, Object?>();
     final Object? count = body['count'];
     return count is int ? count : 0;
   }

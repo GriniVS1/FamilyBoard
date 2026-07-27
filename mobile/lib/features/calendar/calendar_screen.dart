@@ -49,8 +49,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   bool get _canLoadMore {
-    final DateTime maxTo =
-        _today().add(const Duration(days: _maxExtensionDays));
+    final DateTime maxTo = _today().add(
+      const Duration(days: _maxExtensionDays),
+    );
     return _to.isBefore(maxTo);
   }
 
@@ -58,13 +59,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     if (!_canLoadMore) {
       return;
     }
-    final DateTime maxTo =
-        _today().add(const Duration(days: _maxExtensionDays));
+    final DateTime maxTo = _today().add(
+      const Duration(days: _maxExtensionDays),
+    );
     setState(() {
       _to =
           _to.add(const Duration(days: _extensionStepDays)).compareTo(maxTo) < 0
-              ? _to.add(const Duration(days: _extensionStepDays))
-              : maxTo;
+          ? _to.add(const Duration(days: _extensionStepDays))
+          : maxTo;
     });
   }
 
@@ -79,7 +81,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   /// Builds the ordered set of distinct members from loaded events.
   /// Uses [LinkedHashMap] so chip order is stable (insertion order == event order).
   LinkedHashMap<String, EventMember> _distinctMembers(
-      List<MobileEvent> events) {
+    List<MobileEvent> events,
+  ) {
     final LinkedHashMap<String, EventMember> map =
         LinkedHashMap<String, EventMember>();
     for (final MobileEvent e in events) {
@@ -92,13 +95,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
     final EventsRange range = EventsRange(from: _from, to: _to);
-    final AsyncValue<EventsResult> eventsAsync =
-        ref.watch(eventsProvider(range));
+    final AsyncValue<EventsResult> eventsAsync = ref.watch(
+      eventsProvider(range),
+    );
 
     return Scaffold(
-      appBar: AppBar(
-        title: const FamilyBoardLogo(fontSize: 18),
-      ),
+      appBar: AppBar(title: const FamilyBoardLogo(fontSize: 18)),
       floatingActionButton: FloatingActionButton(
         onPressed: () => showEventEditSheet(context),
         tooltip: l10n.calendarAddEventAria,
@@ -128,11 +130,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ),
           data: (EventsResult result) {
             final List<MobileEvent> events = result.events;
-            final LinkedHashMap<String, EventMember> members =
-                _distinctMembers(events);
+            final LinkedHashMap<String, EventMember> members = _distinctMembers(
+              events,
+            );
 
             // Snap back to "All" if the selected member no longer appears.
-            final String? effectiveMemberId = (_selectedMemberId != null &&
+            final String? effectiveMemberId =
+                (_selectedMemberId != null &&
                     members.containsKey(_selectedMemberId))
                 ? _selectedMemberId
                 : null;
@@ -140,8 +144,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             final List<MobileEvent> filtered = effectiveMemberId == null
                 ? events
                 : events
-                    .where((MobileEvent e) => e.member.id == effectiveMemberId)
-                    .toList();
+                      .where(
+                        (MobileEvent e) => e.member.id == effectiveMemberId,
+                      )
+                      .toList();
 
             return Column(
               children: <Widget>[
@@ -151,8 +157,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   l10n: l10n,
                   onSelected: (String? memberId) {
                     setState(() {
-                      _selectedMemberId =
-                          (memberId == _selectedMemberId) ? null : memberId;
+                      _selectedMemberId = (memberId == _selectedMemberId)
+                          ? null
+                          : memberId;
                     });
                   },
                 ),
@@ -288,10 +295,10 @@ class _FilterChip extends StatelessWidget {
           child: Text(
             label,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: textColor,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  height: 1.2,
-                ),
+              color: textColor,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              height: 1.2,
+            ),
           ),
         ),
       ),
@@ -357,8 +364,8 @@ class _ErrorBody extends StatelessWidget {
                 Text(
                   isRevoked ? l10n.homeSessionExpired : message,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 FilledButton(
@@ -429,7 +436,8 @@ class _AgendaBody extends StatelessWidget {
     final List<DateTime> sortedKeys = groups.keys.toList()..sort();
     return Map<DateTime, List<MobileEvent>>.fromEntries(
       sortedKeys.map(
-          (DateTime k) => MapEntry<DateTime, List<MobileEvent>>(k, groups[k]!)),
+        (DateTime k) => MapEntry<DateTime, List<MobileEvent>>(k, groups[k]!),
+      ),
     );
   }
 
@@ -523,13 +531,12 @@ class _DayHeader extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: today
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.7),
-                ),
+              color: today
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
           if (today) ...<Widget>[
             const SizedBox(width: 8),
@@ -542,10 +549,10 @@ class _DayHeader extends StatelessWidget {
               child: Text(
                 l10n.calendarToday,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                    ),
+                  color: Theme.of(context).colorScheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
               ),
             ),
           ],
@@ -569,8 +576,9 @@ class _EventRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final String locale = Localizations.localeOf(context).toString();
     // Prefer event.color override, fall back to member color.
-    final Color accent =
-        AccentPalette.resolve(event.color ?? event.member.color);
+    final Color accent = AccentPalette.resolve(
+      event.color ?? event.member.color,
+    );
 
     final String timeLabel;
     if (event.allDay) {
@@ -597,9 +605,7 @@ class _EventRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: accent.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(12),
-              border: Border(
-                left: BorderSide(color: accent, width: 4),
-              ),
+              border: Border(left: BorderSide(color: accent, width: 4)),
             ),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -612,10 +618,8 @@ class _EventRow extends StatelessWidget {
                       children: <Widget>[
                         Text(
                           event.title,
-                          style:
-                              Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.bodyLarge
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         if (event.description != null &&
                             event.description!.isNotEmpty) ...<Widget>[
@@ -624,13 +628,9 @@ class _EventRow extends StatelessWidget {
                             event.description!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodyMedium
+                            style: Theme.of(context).textTheme.bodyMedium
                                 ?.copyWith(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .onSurface
+                                  color: Theme.of(context).colorScheme.onSurface
                                       .withValues(alpha: 0.6),
                                 ),
                           ),
@@ -643,10 +643,9 @@ class _EventRow extends StatelessWidget {
                               Icon(
                                 Icons.location_on_outlined,
                                 size: 13,
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurface
-                                    .withValues(alpha: 0.5),
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.5),
                               ),
                               const SizedBox(width: 2),
                               Expanded(
@@ -654,9 +653,7 @@ class _EventRow extends StatelessWidget {
                                   event.location!,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(
                                         color: Theme.of(context)
                                             .colorScheme
@@ -714,20 +711,18 @@ class _EmptyState extends StatelessWidget {
               Icon(
                 Icons.event_outlined,
                 size: 56,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.25),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.25),
               ),
               const SizedBox(height: 16),
               Text(
                 l10n.calendarEmpty,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.55),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.55),
+                ),
               ),
               const SizedBox(height: 8),
               Padding(
@@ -736,11 +731,10 @@ class _EmptyState extends StatelessWidget {
                   l10n.calendarEmptySubtitle,
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onSurface
-                            .withValues(alpha: 0.4),
-                      ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.4),
+                  ),
                 ),
               ),
             ],

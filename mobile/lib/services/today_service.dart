@@ -20,11 +20,8 @@ class TodayFetchException implements Exception {
 }
 
 class TodayService {
-  TodayService({
-    required ApiClientFactory clientFactory,
-    required CacheDb cacheDb,
-  })  : _clientFactory = clientFactory,
-        _cached = CachedGet(cacheDb);
+  TodayService({required this._clientFactory, required CacheDb cacheDb})
+    : _cached = CachedGet(cacheDb);
 
   final ApiClientFactory _clientFactory;
   final CachedGet _cached;

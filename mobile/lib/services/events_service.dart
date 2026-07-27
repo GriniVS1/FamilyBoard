@@ -43,11 +43,8 @@ class EventsWriteException implements Exception {
 }
 
 class EventsService {
-  EventsService({
-    required ApiClientFactory clientFactory,
-    required CacheDb cacheDb,
-  })  : _clientFactory = clientFactory,
-        _cached = CachedGet(cacheDb);
+  EventsService({required this._clientFactory, required CacheDb cacheDb})
+    : _cached = CachedGet(cacheDb);
 
   final ApiClientFactory _clientFactory;
   final CachedGet _cached;
@@ -102,15 +99,17 @@ class EventsService {
       throw const EventsFetchException('Unexpected response format');
     }
     try {
-      final Map<String, Object?> body =
-          (data as Map<Object?, Object?>).cast<String, Object?>();
+      final Map<String, Object?> body = (data as Map<Object?, Object?>)
+          .cast<String, Object?>();
       final List<Object?> eventsRaw = body['events'] is List
           ? body['events']! as List<Object?>
           : <Object?>[];
       final List<MobileEvent> events = eventsRaw
           .whereType<Map<Object?, Object?>>()
-          .map((Map<Object?, Object?> e) =>
-              MobileEvent.fromJson(e.cast<String, Object?>()))
+          .map(
+            (Map<Object?, Object?> e) =>
+                MobileEvent.fromJson(e.cast<String, Object?>()),
+          )
           .toList();
       return EventsResult(events: events, staleAt: result.cachedAt);
     } catch (e) {
@@ -145,8 +144,8 @@ class EventsService {
         'startsAt': startsAt.toUtc().toIso8601String(),
         'endsAt': endsAt.toUtc().toIso8601String(),
         'allDay': allDay,
-        if (color != null) 'color': color,
-        if (rrule != null) 'rrule': rrule,
+        'color': ?color,
+        'rrule': ?rrule,
       },
     );
     _guardWrite(response, expected: const <int>{200, 201});
@@ -225,7 +224,8 @@ class EventsService {
         throw const EventsWriteException(EventWriteErrorCode.microsoftReadOnly);
       case 'OVERRIDE_NOT_SUPPORTED':
         throw const EventsWriteException(
-            EventWriteErrorCode.overrideNotSupported);
+          EventWriteErrorCode.overrideNotSupported,
+        );
       case 'EVENT_NOT_FOUND':
         throw const EventsWriteException(EventWriteErrorCode.notFound);
       default:
@@ -255,8 +255,8 @@ class EventsService {
     if (data is! Map) {
       throw const EventsWriteException(EventWriteErrorCode.unknown);
     }
-    final Map<String, Object?> body =
-        (data as Map<Object?, Object?>).cast<String, Object?>();
+    final Map<String, Object?> body = (data as Map<Object?, Object?>)
+        .cast<String, Object?>();
     final Object? eventRaw = body['event'];
     if (eventRaw is! Map) {
       throw const EventsWriteException(EventWriteErrorCode.unknown);

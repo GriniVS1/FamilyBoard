@@ -42,13 +42,13 @@ class MidnightRolloverScheduler {
     required this.onRollover,
     DateTime Function()? now,
     Timer Function(Duration duration, void Function() callback)? timerFactory,
-  })  : _now = now ?? DateTime.now,
-        _timerFactory = timerFactory ?? Timer.new;
+  }) : _now = now ?? DateTime.now,
+       _timerFactory = timerFactory ?? Timer.new;
 
   final void Function() onRollover;
   final DateTime Function() _now;
   final Timer Function(Duration duration, void Function() callback)
-      _timerFactory;
+  _timerFactory;
 
   Timer? _timer;
 
@@ -94,15 +94,12 @@ class MidnightRolloverScheduler {
 /// `currentHomeRangeProvider.overrideWith`) — production code always uses
 /// the `HomeRangeNotifier.new` default, which is real `DateTime.now`/`Timer`.
 class HomeRangeNotifier extends Notifier<EventsRange> {
-  HomeRangeNotifier({
-    DateTime Function()? now,
-    Timer Function(Duration duration, void Function() callback)? timerFactory,
-  })  : _now = now ?? DateTime.now,
-        _timerFactory = timerFactory;
+  HomeRangeNotifier({DateTime Function()? now, this._timerFactory})
+    : _now = now ?? DateTime.now;
 
   final DateTime Function() _now;
   final Timer Function(Duration duration, void Function() callback)?
-      _timerFactory;
+  _timerFactory;
 
   late final MidnightRolloverScheduler _scheduler = MidnightRolloverScheduler(
     onRollover: () => state = _rangeFor(_now()),
@@ -123,5 +120,6 @@ class HomeRangeNotifier extends Notifier<EventsRange> {
 /// invalidate or watch the home screen's events window, so it always
 /// matches exactly what `HomeScreen` is watching.
 final NotifierProvider<HomeRangeNotifier, EventsRange>
-    currentHomeRangeProvider =
-    NotifierProvider<HomeRangeNotifier, EventsRange>(HomeRangeNotifier.new);
+currentHomeRangeProvider = NotifierProvider<HomeRangeNotifier, EventsRange>(
+  HomeRangeNotifier.new,
+);

@@ -25,10 +25,10 @@ class SetupMemberDraft {
   }
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'name': name,
-        'color': color,
-        'emoji': emoji,
-      };
+    'name': name,
+    'color': color,
+    'emoji': emoji,
+  };
 }
 
 /// Builds the `POST /api/setup/members` request body from onboarding drafts.

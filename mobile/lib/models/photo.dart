@@ -15,8 +15,9 @@ class Photo {
     return Photo(
       id: json['id']! as String,
       path: json['path']! as String,
-      caption:
-          captionRaw is String && captionRaw.isNotEmpty ? captionRaw : null,
+      caption: captionRaw is String && captionRaw.isNotEmpty
+          ? captionRaw
+          : null,
       uploadedAt: DateTime.parse(json['uploadedAt']! as String),
     );
   }

@@ -79,11 +79,7 @@ class NotesScreen extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 
 class _NotesList extends ConsumerWidget {
-  const _NotesList({
-    required this.notes,
-    required this.l10n,
-    this.staleAt,
-  });
+  const _NotesList({required this.notes, required this.l10n, this.staleAt});
 
   final List<Note> notes;
   final AppL10n l10n;
@@ -117,13 +113,10 @@ class _NotesList extends ConsumerWidget {
         SliverPadding(
           padding: const EdgeInsets.all(16),
           sliver: SliverGrid(
-            delegate: SliverChildBuilderDelegate(
-              (BuildContext ctx, int index) {
-                final Note note = sorted[index];
-                return _NoteCard(note: note, l10n: l10n);
-              },
-              childCount: sorted.length,
-            ),
+            delegate: SliverChildBuilderDelegate((BuildContext ctx, int index) {
+              final Note note = sorted[index];
+              return _NoteCard(note: note, l10n: l10n);
+            }, childCount: sorted.length),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: crossAxisCount,
               crossAxisSpacing: 12,
@@ -184,10 +177,9 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
 
     setState(() => _busy = true);
     try {
-      await ref.read(notesServiceProvider).deleteNote(
-            session: session,
-            id: widget.note.id,
-          );
+      await ref
+          .read(notesServiceProvider)
+          .deleteNote(session: session, id: widget.note.id);
       if (!mounted) {
         return;
       }
@@ -233,9 +225,7 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
           decoration: BoxDecoration(
             color: cardBg,
             borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: accent.withValues(alpha: 0.5),
-            ),
+            border: Border.all(color: accent.withValues(alpha: 0.5)),
           ),
           padding: const EdgeInsets.all(14),
           child: Stack(
@@ -247,9 +237,9 @@ class _NoteCardState extends ConsumerState<_NoteCard> {
                     child: Text(
                       note.body,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: onCard,
-                            height: 1.4,
-                          ),
+                        color: onCard,
+                        height: 1.4,
+                      ),
                       maxLines: 6,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -295,18 +285,15 @@ class _AuthorChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Text(
-            author.emoji,
-            style: const TextStyle(fontSize: 12),
-          ),
+          Text(author.emoji, style: const TextStyle(fontSize: 12)),
           const SizedBox(width: 4),
           Flexible(
             child: Text(
               l10n.notesByAuthor(author.name),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
@@ -338,30 +325,27 @@ class _EmptyState extends StatelessWidget {
               Icon(
                 Icons.sticky_note_2_outlined,
                 size: 56,
-                color: Theme.of(context)
-                    .colorScheme
-                    .onSurface
-                    .withValues(alpha: 0.25),
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.25),
               ),
               const SizedBox(height: 16),
               Text(
                 l10n.notesEmpty,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.5),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.5),
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 l10n.notesEmptySubtitle,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .onSurface
-                          .withValues(alpha: 0.4),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.4),
+                ),
               ),
             ],
           ),
@@ -404,8 +388,8 @@ class _ErrorBody extends StatelessWidget {
                 Text(
                   isSessionError ? l10n.homeSessionExpired : l10n.homeLoadError,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 FilledButton(

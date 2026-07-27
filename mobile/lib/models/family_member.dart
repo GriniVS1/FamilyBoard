@@ -62,13 +62,15 @@ class MembersResult {
     final Object? membersRaw = json['members'];
     final List<FamilyMember> members = membersRaw is List
         ? membersRaw
-            .whereType<Map<Object?, Object?>>()
-            .map((Map<Object?, Object?> m) =>
-                FamilyMember.fromJson(m.cast<String, Object?>()))
-            .toList()
+              .whereType<Map<Object?, Object?>>()
+              .map(
+                (Map<Object?, Object?> m) =>
+                    FamilyMember.fromJson(m.cast<String, Object?>()),
+              )
+              .toList()
         : <FamilyMember>[];
-    final Map<String, Object?> meJson =
-        (json['me']! as Map<Object?, Object?>).cast<String, Object?>();
+    final Map<String, Object?> meJson = (json['me']! as Map<Object?, Object?>)
+        .cast<String, Object?>();
     return MembersResult(members: members, me: CurrentMember.fromJson(meJson));
   }
 

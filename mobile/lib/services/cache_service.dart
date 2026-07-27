@@ -44,12 +44,7 @@ class CachedGet {
         await _db.write(key, jsonEncode(body));
       }
 
-      return (
-        data: body,
-        statusCode: status,
-        cachedAt: null,
-        fromCache: false,
-      );
+      return (data: body, statusCode: status, cachedAt: null, fromCache: false);
     } on DioException {
       final ({String body, DateTime fetchedAt})? hit = await _db.read(key);
       if (hit == null) rethrow;
@@ -72,10 +67,11 @@ class CachedGet {
     if (queryParameters == null || queryParameters.isEmpty) {
       return '$memberId:$path';
     }
-    final List<String> sortedPairs = queryParameters.entries
-        .map((MapEntry<String, Object?> e) => '${e.key}=${e.value}')
-        .toList()
-      ..sort();
+    final List<String> sortedPairs =
+        queryParameters.entries
+            .map((MapEntry<String, Object?> e) => '${e.key}=${e.value}')
+            .toList()
+          ..sort();
     return '$memberId:$path?${sortedPairs.join('&')}';
   }
 }

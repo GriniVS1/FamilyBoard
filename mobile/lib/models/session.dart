@@ -23,30 +23,24 @@ class Member {
   final String emoji;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'id': id,
-        'name': name,
-        'color': color,
-        'emoji': emoji,
-      };
+    'id': id,
+    'name': name,
+    'color': color,
+    'emoji': emoji,
+  };
 }
 
 class Family {
   const Family({required this.id, required this.name});
 
   factory Family.fromJson(Map<String, Object?> json) {
-    return Family(
-      id: json['id']! as String,
-      name: json['name']! as String,
-    );
+    return Family(id: json['id']! as String, name: json['name']! as String);
   }
 
   final String id;
   final String name;
 
-  Map<String, Object?> toJson() => <String, Object?>{
-        'id': id,
-        'name': name,
-      };
+  Map<String, Object?> toJson() => <String, Object?>{'id': id, 'name': name};
 }
 
 class Session {
@@ -80,8 +74,8 @@ class Session {
       altUrl: altUrlRaw is String && altUrlRaw.isNotEmpty ? altUrlRaw : null,
       installationId:
           installationIdRaw is String && installationIdRaw.isNotEmpty
-              ? installationIdRaw
-              : null,
+          ? installationIdRaw
+          : null,
       remoteUrl: remoteUrlRaw is String && remoteUrlRaw.isNotEmpty
           ? remoteUrlRaw
           : null,
@@ -133,16 +127,16 @@ class Session {
   String get effectiveUrl => activeUrl ?? serverUrl;
 
   Map<String, Object?> toJson() => <String, Object?>{
-        'serverUrl': serverUrl,
-        'token': token,
-        'deviceId': deviceId,
-        'member': member.toJson(),
-        'family': family.toJson(),
-        if (altUrl != null) 'altUrl': altUrl,
-        if (installationId != null) 'installationId': installationId,
-        if (remoteUrl != null) 'remoteUrl': remoteUrl,
-        if (activeUrl != null) 'activeUrl': activeUrl,
-      };
+    'serverUrl': serverUrl,
+    'token': token,
+    'deviceId': deviceId,
+    'member': member.toJson(),
+    'family': family.toJson(),
+    if (altUrl != null) 'altUrl': altUrl,
+    if (installationId != null) 'installationId': installationId,
+    if (remoteUrl != null) 'remoteUrl': remoteUrl,
+    if (activeUrl != null) 'activeUrl': activeUrl,
+  };
 
   String encode() => jsonEncode(toJson());
 
@@ -167,8 +161,9 @@ class Session {
       altUrl: altUrl ?? this.altUrl,
       installationId: installationId ?? this.installationId,
       remoteUrl: remoteUrl ?? this.remoteUrl,
-      activeUrl:
-          identical(activeUrl, _unset) ? this.activeUrl : activeUrl as String?,
+      activeUrl: identical(activeUrl, _unset)
+          ? this.activeUrl
+          : activeUrl as String?,
     );
   }
 }

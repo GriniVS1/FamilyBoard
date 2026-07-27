@@ -29,17 +29,13 @@ class CachedAtPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: <Widget>[
-          Icon(
-            Icons.history,
-            size: 13,
-            color: colors.onSurfaceVariant,
-          ),
+          Icon(Icons.history, size: 13, color: colors.onSurfaceVariant),
           const SizedBox(width: 4),
           Text(
             AppL10n.of(context).staleData(timeStr),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: colors.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: colors.onSurfaceVariant),
           ),
         ],
       ),

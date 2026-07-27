@@ -26,10 +26,8 @@ Future<void> showMealPlanEditSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (BuildContext ctx) => MealPlanEditSheet(
-      plan: plan,
-      takenSlots: takenSlots,
-    ),
+    builder: (BuildContext ctx) =>
+        MealPlanEditSheet(plan: plan, takenSlots: takenSlots),
   );
 }
 
@@ -187,8 +185,10 @@ class _MealPlanEditSheetState extends ConsumerState<MealPlanEditSheet> {
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
     final String locale = Localizations.localeOf(context).toString();
-    final String formattedDate =
-        DateFormat('EEEE, d MMM', locale).format(_date);
+    final String formattedDate = DateFormat(
+      'EEEE, d MMM',
+      locale,
+    ).format(_date);
 
     return Padding(
       padding: EdgeInsets.only(
@@ -272,9 +272,7 @@ class _MealPlanEditSheetState extends ConsumerState<MealPlanEditSheet> {
             maxLines: 4,
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.done,
-            decoration: InputDecoration(
-              labelText: l10n.mealPlanNotesLabel,
-            ),
+            decoration: InputDecoration(labelText: l10n.mealPlanNotesLabel),
           ),
           const SizedBox(height: 20),
 
@@ -284,8 +282,9 @@ class _MealPlanEditSheetState extends ConsumerState<MealPlanEditSheet> {
               Expanded(
                 child: OutlinedButton(
                   onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                  child:
-                      Text(MaterialLocalizations.of(context).cancelButtonLabel),
+                  child: Text(
+                    MaterialLocalizations.of(context).cancelButtonLabel,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),

@@ -10,10 +10,10 @@ import 'session_provider.dart';
 /// Callers trigger a manual refresh via `ref.invalidate(membersProvider)`.
 final FutureProvider<MembersResult> membersProvider =
     FutureProvider<MembersResult>((Ref ref) async {
-  final SessionState sessionState = ref.watch(sessionProvider);
-  final session = sessionState.session;
-  if (session == null) {
-    throw const MembersSessionRevokedException();
-  }
-  return ref.watch(membersServiceProvider).fetchMembers(session);
-});
+      final SessionState sessionState = ref.watch(sessionProvider);
+      final session = sessionState.session;
+      if (session == null) {
+        throw const MembersSessionRevokedException();
+      }
+      return ref.watch(membersServiceProvider).fetchMembers(session);
+    });

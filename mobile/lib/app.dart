@@ -33,8 +33,9 @@ import 'widgets/connectivity_banner.dart';
 /// shell's own branches get their own nested navigators (declared per
 /// `StatefulShellBranch` below) so in-branch pushes (event detail sheets,
 /// etc.) stay scoped to that branch.
-final GlobalKey<NavigatorState> _rootNavigatorKey =
-    GlobalKey<NavigatorState>(debugLabel: 'root');
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);
 
 /// Global messenger key so foreground FCM callbacks can show snackbars
 /// from outside the widget tree.
@@ -78,10 +79,7 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
         ? AppL10n.of(ctx).syncFailed(failure.message)
         : 'Couldn\'t sync: ${failure.message}';
     scaffoldMessengerKey.currentState?.showSnackBar(
-      SnackBar(
-        content: Text(message),
-        behavior: SnackBarBehavior.floating,
-      ),
+      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
 
@@ -139,8 +137,8 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           },
           builder: (BuildContext context, GoRouterState routerState) =>
               SetupOnboardingScreen(
-            payload: routerState.extra! as ScannedSetupPayload,
-          ),
+                payload: routerState.extra! as ScannedSetupPayload,
+              ),
         ),
         // Full-screen flows that must cover the bottom-tab bar. These are
         // deliberately siblings of the shell route below (not nested inside
@@ -162,12 +160,12 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
               const SettingsScreen(),
         ),
         StatefulShellRoute.indexedStack(
-          builder: (
-            BuildContext context,
-            GoRouterState routerState,
-            StatefulNavigationShell navigationShell,
-          ) =>
-              AppShell(navigationShell: navigationShell),
+          builder:
+              (
+                BuildContext context,
+                GoRouterState routerState,
+                StatefulNavigationShell navigationShell,
+              ) => AppShell(navigationShell: navigationShell),
           branches: <StatefulShellBranch>[
             StatefulShellBranch(
               routes: <RouteBase>[
@@ -258,8 +256,9 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
   /// Recognised paths: /home, /calendar. Anything else falls back to /home.
   void _navigateFromPayload(NotificationPayload payload) {
     const Set<String> knownRoutes = <String>{'/home', '/calendar'};
-    final String target =
-        knownRoutes.contains(payload.url) ? payload.url : '/home';
+    final String target = knownRoutes.contains(payload.url)
+        ? payload.url
+        : '/home';
     _router.go(target);
   }
 
@@ -295,12 +294,12 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
 
 class _RouterRefresh extends ChangeNotifier {
   _RouterRefresh(WidgetRef ref) {
-    _subscription = ref.listenManual<SessionState>(
-      sessionProvider,
-      (SessionState? previous, SessionState next) {
-        notifyListeners();
-      },
-    );
+    _subscription = ref.listenManual<SessionState>(sessionProvider, (
+      SessionState? previous,
+      SessionState next,
+    ) {
+      notifyListeners();
+    });
   }
 
   late final ProviderSubscription<SessionState> _subscription;

@@ -36,11 +36,8 @@ class TodosResult {
 /// through [MutationsService] — this service only backs the Home dashboard's
 /// read path.
 class TodosService {
-  TodosService({
-    required ApiClientFactory clientFactory,
-    required CacheDb cacheDb,
-  })  : _clientFactory = clientFactory,
-        _cached = CachedGet(cacheDb);
+  TodosService({required this._clientFactory, required CacheDb cacheDb})
+    : _cached = CachedGet(cacheDb);
 
   final ApiClientFactory _clientFactory;
   final CachedGet _cached;
@@ -69,14 +66,17 @@ class TodosService {
       throw const TodosFetchException('Unexpected response format');
     }
     try {
-      final Map<String, Object?> body =
-          (data as Map<Object?, Object?>).cast<String, Object?>();
-      final List<Object?> todosRaw =
-          body['todos'] is List ? body['todos']! as List<Object?> : <Object?>[];
+      final Map<String, Object?> body = (data as Map<Object?, Object?>)
+          .cast<String, Object?>();
+      final List<Object?> todosRaw = body['todos'] is List
+          ? body['todos']! as List<Object?>
+          : <Object?>[];
       final List<TodoItem> todos = todosRaw
           .whereType<Map<Object?, Object?>>()
-          .map((Map<Object?, Object?> t) =>
-              TodoItem.fromJson(t.cast<String, Object?>()))
+          .map(
+            (Map<Object?, Object?> t) =>
+                TodoItem.fromJson(t.cast<String, Object?>()),
+          )
           .toList();
       return TodosResult(todos: todos, staleAt: result.cachedAt);
     } catch (e) {

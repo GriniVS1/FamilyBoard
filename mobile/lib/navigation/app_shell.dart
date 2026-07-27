@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show ProviderOrFamily;
 import 'package:go_router/go_router.dart';
 
 import '../l10n/generated/app_localizations.dart';
@@ -27,8 +28,10 @@ class AppShell extends ConsumerWidget {
   void _onDestinationSelected(WidgetRef ref, int index) {
     if (index != navigationShell.currentIndex) {
       final EventsRange homeRange = ref.read(currentHomeRangeProvider);
-      for (final ProviderOrFamily provider
-          in providersToInvalidateForTab(index, homeRange)) {
+      for (final ProviderOrFamily provider in providersToInvalidateForTab(
+        index,
+        homeRange,
+      )) {
         ref.invalidate(provider);
       }
     }

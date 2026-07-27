@@ -46,11 +46,8 @@ Future<void> showEventEditSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (BuildContext ctx) => EventEditSheet(
-      event: event,
-      readOnlyCore: readOnlyCore,
-      scope: scope,
-    ),
+    builder: (BuildContext ctx) =>
+        EventEditSheet(event: event, readOnlyCore: readOnlyCore, scope: scope),
   );
 }
 
@@ -105,8 +102,12 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
     _allDay = e?.allDay ?? false;
 
     final DateTime now = DateTime.now();
-    final DateTime defaultStart =
-        DateTime(now.year, now.month, now.day, now.hour);
+    final DateTime defaultStart = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+    );
     final DateTime start = (e?.startsAt ?? defaultStart).toLocal();
     final DateTime end =
         (e?.endsAt ?? defaultStart.add(const Duration(hours: 1))).toLocal();
@@ -125,21 +126,21 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
   }
 
   DateTime get _startDateTime => DateTime(
-        _startDate.year,
-        _startDate.month,
-        _startDate.day,
-        _allDay ? 0 : _startTime.hour,
-        _allDay ? 0 : _startTime.minute,
-      );
+    _startDate.year,
+    _startDate.month,
+    _startDate.day,
+    _allDay ? 0 : _startTime.hour,
+    _allDay ? 0 : _startTime.minute,
+  );
 
   DateTime get _endDateTime => DateTime(
-        _endDate.year,
-        _endDate.month,
-        _endDate.day,
-        _allDay ? 23 : _endTime.hour,
-        _allDay ? 59 : _endTime.minute,
-        _allDay ? 59 : 0,
-      );
+    _endDate.year,
+    _endDate.month,
+    _endDate.day,
+    _allDay ? 23 : _endTime.hour,
+    _allDay ? 59 : _endTime.minute,
+    _allDay ? 59 : 0,
+  );
 
   bool get _isValid {
     if (_memberId == null) {
@@ -180,8 +181,10 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
 
   Future<void> _pickTime({required bool isStart}) async {
     final TimeOfDay initial = isStart ? _startTime : _endTime;
-    final TimeOfDay? picked =
-        await showTimePicker(context: context, initialTime: initial);
+    final TimeOfDay? picked = await showTimePicker(
+      context: context,
+      initialTime: initial,
+    );
     if (picked == null || !mounted) {
       return;
     }
@@ -226,10 +229,7 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
       if (_isEdit) {
         final String scope = widget.scope ?? 'series';
         final Map<String, Object?> patch = widget.readOnlyCore
-            ? <String, Object?>{
-                'memberId': _memberId,
-                'color': _color,
-              }
+            ? <String, Object?>{'memberId': _memberId, 'color': _color}
             : <String, Object?>{
                 'memberId': _memberId,
                 'title': _titleController.text.trim(),
@@ -348,8 +348,9 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
                 style: TextStyle(color: Theme.of(context).colorScheme.error),
               ),
               data: (MembersResult result) {
-                _memberId ??=
-                    result.members.isNotEmpty ? result.members.first.id : null;
+                _memberId ??= result.members.isNotEmpty
+                    ? result.members.first.id
+                    : null;
                 return _MemberChipRow(
                   members: result.members,
                   selectedId: _memberId,
@@ -379,8 +380,9 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
                   ),
                   Switch(
                     value: _allDay,
-                    onChanged:
-                        _busy ? null : (bool v) => setState(() => _allDay = v),
+                    onChanged: _busy
+                        ? null
+                        : (bool v) => setState(() => _allDay = v),
                   ),
                 ],
               ),
@@ -451,8 +453,9 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
                     label: Text(
                       _recurrenceEndDate == null
                           ? l10n.calendarEventRecurrenceEndNone
-                          : DateFormat.yMMMd(locale)
-                              .format(_recurrenceEndDate!),
+                          : DateFormat.yMMMd(
+                              locale,
+                            ).format(_recurrenceEndDate!),
                     ),
                     style: OutlinedButton.styleFrom(
                       minimumSize: const Size(double.infinity, 52),
@@ -534,9 +537,9 @@ class _MemberChipRow extends StatelessWidget {
               child: Text(
                 '${member.emoji} ${member.name}'.trim(),
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: selected ? Colors.white : accent,
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                    ),
+                  color: selected ? Colors.white : accent,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                ),
               ),
             ),
           ),
@@ -547,10 +550,7 @@ class _MemberChipRow extends StatelessWidget {
 }
 
 class _ColorSwatchRow extends StatelessWidget {
-  const _ColorSwatchRow({
-    required this.selectedColor,
-    required this.onChanged,
-  });
+  const _ColorSwatchRow({required this.selectedColor, required this.onChanged});
 
   final String selectedColor;
   final ValueChanged<String> onChanged;
@@ -684,8 +684,9 @@ class _RecurrencePicker extends StatelessWidget {
           )
           .toList(),
       selected: <RecurrenceFreq>{value},
-      onSelectionChanged:
-          busy ? null : (Set<RecurrenceFreq> sel) => onChanged(sel.first),
+      onSelectionChanged: busy
+          ? null
+          : (Set<RecurrenceFreq> sel) => onChanged(sel.first),
     );
   }
 }

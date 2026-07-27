@@ -18,47 +18,45 @@ import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage
 import 'package:flutter_test/flutter_test.dart';
 
 Session _session() => const Session(
-      serverUrl: 'http://192.168.1.10:3000',
-      token: 'device-token',
-      deviceId: 'device_1',
-      member: Member(id: 'member_1', name: 'Alex', color: 'sky', emoji: '🧑'),
-      family: Family(id: 'family_1', name: 'The Family'),
-    );
+  serverUrl: 'http://192.168.1.10:3000',
+  token: 'device-token',
+  deviceId: 'device_1',
+  member: Member(id: 'member_1', name: 'Alex', color: 'sky', emoji: '🧑'),
+  family: Family(id: 'family_1', name: 'The Family'),
+);
 
 void main() {
-  test(
-    'a session persisted before the v10 upgrade is still readable through '
-    'SecureSessionStore.read() with no data loss',
-    () async {
-      final Session original = _session();
-      // Simulates data already sitting in the platform store from before
-      // this upgrade — the pre-upgrade code path wrote the same
-      // `Session.encode()` string, just under
-      // `AndroidOptions(encryptedSharedPreferences: true)`. The cipher
-      // change lives entirely in the native layer below this fake.
-      final TestFlutterSecureStoragePlatform fakePlatform =
-          TestFlutterSecureStoragePlatform(<String, String>{
-        'familyboard.session.v1': original.encode(),
-      });
-      FlutterSecureStoragePlatform.instance = fakePlatform;
+  test('a session persisted before the v10 upgrade is still readable through '
+      'SecureSessionStore.read() with no data loss', () async {
+    final Session original = _session();
+    // Simulates data already sitting in the platform store from before
+    // this upgrade — the pre-upgrade code path wrote the same
+    // `Session.encode()` string, just under
+    // `AndroidOptions(encryptedSharedPreferences: true)`. The cipher
+    // change lives entirely in the native layer below this fake.
+    final TestFlutterSecureStoragePlatform fakePlatform =
+        TestFlutterSecureStoragePlatform(<String, String>{
+          'familyboard.session.v1': original.encode(),
+        });
+    FlutterSecureStoragePlatform.instance = fakePlatform;
 
-      final SecureSessionStore store = SecureSessionStore();
-      final Session? read = await store.read();
+    final SecureSessionStore store = SecureSessionStore();
+    final Session? read = await store.read();
 
-      expect(read, isNotNull);
-      expect(read!.serverUrl, equals(original.serverUrl));
-      expect(read.token, equals(original.token));
-      expect(read.deviceId, equals(original.deviceId));
-      expect(read.member.id, equals(original.member.id));
-      expect(read.family.id, equals(original.family.id));
-    },
-  );
+    expect(read, isNotNull);
+    expect(read!.serverUrl, equals(original.serverUrl));
+    expect(read.token, equals(original.token));
+    expect(read.deviceId, equals(original.deviceId));
+    expect(read.member.id, equals(original.member.id));
+    expect(read.family.id, equals(original.family.id));
+  });
 
   test(
     'write() then read() round-trips under the v10 default AndroidOptions()',
     () async {
-      FlutterSecureStoragePlatform.instance =
-          TestFlutterSecureStoragePlatform(<String, String>{});
+      FlutterSecureStoragePlatform.instance = TestFlutterSecureStoragePlatform(
+        <String, String>{},
+      );
 
       final SecureSessionStore store = SecureSessionStore();
       final Session original = _session();
@@ -74,8 +72,8 @@ void main() {
   test('clear() removes the session key', () async {
     final TestFlutterSecureStoragePlatform fakePlatform =
         TestFlutterSecureStoragePlatform(<String, String>{
-      'familyboard.session.v1': _session().encode(),
-    });
+          'familyboard.session.v1': _session().encode(),
+        });
     FlutterSecureStoragePlatform.instance = fakePlatform;
 
     final SecureSessionStore store = SecureSessionStore();

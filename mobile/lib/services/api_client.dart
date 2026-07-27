@@ -68,8 +68,9 @@ class ApiClientFactory {
                 try {
                   final RequestOptions retryOptions = err.requestOptions;
                   retryOptions.baseUrl = _normalize(newBaseUrl);
-                  final Response<Object?> retried =
-                      await dio.fetch<Object?>(retryOptions);
+                  final Response<Object?> retried = await dio.fetch<Object?>(
+                    retryOptions,
+                  );
                   handler.resolve(retried);
                 } on DioException catch (retryError) {
                   handler.next(retryError);

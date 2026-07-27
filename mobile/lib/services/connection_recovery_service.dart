@@ -57,10 +57,10 @@ class ConnectionRecoveryService {
     MdnsDiscoveryService? discoveryService,
     Connectivity? connectivity,
     Duration? minInterval,
-  })  : _identity = identityService ?? IdentityService(),
-        _discovery = discoveryService ?? MdnsDiscoveryService(),
-        _connectivity = connectivity ?? Connectivity(),
-        _minInterval = minInterval ?? const Duration(seconds: 30);
+  }) : _identity = identityService ?? IdentityService(),
+       _discovery = discoveryService ?? MdnsDiscoveryService(),
+       _connectivity = connectivity ?? Connectivity(),
+       _minInterval = minInterval ?? const Duration(seconds: 30);
 
   final IdentityService _identity;
   final MdnsDiscoveryService _discovery;
@@ -136,8 +136,8 @@ class ConnectionRecoveryService {
   /// connectivity read must not silently disable LAN recovery.
   Future<bool> _isOnWifi() async {
     try {
-      final List<ConnectivityResult> results =
-          await _connectivity.checkConnectivity();
+      final List<ConnectivityResult> results = await _connectivity
+          .checkConnectivity();
       return results.contains(ConnectivityResult.wifi);
     } on Object {
       return true;

@@ -8,34 +8,31 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('builds one entry per non-blank draft, trimming names', () {
-    final List<Map<String, Object?>> payload = buildMembersPayload(
-      const <SetupMemberDraft>[
-        SetupMemberDraft(name: '  Mia  ', color: 'peach', emoji: '👧'),
-        SetupMemberDraft(name: 'Noah', color: 'sky', emoji: '👦'),
-      ],
-    );
+    final List<Map<String, Object?>> payload =
+        buildMembersPayload(const <SetupMemberDraft>[
+          SetupMemberDraft(name: '  Mia  ', color: 'peach', emoji: '👧'),
+          SetupMemberDraft(name: 'Noah', color: 'sky', emoji: '👦'),
+        ]);
 
     expect(payload, hasLength(2));
     expect(
-        payload[0],
-        equals(<String, Object?>{
-          'name': 'Mia',
-          'color': 'peach',
-          'emoji': '👧',
-        }));
+      payload[0],
+      equals(<String, Object?>{'name': 'Mia', 'color': 'peach', 'emoji': '👧'}),
+    );
     expect(payload[1]['name'], equals('Noah'));
-    expect(payload.every((Map<String, Object?> m) => !m.containsKey('role')),
-        isTrue);
+    expect(
+      payload.every((Map<String, Object?> m) => !m.containsKey('role')),
+      isTrue,
+    );
   });
 
   test('drops drafts with a blank or whitespace-only name', () {
-    final List<Map<String, Object?>> payload = buildMembersPayload(
-      const <SetupMemberDraft>[
-        SetupMemberDraft(name: '', color: 'peach', emoji: '👧'),
-        SetupMemberDraft(name: '   ', color: 'sky', emoji: '👦'),
-        SetupMemberDraft(name: 'Mia', color: 'mint', emoji: '🦊'),
-      ],
-    );
+    final List<Map<String, Object?>> payload =
+        buildMembersPayload(const <SetupMemberDraft>[
+          SetupMemberDraft(name: '', color: 'peach', emoji: '👧'),
+          SetupMemberDraft(name: '   ', color: 'sky', emoji: '👦'),
+          SetupMemberDraft(name: 'Mia', color: 'mint', emoji: '🦊'),
+        ]);
 
     expect(payload, hasLength(1));
     expect(payload.single['name'], equals('Mia'));
@@ -44,7 +41,7 @@ void main() {
   test('an all-blank list builds an empty payload', () {
     final List<Map<String, Object?>> payload = buildMembersPayload(
       const <SetupMemberDraft>[
-        SetupMemberDraft(name: '  ', color: 'peach', emoji: '👧')
+        SetupMemberDraft(name: '  ', color: 'peach', emoji: '👧'),
       ],
     );
     expect(payload, isEmpty);

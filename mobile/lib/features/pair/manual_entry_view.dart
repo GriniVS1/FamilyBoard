@@ -111,9 +111,7 @@ class _ManualEntryViewState extends ConsumerState<ManualEntryView> {
           const SizedBox(height: 16),
           TextFormField(
             controller: _nameController,
-            decoration: InputDecoration(
-              labelText: l10n.pairDeviceNameLabel,
-            ),
+            decoration: InputDecoration(labelText: l10n.pairDeviceNameLabel),
             textCapitalization: TextCapitalization.words,
             textInputAction: TextInputAction.done,
             validator: (String? value) {
@@ -153,7 +151,9 @@ class _ManualEntryViewState extends ConsumerState<ManualEntryView> {
     final String server = _serverController.text.trim();
     final String name = _nameController.text.trim();
 
-    await ref.read(pairControllerProvider.notifier).submit(
+    await ref
+        .read(pairControllerProvider.notifier)
+        .submit(
           serverUrl: server,
           code: code,
           deviceName: name,

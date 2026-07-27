@@ -41,33 +41,35 @@ final Provider<IdentityService> identityServiceProvider =
 /// Finds the wall again on the LAN (alt URL, then mDNS) when its IP changes.
 final Provider<ConnectionRecoveryService> connectionRecoveryServiceProvider =
     Provider<ConnectionRecoveryService>(
-  (Ref ref) => ConnectionRecoveryService(
-    identityService: ref.watch(identityServiceProvider),
-  ),
-);
+      (Ref ref) => ConnectionRecoveryService(
+        identityService: ref.watch(identityServiceProvider),
+      ),
+    );
 
 /// Wires [ApiClientFactory]'s error-interceptor recovery hook to
 /// [ConnectionRecoveryService] + [SessionNotifier], so a rediscovered URL is
 /// persisted before the failed request is retried against it.
 final Provider<ApiClientFactory> apiClientFactoryProvider =
     Provider<ApiClientFactory>((Ref ref) {
-  return ApiClientFactory(
-    recovery: (Session session) async {
-      final RecoveredConnection? recovered =
-          await ref.read(connectionRecoveryServiceProvider).recover(session);
-      if (recovered == null) {
-        return null;
-      }
-      await ref
-          .read(sessionProvider.notifier)
-          .applyRecoveredConnection(recovered);
-      return recovered.serverUrl;
-    },
-  );
-});
+      return ApiClientFactory(
+        recovery: (Session session) async {
+          final RecoveredConnection? recovered = await ref
+              .read(connectionRecoveryServiceProvider)
+              .recover(session);
+          if (recovered == null) {
+            return null;
+          }
+          await ref
+              .read(sessionProvider.notifier)
+              .applyRecoveredConnection(recovered);
+          return recovered.serverUrl;
+        },
+      );
+    });
 
-final Provider<CacheDb> cacheDbProvider =
-    Provider<CacheDb>((_) => CacheDb.instance);
+final Provider<CacheDb> cacheDbProvider = Provider<CacheDb>(
+  (_) => CacheDb.instance,
+);
 
 final Provider<PairService> pairServiceProvider = Provider<PairService>(
   (Ref ref) => PairService(clientFactory: ref.watch(apiClientFactoryProvider)),
@@ -75,9 +77,9 @@ final Provider<PairService> pairServiceProvider = Provider<PairService>(
 
 final Provider<HeartbeatService> heartbeatServiceProvider =
     Provider<HeartbeatService>(
-  (Ref ref) =>
-      HeartbeatService(clientFactory: ref.watch(apiClientFactoryProvider)),
-);
+      (Ref ref) =>
+          HeartbeatService(clientFactory: ref.watch(apiClientFactoryProvider)),
+    );
 
 final Provider<FcmService> fcmServiceProvider = Provider<FcmService>(
   (Ref ref) => FcmService(clientFactory: ref.watch(apiClientFactoryProvider)),
@@ -85,19 +87,19 @@ final Provider<FcmService> fcmServiceProvider = Provider<FcmService>(
 
 final Provider<WriteQueueService> writeQueueServiceProvider =
     Provider<WriteQueueService>(
-  (Ref ref) => WriteQueueService(
-    db: ref.watch(cacheDbProvider),
-    clientFactory: ref.watch(apiClientFactoryProvider),
-  ),
-);
+      (Ref ref) => WriteQueueService(
+        db: ref.watch(cacheDbProvider),
+        clientFactory: ref.watch(apiClientFactoryProvider),
+      ),
+    );
 
 final Provider<MutationsService> mutationsServiceProvider =
     Provider<MutationsService>(
-  (Ref ref) => MutationsService(
-    writeQueueService: ref.watch(writeQueueServiceProvider),
-    clientFactory: ref.watch(apiClientFactoryProvider),
-  ),
-);
+      (Ref ref) => MutationsService(
+        writeQueueService: ref.watch(writeQueueServiceProvider),
+        clientFactory: ref.watch(apiClientFactoryProvider),
+      ),
+    );
 
 final Provider<TodayService> todayServiceProvider = Provider<TodayService>(
   (Ref ref) => TodayService(
@@ -131,32 +133,33 @@ final Provider<TodosService> todosServiceProvider = Provider<TodosService>(
 
 final Provider<GroceryService> groceryServiceProvider =
     Provider<GroceryService>(
-  (Ref ref) => GroceryService(
-    clientFactory: ref.watch(apiClientFactoryProvider),
-    cacheDb: ref.watch(cacheDbProvider),
-    writeQueueService: ref.watch(writeQueueServiceProvider),
-  ),
-);
+      (Ref ref) => GroceryService(
+        clientFactory: ref.watch(apiClientFactoryProvider),
+        cacheDb: ref.watch(cacheDbProvider),
+        writeQueueService: ref.watch(writeQueueServiceProvider),
+      ),
+    );
 
 final Provider<MealPlanService> mealPlanServiceProvider =
     Provider<MealPlanService>(
-  (Ref ref) => MealPlanService(
-    clientFactory: ref.watch(apiClientFactoryProvider),
-    cacheDb: ref.watch(cacheDbProvider),
-  ),
-);
+      (Ref ref) => MealPlanService(
+        clientFactory: ref.watch(apiClientFactoryProvider),
+        cacheDb: ref.watch(cacheDbProvider),
+      ),
+    );
 
 final Provider<CalendarSetupService> calendarSetupServiceProvider =
     Provider<CalendarSetupService>(
-  (Ref ref) =>
-      CalendarSetupService(clientFactory: ref.watch(apiClientFactoryProvider)),
-);
+      (Ref ref) => CalendarSetupService(
+        clientFactory: ref.watch(apiClientFactoryProvider),
+      ),
+    );
 
 final Provider<MembersService> membersServiceProvider =
     Provider<MembersService>(
-  (Ref ref) =>
-      MembersService(clientFactory: ref.watch(apiClientFactoryProvider)),
-);
+      (Ref ref) =>
+          MembersService(clientFactory: ref.watch(apiClientFactoryProvider)),
+    );
 
 final Provider<PhotosService> photosServiceProvider = Provider<PhotosService>(
   (Ref ref) =>
@@ -166,13 +169,9 @@ final Provider<PhotosService> photosServiceProvider = Provider<PhotosService>(
 class SessionState {
   const SessionState({required this.loaded, required this.session});
 
-  const SessionState.loading()
-      : loaded = false,
-        session = null;
+  const SessionState.loading() : loaded = false, session = null;
 
-  const SessionState.none()
-      : loaded = true,
-        session = null;
+  const SessionState.none() : loaded = true, session = null;
 
   const SessionState.signedIn(this.session) : loaded = true;
 
@@ -198,9 +197,9 @@ class SessionNotifier extends Notifier<SessionState>
   /// [didChangeAppLifecycleState] and [clear].
   late final ForegroundPollController _pollController =
       ForegroundPollController(
-    interval: const Duration(seconds: 30),
-    onTick: _pollTick,
-  );
+        interval: const Duration(seconds: 30),
+        onTick: _pollTick,
+      );
 
   @override
   SessionState build() {
@@ -212,10 +211,11 @@ class SessionNotifier extends Notifier<SessionState>
     // Return-to-LAN trigger #2: connectivity flips to Wi-Fi while we're
     // pinned to the relay. Trigger #1 (app resume) is the
     // didChangeAppLifecycleState override below.
-    ref.listen<AsyncValue<bool>>(wifiConnectivityProvider,
-        (AsyncValue<bool>? previous, AsyncValue<bool> next) {
-      final bool cameOnWifi =
-          next.valueOrNull == true && previous?.valueOrNull != true;
+    ref.listen<AsyncValue<bool>>(wifiConnectivityProvider, (
+      AsyncValue<bool>? previous,
+      AsyncValue<bool> next,
+    ) {
+      final bool cameOnWifi = next.value == true && previous?.value != true;
       if (cameOnWifi) {
         unawaited(_maybeReturnToLan());
       }
@@ -294,8 +294,9 @@ class SessionNotifier extends Notifier<SessionState>
   }
 
   Future<void> _backfillFromIdentity(Session session) async {
-    final IdentityResult? result =
-        await ref.read(identityServiceProvider).fetch(session.serverUrl);
+    final IdentityResult? result = await ref
+        .read(identityServiceProvider)
+        .fetch(session.serverUrl);
     if (result != null) {
       await applyIdentity(result);
     }
@@ -371,8 +372,9 @@ class SessionNotifier extends Notifier<SessionState>
       // activeUrl is set but isn't the relay — nothing to flip back from.
       return;
     }
-    final RecoveredConnection? lan =
-        await ref.read(connectionRecoveryServiceProvider).probeLan(current);
+    final RecoveredConnection? lan = await ref
+        .read(connectionRecoveryServiceProvider)
+        .probeLan(current);
     if (lan == null) {
       return;
     }
