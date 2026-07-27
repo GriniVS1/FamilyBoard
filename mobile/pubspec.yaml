@@ -1,7 +1,7 @@
 name: familyboard_mobile
 description: FamilyBoard mobile companion app (M2.1 skeleton — pairing + home stub).
 publish_to: "none"
-version: 0.1.12
+version: 0.1.13
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -29,7 +29,7 @@ dependencies:
   url_launcher: ^6.3.2
 
 dev_dependencies:
-  flutter_lints: ^4.0.0
+  flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
 
