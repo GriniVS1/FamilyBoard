@@ -6,7 +6,13 @@ class SecureSessionStore {
   SecureSessionStore({FlutterSecureStorage? storage})
       : _storage = storage ??
             const FlutterSecureStorage(
-              aOptions: AndroidOptions(encryptedSharedPreferences: true),
+              // `encryptedSharedPreferences` is deprecated in v10 (Jetpack
+              // Security library is deprecated upstream); the plugin's
+              // default AndroidOptions() now uses custom AES-GCM/RSA-OAEP
+              // ciphers and auto-migrates any v9 encryptedSharedPreferences
+              // data in place via `migrateOnAlgorithmChange` (default true)
+              // — no explicit option or code migration needed here.
+              aOptions: AndroidOptions(),
               iOptions: IOSOptions(
                 // first_unlock_this_device (kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
                 // is non-migratable and excluded from iTunes/Finder backups,
