@@ -4,6 +4,10 @@
   "@appTitle": {
     "description": "Application title shown on the app bar and OS app switcher."
   },
+  "moreTitle": "More",
+  "@moreTitle": {
+    "description": "Label of the fifth bottom-nav tab and title of the screen it opens, listing Notes/Photos/Settings."
+  },
   "splashLoading": "Loading…",
   "@splashLoading": {},
   "pairTitle": "Pair this device",
@@ -574,6 +578,10 @@
   "remoteConnectionTooltip": "Connected via the cloud relay (away from home Wi-Fi)",
   "@remoteConnectionTooltip": {
     "description": "Tooltip on the small cloud icon shown in the app bar when the app is talking to the wall through the cloud relay instead of the LAN."
+  },
+  "photosTitle": "Photos",
+  "@photosTitle": {
+    "description": "Label for the Photos entry in the More screen list."
   },
   "photosOpenAria": "Open photos",
   "@photosOpenAria": {},

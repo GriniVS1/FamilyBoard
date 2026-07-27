@@ -9,6 +9,7 @@ import 'features/calendar/calendar_screen.dart';
 import 'features/grocery/grocery_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/meal_plan/meal_plan_screen.dart';
+import 'features/more/more_screen.dart';
 import 'features/notes/notes_screen.dart';
 import 'features/pair/pair_screen.dart';
 import 'features/pair/qr_scanner_view.dart';
@@ -18,6 +19,7 @@ import 'features/setup_onboarding/setup_onboarding_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'models/notification_payload.dart';
+import 'navigation/app_shell.dart';
 import 'services/fcm_service.dart';
 import 'services/write_queue_service.dart';
 import 'state/locale_provider.dart';
@@ -25,6 +27,14 @@ import 'state/session_provider.dart';
 import 'state/write_queue_provider.dart';
 import 'theme.dart';
 import 'widgets/connectivity_banner.dart';
+
+/// Root navigator — hosts the bottom-tab shell itself plus every route that
+/// should push *over* it (Notes, Photos, Settings, pairing, splash). The
+/// shell's own branches get their own nested navigators (declared per
+/// `StatefulShellBranch` below) so in-branch pushes (event detail sheets,
+/// etc.) stay scoped to that branch.
+final GlobalKey<NavigatorState> _rootNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'root');
 
 /// Global messenger key so foreground FCM callbacks can show snackbars
 /// from outside the widget tree.
@@ -78,6 +88,7 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
   GoRouter _buildRouter() {
     final _RouterRefresh refresh = _RouterRefresh(ref);
     return GoRouter(
+      navigatorKey: _rootNavigatorKey,
       initialLocation: '/splash',
       refreshListenable: refresh,
       redirect: (BuildContext context, GoRouterState routerState) {
@@ -101,7 +112,8 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
             location == '/grocery' ||
             location == '/meal-plan' ||
             location == '/photos' ||
-            location == '/settings') {
+            location == '/settings' ||
+            location == '/more') {
           return '/pair';
         }
         return null;
@@ -130,30 +142,14 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
             payload: routerState.extra! as ScannedSetupPayload,
           ),
         ),
-        GoRoute(
-          path: '/home',
-          builder: (BuildContext context, GoRouterState routerState) =>
-              const HomeScreen(),
-        ),
-        GoRoute(
-          path: '/calendar',
-          builder: (BuildContext context, GoRouterState routerState) =>
-              const CalendarScreen(),
-        ),
+        // Full-screen flows that must cover the bottom-tab bar. These are
+        // deliberately siblings of the shell route below (not nested inside
+        // any branch), so GoRouter pushes them on the root navigator —
+        // exactly like /pair and /splash above.
         GoRoute(
           path: '/notes',
           builder: (BuildContext context, GoRouterState routerState) =>
               const NotesScreen(),
-        ),
-        GoRoute(
-          path: '/grocery',
-          builder: (BuildContext context, GoRouterState routerState) =>
-              const GroceryScreen(),
-        ),
-        GoRoute(
-          path: '/meal-plan',
-          builder: (BuildContext context, GoRouterState routerState) =>
-              const MealPlanScreen(),
         ),
         GoRoute(
           path: '/photos',
@@ -164,6 +160,61 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           path: '/settings',
           builder: (BuildContext context, GoRouterState routerState) =>
               const SettingsScreen(),
+        ),
+        StatefulShellRoute.indexedStack(
+          builder: (
+            BuildContext context,
+            GoRouterState routerState,
+            StatefulNavigationShell navigationShell,
+          ) =>
+              AppShell(navigationShell: navigationShell),
+          branches: <StatefulShellBranch>[
+            StatefulShellBranch(
+              routes: <RouteBase>[
+                GoRoute(
+                  path: '/home',
+                  builder: (BuildContext context, GoRouterState routerState) =>
+                      const HomeScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: <RouteBase>[
+                GoRoute(
+                  path: '/calendar',
+                  builder: (BuildContext context, GoRouterState routerState) =>
+                      const CalendarScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: <RouteBase>[
+                GoRoute(
+                  path: '/meal-plan',
+                  builder: (BuildContext context, GoRouterState routerState) =>
+                      const MealPlanScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: <RouteBase>[
+                GoRoute(
+                  path: '/grocery',
+                  builder: (BuildContext context, GoRouterState routerState) =>
+                      const GroceryScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: <RouteBase>[
+                GoRoute(
+                  path: '/more',
+                  builder: (BuildContext context, GoRouterState routerState) =>
+                      const MoreScreen(),
+                ),
+              ],
+            ),
+          ],
         ),
       ],
     );
