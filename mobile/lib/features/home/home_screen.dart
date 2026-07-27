@@ -19,7 +19,9 @@ import '../../services/fcm_service.dart';
 import '../../services/notes_service.dart';
 import '../../services/today_service.dart';
 import '../../services/todos_service.dart';
+import '../../state/data_refresh.dart';
 import '../../state/events_provider.dart';
+import '../../state/home_range_provider.dart';
 import '../../state/members_provider.dart';
 import '../../state/notes_provider.dart';
 import '../../state/session_provider.dart';
@@ -110,32 +112,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
   }
 
-  /// Today (inclusive) through +8 days — covers the Heute card (today) and
-  /// the Demnächst card (the 7 days after today) from a single fetch.
-  EventsRange _eventsRange() {
-    final DateTime today = _todayMidnight();
-    return EventsRange(from: today, to: today.add(const Duration(days: 8)));
-  }
-
+  /// Pull-to-refresh — uses the same provider set as resume-refresh and
+  /// foreground polling (see `state/data_refresh.dart`), with futures
+  /// awaited so `RefreshIndicator` knows when to stop spinning. Reads
+  /// [currentHomeRangeProvider] rather than recomputing a range so this
+  /// always targets exactly the instance the widget tree below is watching.
   Future<void> _refreshAll() async {
-    final EventsRange range = _eventsRange();
-    ref.invalidate(eventsProvider(range));
-    ref.invalidate(todayProvider);
-    ref.invalidate(todosProvider);
-    ref.invalidate(notesProvider);
-    // Kick every fetch off immediately, then await each independently so one
-    // slow/failing card doesn't block the others from refreshing.
-    final List<Future<void>> pending = <Future<void>>[
-      ref.read(eventsProvider(range).future).then((_) {}),
-      ref.read(todayProvider.future).then((_) {}),
-      ref.read(todosProvider.future).then((_) {}),
-      ref.read(notesProvider.future).then((_) {}),
-    ];
-    for (final Future<void> f in pending) {
-      try {
-        await f;
-      } catch (_) {}
-    }
+    await refreshVisibleData(
+      range: ref.read(currentHomeRangeProvider),
+      invalidate: ref.invalidate,
+      read: ref.read,
+    );
   }
 
   @override
@@ -150,7 +137,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
     }
 
     final Color accent = AccentPalette.resolve(session.member.color);
-    final EventsRange range = _eventsRange();
+    // Watched (not read) so a midnight rollover — handled internally by
+    // HomeRangeNotifier's own timer, independent of any lifecycle event —
+    // rebuilds this screen with the corrected window.
+    final EventsRange range = ref.watch(currentHomeRangeProvider);
 
     return Scaffold(
       appBar: AppBar(
