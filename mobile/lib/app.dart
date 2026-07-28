@@ -17,6 +17,7 @@ import 'features/photos/photos_screen.dart';
 import 'features/settings/settings_screen.dart';
 import 'features/setup_onboarding/setup_onboarding_screen.dart';
 import 'features/splash/splash_screen.dart';
+import 'features/tasks/tasks_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'models/notification_payload.dart';
 import 'navigation/app_shell.dart';
@@ -111,6 +112,7 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
             location == '/meal-plan' ||
             location == '/photos' ||
             location == '/settings' ||
+            location == '/tasks' ||
             location == '/more') {
           return '/pair';
         }
@@ -158,6 +160,11 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
           path: '/settings',
           builder: (BuildContext context, GoRouterState routerState) =>
               const SettingsScreen(),
+        ),
+        GoRoute(
+          path: '/tasks',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const TasksScreen(),
         ),
         StatefulShellRoute.indexedStack(
           builder:

@@ -7,6 +7,7 @@ import '../db/cache_db.dart';
 import '../models/session.dart';
 import '../services/api_client.dart';
 import '../services/calendar_setup_service.dart';
+import '../services/chores_service.dart';
 import '../services/connection_recovery_service.dart';
 import '../services/events_service.dart';
 import '../services/fcm_service.dart';
@@ -126,6 +127,15 @@ final Provider<NotesService> notesServiceProvider = Provider<NotesService>(
 /// Read-only — writes for todos go through [mutationsServiceProvider].
 final Provider<TodosService> todosServiceProvider = Provider<TodosService>(
   (Ref ref) => TodosService(
+    clientFactory: ref.watch(apiClientFactoryProvider),
+    cacheDb: ref.watch(cacheDbProvider),
+  ),
+);
+
+/// Read-only — writes for chores (complete/undo/create) go through
+/// [mutationsServiceProvider].
+final Provider<ChoresService> choresServiceProvider = Provider<ChoresService>(
+  (Ref ref) => ChoresService(
     clientFactory: ref.watch(apiClientFactoryProvider),
     cacheDb: ref.watch(cacheDbProvider),
   ),

@@ -194,6 +194,15 @@ class _EventDetailSheetState extends ConsumerState<EventDetailSheet> {
                     context,
                   ).colorScheme.onSurface.withValues(alpha: 0.4),
                 ),
+              SizedBox(
+                width: 48,
+                height: 48,
+                child: IconButton(
+                  icon: const Icon(Icons.close),
+                  tooltip: l10n.calendarEventCloseTooltip,
+                  onPressed: _busy ? null : () => Navigator.of(context).pop(),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),

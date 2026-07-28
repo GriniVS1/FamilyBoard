@@ -30,8 +30,10 @@ import '../../state/todos_provider.dart';
 import '../../theme.dart';
 import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/member_chip.dart';
 import '../../widgets/queue_badge.dart';
 import '../chores/chore_create_sheet.dart';
+import 'home_chore_filter.dart';
 
 /// Local midnight today on the device.
 DateTime _todayMidnight() {
@@ -677,10 +679,17 @@ class _ChoresCardBody extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final int done = payload.chores
+    // Only the signed-in member's own chores, plus unassigned ones — see
+    // `filterHomeChores` for why unassigned chores stay visible to everyone.
+    // The full family list lives on the Tasks screen (`/tasks`).
+    final List<TodayChore> visibleChores = filterHomeChores(
+      payload.chores,
+      session.member.id,
+    );
+    final int done = visibleChores
         .where((TodayChore c) => c.completedToday)
         .length;
-    final int total = payload.chores.length;
+    final int total = visibleChores.length;
     final AsyncValue<MembersResult> membersAsync = ref.watch(membersProvider);
     final bool isAdmin = membersAsync.value?.isAdmin ?? false;
 
@@ -703,6 +712,11 @@ class _ChoresCardBody extends ConsumerWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
+                TextButton(
+                  style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                  onPressed: () => context.push('/tasks'),
+                  child: Text(l10n.homeSeeAll),
+                ),
                 if (isAdmin)
                   SizedBox(
                     width: 48,
@@ -716,10 +730,10 @@ class _ChoresCardBody extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 12),
-            if (payload.chores.isEmpty)
+            if (visibleChores.isEmpty)
               _EmptyState(message: l10n.homeNoChores)
             else
-              ...payload.chores.map(
+              ...visibleChores.map(
                 (TodayChore chore) =>
                     _ChoreRow(chore: chore, session: session, l10n: l10n),
               ),
@@ -943,6 +957,15 @@ class _ChoreRowState extends ConsumerState<_ChoreRow> {
                   ),
                 ),
                 const SizedBox(width: 8),
+                if (widget.chore.member != null)
+                  MemberChip(
+                    name: widget.chore.member!.name,
+                    color: widget.chore.member!.color,
+                    emoji: widget.chore.member!.emoji,
+                  )
+                else
+                  UnassignedChip(label: widget.l10n.tasksChoreUnassigned),
+                const SizedBox(width: 8),
                 if (_busy)
                   const SizedBox(
                     width: 16,
@@ -1139,8 +1162,8 @@ class _TodosCard extends ConsumerWidget {
   }
 }
 
-/// Todos beyond this count are hidden — there is no dedicated `/todos` screen
-/// to link out to yet (see mobile M3.4/backend follow-ups).
+/// Todos beyond this count are hidden — the full family list is one tap away
+/// via the "Alle anzeigen" link, which pushes the Tasks screen (`/tasks`).
 const int _todosCardCap = 8;
 
 class _TodosCardBody extends ConsumerStatefulWidget {
@@ -1233,9 +1256,21 @@ class _TodosCardBodyState extends ConsumerState<_TodosCardBody> {
               CachedAtPill(staleAt: widget.staleAt),
               const SizedBox(height: 8),
             ],
-            Text(
-              widget.l10n.homeTodosHeading(open),
-              style: Theme.of(context).textTheme.titleMedium,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: <Widget>[
+                Expanded(
+                  child: Text(
+                    widget.l10n.homeTodosHeading(open),
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+                  onPressed: () => context.push('/tasks'),
+                  child: Text(widget.l10n.homeSeeAll),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             if (visible.isEmpty)
@@ -1525,7 +1560,11 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
                   ),
                 ),
                 if (widget.todo.member != null) ...<Widget>[
-                  _TodoMemberChip(member: widget.todo.member!),
+                  MemberChip(
+                    name: widget.todo.member!.name,
+                    color: widget.todo.member!.color,
+                    emoji: widget.todo.member!.emoji,
+                  ),
                   const SizedBox(width: 8),
                 ],
                 Expanded(
@@ -1592,34 +1631,6 @@ class _TodoRowState extends ConsumerState<_TodoRow> {
     final DateTime today = DateTime(now.year, now.month, now.day);
     final DateTime due = DateTime(dueDate.year, dueDate.month, dueDate.day);
     return due.isBefore(today);
-  }
-}
-
-class _TodoMemberChip extends StatelessWidget {
-  const _TodoMemberChip({required this.member});
-
-  final TodoMember member;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color accent = AccentPalette.resolve(member.color);
-    final String label = member.emoji.isNotEmpty
-        ? member.emoji
-        : (member.name.isNotEmpty ? member.name[0].toUpperCase() : '?');
-    return Tooltip(
-      message: member.name,
-      child: Container(
-        width: 24,
-        height: 24,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: accent.withValues(alpha: 0.25),
-          shape: BoxShape.circle,
-          border: Border.all(color: accent, width: 1.5),
-        ),
-        child: Text(label, style: const TextStyle(fontSize: 12)),
-      ),
-    );
   }
 }
 

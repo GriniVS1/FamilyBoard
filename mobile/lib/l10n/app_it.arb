@@ -4,6 +4,16 @@
   "@appTitle": {},
   "moreTitle": "Altro",
   "@moreTitle": {},
+  "tasksTitle": "Attività e faccende",
+  "@tasksTitle": {},
+  "tasksChoreCompletedBy": "Fatto da {name}",
+  "@tasksChoreCompletedBy": {
+    "placeholders": {
+      "name": { "type": "String", "example": "Mia" }
+    }
+  },
+  "tasksChoreUnassigned": "Tutti",
+  "@tasksChoreUnassigned": {},
   "splashLoading": "Caricamento…",
   "@splashLoading": {},
   "pairTitle": "Associa questo dispositivo",
@@ -498,6 +508,14 @@
   "@calendarErrorEventNotFound": {},
   "calendarErrorSaveGeneric": "Impossibile salvare l'evento. Riprova.",
   "@calendarErrorSaveGeneric": {},
+  "calendarEventCloseTooltip": "Chiudi",
+  "@calendarEventCloseTooltip": {},
+  "calendarDiscardConfirm": "Scartare le modifiche?",
+  "@calendarDiscardConfirm": {},
+  "calendarDiscardKeepEditing": "Continua a modificare",
+  "@calendarDiscardKeepEditing": {},
+  "calendarDiscardButton": "Scarta",
+  "@calendarDiscardButton": {},
   "settingsSectionMembers": "Membri della famiglia",
   "@settingsSectionMembers": {},
   "membersRoleAdmin": "Admin",

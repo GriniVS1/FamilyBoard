@@ -4,6 +4,16 @@
   "@appTitle": {},
   "moreTitle": "Plus",
   "@moreTitle": {},
+  "tasksTitle": "Tâches et corvées",
+  "@tasksTitle": {},
+  "tasksChoreCompletedBy": "Fait par {name}",
+  "@tasksChoreCompletedBy": {
+    "placeholders": {
+      "name": { "type": "String", "example": "Mia" }
+    }
+  },
+  "tasksChoreUnassigned": "Tous",
+  "@tasksChoreUnassigned": {},
   "splashLoading": "Chargement…",
   "@splashLoading": {},
   "pairTitle": "Associer cet appareil",
@@ -498,6 +508,14 @@
   "@calendarErrorEventNotFound": {},
   "calendarErrorSaveGeneric": "Impossible d'enregistrer l'événement. Réessaie.",
   "@calendarErrorSaveGeneric": {},
+  "calendarEventCloseTooltip": "Fermer",
+  "@calendarEventCloseTooltip": {},
+  "calendarDiscardConfirm": "Annuler tes modifications ?",
+  "@calendarDiscardConfirm": {},
+  "calendarDiscardKeepEditing": "Continuer la modification",
+  "@calendarDiscardKeepEditing": {},
+  "calendarDiscardButton": "Ignorer",
+  "@calendarDiscardButton": {},
   "settingsSectionMembers": "Membres de la famille",
   "@settingsSectionMembers": {},
   "membersRoleAdmin": "Admin",

@@ -43,6 +43,12 @@ Future<void> showEventEditSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    // Dismissal is gated behind the sheet's own dirty-check (close button /
+    // Cancel / system back, all routed through `_handleClose`) rather than
+    // the default tap-outside/drag-to-dismiss gestures, which would discard
+    // a filled-in form silently. See `_EventEditSheetState._handleClose`.
+    isDismissible: false,
+    enableDrag: false,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -88,7 +94,18 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
   DateTime? _recurrenceEndDate;
   bool _busy = false;
 
+  /// True once the user has changed anything from its initial value —
+  /// gates the discard-confirmation on close (see `_handleClose`).
+  bool _dirty = false;
+
   bool get _isEdit => widget.event != null;
+
+  /// Marks the form dirty and rebuilds — used both by discrete field
+  /// setters and by the text-controller listeners below, replacing their
+  /// previous plain `setState(() {})` (kept for `_isValid` reactivity).
+  void _markDirty() {
+    setState(() => _dirty = true);
+  }
 
   @override
   void initState() {
@@ -97,6 +114,9 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
     _titleController = TextEditingController(text: e?.title ?? '');
     _descriptionController = TextEditingController(text: e?.description ?? '');
     _locationController = TextEditingController(text: e?.location ?? '');
+    _titleController.addListener(_markDirty);
+    _descriptionController.addListener(_markDirty);
+    _locationController.addListener(_markDirty);
     _memberId = e?.member.id;
     _color = e?.color ?? e?.member.color ?? 'sky';
     _allDay = e?.allDay ?? false;
@@ -168,6 +188,7 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
       return;
     }
     setState(() {
+      _dirty = true;
       if (isStart) {
         _startDate = picked;
         if (_endDate.isBefore(_startDate)) {
@@ -189,6 +210,7 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
       return;
     }
     setState(() {
+      _dirty = true;
       if (isStart) {
         _startTime = picked;
       } else {
@@ -208,7 +230,40 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
     if (picked == null || !mounted) {
       return;
     }
-    setState(() => _recurrenceEndDate = picked);
+    setState(() {
+      _dirty = true;
+      _recurrenceEndDate = picked;
+    });
+  }
+
+  /// Closes the sheet — with a discard-confirmation if the form is dirty,
+  /// otherwise immediately. Wired to the header close button, the bottom
+  /// Cancel button, and (via [PopScope] below) the system back gesture.
+  Future<void> _handleClose() async {
+    if (_busy) {
+      return;
+    }
+    if (!_dirty) {
+      Navigator.of(context).pop();
+      return;
+    }
+    final bool discard = await confirmDiscardEventChanges(
+      context,
+      AppL10n.of(context),
+    );
+    if (discard && mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
+  /// [PopScope.onPopInvokedWithResult] handler for the system back gesture —
+  /// the only pop path [canPop] can actually block, since drag/tap-outside
+  /// are disabled on this sheet (see `showEventEditSheet`).
+  Future<void> _handlePopInvoked(bool didPop, Object? result) async {
+    if (didPop) {
+      return;
+    }
+    await _handleClose();
   }
 
   Future<void> _save() async {
@@ -298,203 +353,239 @@ class _EventEditSheetState extends ConsumerState<EventEditSheet> {
     final String locale = Localizations.localeOf(context).toString();
     final AsyncValue<MembersResult> membersAsync = ref.watch(membersProvider);
 
-    return Padding(
-      padding: EdgeInsets.only(
-        left: 24,
-        right: 24,
-        top: 24,
-        bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
-      ),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            Text(
-              _isEdit
-                  ? l10n.calendarEventEditTitle
-                  : l10n.calendarEventCreateTitle,
-              style: Theme.of(context).textTheme.headlineSmall,
-            ),
-            if (widget.readOnlyCore && widget.event != null) ...<Widget>[
-              const SizedBox(height: 12),
-              EventReadOnlyBanner(source: widget.event!.source, l10n: l10n),
-            ],
-            const SizedBox(height: 16),
-            if (!widget.readOnlyCore) ...<Widget>[
-              TextField(
-                controller: _titleController,
-                autofocus: !_isEdit,
-                textCapitalization: TextCapitalization.sentences,
-                onChanged: (String _) => setState(() {}),
-                decoration: InputDecoration(
-                  labelText: l10n.calendarEventTitleLabel,
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-            Text(
-              l10n.calendarEventMemberLabel,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            membersAsync.when(
-              loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 8),
-                child: LinearProgressIndicator(),
-              ),
-              error: (Object err, StackTrace _) => Text(
-                l10n.calendarErrorSaveGeneric,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-              ),
-              data: (MembersResult result) {
-                _memberId ??= result.members.isNotEmpty
-                    ? result.members.first.id
-                    : null;
-                return _MemberChipRow(
-                  members: result.members,
-                  selectedId: _memberId,
-                  onSelected: (String id) => setState(() => _memberId = id),
-                );
-              },
-            ),
-            const SizedBox(height: 16),
-            Text(
-              l10n.calendarEventColorLabel,
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            _ColorSwatchRow(
-              selectedColor: _color,
-              onChanged: (String c) => setState(() => _color = c),
-            ),
-            if (!widget.readOnlyCore) ...<Widget>[
-              const SizedBox(height: 16),
+    return PopScope<Object?>(
+      // Drag-to-dismiss and tap-outside are disabled on this sheet (see
+      // `showEventEditSheet`), so the system back gesture is the only
+      // dismissal path this guards — explicit pops from `_handleClose` and
+      // `_save` are unaffected by `canPop` (see `Navigator.pop` vs
+      // `Navigator.maybePop`).
+      canPop: !_dirty,
+      onPopInvokedWithResult: _handlePopInvoked,
+      child: Padding(
+        padding: EdgeInsets.only(
+          left: 24,
+          right: 24,
+          top: 24,
+          bottom: MediaQuery.viewInsetsOf(context).bottom + 24,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[
               Row(
                 children: <Widget>[
                   Expanded(
                     child: Text(
-                      l10n.calendarEventAllDayLabel,
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      _isEdit
+                          ? l10n.calendarEventEditTitle
+                          : l10n.calendarEventCreateTitle,
+                      style: Theme.of(context).textTheme.headlineSmall,
                     ),
                   ),
-                  Switch(
-                    value: _allDay,
-                    onChanged: _busy
-                        ? null
-                        : (bool v) => setState(() => _allDay = v),
+                  SizedBox(
+                    width: 48,
+                    height: 48,
+                    child: IconButton(
+                      icon: const Icon(Icons.close),
+                      tooltip: l10n.calendarEventCloseTooltip,
+                      onPressed: _busy ? null : _handleClose,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              _DateTimeRow(
-                label: l10n.calendarEventStartLabel,
-                date: _startDate,
-                time: _startTime,
-                allDay: _allDay,
-                locale: locale,
-                busy: _busy,
-                onPickDate: () => _pickDate(isStart: true),
-                onPickTime: () => _pickTime(isStart: true),
-              ),
-              const SizedBox(height: 8),
-              _DateTimeRow(
-                label: l10n.calendarEventEndLabel,
-                date: _endDate,
-                time: _endTime,
-                allDay: _allDay,
-                locale: locale,
-                busy: _busy,
-                onPickDate: () => _pickDate(isStart: false),
-                onPickTime: () => _pickTime(isStart: false),
-              ),
-              if (!_endDateTime.isAfter(_startDateTime)) ...<Widget>[
-                const SizedBox(height: 8),
-                Text(
-                  l10n.calendarValidationEndAfterStart,
-                  style: TextStyle(color: Theme.of(context).colorScheme.error),
-                ),
+              if (widget.readOnlyCore && widget.event != null) ...<Widget>[
+                const SizedBox(height: 12),
+                EventReadOnlyBanner(source: widget.event!.source, l10n: l10n),
               ],
               const SizedBox(height: 16),
-              TextField(
-                controller: _locationController,
-                decoration: InputDecoration(
-                  labelText: l10n.calendarEventLocationLabel,
+              if (!widget.readOnlyCore) ...<Widget>[
+                TextField(
+                  controller: _titleController,
+                  autofocus: !_isEdit,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: InputDecoration(
+                    labelText: l10n.calendarEventTitleLabel,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _descriptionController,
-                minLines: 2,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  labelText: l10n.calendarEventDescriptionLabel,
-                ),
-              ),
-              if (!_isEdit) ...<Widget>[
                 const SizedBox(height: 16),
-                Text(
-                  l10n.calendarEventRecurrenceLabel,
-                  style: Theme.of(context).textTheme.titleSmall,
+              ],
+              Text(
+                l10n.calendarEventMemberLabel,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              membersAsync.when(
+                loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: LinearProgressIndicator(),
+                ),
+                error: (Object err, StackTrace _) => Text(
+                  l10n.calendarErrorSaveGeneric,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+                data: (MembersResult result) {
+                  _memberId ??= result.members.isNotEmpty
+                      ? result.members.first.id
+                      : null;
+                  return _MemberChipRow(
+                    members: result.members,
+                    selectedId: _memberId,
+                    onSelected: (String id) => setState(() {
+                      _memberId = id;
+                      _dirty = true;
+                    }),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              Text(
+                l10n.calendarEventColorLabel,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+              const SizedBox(height: 8),
+              _ColorSwatchRow(
+                selectedColor: _color,
+                onChanged: (String c) => setState(() {
+                  _color = c;
+                  _dirty = true;
+                }),
+              ),
+              if (!widget.readOnlyCore) ...<Widget>[
+                const SizedBox(height: 16),
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        l10n.calendarEventAllDayLabel,
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ),
+                    Switch(
+                      value: _allDay,
+                      onChanged: _busy
+                          ? null
+                          : (bool v) => setState(() {
+                              _allDay = v;
+                              _dirty = true;
+                            }),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
-                _RecurrencePicker(
-                  value: _recurrence,
-                  l10n: l10n,
+                _DateTimeRow(
+                  label: l10n.calendarEventStartLabel,
+                  date: _startDate,
+                  time: _startTime,
+                  allDay: _allDay,
+                  locale: locale,
                   busy: _busy,
-                  onChanged: (RecurrenceFreq f) =>
-                      setState(() => _recurrence = f),
+                  onPickDate: () => _pickDate(isStart: true),
+                  onPickTime: () => _pickTime(isStart: true),
                 ),
-                if (_recurrence != RecurrenceFreq.none) ...<Widget>[
+                const SizedBox(height: 8),
+                _DateTimeRow(
+                  label: l10n.calendarEventEndLabel,
+                  date: _endDate,
+                  time: _endTime,
+                  allDay: _allDay,
+                  locale: locale,
+                  busy: _busy,
+                  onPickDate: () => _pickDate(isStart: false),
+                  onPickTime: () => _pickTime(isStart: false),
+                ),
+                if (!_endDateTime.isAfter(_startDateTime)) ...<Widget>[
                   const SizedBox(height: 8),
-                  OutlinedButton.icon(
-                    onPressed: _busy ? null : _pickRecurrenceEnd,
-                    icon: const Icon(Icons.event_busy_outlined, size: 18),
-                    label: Text(
-                      _recurrenceEndDate == null
-                          ? l10n.calendarEventRecurrenceEndNone
-                          : DateFormat.yMMMd(
-                              locale,
-                            ).format(_recurrenceEndDate!),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 52),
-                      alignment: Alignment.centerLeft,
+                  Text(
+                    l10n.calendarValidationEndAfterStart,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
                     ),
                   ),
                 ],
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _locationController,
+                  decoration: InputDecoration(
+                    labelText: l10n.calendarEventLocationLabel,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _descriptionController,
+                  minLines: 2,
+                  maxLines: 5,
+                  decoration: InputDecoration(
+                    labelText: l10n.calendarEventDescriptionLabel,
+                  ),
+                ),
+                if (!_isEdit) ...<Widget>[
+                  const SizedBox(height: 16),
+                  Text(
+                    l10n.calendarEventRecurrenceLabel,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: 8),
+                  _RecurrencePicker(
+                    value: _recurrence,
+                    l10n: l10n,
+                    busy: _busy,
+                    onChanged: (RecurrenceFreq f) => setState(() {
+                      _recurrence = f;
+                      _dirty = true;
+                    }),
+                  ),
+                  if (_recurrence != RecurrenceFreq.none) ...<Widget>[
+                    const SizedBox(height: 8),
+                    OutlinedButton.icon(
+                      onPressed: _busy ? null : _pickRecurrenceEnd,
+                      icon: const Icon(Icons.event_busy_outlined, size: 18),
+                      label: Text(
+                        _recurrenceEndDate == null
+                            ? l10n.calendarEventRecurrenceEndNone
+                            : DateFormat.yMMMd(
+                                locale,
+                              ).format(_recurrenceEndDate!),
+                      ),
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 52),
+                        alignment: Alignment.centerLeft,
+                      ),
+                    ),
+                  ],
+                ],
               ],
-            ],
-            const SizedBox(height: 20),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: _busy ? null : () => Navigator.of(context).pop(),
-                    child: Text(
-                      MaterialLocalizations.of(context).cancelButtonLabel,
+              const SizedBox(height: 20),
+              Row(
+                children: <Widget>[
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: _busy ? null : _handleClose,
+                      child: Text(
+                        MaterialLocalizations.of(context).cancelButtonLabel,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: FilledButton(
-                    onPressed: (_busy || !_isValid) ? null : _save,
-                    child: _busy
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(l10n.calendarEventSave),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: (_busy || !_isValid) ? null : _save,
+                      child: _busy
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Text(l10n.calendarEventSave),
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

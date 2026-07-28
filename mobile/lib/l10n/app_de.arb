@@ -4,6 +4,16 @@
   "@appTitle": {},
   "moreTitle": "Mehr",
   "@moreTitle": {},
+  "tasksTitle": "Aufgaben & Ämtli",
+  "@tasksTitle": {},
+  "tasksChoreCompletedBy": "Erledigt von {name}",
+  "@tasksChoreCompletedBy": {
+    "placeholders": {
+      "name": { "type": "String", "example": "Mia" }
+    }
+  },
+  "tasksChoreUnassigned": "Alle",
+  "@tasksChoreUnassigned": {},
   "splashLoading": "Laden…",
   "@splashLoading": {},
   "pairTitle": "Gerät verbinden",
@@ -498,6 +508,14 @@
   "@calendarErrorEventNotFound": {},
   "calendarErrorSaveGeneric": "Termin konnte nicht gespeichert werden. Versuche es erneut.",
   "@calendarErrorSaveGeneric": {},
+  "calendarEventCloseTooltip": "Schliessen",
+  "@calendarEventCloseTooltip": {},
+  "calendarDiscardConfirm": "Änderungen verwerfen?",
+  "@calendarDiscardConfirm": {},
+  "calendarDiscardKeepEditing": "Weiter bearbeiten",
+  "@calendarDiscardKeepEditing": {},
+  "calendarDiscardButton": "Verwerfen",
+  "@calendarDiscardButton": {},
   "settingsSectionMembers": "Familienmitglieder",
   "@settingsSectionMembers": {},
   "membersRoleAdmin": "Admin",

@@ -167,6 +167,20 @@ export async function listGroceryItems(familyId: string) {
   });
 }
 
+export type MemberSummary = {
+  id: string;
+  name: string;
+  color: string;
+  emoji: string | null;
+};
+
+const memberSummarySelect = {
+  id: true,
+  name: true,
+  color: true,
+  emoji: true,
+} as const;
+
 export type TodayEvent = {
   id: string;
   title: string;
@@ -183,6 +197,8 @@ export type TodayChore = {
   title: string;
   icon: string | null;
   points: number;
+  memberId: string | null;
+  member: MemberSummary | null;
   completedToday: boolean;
 };
 
@@ -194,7 +210,7 @@ export type TodayTodo = {
 };
 
 export type TodayPayload = {
-  member: { id: string; name: string; color: string; emoji: string | null };
+  member: MemberSummary;
   today: { iso: string };
   events: TodayEvent[];
   chores: TodayChore[];
@@ -275,6 +291,8 @@ export async function getTodayForMember(
         title: true,
         icon: true,
         points: true,
+        memberId: true,
+        member: { select: memberSummarySelect },
         completions: {
           where: {
             memberId,
@@ -320,6 +338,8 @@ export async function getTodayForMember(
       title: ch.title,
       icon: ch.icon,
       points: ch.points,
+      memberId: ch.memberId,
+      member: ch.member,
       completedToday: ch.completions.length > 0,
     }))
     .sort((a, b) => {
@@ -389,4 +409,86 @@ export async function getSetupStatus() {
     googleConfigured,
     setupComplete,
   };
+}
+
+export type ChoreListItem = {
+  id: string;
+  title: string;
+  icon: string | null;
+  points: number;
+  rrule: string | null;
+  memberId: string | null;
+  member: MemberSummary | null;
+  completedToday: boolean;
+  completedTodayBy: MemberSummary | null;
+};
+
+/**
+ * Full family chore list for the mobile chores tab: each chore's own
+ * assignee plus who (if anyone) actually completed it today — those can
+ * differ when an unassigned chore gets done by whoever picks it up.
+ */
+export async function getChoresForFamily(
+  familyId: string,
+): Promise<ChoreListItem[]> {
+  const now = new Date();
+  const startOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    0,
+    0,
+    0,
+    0,
+  );
+  const endOfToday = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0,
+    0,
+    0,
+    0,
+  );
+
+  const rawChores = await db.chore.findMany({
+    where: { familyId },
+    select: {
+      id: true,
+      title: true,
+      icon: true,
+      points: true,
+      rrule: true,
+      memberId: true,
+      member: { select: memberSummarySelect },
+      completions: {
+        where: { completedAt: { gte: startOfToday, lt: endOfToday } },
+        orderBy: { completedAt: "desc" },
+        take: 1,
+        select: { member: { select: memberSummarySelect } },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const chores: ChoreListItem[] = rawChores.map((ch) => {
+    const latestCompletion = ch.completions[0] ?? null;
+    return {
+      id: ch.id,
+      title: ch.title,
+      icon: ch.icon,
+      points: ch.points,
+      rrule: ch.rrule,
+      memberId: ch.memberId,
+      member: ch.member,
+      completedToday: latestCompletion !== null,
+      completedTodayBy: latestCompletion ? latestCompletion.member : null,
+    };
+  });
+
+  // Stable sort: open chores first, completed ones last; createdAt-desc order
+  // from the query is preserved within each group.
+  return chores.sort((a, b) =>
+    a.completedToday === b.completedToday ? 0 : a.completedToday ? 1 : -1,
+  );
 }

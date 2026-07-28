@@ -1,7 +1,7 @@
 name: familyboard_mobile
 description: FamilyBoard mobile companion app (M2.1 skeleton — pairing + home stub).
 publish_to: "none"
-version: 0.1.15
+version: 0.1.16
 
 environment:
   # Floor raised by this dependency refresh: flutter_riverpod 3.x needs
