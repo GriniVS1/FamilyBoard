@@ -4,6 +4,7 @@ import { assertSetupIncomplete } from "@/lib/setup-guard";
 import { db } from "@/lib/db";
 import { setAdminPin } from "@/lib/pin";
 import { generateDeviceToken, hashDeviceToken } from "@/lib/mobile-tokens";
+import { connectedRemoteUrl } from "@/lib/relay-url";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -78,6 +79,12 @@ export const POST = withErrorHandling(async (req) => {
         emoji: admin.emoji,
       },
       family: { id: family.id, name: family.name },
+      // Off-LAN address for this board. Without it the app has nothing to dial
+      // once it leaves the WiFi — connection recovery bails out on a null
+      // remoteUrl — and it would depend entirely on a later identity backfill.
+      // Null when the tunnel isn't up yet at setup time; the app's
+      // identity backfill fills it in on the next LAN start.
+      remoteUrl: await connectedRemoteUrl(),
     },
   });
 });
