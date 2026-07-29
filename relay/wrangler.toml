@@ -9,6 +9,12 @@ routes = [{ pattern = "relay.familyboard.ch", custom_domain = true }]
 [durable_objects]
 bindings = [{ name = "TUNNEL", class_name = "TunnelDO" }]
 
+# RELAY_ADMIN_TOKEN gates POST /admin/reset-secret/<installationId> (repair
+# tool for a stale TOFU pin, e.g. after a factory reset re-mints the device
+# secret). It's a Worker SECRET, not a var — set it with:
+#   npx wrangler secret put RELAY_ADMIN_TOKEN
+# and never commit its value. See README.md.
+
 # No static asset serving: remote access is app-only. The relay is a pure API
 # tunnel — every request goes to the Worker, which serves only /connect,
 # /f/<id>/*, /status/<id>, /health and 404s everything else. (The former

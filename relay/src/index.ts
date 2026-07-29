@@ -14,6 +14,7 @@ import { isAllowedRemotePath } from "./whitelist";
 
 export interface Env {
   TUNNEL: DurableObjectNamespace;
+  RELAY_ADMIN_TOKEN: string; // Worker secret — gates POST /admin/reset-secret/<id>
 }
 
 const MAX_REQUEST_BODY = 1 * 1024 * 1024; // bytes
@@ -68,6 +69,25 @@ type ReqFrame = {
 type ResFrame =
   | { t: "res"; id: string; status: number; headers?: Record<string, string>; body?: string }
   | { t: "err"; id: string; code: string };
+
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let out = 0;
+  for (let i = 0; i < a.length; i++) out |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return out === 0;
+}
+
+// Mirror of license/src/index.ts requireAdmin — same shape, separate token.
+// Returns a 401 Response when the caller isn't the vendor/operator, else null.
+function requireAdmin(req: Request, env: Env): Response | null {
+  const expected = (env.RELAY_ADMIN_TOKEN || "").trim();
+  const m = /^Bearer\s+(.+)$/i.exec(req.headers.get("authorization") || "");
+  const token = m ? m[1].trim() : "";
+  if (!expected || !token || !timingSafeEqual(token, expected)) {
+    return json({ error: "unauthorized" }, 401);
+  }
+  return null;
+}
 
 // Coarse per-IP limiter (per isolate — resets on isolate recycle; the WAF rule
 // on the zone is the durable backstop).
@@ -128,6 +148,18 @@ export default {
       );
     }
 
+    // Vendor/operator repair surface: clear a stale TOFU pin after e.g. a
+    // factory reset re-mints the device secret. Not exposed to the phone or
+    // the wall — hit manually via curl. See relay/README.md.
+    const a = url.pathname.match(/^\/admin\/reset-secret\/([a-z0-9-]{10,64})$/i);
+    if (a) {
+      if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+      const guard = requireAdmin(req, env);
+      if (guard) return guard;
+      const stub = env.TUNNEL.get(env.TUNNEL.idFromName(a[1]));
+      return stub.fetch(new Request("https://tunnel/__admin/reset-secret", { method: "POST" }));
+    }
+
     const s = url.pathname.match(/^\/status\/([a-z0-9-]{10,64})$/i);
     if (s) {
       if (!ipAllowed(ip)) return json({ error: "rate_limited" }, 429);
@@ -157,7 +189,22 @@ export class TunnelDO implements DurableObject {
     if (url.pathname === "/__status") {
       return json({ online: this.ctx.getWebSockets().length > 0 });
     }
+    if (url.pathname === "/__admin/reset-secret" && req.method === "POST") {
+      return this.handleResetSecret();
+    }
     return this.handleForward(req, url);
+  }
+
+  // Clears the pinned TOFU secret hash so the NEXT /connect re-pins whatever
+  // secret the device presents (e.g. one freshly minted after a factory
+  // reset). Also drops any live socket so a stale connection under the old
+  // secret can't linger — there normally isn't one, since the device that
+  // needs this repair is the one that's been failing to connect.
+  private async handleResetSecret(): Promise<Response> {
+    const existed = (await this.ctx.storage.get<string>("secretHash")) !== undefined;
+    await this.ctx.storage.delete("secretHash");
+    for (const ws of this.ctx.getWebSockets()) ws.close(1012, "secret_reset");
+    return json({ ok: true, cleared: existed });
   }
 
   private async handleConnect(req: Request): Promise<Response> {

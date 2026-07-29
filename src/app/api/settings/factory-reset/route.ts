@@ -17,6 +17,24 @@ const bodySchema = z.object({
   confirm: z.literal("RESET"),
 });
 
+// These Setting keys belong to the DEVICE, not the family, and must survive a
+// factory reset:
+//   - relay_device_secret: pinned via trust-on-first-use by the relay
+//     Worker's TunnelDO (see relay/src/index.ts). Wiping it makes the wall
+//     mint a fresh secret while the relay still has the old one pinned —
+//     every reconnect gets 403 forever (see relay/README.md's repair section
+//     for devices that already hit this before the fix).
+//   - device_id: the license-binding identity (src/lib/license.ts). Churning
+//     it on reset would silently detach an already-activated license key.
+//   - license_lease: the cached online-license lease (device-bound, signed
+//     against device_id). Dropping it forces an unnecessary re-check-in and,
+//     offline, an unnecessary trip through the grace/soft window.
+const PRESERVED_SETTING_KEYS: string[] = [
+  "relay_device_secret",
+  "device_id",
+  "license_lease",
+];
+
 async function clearPhotosDir(): Promise<void> {
   const dir = getPhotosDir();
   let files: string[] = [];
@@ -88,9 +106,12 @@ export const POST = withErrorHandling(async (req) => {
     await tx.member.deleteMany();
     await tx.family.deleteMany();
     // Deletes all settings including VAPID keys, notified-event caches, and
-    // digest tracking. The cascade from family.delete handles subscriptions,
-    // but VAPID rows are bare Setting entries and must be cleared explicitly.
-    await tx.setting.deleteMany();
+    // digest tracking, EXCEPT the device-infra keys in PRESERVED_SETTING_KEYS
+    // below. The cascade from family.delete handles subscriptions, but VAPID
+    // rows are bare Setting entries and must be cleared explicitly.
+    await tx.setting.deleteMany({
+      where: { key: { notIn: PRESERVED_SETTING_KEYS } },
+    });
   });
 
   invalidateVapidCache();
