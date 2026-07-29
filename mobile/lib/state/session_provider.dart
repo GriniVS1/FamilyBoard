@@ -27,7 +27,6 @@ import '../services/write_queue_service.dart';
 import 'connectivity_provider.dart';
 import 'data_refresh.dart';
 import 'foreground_poll_controller.dart';
-import 'home_range_provider.dart';
 
 final Provider<SecureSessionStore> sessionStoreProvider =
     Provider<SecureSessionStore>((Ref ref) => SecureSessionStore());
@@ -201,10 +200,10 @@ class SessionNotifier extends Notifier<SessionState>
   /// in the foreground.
   bool _foreground = true;
 
-  /// Refreshes [visibleHomeProviders] every 30s while the app is foreground
-  /// and signed in. Started on resume/app start, stopped on
-  /// pause/inactive/detached/hidden and on sign-out — see
-  /// [didChangeAppLifecycleState] and [clear].
+  /// Refreshes [allDataProviders] — every screen's data, not just Home's —
+  /// every 30s while the app is foreground and signed in. Started on
+  /// resume/app start, stopped on pause/inactive/detached/hidden and on
+  /// sign-out — see [didChangeAppLifecycleState] and [clear].
   late final ForegroundPollController _pollController =
       ForegroundPollController(
         interval: const Duration(seconds: 30),
@@ -238,12 +237,7 @@ class SessionNotifier extends Notifier<SessionState>
     if (!state.hasSession) {
       return;
     }
-    // Read (not recompute) the current range — must target whatever
-    // instance HomeScreen is actually watching, see home_range_provider.dart.
-    invalidateVisibleHomeProviders(
-      range: ref.read(currentHomeRangeProvider),
-      invalidate: ref.invalidate,
-    );
+    invalidateAllDataProviders(invalidate: ref.invalidate);
   }
 
   /// Starts the foreground poll if a session is signed in and the app is
@@ -279,10 +273,7 @@ class SessionNotifier extends Notifier<SessionState>
   Future<void> _onResumed() async {
     await _maybeReturnToLan();
     if (state.hasSession) {
-      invalidateVisibleHomeProviders(
-        range: ref.read(currentHomeRangeProvider),
-        invalidate: ref.invalidate,
-      );
+      invalidateAllDataProviders(invalidate: ref.invalidate);
       _pollController.start();
     }
   }
