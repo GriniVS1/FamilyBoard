@@ -190,6 +190,14 @@ class SessionState {
   bool get hasSession => session != null;
 }
 
+/// Whether [SessionNotifier._onResumed] should kick off an identity-backfill
+/// attempt on this resume: only when there's a session at all, and only
+/// while it's still missing a `remoteUrl` — a phone that already has one
+/// doesn't need to keep re-fetching. Pulled out as a pure function so the
+/// decision is unit-testable without a `ProviderContainer`/`WidgetsBinding`.
+bool shouldBackfillRemoteUrl(Session? session) =>
+    session != null && session.remoteUrl == null;
+
 class SessionNotifier extends Notifier<SessionState>
     with WidgetsBindingObserver {
   /// Whether the app is currently in the foreground — tracked ourselves
@@ -272,6 +280,19 @@ class SessionNotifier extends Notifier<SessionState>
   /// (about to be replaced) URL.
   Future<void> _onResumed() async {
     await _maybeReturnToLan();
+    final Session? current = state.session;
+    if (shouldBackfillRemoteUrl(current)) {
+      // Covers the field case where the post-pair identity fetch in
+      // adoptPairedSession (or the wall's setup/pin response) never landed a
+      // remoteUrl — e.g. the relay tunnel wasn't up yet, or the fetch itself
+      // failed. Retried on every resume until it succeeds; idempotent
+      // (applyIdentity only writes when the result actually carries a
+      // remoteUrl) and loop-safe (fire-and-forget, no timer, bounded by how
+      // often the user backgrounds/foregrounds the app — a failed attempt
+      // just leaves remoteUrl null for the next resume, it never retries
+      // itself).
+      unawaited(_backfillFromIdentity(current!));
+    }
     if (state.hasSession) {
       invalidateAllDataProviders(invalidate: ref.invalidate);
       _pollController.start();

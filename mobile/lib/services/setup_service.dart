@@ -29,21 +29,26 @@ class SetupException implements Exception {
 /// Parsed `session` payload from `POST /api/setup/pin` (only present when the
 /// request included `device` — see [SetupService.setPin]). Deliberately
 /// narrower than [Session]: it carries only what the wall's response knows
-/// about (`token`/`deviceId`/`member`/`family`), not the caller-side fields
-/// (`serverUrl`/`altUrl`/`installationId`) the onboarding controller already
-/// holds and must merge in itself, mirroring how `PairService.pair` builds
-/// its `Session`.
+/// about (`token`/`deviceId`/`member`/`family`/`remoteUrl`), not the
+/// caller-side fields (`serverUrl`/`altUrl`/`installationId`) the onboarding
+/// controller already holds and must merge in itself, mirroring how
+/// `PairService.pair` builds its `Session`. `remoteUrl` comes straight from
+/// the wall (`connectedRemoteUrl()` in `src/app/api/setup/pin/route.ts`) — it
+/// is null only when the relay tunnel wasn't up yet at setup time, not a
+/// controller-side placeholder.
 class SetupPinSession {
   const SetupPinSession({
     required this.token,
     required this.deviceId,
     required this.member,
     required this.family,
+    this.remoteUrl,
   });
 
   /// Parses the `session` object nested in `POST /api/setup/pin`'s response
   /// (not the whole response body).
   factory SetupPinSession.fromJson(Map<String, Object?> json) {
+    final Object? remoteUrlRaw = json['remoteUrl'];
     return SetupPinSession(
       token: json['token']! as String,
       deviceId: json['deviceId']! as String,
@@ -53,6 +58,9 @@ class SetupPinSession {
       family: Family.fromJson(
         (json['family']! as Map<Object?, Object?>).cast<String, Object?>(),
       ),
+      remoteUrl: remoteUrlRaw is String && remoteUrlRaw.isNotEmpty
+          ? remoteUrlRaw
+          : null,
     );
   }
 
@@ -60,6 +68,7 @@ class SetupPinSession {
   final String deviceId;
   final Member member;
   final Family family;
+  final String? remoteUrl;
 }
 
 /// Talks to the wall's unauthenticated `/api/setup/*` mutation routes (plus
