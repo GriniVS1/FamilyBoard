@@ -230,10 +230,12 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
   /// admin member (`POST /api/setup/pin` with `device`). Builds the final
   /// [Session] exactly the way `PairService.pair` does after
   /// `POST /api/devices/pair`: `serverUrl`/`altUrl`/`installationId` come
-  /// from this onboarding session, `token`/`deviceId`/`member`/`family` come
-  /// from the response. `remoteUrl` is left null — the wall's setup/pin
-  /// response doesn't carry one — and gets backfilled by the same post-pair
-  /// identity fetch [adoptPairedSession] runs for normal pairing.
+  /// from this onboarding session, `token`/`deviceId`/`member`/`family`/
+  /// `remoteUrl` come from the response. `remoteUrl` is null only when the
+  /// relay tunnel wasn't up yet at setup time — [SessionNotifier] backfills
+  /// it opportunistically (on the next LAN start, or the next app resume)
+  /// via the same identity fetch [adoptPairedSession] runs for normal
+  /// pairing.
   Future<bool> submitPin(String pin) => _run(() async {
     final String? baseUrl = state.baseUrl;
     if (baseUrl == null) {
@@ -255,6 +257,7 @@ class SetupOnboardingController extends Notifier<SetupOnboardingState> {
       deviceId: result.deviceId,
       member: result.member,
       family: result.family,
+      remoteUrl: result.remoteUrl,
     );
     await adoptPairedSession(ref, session);
   });

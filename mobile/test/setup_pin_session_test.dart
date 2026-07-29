@@ -40,4 +40,48 @@ void main() {
     });
     expect(result.member.emoji, equals(''));
   });
+
+  Map<String, Object?> baseJson() => <String, Object?>{
+    'token': 't',
+    'deviceId': 'd',
+    'member': <String, Object?>{'id': 'm', 'name': 'Sam', 'color': 'mint'},
+    'family': <String, Object?>{'id': 'f', 'name': 'Fam'},
+  };
+
+  test('parses a non-empty remoteUrl string', () {
+    final SetupPinSession result = SetupPinSession.fromJson(<String, Object?>{
+      ...baseJson(),
+      'remoteUrl': 'https://relay.familyboard.ch/f/abc123',
+    });
+    expect(result.remoteUrl, equals('https://relay.familyboard.ch/f/abc123'));
+  });
+
+  test('treats a null remoteUrl as null (tunnel not up at setup time)', () {
+    final SetupPinSession result = SetupPinSession.fromJson(<String, Object?>{
+      ...baseJson(),
+      'remoteUrl': null,
+    });
+    expect(result.remoteUrl, isNull);
+  });
+
+  test('treats a missing remoteUrl key as null', () {
+    final SetupPinSession result = SetupPinSession.fromJson(baseJson());
+    expect(result.remoteUrl, isNull);
+  });
+
+  test('treats an empty-string remoteUrl as null', () {
+    final SetupPinSession result = SetupPinSession.fromJson(<String, Object?>{
+      ...baseJson(),
+      'remoteUrl': '',
+    });
+    expect(result.remoteUrl, isNull);
+  });
+
+  test('treats a non-string remoteUrl as null (defensive)', () {
+    final SetupPinSession result = SetupPinSession.fromJson(<String, Object?>{
+      ...baseJson(),
+      'remoteUrl': 12345,
+    });
+    expect(result.remoteUrl, isNull);
+  });
 }
