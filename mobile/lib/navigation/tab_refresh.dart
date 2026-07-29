@@ -12,6 +12,13 @@
 // — invalidation is a no-op until something re-reads the provider — and
 // targeted: only the tab actually being switched *to* gets refreshed, not
 // every branch on every switch.
+//
+// Since the 30s foreground poll now also covers every tab's data (see
+// `data_refresh.dart`'s `allDataProviders`), this on-switch invalidation is
+// technically redundant within any given 30s window — but it's kept: it's
+// what makes a tab switch feel instant (no stale frame while waiting for the
+// next tick) rather than "eventually consistent within 30s", and it's a
+// single cheap invalidate call, not worth removing for that.
 import 'package:flutter_riverpod/misc.dart' show ProviderOrFamily;
 
 import '../state/data_refresh.dart';
