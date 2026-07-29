@@ -29,6 +29,7 @@ import { FactoryResetDialog } from "./factory-reset-dialog";
 import { FamilyEditor } from "./family-editor";
 import { CaldavRow } from "./caldav-row";
 import { DevicesRow } from "./devices-row";
+import { RemoteAccessCard } from "./remote-access-card";
 import { GoogleRow } from "./google-row";
 import { MicrosoftCallbackBanner } from "./microsoft-callback-banner";
 import { MicrosoftRow } from "./microsoft-row";
@@ -285,6 +286,10 @@ export function SettingsView({
 
       <GateOverlay locked={!unlocked}>
         <DevicesRow members={memberList} />
+      </GateOverlay>
+
+      <GateOverlay locked={!unlocked}>
+        <RemoteAccessCard adminPin={verifiedPin} />
       </GateOverlay>
 
       <GateOverlay locked={!unlocked}>
