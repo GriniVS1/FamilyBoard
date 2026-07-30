@@ -169,6 +169,46 @@
   "@todosErrorTooMany": {},
   "todosErrorGeneric": "Couldn't update the to-do.",
   "@todosErrorGeneric": {},
+  "todosDueQuickToday": "Today",
+  "@todosDueQuickToday": {
+    "description": "Quick-pick option in the due-date sheet: sets the due date to today."
+  },
+  "todosDueQuickTomorrow": "Tomorrow",
+  "@todosDueQuickTomorrow": {
+    "description": "Quick-pick option in the due-date sheet: sets the due date to tomorrow."
+  },
+  "todosDuePickCustom": "Pick a date…",
+  "@todosDuePickCustom": {
+    "description": "Opens the full date picker from the due-date sheet."
+  },
+  "todosDueRemove": "Remove date",
+  "@todosDueRemove": {
+    "description": "Clears a to-do's due date. Only shown when one is already set."
+  },
+  "todosDueTooltip": "Due date",
+  "@todosDueTooltip": {
+    "description": "Tooltip on the calendar-icon affordance used to add/change a to-do's due date."
+  },
+  "todosSectionOverdue": "Overdue",
+  "@todosSectionOverdue": {
+    "description": "Tasks screen to-do section header for past-due items."
+  },
+  "todosSectionToday": "Today",
+  "@todosSectionToday": {
+    "description": "Tasks screen to-do section header for items due today."
+  },
+  "todosSectionThisWeek": "This week",
+  "@todosSectionThisWeek": {
+    "description": "Tasks screen to-do section header for items due within the next 7 days."
+  },
+  "todosSectionLater": "Later",
+  "@todosSectionLater": {
+    "description": "Tasks screen to-do section header for items due beyond this week."
+  },
+  "todosSectionNoDate": "No date",
+  "@todosSectionNoDate": {
+    "description": "Tasks screen to-do section header for items with no due date."
+  },
   "choresUndoConfirm": "Undo today's star?",
   "@choresUndoConfirm": {},
   "choresErrorGeneric": "Couldn't update the chore.",
