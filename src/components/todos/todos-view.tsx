@@ -192,6 +192,9 @@ export function TodosView({ initialMembers }: TodosViewProps) {
   function handleDelete(todo: Todo) {
     deleteMutation.mutate(todo.id);
   }
+  function handleDueDateChange(todo: Todo, dueDate: string | null) {
+    patchMutation.mutate({ id: todo.id, patch: { dueDate } });
+  }
 
   const isEmpty = !isLoading && todos.length === 0 && !error;
 
@@ -241,6 +244,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                     member={todo.memberId ? membersById.get(todo.memberId) ?? null : null}
                     onToggle={handleToggle}
                     onDelete={handleDelete}
+                    onDueDateChange={handleDueDateChange}
                   />
                 </motion.div>
               ))}
@@ -287,6 +291,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                         }
                         onToggle={handleToggle}
                         onDelete={handleDelete}
+                        onDueDateChange={handleDueDateChange}
                       />
                     ))}
                   </motion.ul>
