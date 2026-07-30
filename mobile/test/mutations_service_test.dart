@@ -1,13 +1,37 @@
 // Unit tests for the pure payload-building logic in `MutationsService`
-// (`buildCreateChorePayload`) and `ChoreMutation.fromJson` parsing. The
-// network-calling parts of `MutationsService.createChore` are exercised
-// through the app-tester's integration pass, not here.
+// (`buildCreateChorePayload`, `buildUpdateTodoDueDatePayload`) and
+// `ChoreMutation.fromJson` parsing. The network-calling parts of
+// `MutationsService.createChore`/`updateTodoDueDate` are exercised through
+// the app-tester's integration pass, not here.
 
 import 'package:familyboard_mobile/models/mutations.dart';
 import 'package:familyboard_mobile/services/mutations_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  group('buildUpdateTodoDueDatePayload', () {
+    test('sends an ISO date string when setting a due date', () {
+      final Map<String, Object?> body = buildUpdateTodoDueDatePayload(
+        DateTime.parse('2026-05-11T00:00:00.000Z'),
+      );
+
+      expect(body, <String, Object?>{'dueDate': '2026-05-11T00:00:00.000Z'});
+    });
+
+    test(
+      'sends an explicit null (not an absent key) when removing the due date',
+      () {
+        final Map<String, Object?> body = buildUpdateTodoDueDatePayload(null);
+
+        // The key must be *present* — the wall's zod schema
+        // (`z.coerce.date().nullable().optional()`) reads a present `null`
+        // as "clear the field" and an absent key as "leave it untouched".
+        expect(body.containsKey('dueDate'), isTrue);
+        expect(body['dueDate'], isNull);
+      },
+    );
+  });
+
   group('buildCreateChorePayload', () {
     test('omits rrule entirely for "Keine" (no recurrence)', () {
       final Map<String, Object?> body = buildCreateChorePayload(

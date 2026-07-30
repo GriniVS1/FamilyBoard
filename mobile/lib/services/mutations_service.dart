@@ -5,6 +5,19 @@ import '../models/session.dart';
 import 'api_client.dart';
 import 'write_queue_service.dart';
 
+/// Builds the JSON body for `PATCH /api/mobile/todos/[id]` when only the due
+/// date is changing.
+///
+/// The `dueDate` key is **always** present — that's the whole point: the
+/// wall's zod schema (`dueDate: z.coerce.date().nullable().optional()`) reads
+/// a present-but-`null` value as "clear the due date" and an absent key as
+/// "leave the due date untouched". Sending `dueDate: null` any time [dueDate]
+/// is null (including "remove the date") is therefore correct; there's no
+/// "no-op" case here since this payload always intends a due-date change.
+Map<String, Object?> buildUpdateTodoDueDatePayload(DateTime? dueDate) {
+  return <String, Object?>{'dueDate': dueDate?.toIso8601String()};
+}
+
 /// Builds the JSON body for `POST /api/mobile/chores`.
 ///
 /// Exposed at library level (rather than buried in [MutationsService]) so the
@@ -100,6 +113,30 @@ class MutationsService {
 
     if (_wasQueued(response)) {
       return TodoMutation(id: id, title: '', done: done, dueDate: null);
+    }
+
+    _guardSuccess(response: response, expected: 200);
+    return TodoMutation.fromJson(_extractMap(response.data));
+  }
+
+  /// PATCHes just the due date — always sends the `dueDate` key explicitly
+  /// (see [buildUpdateTodoDueDatePayload]) so `null` removes it rather than
+  /// being ignored as "no change".
+  Future<TodoMutation> updateTodoDueDate({
+    required Session session,
+    required String id,
+    required DateTime? dueDate,
+  }) async {
+    final Map<String, Object?> body = buildUpdateTodoDueDatePayload(dueDate);
+    final Response<Object?> response = await _sendOrQueue(
+      session: session,
+      method: 'PATCH',
+      path: '/api/mobile/todos/$id',
+      body: body,
+    );
+
+    if (_wasQueued(response)) {
+      return TodoMutation(id: id, title: '', done: false, dueDate: dueDate);
     }
 
     _guardSuccess(response: response, expected: 200);

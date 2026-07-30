@@ -14,6 +14,7 @@ import '../../models/note.dart';
 import '../../models/session.dart';
 import '../../models/today.dart';
 import '../../models/todo_item.dart';
+import '../../models/todo_sort.dart';
 import '../../services/events_service.dart';
 import '../../services/fcm_service.dart';
 import '../../services/notes_service.dart';
@@ -32,6 +33,8 @@ import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
 import '../../widgets/member_chip.dart';
 import '../../widgets/queue_badge.dart';
+import '../../widgets/todo_composer.dart';
+import '../../widgets/todo_row.dart';
 import '../chores/chore_create_sheet.dart';
 import 'home_chore_filter.dart';
 
@@ -1186,6 +1189,7 @@ class _TodosCardBody extends ConsumerStatefulWidget {
 class _TodosCardBodyState extends ConsumerState<_TodosCardBody> {
   final TextEditingController _addController = TextEditingController();
   bool _addBusy = false;
+  DateTime? _addDueDate;
 
   @override
   void dispose() {
@@ -1203,11 +1207,16 @@ class _TodosCardBodyState extends ConsumerState<_TodosCardBody> {
     try {
       await ref
           .read(mutationsServiceProvider)
-          .createTodo(session: widget.session, title: title);
+          .createTodo(
+            session: widget.session,
+            title: title,
+            dueDate: _addDueDate,
+          );
       if (!mounted) {
         return;
       }
       _addController.clear();
+      setState(() => _addDueDate = null);
       ref.invalidate(todosProvider);
     } on MutationSessionRevokedException {
       if (!mounted) {
@@ -1244,7 +1253,13 @@ class _TodosCardBodyState extends ConsumerState<_TodosCardBody> {
   @override
   Widget build(BuildContext context) {
     final int open = widget.todos.where((TodoItem t) => !t.done).length;
-    final List<TodoItem> visible = widget.todos.take(_todosCardCap).toList();
+    // Re-sorted by due date within the API's done/not-done partitions (see
+    // `sortTodosForDisplay`) before the dashboard cap is applied, so an
+    // overdue or due-today item near the bottom of the family list still
+    // surfaces on Home.
+    final List<TodoItem> visible = sortTodosForDisplay(
+      widget.todos,
+    ).take(_todosCardCap).toList();
 
     return Card(
       child: Padding(
@@ -1277,390 +1292,23 @@ class _TodosCardBodyState extends ConsumerState<_TodosCardBody> {
               _EmptyState(message: widget.l10n.homeNoTodos)
             else
               ...visible.map(
-                (TodoItem todo) => _TodoRow(
+                (TodoItem todo) => TodoRow(
                   todo: todo,
                   session: widget.session,
                   l10n: widget.l10n,
                 ),
               ),
             const SizedBox(height: 8),
-            _AddTodoRow(
+            TodoComposerRow(
               controller: _addController,
               busy: _addBusy,
               l10n: widget.l10n,
+              dueDate: _addDueDate,
+              onDueDateChanged: (DateTime? d) =>
+                  setState(() => _addDueDate = d),
               onSubmit: _submitNew,
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _AddTodoRow extends StatelessWidget {
-  const _AddTodoRow({
-    required this.controller,
-    required this.busy,
-    required this.l10n,
-    required this.onSubmit,
-  });
-
-  final TextEditingController controller;
-  final bool busy;
-  final AppL10n l10n;
-  final VoidCallback onSubmit;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: <Widget>[
-        Expanded(
-          child: TextField(
-            controller: controller,
-            enabled: !busy,
-            textInputAction: TextInputAction.done,
-            onSubmitted: (_) => onSubmit(),
-            decoration: InputDecoration(
-              hintText: l10n.todosAddPlaceholder,
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 12,
-                vertical: 10,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        SizedBox(
-          height: 48,
-          width: 48,
-          child: busy
-              ? const Center(
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                )
-              : IconButton.filled(
-                  icon: const Icon(Icons.add),
-                  tooltip: l10n.todosAddButton,
-                  onPressed: onSubmit,
-                ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TodoRow extends ConsumerStatefulWidget {
-  const _TodoRow({
-    required this.todo,
-    required this.session,
-    required this.l10n,
-  });
-
-  final TodoItem todo;
-  final Session session;
-  final AppL10n l10n;
-
-  @override
-  ConsumerState<_TodoRow> createState() => _TodoRowState();
-}
-
-class _TodoRowState extends ConsumerState<_TodoRow> {
-  bool _busy = false;
-  bool _optimisticDone = false;
-  bool _optimisticOverride = false;
-  bool _isQueued = false;
-
-  bool get _isDone => _optimisticOverride ? _optimisticDone : widget.todo.done;
-
-  Future<void> _toggle() async {
-    if (_busy) {
-      return;
-    }
-    final bool newDone = !_isDone;
-    setState(() {
-      _busy = true;
-      _optimisticDone = newDone;
-      _optimisticOverride = true;
-    });
-
-    try {
-      final TodoMutation result = await ref
-          .read(mutationsServiceProvider)
-          .toggleTodo(
-            session: widget.session,
-            id: widget.todo.id,
-            done: newDone,
-          );
-      if (!mounted) {
-        return;
-      }
-      // An empty title signals a queued synthetic result.
-      if (result.title.isEmpty) {
-        setState(() {
-          _isQueued = true;
-          _busy = false;
-        });
-        return;
-      }
-      ref.invalidate(todosProvider);
-    } on MutationSessionRevokedException {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _optimisticOverride = false;
-        _busy = false;
-      });
-      await ref.read(sessionProvider.notifier).clear();
-    } on MutationNotFoundException {
-      if (!mounted) {
-        return;
-      }
-      // Silently drop.
-      ref.invalidate(todosProvider);
-    } on MutationFetchException {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _optimisticDone = !newDone;
-        _optimisticOverride = true;
-        _busy = false;
-      });
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(widget.l10n.todosErrorGeneric),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  Future<void> _delete() async {
-    final AppL10n l10n = widget.l10n;
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext ctx) {
-        return AlertDialog(
-          content: Text(l10n.todosDeleteConfirm),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(l10n.todosDeleteConfirm),
-            ),
-          ],
-        );
-      },
-    );
-    if (confirmed != true || !mounted) {
-      return;
-    }
-
-    try {
-      await ref
-          .read(mutationsServiceProvider)
-          .deleteTodo(session: widget.session, id: widget.todo.id);
-      if (!mounted) {
-        return;
-      }
-      ref.invalidate(todosProvider);
-    } on MutationSessionRevokedException {
-      if (!mounted) {
-        return;
-      }
-      await ref.read(sessionProvider.notifier).clear();
-    } on MutationNotFoundException {
-      if (!mounted) {
-        return;
-      }
-      ref.invalidate(todosProvider);
-    } on MutationFetchException {
-      if (!mounted) {
-        return;
-      }
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(widget.l10n.todosErrorGeneric),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bool done = _isDone;
-    final Color mutedColor = Theme.of(
-      context,
-    ).colorScheme.onSurface.withValues(alpha: 0.4);
-    final String? duePill = _duePill(widget.todo.dueDate, widget.l10n);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Opacity(
-        opacity: _isQueued ? 0.6 : 1.0,
-        child: InkWell(
-          onTap: _busy ? null : _toggle,
-          onLongPress: _busy ? null : _delete,
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            constraints: const BoxConstraints(minHeight: 56),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Theme.of(context).colorScheme.outline),
-            ),
-            child: Row(
-              children: <Widget>[
-                GestureDetector(
-                  onTap: _busy ? null : _toggle,
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.only(right: 10),
-                    child: SizedBox(
-                      width: 32,
-                      height: 32,
-                      child: _busy
-                          ? const Center(
-                              child: SizedBox(
-                                width: 18,
-                                height: 18,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            )
-                          : _isQueued
-                          ? Icon(
-                              Icons.schedule,
-                              size: 20,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.onSurface.withValues(alpha: 0.4),
-                            )
-                          : Icon(
-                              done
-                                  ? Icons.check_circle_rounded
-                                  : Icons.radio_button_unchecked_rounded,
-                              color: done
-                                  ? mutedColor
-                                  : Theme.of(context).colorScheme.primary,
-                              size: 24,
-                            ),
-                    ),
-                  ),
-                ),
-                if (widget.todo.member != null) ...<Widget>[
-                  MemberChip(
-                    name: widget.todo.member!.name,
-                    color: widget.todo.member!.color,
-                    emoji: widget.todo.member!.emoji,
-                  ),
-                  const SizedBox(width: 8),
-                ],
-                Expanded(
-                  child: Text(
-                    widget.todo.title,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: done ? mutedColor : null,
-                      decoration: done ? TextDecoration.lineThrough : null,
-                      decorationColor: mutedColor,
-                    ),
-                  ),
-                ),
-                if (_isQueued) ...<Widget>[
-                  const SizedBox(width: 4),
-                  Text(
-                    AppL10n.of(context).queuedRow,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.4),
-                      fontSize: 11,
-                    ),
-                  ),
-                ] else if (duePill != null) ...<Widget>[
-                  const SizedBox(width: 8),
-                  _DuePill(
-                    label: duePill,
-                    overdue: _isOverdue(widget.todo.dueDate),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  String? _duePill(DateTime? dueDate, AppL10n l10n) {
-    if (dueDate == null) {
-      return null;
-    }
-    final DateTime now = DateTime.now();
-    final DateTime today = DateTime(now.year, now.month, now.day);
-    final DateTime due = DateTime(dueDate.year, dueDate.month, dueDate.day);
-    final int diff = due.difference(today).inDays;
-    if (diff == 0) {
-      return l10n.homeDueToday;
-    }
-    if (diff == 1) {
-      return l10n.homeDueTomorrow;
-    }
-    if (diff < 0) {
-      return l10n.homeOverdue(DateFormat('EEE d.M').format(dueDate.toLocal()));
-    }
-    return l10n.homeDueOn(DateFormat('EEE d.M').format(dueDate.toLocal()));
-  }
-
-  bool _isOverdue(DateTime? dueDate) {
-    if (dueDate == null) {
-      return false;
-    }
-    final DateTime now = DateTime.now();
-    final DateTime today = DateTime(now.year, now.month, now.day);
-    final DateTime due = DateTime(dueDate.year, dueDate.month, dueDate.day);
-    return due.isBefore(today);
-  }
-}
-
-class _DuePill extends StatelessWidget {
-  const _DuePill({required this.label, required this.overdue});
-
-  final String label;
-  final bool overdue;
-
-  @override
-  Widget build(BuildContext context) {
-    final Color bg = overdue
-        ? Theme.of(context).colorScheme.errorContainer
-        : Theme.of(context).colorScheme.secondaryContainer;
-    final Color fg = overdue
-        ? Theme.of(context).colorScheme.onErrorContainer
-        : Theme.of(context).colorScheme.onSecondaryContainer;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: fg,
-          fontWeight: FontWeight.w600,
-          fontSize: 12,
         ),
       ),
     );
