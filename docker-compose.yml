@@ -17,7 +17,10 @@ services:
       - ./data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/api/health"]
+      # 127.0.0.1, not localhost: inside the container localhost resolves to
+      # ::1 first, where the server (bound to 0.0.0.0) does not listen — the
+      # check then fails with "connection refused" while the app is healthy.
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/health"]
       interval: 30s
       timeout: 5s
       retries: 5

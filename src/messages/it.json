@@ -482,7 +482,8 @@
       "statusFailed": "Impossibile caricare lo stato.",
       "disconnectFailed": "Disconnessione fallita.",
       "syncFailed": "Sincronizzazione fallita.",
-      "notConfigured": "Google Calendar non disponibile"
+      "notConfigured": "Google Calendar non disponibile",
+      "authExpired": "Connessione scaduta — ricollegati tramite l'app FamilyBoard."
     },
     "pin": {
       "title": "Sicurezza",
@@ -647,6 +648,7 @@
       "email": "Account",
       "lastSynced": "Ultima sinc.",
       "never": "mai",
+      "authExpired": "Connessione scaduta — ricollegati tramite l'app FamilyBoard.",
       "callback": {
         "connected": "Outlook collegato!",
         "error": "Impossibile collegare Outlook. {reason}",

@@ -18,3 +18,14 @@ services:
     privileged: true
     # In host mode the ports stanza is ignored; clear it so Compose doesn't warn.
     ports: !reset []
+    # Repeat the healthcheck here so shipped devices get the fix: the base
+    # docker-compose.yml comes from the git checkout on the device and is NOT
+    # updated by OTA, while this override rides the host payload. localhost
+    # resolved to ::1 (nothing listening) and marked healthy containers
+    # "unhealthy" forever.
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s

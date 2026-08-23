@@ -337,17 +337,35 @@ export async function deleteRemoteEvent(eventId: string): Promise<void> {
 export async function runGoogleSyncForAllMembers(): Promise<SyncCounts> {
   if (!googleSyncPossible) return ZERO;
   const members = await db.member.findMany({
-    where: { googleSyncEnabled: true, googleRefreshTokenEnc: { not: null } },
+    // googleAuthFailedAt is set once the provider rejected the stored
+    // credential; skip those instead of hammering a dead token every tick.
+    // Re-linking the account clears the flag.
+    where: {
+      googleSyncEnabled: true,
+      googleRefreshTokenEnc: { not: null },
+      googleAuthFailedAt: null,
+    },
   });
   let total: SyncCounts = ZERO;
   for (const m of members) {
     try {
       total = add(total, await pullForMember(m.id));
     } catch (err) {
-      console.error(
-        `[sync] member ${m.id} pull failed`,
-        err instanceof Error ? err.message : err,
-      );
+      const message = err instanceof Error ? err.message : String(err);
+      // Self-hosted (non-broker) path: googleapis surfaces a revoked refresh
+      // token as invalid_grant rather than our own AppError, so catch it here
+      // too — same reasoning as the broker path in google.ts.
+      if (message.includes("invalid_grant")) {
+        await db.member.update({
+          where: { id: m.id },
+          data: { googleAuthFailedAt: new Date() },
+        });
+        console.error(
+          `[sync] member ${m.id} google credential rejected — re-link required`,
+        );
+        continue;
+      }
+      console.error(`[sync] member ${m.id} pull failed`, message);
     }
   }
   return total;

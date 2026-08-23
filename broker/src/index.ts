@@ -125,6 +125,44 @@ function errorPage(message: string, status = 400): Response {
   );
 }
 
+// --- Refresh guards ----------------------------------------------------------
+//
+// A device whose refresh token the provider has revoked used to cost one KV
+// read AND one KV write per attempt, forever: the wall retries every 5 minutes,
+// so two members burned ~576 writes/day — 58% of the free daily quota — while
+// calendar sync stayed dead. Two cheap guards fix that, and they also blunt an
+// outsider spraying these unauthenticated endpoints:
+//
+//   1. burstLimited(): per-isolate counter, costs nothing. Cloudflare may run
+//      many isolates, so this is a first line, not a global limit.
+//   2. bad:<hash>: negative cache. Once the provider rejects a token we 401
+//      straight from KV for an hour — no upstream call, and one write per hour
+//      instead of one per attempt.
+const BURST_WINDOW_MS = 60_000;
+const BURST_MAX = 120;
+const BAD_TOKEN_TTL_S = 3_600;
+
+let burstWindowStart = 0;
+let burstCount = 0;
+
+function burstLimited(): boolean {
+  const now = Date.now();
+  if (now - burstWindowStart > BURST_WINDOW_MS) {
+    burstWindowStart = now;
+    burstCount = 0;
+  }
+  burstCount += 1;
+  return burstCount > BURST_MAX;
+}
+
+async function isKnownBadToken(env: Env, hash: string): Promise<boolean> {
+  return (await env.OAUTH_KV.get(`bad:${hash}`)) !== null;
+}
+
+async function markBadToken(env: Env, hash: string): Promise<void> {
+  await env.OAUTH_KV.put(`bad:${hash}`, "1", { expirationTtl: BAD_TOKEN_TTL_S });
+}
+
 async function handleStart(req: Request, env: Env): Promise<Response> {
   let body: Partial<Pending>;
   try {
@@ -140,6 +178,9 @@ async function handleStart(req: Request, env: Env): Promise<Response> {
   if (!returnUrl || !isAllowedReturnUrl(returnUrl, "/api/auth/google/adopt")) {
     return json({ error: "returnUrl_not_allowed" }, 400);
   }
+  // Each start writes a pending-state entry, so an unauthenticated flood could
+  // drain the daily KV write quota. Same per-isolate first line as refresh.
+  if (burstLimited()) return json({ error: "rate_limited" }, 429);
 
   const state = b64urlFromBytes(crypto.getRandomValues(new Uint8Array(32)));
   const pending: Pending = { memberId, adoptSecret, returnUrl };
@@ -233,10 +274,14 @@ async function handleRefresh(req: Request, env: Env): Promise<Response> {
     return json({ error: "refreshToken_required" }, 400);
   }
 
-  const rlKey = `rl:refresh:${await sha256B64url(refreshToken)}`;
+  if (burstLimited()) return json({ error: "rate_limited" }, 429);
+
+  const hash = await sha256B64url(refreshToken);
+  if (await isKnownBadToken(env, hash)) return json({ error: "refresh_failed" }, 401);
+
+  const rlKey = `rl:refresh:${hash}`;
   const count = parseInt((await env.OAUTH_KV.get(rlKey)) ?? "0", 10);
   if (count >= 30) return json({ error: "rate_limited" }, 429);
-  await env.OAUTH_KV.put(rlKey, String(count + 1), { expirationTtl: 60 });
 
   const res = await fetch(GOOGLE_TOKEN, {
     method: "POST",
@@ -251,11 +296,17 @@ async function handleRefresh(req: Request, env: Env): Promise<Response> {
   if (!res.ok) {
     // 400/401 from Google means the refresh token is revoked/invalid — surface
     // that to the device (401) so it can prompt a relink; anything else is 502.
-    const status = res.status === 400 || res.status === 401 ? 401 : 502;
-    return json({ error: "refresh_failed" }, status);
+    if (res.status === 400 || res.status === 401) {
+      await markBadToken(env, hash);
+      return json({ error: "refresh_failed" }, 401);
+    }
+    return json({ error: "refresh_failed" }, 502);
   }
   const t = (await res.json()) as { access_token?: string; expires_in?: number };
   if (!t.access_token) return json({ error: "no_access_token" }, 502);
+  // Count only successful refreshes: a working token that suddenly refreshes in
+  // a tight loop is the abuse case worth throttling.
+  await env.OAUTH_KV.put(rlKey, String(count + 1), { expirationTtl: 60 });
   return json({ access_token: t.access_token, expires_in: t.expires_in ?? 3600 });
 }
 
@@ -276,6 +327,9 @@ async function handleMsStart(req: Request, env: Env): Promise<Response> {
   if (!returnUrl || !isAllowedReturnUrl(returnUrl, "/api/auth/microsoft/adopt")) {
     return json({ error: "returnUrl_not_allowed" }, 400);
   }
+  // Each start writes a pending-state entry, so an unauthenticated flood could
+  // drain the daily KV write quota. Same per-isolate first line as refresh.
+  if (burstLimited()) return json({ error: "rate_limited" }, 429);
 
   const tenant = env.MS_TENANT || "common";
   const state = b64urlFromBytes(crypto.getRandomValues(new Uint8Array(32)));
@@ -369,10 +423,14 @@ async function handleMsRefresh(req: Request, env: Env): Promise<Response> {
     return json({ error: "refreshToken_required" }, 400);
   }
 
-  const rlKey = `rl:msrefresh:${await sha256B64url(refreshToken)}`;
+  if (burstLimited()) return json({ error: "rate_limited" }, 429);
+
+  const hash = await sha256B64url(refreshToken);
+  if (await isKnownBadToken(env, hash)) return json({ error: "refresh_failed" }, 401);
+
+  const rlKey = `rl:msrefresh:${hash}`;
   const count = parseInt((await env.OAUTH_KV.get(rlKey)) ?? "0", 10);
   if (count >= 30) return json({ error: "rate_limited" }, 429);
-  await env.OAUTH_KV.put(rlKey, String(count + 1), { expirationTtl: 60 });
 
   const tenant = env.MS_TENANT || "common";
   const res = await fetch(msTokenUrl(tenant), {
@@ -387,8 +445,11 @@ async function handleMsRefresh(req: Request, env: Env): Promise<Response> {
     }),
   });
   if (!res.ok) {
-    const status = res.status === 400 || res.status === 401 ? 401 : 502;
-    return json({ error: "refresh_failed" }, status);
+    if (res.status === 400 || res.status === 401) {
+      await markBadToken(env, hash);
+      return json({ error: "refresh_failed" }, 401);
+    }
+    return json({ error: "refresh_failed" }, 502);
   }
   const t = (await res.json()) as {
     access_token?: string;
@@ -396,6 +457,8 @@ async function handleMsRefresh(req: Request, env: Env): Promise<Response> {
     refresh_token?: string;
   };
   if (!t.access_token) return json({ error: "no_access_token" }, 502);
+  // Count only successful refreshes — see the Google handler.
+  await env.OAUTH_KV.put(rlKey, String(count + 1), { expirationTtl: 60 });
   return json({
     access_token: t.access_token,
     expires_in: t.expires_in ?? 3600,

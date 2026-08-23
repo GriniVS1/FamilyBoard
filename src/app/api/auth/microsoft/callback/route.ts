@@ -83,6 +83,7 @@ export async function GET(req: Request) {
       microsoftAccessExpiresAt: tokens.expiresAt,
       microsoftDeltaLink: null,
       microsoftSyncEnabled: true,
+      microsoftAuthFailedAt: null,
     },
   });
 

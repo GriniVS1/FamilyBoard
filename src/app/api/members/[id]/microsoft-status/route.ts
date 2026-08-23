@@ -16,5 +16,7 @@ export const GET = withErrorHandling<Ctx>(async (_req, { params }) => {
     calendarId: member.microsoftCalendarId ?? undefined,
     lastSyncedAt: member.microsoftSyncedAt?.toISOString() ?? undefined,
     syncEnabled: member.microsoftSyncEnabled,
+    // Provider rejected the stored credential — see google-status.
+    authExpired: member.microsoftAuthFailedAt !== null,
   });
 });

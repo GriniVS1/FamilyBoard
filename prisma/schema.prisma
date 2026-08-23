@@ -67,6 +67,10 @@ model Member {
   googleAccessExpiresAt DateTime?
   googleSyncToken       String?
   googleSyncEnabled     Boolean           @default(false)
+  // Set when the provider rejected the stored credential (HTTP 401 on
+  // refresh). Sync skips the member while this is set, instead of retrying
+  // a dead token every 5 minutes; cleared when the account is re-linked.
+  googleAuthFailedAt    DateTime?
   caldavServerUrl       String?
   caldavUsername        String?
   caldavPasswordEnc     String?
@@ -83,6 +87,7 @@ model Member {
   microsoftDeltaLink         String?
   microsoftSyncEnabled       Boolean           @default(false)
   microsoftSyncedAt          DateTime?
+  microsoftAuthFailedAt      DateTime?
   createdAt                  DateTime          @default(now())
   events                Event[]
   chores                Chore[]

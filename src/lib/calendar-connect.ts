@@ -376,6 +376,9 @@ export type CalendarProviderStatus = {
   provider: "google" | "caldav" | "microsoft" | null;
   connected: boolean;
   accountLabel: string | null;
+  // The provider rejected the stored credential — sync is paused until the
+  // account is re-linked from the app. See googleAuthFailedAt on Member.
+  authExpired: boolean;
 };
 
 export function getCalendarProviderStatus(
@@ -383,27 +386,39 @@ export function getCalendarProviderStatus(
     Member,
     | "googleSyncEnabled"
     | "googleEmail"
+    | "googleAuthFailedAt"
     | "microsoftSyncEnabled"
     | "microsoftEmail"
+    | "microsoftAuthFailedAt"
     | "caldavSyncEnabled"
     | "caldavUsername"
     | "caldavCalendarName"
   >,
 ): CalendarProviderStatus {
   if (member.googleSyncEnabled) {
-    return { provider: "google", connected: true, accountLabel: member.googleEmail ?? null };
+    return {
+      provider: "google",
+      connected: true,
+      accountLabel: member.googleEmail ?? null,
+      authExpired: member.googleAuthFailedAt !== null,
+    };
   }
   if (member.microsoftSyncEnabled) {
-    return { provider: "microsoft", connected: true, accountLabel: member.microsoftEmail ?? null };
+    return {
+      provider: "microsoft",
+      connected: true,
+      accountLabel: member.microsoftEmail ?? null,
+      authExpired: member.microsoftAuthFailedAt !== null,
+    };
   }
   if (member.caldavSyncEnabled) {
     const label =
       member.caldavUsername && member.caldavCalendarName
         ? `${member.caldavUsername} · ${member.caldavCalendarName}`
         : member.caldavUsername ?? member.caldavCalendarName ?? null;
-    return { provider: "caldav", connected: true, accountLabel: label };
+    return { provider: "caldav", connected: true, accountLabel: label, authExpired: false };
   }
-  return { provider: null, connected: false, accountLabel: null };
+  return { provider: null, connected: false, accountLabel: null, authExpired: false };
 }
 
 export async function disconnectCurrentProvider(
