@@ -93,6 +93,7 @@ export async function GET(req: Request) {
       googleAccessExpiresAt: tokens.expiry_date ? new Date(tokens.expiry_date) : null,
       googleSyncToken: null,
       googleSyncEnabled: true,
+      googleAuthFailedAt: null,
     },
   });
 

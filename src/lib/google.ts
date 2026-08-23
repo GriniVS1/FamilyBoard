@@ -114,13 +114,30 @@ export async function getCalendarForMember(
     const expiresAt = member.googleAccessExpiresAt;
     let accessToken = cached ?? undefined;
     if (!accessToken || !expiresAt || expiresAt.getTime() < Date.now() + 60_000) {
-      const refreshed = await refreshAccessTokenViaBroker(refreshToken);
+      let refreshed: { accessToken: string; expiresAt: Date };
+      try {
+        refreshed = await refreshAccessTokenViaBroker(refreshToken);
+      } catch (err) {
+        // A revoked/expired refresh token never recovers on its own. Record it
+        // so the sync loop stops re-trying every 5 minutes (each attempt costs
+        // the broker a KV read+write) and the UI can ask for a re-link.
+        if (err instanceof AppError && err.code === "GOOGLE_TOKEN_REVOKED") {
+          await db.member.update({
+            where: { id: memberId },
+            data: { googleAuthFailedAt: new Date() },
+          });
+        }
+        throw err;
+      }
       accessToken = refreshed.accessToken;
       await db.member.update({
         where: { id: memberId },
         data: {
           googleAccessToken: refreshed.accessToken,
           googleAccessExpiresAt: refreshed.expiresAt,
+          // A working refresh clears a previous failure (e.g. the account was
+          // re-linked, or the provider hiccup was temporary).
+          ...(member.googleAuthFailedAt ? { googleAuthFailedAt: null } : {}),
         },
       });
     }

@@ -98,6 +98,8 @@ export async function GET(req: Request) {
       googleAccessExpiresAt: null,
       googleSyncToken: null,
       googleSyncEnabled: true,
+      // A fresh link clears an earlier rejection so sync resumes.
+      googleAuthFailedAt: null,
     },
   });
 

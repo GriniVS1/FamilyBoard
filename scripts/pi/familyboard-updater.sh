@@ -19,7 +19,7 @@ COMPOSE_DIR="${COMPOSE_DIR:-/opt/familyboard}"
 PUBKEY="${RELEASE_PUBKEY:-/etc/familyboard/release-pub.pem}"
 STATE_DIR="${STATE_DIR:-/var/lib/familyboard}"
 IMAGE="${IMAGE_NAME:-familyboard}"
-HEALTH_URL="${HEALTH_URL:-http://localhost:3000/api/health}"
+HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3000/api/health}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-90}"
 KEEP_DB_BACKUPS="${KEEP_DB_BACKUPS:-3}"
 

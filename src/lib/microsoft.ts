@@ -65,7 +65,7 @@ async function refreshMicrosoftViaBroker(refreshToken: string): Promise<{
   if (!res.ok) {
     throw new AppError(
       `Broker Microsoft token refresh failed (${res.status})`,
-      "MICROSOFT_REFRESH_FAILED",
+      res.status === 401 ? "MICROSOFT_TOKEN_REVOKED" : "MICROSOFT_REFRESH_FAILED",
       res.status === 401 ? 401 : 502,
     );
   }
@@ -235,11 +235,26 @@ export async function getGraphClientForMember(memberId: string): Promise<GraphCl
   // Broker mode: refresh through the broker (no local Azure secret to run the
   // refresh grant here). Persist the rotated refresh token Microsoft returns.
   if (microsoftBrokerMode()) {
-    const refreshed = await refreshMicrosoftViaBroker(refreshToken);
+    let refreshed: Awaited<ReturnType<typeof refreshMicrosoftViaBroker>>;
+    try {
+      refreshed = await refreshMicrosoftViaBroker(refreshToken);
+    } catch (err) {
+      // Same reasoning as google.ts: a rejected credential never recovers by
+      // itself, so record it and let the sync loop skip this member instead of
+      // burning a broker KV read+write every 5 minutes.
+      if (err instanceof AppError && err.code === "MICROSOFT_TOKEN_REVOKED") {
+        await db.member.update({
+          where: { id: memberId },
+          data: { microsoftAuthFailedAt: new Date() },
+        });
+      }
+      throw err;
+    }
     const brokerUpdate: {
       microsoftAccessToken: string;
       microsoftAccessExpiresAt: Date;
       microsoftRefreshTokenEnc?: string;
+      microsoftAuthFailedAt?: Date | null;
     } = {
       microsoftAccessToken: refreshed.accessToken,
       microsoftAccessExpiresAt: refreshed.expiresAt,
@@ -247,6 +262,7 @@ export async function getGraphClientForMember(memberId: string): Promise<GraphCl
     if (refreshed.refreshToken && refreshed.refreshToken !== refreshToken) {
       brokerUpdate.microsoftRefreshTokenEnc = encryptToken(refreshed.refreshToken);
     }
+    if (member.microsoftAuthFailedAt) brokerUpdate.microsoftAuthFailedAt = null;
     await db.member.update({ where: { id: memberId }, data: brokerUpdate });
     return {
       client: buildGraphClient(refreshed.accessToken),
@@ -711,6 +727,9 @@ export async function runMicrosoftSyncForAllMembers(): Promise<SyncCounts> {
     where: {
       microsoftSyncEnabled: true,
       microsoftRefreshTokenEnc: { not: null },
+      // See googleAuthFailedAt in sync.ts — skip credentials the provider has
+      // already rejected; re-linking clears the flag.
+      microsoftAuthFailedAt: null,
     },
   });
 

@@ -91,6 +91,7 @@ export async function GET(req: Request) {
       microsoftAccessExpiresAt: null,
       microsoftDeltaLink: null,
       microsoftSyncEnabled: true,
+      microsoftAuthFailedAt: null,
     },
   });
 

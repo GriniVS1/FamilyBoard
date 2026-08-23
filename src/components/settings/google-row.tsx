@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Link2, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, Link2, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
@@ -13,6 +13,7 @@ type GoogleStatus = {
   email?: string;
   syncEnabled: boolean;
   lastSyncAt?: string;
+  authExpired: boolean;
 };
 
 type GoogleRowProps = {
@@ -95,6 +96,11 @@ export function GoogleRow({ member, adminPin }: GoogleRowProps) {
             <div className="text-xs text-muted">{t("checking")}</div>
           ) : isError ? (
             <div className="text-xs text-accent-rose">{t("statusFailed")}</div>
+          ) : status?.connected && status.authExpired ? (
+            <div className="flex items-center gap-1.5 text-xs text-accent-rose">
+              <AlertTriangle className="size-4 shrink-0" aria-hidden />
+              <span className="truncate">{t("authExpired")}</span>
+            </div>
           ) : status?.connected ? (
             <div className="text-xs text-muted truncate">
               {status.email ?? t("connected")} · {t("lastSync", { when: lastSyncLabel })}

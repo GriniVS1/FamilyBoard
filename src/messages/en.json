@@ -482,7 +482,8 @@
       "statusFailed": "Could not load status.",
       "disconnectFailed": "Could not disconnect.",
       "syncFailed": "Sync failed.",
-      "notConfigured": "Google Calendar not available"
+      "notConfigured": "Google Calendar not available",
+      "authExpired": "Connection expired — re-connect in the FamilyBoard app."
     },
     "pin": {
       "title": "Security",
@@ -647,6 +648,7 @@
       "email": "Account",
       "lastSynced": "Last synced",
       "never": "never",
+      "authExpired": "Connection expired — re-connect in the FamilyBoard app.",
       "callback": {
         "connected": "Outlook connected!",
         "error": "Couldn't connect Outlook. {reason}",

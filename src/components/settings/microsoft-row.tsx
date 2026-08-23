@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
-import { Loader2, Mail, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, Loader2, Mail, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/shared/button";
@@ -13,6 +13,7 @@ type MicrosoftStatus = {
   email?: string;
   calendarName?: string;
   lastSyncedAt?: string;
+  authExpired: boolean;
 };
 
 type MicrosoftRowProps = {
@@ -96,6 +97,11 @@ export function MicrosoftRow({ member, adminPin }: MicrosoftRowProps) {
             <div className="text-xs text-muted">{t("description")}</div>
           ) : isError ? (
             <div className="text-xs text-accent-rose">{t("notConfigured")}</div>
+          ) : status?.connected && status.authExpired ? (
+            <div className="flex items-center gap-1.5 text-xs text-accent-rose">
+              <AlertTriangle className="size-4 shrink-0" aria-hidden />
+              <span className="truncate">{t("authExpired")}</span>
+            </div>
           ) : status?.connected ? (
             <div className="text-xs text-muted truncate">
               {status.email ?? t("connected")} · {t("lastSynced")}: {lastSyncLabel}

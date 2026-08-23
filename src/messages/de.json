@@ -482,7 +482,8 @@
       "statusFailed": "Status konnte nicht geladen werden.",
       "disconnectFailed": "Trennen fehlgeschlagen.",
       "syncFailed": "Synchronisierung fehlgeschlagen.",
-      "notConfigured": "Google Kalender nicht verfügbar"
+      "notConfigured": "Google Kalender nicht verfügbar",
+      "authExpired": "Verbindung abgelaufen — bitte in der FamilyBoard-App neu verbinden."
     },
     "pin": {
       "title": "Sicherheit",
@@ -647,6 +648,7 @@
       "email": "Konto",
       "lastSynced": "Zuletzt synchronisiert",
       "never": "nie",
+      "authExpired": "Verbindung abgelaufen — bitte in der FamilyBoard-App neu verbinden.",
       "callback": {
         "connected": "Outlook verbunden!",
         "error": "Outlook konnte nicht verbunden werden. {reason}",

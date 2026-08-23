@@ -482,7 +482,8 @@
       "statusFailed": "Impossible de charger le statut.",
       "disconnectFailed": "Déconnexion échouée.",
       "syncFailed": "Synchronisation échouée.",
-      "notConfigured": "Google Agenda indisponible"
+      "notConfigured": "Google Agenda indisponible",
+      "authExpired": "Connexion expirée — reconnecte-toi depuis l'application FamilyBoard."
     },
     "pin": {
       "title": "Sécurité",
@@ -647,6 +648,7 @@
       "email": "Compte",
       "lastSynced": "Dernière sync.",
       "never": "jamais",
+      "authExpired": "Connexion expirée — reconnecte-toi depuis l'application FamilyBoard.",
       "callback": {
         "connected": "Outlook connecté !",
         "error": "Impossible de connecter Outlook. {reason}",

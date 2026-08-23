@@ -18,6 +18,9 @@ export const GET = withErrorHandling<Ctx>(async (_req, { params }) => {
     connected: Boolean(member.googleRefreshTokenEnc),
     email: member.googleEmail ?? undefined,
     syncEnabled: member.googleSyncEnabled,
+    // Provider rejected the stored credential — the UI asks for a re-link and
+    // the sync loop skips this member until then.
+    authExpired: member.googleAuthFailedAt !== null,
     lastSyncAt: lastSyncRow?.value,
   });
 });
