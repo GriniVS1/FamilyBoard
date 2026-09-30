@@ -210,8 +210,9 @@ class SessionNotifier extends Notifier<SessionState>
 
   /// Refreshes [allDataProviders] — every screen's data, not just Home's —
   /// every 30s while the app is foreground and signed in. Started on
-  /// resume/app start, stopped on pause/inactive/detached/hidden and on
-  /// sign-out — see [didChangeAppLifecycleState] and [clear].
+  /// resume/app start, stopped on pause/hidden/detached and on sign-out —
+  /// `inactive` keeps it running (iPhone Duo Split View, see
+  /// [lifecycleKeepsPollAlive]). See [didChangeAppLifecycleState], [clear].
   late final ForegroundPollController _pollController =
       ForegroundPollController(
         interval: const Duration(seconds: 30),
@@ -257,20 +258,26 @@ class SessionNotifier extends Notifier<SessionState>
     }
   }
 
+  /// Whether the 30s poll timer is currently armed. Exposed for the
+  /// lifecycle tests only.
+  @visibleForTesting
+  bool get isPolling => _pollController.isRunning;
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.resumed:
-        _foreground = true;
-        unawaited(_onResumed());
-        break;
-      case AppLifecycleState.paused:
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.detached:
-      case AppLifecycleState.hidden:
-        _foreground = false;
-        _pollController.stop();
-        break;
+    if (!lifecycleKeepsPollAlive(state)) {
+      _foreground = false;
+      _pollController.stop();
+      return;
+    }
+    _foreground = true;
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_onResumed());
+    } else {
+      // `inactive` (Split View parking, app switcher, system dialogs): no
+      // refresh burst, but re-arm the timer in case we got here from
+      // `hidden` and never reach `resumed` (Split View).
+      _maybeStartPoll();
     }
   }
 

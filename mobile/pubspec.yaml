@@ -1,12 +1,13 @@
 name: familyboard_mobile
 description: FamilyBoard mobile companion app (M2.1 skeleton — pairing + home stub).
 publish_to: "none"
-version: 0.1.19
+version: 0.2.0
 
 environment:
   # Floor raised by this dependency refresh: flutter_riverpod 3.x needs
   # Dart ^3.12.0; go_router 17.x needs Flutter >=3.38.0 (both satisfied by
-  # our dev toolchain, Flutter 3.44.5 / Dart 3.12.2).
+  # our dev toolchain; verified on Flutter 3.47.5 / Dart 3.13.4, nothing
+  # requires a higher floor).
   sdk: ">=3.12.0 <4.0.0"
   flutter: ">=3.38.0"
 

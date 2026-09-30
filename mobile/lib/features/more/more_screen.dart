@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../l10n/generated/app_localizations.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/adaptive_layout.dart';
 
 /// "Mehr" tab — a plain navigation list to the screens that don't get their
 /// own bottom-tab slot: Notes, Photos, Settings. Each row pushes its target
@@ -17,33 +18,35 @@ class MoreScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const FamilyBoardLogo(fontSize: 18)),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: <Widget>[
-            _MoreRow(
-              icon: Icons.checklist_outlined,
-              label: l10n.tasksTitle,
-              onTap: () => context.push('/tasks'),
-            ),
-            const SizedBox(height: 12),
-            _MoreRow(
-              icon: Icons.sticky_note_2_outlined,
-              label: l10n.notesTitle,
-              onTap: () => context.push('/notes'),
-            ),
-            const SizedBox(height: 12),
-            _MoreRow(
-              icon: Icons.photo_library_outlined,
-              label: l10n.photosTitle,
-              onTap: () => context.push('/photos'),
-            ),
-            const SizedBox(height: 12),
-            _MoreRow(
-              icon: Icons.settings_outlined,
-              label: l10n.settingsTitle,
-              onTap: () => context.push('/settings'),
-            ),
-          ],
+        child: ConstrainedContent(
+          child: ListView(
+            padding: const EdgeInsets.all(16),
+            children: <Widget>[
+              _MoreRow(
+                icon: Icons.checklist_outlined,
+                label: l10n.tasksTitle,
+                onTap: () => context.push('/tasks'),
+              ),
+              const SizedBox(height: 12),
+              _MoreRow(
+                icon: Icons.sticky_note_2_outlined,
+                label: l10n.notesTitle,
+                onTap: () => context.push('/notes'),
+              ),
+              const SizedBox(height: 12),
+              _MoreRow(
+                icon: Icons.photo_library_outlined,
+                label: l10n.photosTitle,
+                onTap: () => context.push('/photos'),
+              ),
+              const SizedBox(height: 12),
+              _MoreRow(
+                icon: Icons.settings_outlined,
+                label: l10n.settingsTitle,
+                onTap: () => context.push('/settings'),
+              ),
+            ],
+          ),
         ),
       ),
     );

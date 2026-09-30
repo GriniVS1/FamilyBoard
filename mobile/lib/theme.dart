@@ -164,6 +164,28 @@ class FamilyBoardTheme {
           ),
         ),
       ),
+      // Same treatment as the bottom bar, for the >= 600pt layout where the
+      // shell swaps to a left rail (iPhone Duo inner display, tablets).
+      navigationRailTheme: NavigationRailThemeData(
+        backgroundColor: scheme.surface,
+        indicatorColor: scheme.primary.withValues(alpha: 0.16),
+        indicatorShape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        labelType: NavigationRailLabelType.all,
+        selectedLabelTextStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: scheme.primary,
+        ),
+        unselectedLabelTextStyle: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+          color: mutedText,
+        ),
+        selectedIconTheme: IconThemeData(size: 24, color: scheme.primary),
+        unselectedIconTheme: IconThemeData(size: 24, color: mutedText),
+      ),
     );
   }
 }

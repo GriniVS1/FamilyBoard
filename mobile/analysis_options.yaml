@@ -12,6 +12,8 @@ analyzer:
     - "build/**"
     - ".dart_tool/**"
     - "lib/l10n/generated/**"
+    - android/**
+    - ios/**
 
 linter:
   rules:

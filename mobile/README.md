@@ -141,6 +141,7 @@ mobile/
     main.dart                runApp(ProviderScope(FamilyBoardApp))
     app.dart                 MaterialApp.router + go_router redirect logic
     theme.dart               Material 3 wired to FamilyBoard accent palette
+    widgets/adaptive_layout.dart  breakpoints + ConstrainedContent
     services/
       api_client.dart        Dio factory (Bearer interceptor for auth calls)
       fcm_service.dart       Firebase Cloud Messaging: permission, token, register, listeners
@@ -162,6 +163,28 @@ mobile/
   tool/
     sync_messages.dart       dart run tool/sync_messages.dart — ARB parity check
 ```
+
+## iOS 27 / iPhone Duo (foldable) notes
+
+- **UIScene lifecycle** is mandatory for apps built with Xcode 27. `Info.plist`
+  carries `UIApplicationSceneManifest` and `ios/Runner/SceneDelegate.swift`
+  exists; both are identical to the Flutter 3.47 `flutter create` template
+  (only our custom keys differ). Re-diff against a throwaway
+  `flutter create` after each Flutter upgrade.
+- **Width-based adaptivity only.** The Duo reports 466pt (cover), 626pt
+  (inner, portrait) and 890pt (inner, landscape) and resizes the app live on
+  fold / unfold. `lib/widgets/adaptive_layout.dart` holds the breakpoints:
+  >= 600pt swaps the bottom NavigationBar for a left NavigationRail
+  (`navigation/app_shell.dart`); `ConstrainedContent` centres single-column
+  screens at 700pt; the photo grid picks 2/3/4 columns from its width. Always
+  read `MediaQuery.sizeOf(context)` inside `build`, never in `initState`.
+- **No hinge awareness.** Flutter does not populate `MediaQuery.displayFeatures`
+  on iOS yet, so hinge-aware two-pane layouts are out of scope.
+- **Split View** parks visible apps in `AppLifecycleState.inactive`; the
+  foreground poll keeps running there and only stops on
+  paused / hidden / detached.
+- Builds made with an iOS SDK older than 27.1 run letterboxed on the Duo;
+  build the TestFlight binary with Xcode 27.1+ once it ships.
 
 ## Validating localisation key parity
 
