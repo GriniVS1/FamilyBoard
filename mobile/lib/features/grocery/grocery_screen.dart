@@ -9,6 +9,7 @@ import '../../services/grocery_service.dart';
 import '../../state/grocery_provider.dart';
 import '../../state/session_provider.dart';
 import '../../widgets/cached_at_pill.dart';
+import '../../widgets/adaptive_layout.dart';
 import '../../widgets/familyboard_logo.dart';
 import '../../widgets/queue_badge.dart';
 
@@ -164,39 +165,42 @@ class _GroceryScreenState extends ConsumerState<GroceryScreen> {
         ],
       ),
       body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            _QuickAddRow(
-              controller: _addController,
-              busy: _addBusy,
-              l10n: l10n,
-              onSubmit: _submitNew,
-            ),
-            Expanded(
-              child: groceryAsync.when(
-                loading: () => const Center(child: CircularProgressIndicator()),
-                error: (Object err, StackTrace _) => _ErrorBody(
-                  error: err,
-                  l10n: l10n,
-                  onRetry: () => ref.invalidate(groceryProvider),
-                  onSessionExpired: () async {
-                    await ref.read(sessionProvider.notifier).clear();
-                  },
-                ),
-                data: (GroceryResult result) => _GroceryBody(
-                  items: result.items,
-                  staleAt: result.staleAt,
-                  l10n: l10n,
-                  onRefresh: () async {
-                    ref.invalidate(groceryProvider);
-                    try {
-                      await ref.read(groceryProvider.future);
-                    } catch (_) {}
-                  },
+        child: ConstrainedContent(
+          child: Column(
+            children: <Widget>[
+              _QuickAddRow(
+                controller: _addController,
+                busy: _addBusy,
+                l10n: l10n,
+                onSubmit: _submitNew,
+              ),
+              Expanded(
+                child: groceryAsync.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (Object err, StackTrace _) => _ErrorBody(
+                    error: err,
+                    l10n: l10n,
+                    onRetry: () => ref.invalidate(groceryProvider),
+                    onSessionExpired: () async {
+                      await ref.read(sessionProvider.notifier).clear();
+                    },
+                  ),
+                  data: (GroceryResult result) => _GroceryBody(
+                    items: result.items,
+                    staleAt: result.staleAt,
+                    l10n: l10n,
+                    onRefresh: () async {
+                      ref.invalidate(groceryProvider);
+                      try {
+                        await ref.read(groceryProvider.future);
+                      } catch (_) {}
+                    },
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -293,7 +297,7 @@ class _GroceryBody extends StatelessWidget {
                 child: CachedAtPill(staleAt: staleAt),
               ),
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.4,
+              height: MediaQuery.sizeOf(context).height * 0.4,
               child: _EmptyState(l10n: l10n),
             ),
           ],

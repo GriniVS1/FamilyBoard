@@ -12,6 +12,7 @@ import '../../state/meal_plan_provider.dart';
 import '../../state/session_provider.dart';
 import '../../theme.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/adaptive_layout.dart';
 import 'meal_plan_edit_sheet.dart';
 
 class MealPlanScreen extends ConsumerStatefulWidget {
@@ -162,34 +163,36 @@ class _MealPlanScreenState extends ConsumerState<MealPlanScreen> {
         label: Text(l10n.mealPlanNew),
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(mealPlanProvider);
-            try {
-              await ref.read(mealPlanProvider.future);
-            } catch (_) {}
-          },
-          child: mealPlanAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (Object err, StackTrace _) => _ErrorBody(
-              error: err,
-              l10n: l10n,
-              onRetry: () => ref.invalidate(mealPlanProvider),
-              onSessionExpired: () async {
-                await ref.read(sessionProvider.notifier).clear();
-              },
+        child: ConstrainedContent(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(mealPlanProvider);
+              try {
+                await ref.read(mealPlanProvider.future);
+              } catch (_) {}
+            },
+            child: mealPlanAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (Object err, StackTrace _) => _ErrorBody(
+                error: err,
+                l10n: l10n,
+                onRetry: () => ref.invalidate(mealPlanProvider),
+                onSessionExpired: () async {
+                  await ref.read(sessionProvider.notifier).clear();
+                },
+              ),
+              data: (MealPlanResult result) => result.plans.isEmpty
+                  ? ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      children: <Widget>[
+                        SizedBox(
+                          height: MediaQuery.sizeOf(context).height * 0.5,
+                          child: _EmptyState(l10n: l10n),
+                        ),
+                      ],
+                    )
+                  : _WeekBody(plans: result.plans, l10n: l10n),
             ),
-            data: (MealPlanResult result) => result.plans.isEmpty
-                ? ListView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    children: <Widget>[
-                      SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.5,
-                        child: _EmptyState(l10n: l10n),
-                      ),
-                    ],
-                  )
-                : _WeekBody(plans: result.plans, l10n: l10n),
           ),
         ),
       ),

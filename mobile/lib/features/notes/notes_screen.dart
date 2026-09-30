@@ -10,6 +10,7 @@ import '../../state/notes_provider.dart';
 import '../../state/session_provider.dart';
 import '../../theme.dart';
 import '../../widgets/cached_at_pill.dart';
+import '../../widgets/adaptive_layout.dart';
 import '../../widgets/familyboard_logo.dart';
 import '../../widgets/queue_badge.dart';
 import 'note_edit_sheet.dart';
@@ -45,27 +46,29 @@ class NotesScreen extends ConsumerWidget {
         ],
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(notesProvider);
-            try {
-              await ref.read(notesProvider.future);
-            } catch (_) {}
-          },
-          child: notesAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (Object err, StackTrace _) => _ErrorBody(
-              error: err,
-              l10n: l10n,
-              onRetry: () => ref.invalidate(notesProvider),
-              onSessionExpired: () async {
-                await ref.read(sessionProvider.notifier).clear();
-              },
-            ),
-            data: (NotesResult result) => _NotesList(
-              notes: result.notes,
-              l10n: l10n,
-              staleAt: result.staleAt,
+        child: ConstrainedContent(
+          child: RefreshIndicator(
+            onRefresh: () async {
+              ref.invalidate(notesProvider);
+              try {
+                await ref.read(notesProvider.future);
+              } catch (_) {}
+            },
+            child: notesAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (Object err, StackTrace _) => _ErrorBody(
+                error: err,
+                l10n: l10n,
+                onRetry: () => ref.invalidate(notesProvider),
+                onSessionExpired: () async {
+                  await ref.read(sessionProvider.notifier).clear();
+                },
+              ),
+              data: (NotesResult result) => _NotesList(
+                notes: result.notes,
+                l10n: l10n,
+                staleAt: result.staleAt,
+              ),
             ),
           ),
         ),

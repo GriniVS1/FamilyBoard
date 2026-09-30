@@ -10,6 +10,7 @@ import '../../services/photos_service.dart';
 import '../../state/photos_provider.dart';
 import '../../state/session_provider.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/adaptive_layout.dart';
 
 /// Re-encodes HEIC/large gallery photos down to a JPEG under the wall's 8 MiB
 /// cap before they ever reach [PhotosService.uploadPhoto].
@@ -206,53 +207,57 @@ class _PhotosScreenState extends ConsumerState<PhotosScreen> {
         child: const Icon(Icons.add_photo_alternate_outlined),
       ),
       body: SafeArea(
-        child: session == null
-            ? const SizedBox.shrink()
-            : Column(
-                children: <Widget>[
-                  if (_uploading)
-                    _UploadProgressBanner(
-                      l10n: l10n,
-                      current: _uploadCurrent,
-                      total: _uploadTotal,
-                      fileProgress: _currentFileProgress,
-                    ),
-                  Expanded(
-                    child: photosAsync.when(
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (Object err, StackTrace _) => _ErrorBody(
-                        error: err,
+        child: ConstrainedContent(
+          maxWidth: AdaptiveLayout.gridMaxWidth,
+          child: session == null
+              ? const SizedBox.shrink()
+              : Column(
+                  children: <Widget>[
+                    if (_uploading)
+                      _UploadProgressBanner(
                         l10n: l10n,
-                        onRetry: () => ref.invalidate(photosProvider),
-                        onSessionExpired: () async {
-                          await ref.read(sessionProvider.notifier).clear();
+                        current: _uploadCurrent,
+                        total: _uploadTotal,
+                        fileProgress: _currentFileProgress,
+                      ),
+                    Expanded(
+                      child: photosAsync.when(
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (Object err, StackTrace _) => _ErrorBody(
+                          error: err,
+                          l10n: l10n,
+                          onRetry: () => ref.invalidate(photosProvider),
+                          onSessionExpired: () async {
+                            await ref.read(sessionProvider.notifier).clear();
+                          },
+                        ),
+                        data: (List<Photo> photos) {
+                          final List<Photo> merged = <Photo>[
+                            ...photos,
+                            ..._optimisticUploaded.where(
+                              (Photo p) =>
+                                  !photos.any((Photo q) => q.id == p.id),
+                            ),
+                          ];
+                          return _PhotosBody(
+                            photos: merged,
+                            session: session,
+                            l10n: l10n,
+                            onRefresh: () async {
+                              ref.invalidate(photosProvider);
+                              try {
+                                await ref.read(photosProvider.future);
+                              } catch (_) {}
+                            },
+                            onDelete: _confirmDelete,
+                          );
                         },
                       ),
-                      data: (List<Photo> photos) {
-                        final List<Photo> merged = <Photo>[
-                          ...photos,
-                          ..._optimisticUploaded.where(
-                            (Photo p) => !photos.any((Photo q) => q.id == p.id),
-                          ),
-                        ];
-                        return _PhotosBody(
-                          photos: merged,
-                          session: session,
-                          l10n: l10n,
-                          onRefresh: () async {
-                            ref.invalidate(photosProvider);
-                            try {
-                              await ref.read(photosProvider.future);
-                            } catch (_) {}
-                          },
-                          onDelete: _confirmDelete,
-                        );
-                      },
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
+        ),
       ),
     );
   }
@@ -328,7 +333,7 @@ class _PhotosBody extends StatelessWidget {
           physics: const AlwaysScrollableScrollPhysics(),
           children: <Widget>[
             SizedBox(
-              height: MediaQuery.of(context).size.height * 0.6,
+              height: MediaQuery.sizeOf(context).height * 0.6,
               child: _EmptyState(l10n: l10n),
             ),
           ],
@@ -336,29 +341,32 @@ class _PhotosBody extends StatelessWidget {
       );
     }
 
-    final int crossAxisCount = MediaQuery.of(context).size.width >= 600 ? 3 : 2;
-
     return RefreshIndicator(
       onRefresh: onRefresh,
-      child: GridView.builder(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          childAspectRatio: 1,
-        ),
-        itemCount: photos.length,
-        itemBuilder: (BuildContext context, int index) {
-          final Photo photo = photos[index];
-          return _PhotoTile(
-            photo: photo,
-            session: session,
-            l10n: l10n,
-            onDelete: () => onDelete(photo),
-          );
-        },
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) =>
+            GridView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: AdaptiveLayout.photoColumns(
+                  constraints.maxWidth,
+                ),
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 1,
+              ),
+              itemCount: photos.length,
+              itemBuilder: (BuildContext context, int index) {
+                final Photo photo = photos[index];
+                return _PhotoTile(
+                  photo: photo,
+                  session: session,
+                  l10n: l10n,
+                  onDelete: () => onDelete(photo),
+                );
+              },
+            ),
       ),
     );
   }

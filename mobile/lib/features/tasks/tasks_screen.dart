@@ -17,6 +17,7 @@ import '../../state/session_provider.dart';
 import '../../state/today_provider.dart';
 import '../../state/todos_provider.dart';
 import '../../widgets/cached_at_pill.dart';
+import '../../widgets/adaptive_layout.dart';
 import '../../widgets/familyboard_logo.dart';
 import '../../widgets/member_chip.dart';
 import '../../widgets/queue_badge.dart';
@@ -51,32 +52,34 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         actions: const <Widget>[QueueBadge()],
       ),
       body: SafeArea(
-        child: Column(
-          children: <Widget>[
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-              child: SegmentedButton<_TasksTab>(
-                segments: <ButtonSegment<_TasksTab>>[
-                  ButtonSegment<_TasksTab>(
-                    value: _TasksTab.chores,
-                    label: Text(l10n.homeChoresCard),
-                  ),
-                  ButtonSegment<_TasksTab>(
-                    value: _TasksTab.todos,
-                    label: Text(l10n.homeTodosCard),
-                  ),
-                ],
-                selected: <_TasksTab>{_tab},
-                onSelectionChanged: (Set<_TasksTab> sel) =>
-                    setState(() => _tab = sel.first),
+        child: ConstrainedContent(
+          child: Column(
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                child: SegmentedButton<_TasksTab>(
+                  segments: <ButtonSegment<_TasksTab>>[
+                    ButtonSegment<_TasksTab>(
+                      value: _TasksTab.chores,
+                      label: Text(l10n.homeChoresCard),
+                    ),
+                    ButtonSegment<_TasksTab>(
+                      value: _TasksTab.todos,
+                      label: Text(l10n.homeTodosCard),
+                    ),
+                  ],
+                  selected: <_TasksTab>{_tab},
+                  onSelectionChanged: (Set<_TasksTab> sel) =>
+                      setState(() => _tab = sel.first),
+                ),
               ),
-            ),
-            Expanded(
-              child: _tab == _TasksTab.chores
-                  ? const _ChoresSegment()
-                  : const _TodosSegment(),
-            ),
-          ],
+              Expanded(
+                child: _tab == _TasksTab.chores
+                    ? const _ChoresSegment()
+                    : const _TodosSegment(),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: _tab == _TasksTab.chores && isAdmin

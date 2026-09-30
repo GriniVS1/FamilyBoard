@@ -11,6 +11,7 @@ import '../../state/events_provider.dart';
 import '../../state/session_provider.dart';
 import '../../theme.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/adaptive_layout.dart';
 import 'event_detail_sheet.dart';
 import 'event_edit_sheet.dart';
 
@@ -107,78 +108,79 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         child: const Icon(Icons.add),
       ),
       body: SafeArea(
-        child: eventsAsync.when(
-          loading: () => const Column(
-            children: <Widget>[
-              SizedBox(height: 0),
-              Expanded(child: _LoadingBody()),
-            ],
-          ),
-          error: (Object err, StackTrace _) => RefreshIndicator(
-            onRefresh: _refresh,
-            child: _ErrorBody(
-              error: err,
-              l10n: l10n,
-              onRetry: () {
-                final EventsRange r = EventsRange(from: _from, to: _to);
-                ref.invalidate(eventsProvider(r));
-              },
-              onSessionExpired: () async {
-                await ref.read(sessionProvider.notifier).clear();
-              },
-            ),
-          ),
-          data: (EventsResult result) {
-            final List<MobileEvent> events = result.events;
-            final LinkedHashMap<String, EventMember> members = _distinctMembers(
-              events,
-            );
-
-            // Snap back to "All" if the selected member no longer appears.
-            final String? effectiveMemberId =
-                (_selectedMemberId != null &&
-                    members.containsKey(_selectedMemberId))
-                ? _selectedMemberId
-                : null;
-
-            final List<MobileEvent> filtered = effectiveMemberId == null
-                ? events
-                : events
-                      .where(
-                        (MobileEvent e) => e.member.id == effectiveMemberId,
-                      )
-                      .toList();
-
-            return Column(
+        child: ConstrainedContent(
+          child: eventsAsync.when(
+            loading: () => const Column(
               children: <Widget>[
-                _MemberFilterRow(
-                  members: members,
-                  selectedMemberId: effectiveMemberId,
-                  l10n: l10n,
-                  onSelected: (String? memberId) {
-                    setState(() {
-                      _selectedMemberId = (memberId == _selectedMemberId)
-                          ? null
-                          : memberId;
-                    });
-                  },
-                ),
-                Expanded(
-                  child: RefreshIndicator(
-                    onRefresh: _refresh,
-                    child: _AgendaBody(
-                      events: filtered,
-                      from: _from,
-                      to: _to,
-                      l10n: l10n,
-                      canLoadMore: _canLoadMore,
-                      onLoadMore: _loadMore,
+                SizedBox(height: 0),
+                Expanded(child: _LoadingBody()),
+              ],
+            ),
+            error: (Object err, StackTrace _) => RefreshIndicator(
+              onRefresh: _refresh,
+              child: _ErrorBody(
+                error: err,
+                l10n: l10n,
+                onRetry: () {
+                  final EventsRange r = EventsRange(from: _from, to: _to);
+                  ref.invalidate(eventsProvider(r));
+                },
+                onSessionExpired: () async {
+                  await ref.read(sessionProvider.notifier).clear();
+                },
+              ),
+            ),
+            data: (EventsResult result) {
+              final List<MobileEvent> events = result.events;
+              final LinkedHashMap<String, EventMember> members =
+                  _distinctMembers(events);
+
+              // Snap back to "All" if the selected member no longer appears.
+              final String? effectiveMemberId =
+                  (_selectedMemberId != null &&
+                      members.containsKey(_selectedMemberId))
+                  ? _selectedMemberId
+                  : null;
+
+              final List<MobileEvent> filtered = effectiveMemberId == null
+                  ? events
+                  : events
+                        .where(
+                          (MobileEvent e) => e.member.id == effectiveMemberId,
+                        )
+                        .toList();
+
+              return Column(
+                children: <Widget>[
+                  _MemberFilterRow(
+                    members: members,
+                    selectedMemberId: effectiveMemberId,
+                    l10n: l10n,
+                    onSelected: (String? memberId) {
+                      setState(() {
+                        _selectedMemberId = (memberId == _selectedMemberId)
+                            ? null
+                            : memberId;
+                      });
+                    },
+                  ),
+                  Expanded(
+                    child: RefreshIndicator(
+                      onRefresh: _refresh,
+                      child: _AgendaBody(
+                        events: filtered,
+                        from: _from,
+                        to: _to,
+                        l10n: l10n,
+                        canLoadMore: _canLoadMore,
+                        onLoadMore: _loadMore,
+                      ),
                     ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../state/setup_onboarding_controller.dart';
 import '../../widgets/familyboard_logo.dart';
+import '../../widgets/adaptive_layout.dart';
 import '../pair/qr_scanner_view.dart';
 import 'step_family_view.dart';
 import 'step_members_view.dart';
@@ -56,9 +57,11 @@ class _SetupOnboardingScreenState extends ConsumerState<SetupOnboardingScreen> {
         ),
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: _buildBody(context, l10n, state),
+        child: ConstrainedContent(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: _buildBody(context, l10n, state),
+          ),
         ),
       ),
     );
