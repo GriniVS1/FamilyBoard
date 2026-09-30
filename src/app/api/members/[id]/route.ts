@@ -1,6 +1,7 @@
 import { ok, withErrorHandling } from "@/lib/api";
 import { deleteMember, patchMemberSchema, updateMember } from "@/lib/members";
 import { requireAdminPin } from "@/lib/admin-pin";
+import { toPublicMember } from "@/lib/queries";
 
 export const runtime = "nodejs";
 
@@ -11,7 +12,7 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
   const { id } = await params;
   const body = patchMemberSchema.parse(await req.json());
   const updated = await updateMember(id, body);
-  return ok(updated);
+  return ok(toPublicMember(updated));
 });
 
 export const DELETE = withErrorHandling<Ctx>(async (_req, { params }) => {
