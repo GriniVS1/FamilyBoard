@@ -31,3 +31,10 @@ tool/.release-private.pem
 tool/*.pem
 # …but the OTA release PUBLIC key is meant to be committed and baked into the image
 !tool/release-pub.pem
+
+# Local editor / agent tooling and generated caches
+.idea/
+.codex/
+AGENTS.md
+broker/.wrangler/
+graphify-out/
