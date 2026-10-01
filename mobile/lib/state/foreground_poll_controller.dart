@@ -1,5 +1,27 @@
 import 'dart:async';
 
+import 'package:flutter/widgets.dart' show AppLifecycleState;
+
+/// Whether the foreground poll may keep running in [state].
+///
+/// `inactive` deliberately counts as alive. On the iPhone Duo (iOS 27) Split
+/// View parks every visible-but-unfocused app in `inactive`, and such an app
+/// is on screen and must keep refreshing. On classic iPhones `inactive` is a
+/// transient state (app switcher, permission dialogs, Control Centre) that is
+/// harmless to poll through. Only `paused`, `hidden` and `detached` mean the
+/// app is no longer visible.
+bool lifecycleKeepsPollAlive(AppLifecycleState state) {
+  switch (state) {
+    case AppLifecycleState.resumed:
+    case AppLifecycleState.inactive:
+      return true;
+    case AppLifecycleState.paused:
+    case AppLifecycleState.hidden:
+    case AppLifecycleState.detached:
+      return false;
+  }
+}
+
 /// Drives the 30s foreground data-refresh poll. A thin wrapper around
 /// `Timer.periodic` with idempotent start/stop semantics, so
 /// `SessionNotifier` can call `start()`/`stop()` freely from several

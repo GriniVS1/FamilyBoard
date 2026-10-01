@@ -1,3 +1,4 @@
+import type { Member } from "@prisma/client";
 import { db } from "./db";
 import { env, googleConfigured } from "./env";
 import { isAdminPinSet } from "./pin";
@@ -170,13 +171,63 @@ export async function getOrCreateInstallation() {
 }
 
 export async function getFamily() {
-  return db.family.findFirst({
-    include: { members: { orderBy: { createdAt: "asc" } } },
-  });
+  return db.family.findFirst();
 }
 
-export async function listMembers() {
-  return db.member.findMany({ orderBy: { createdAt: "asc" } });
+export type PublicMember = {
+  id: string;
+  familyId: string;
+  name: string;
+  color: string;
+  emoji: string | null;
+  role: string;
+  createdAt: Date;
+  googleConnected: boolean;
+  googleEmail: string | null;
+  googleSyncEnabled: boolean;
+  googleAuthFailedAt: Date | null;
+  caldavConnected: boolean;
+  caldavCalendarName: string | null;
+  caldavSyncEnabled: boolean;
+  caldavSyncedAt: Date | null;
+  microsoftConnected: boolean;
+  microsoftEmail: string | null;
+  microsoftSyncEnabled: boolean;
+  microsoftSyncedAt: Date | null;
+  microsoftAuthFailedAt: Date | null;
+};
+
+// Explicit allowlist rather than stripping known secrets: a Member row carries
+// OAuth tokens, CalDAV credentials and sync cursors, and a column added later
+// must stay private until someone deliberately exposes it here.
+export function toPublicMember(member: Member): PublicMember {
+  return {
+    id: member.id,
+    familyId: member.familyId,
+    name: member.name,
+    color: member.color,
+    emoji: member.emoji,
+    role: member.role,
+    createdAt: member.createdAt,
+    googleConnected: Boolean(member.googleRefreshTokenEnc),
+    googleEmail: member.googleEmail,
+    googleSyncEnabled: member.googleSyncEnabled,
+    googleAuthFailedAt: member.googleAuthFailedAt,
+    caldavConnected: Boolean(member.caldavPasswordEnc),
+    caldavCalendarName: member.caldavCalendarName,
+    caldavSyncEnabled: member.caldavSyncEnabled,
+    caldavSyncedAt: member.caldavSyncedAt,
+    microsoftConnected: Boolean(member.microsoftRefreshTokenEnc),
+    microsoftEmail: member.microsoftEmail,
+    microsoftSyncEnabled: member.microsoftSyncEnabled,
+    microsoftSyncedAt: member.microsoftSyncedAt,
+    microsoftAuthFailedAt: member.microsoftAuthFailedAt,
+  };
+}
+
+export async function listMembers(): Promise<PublicMember[]> {
+  const members = await db.member.findMany({ orderBy: { createdAt: "asc" } });
+  return members.map(toPublicMember);
 }
 
 export async function createFamilyIfMissing(name: string) {

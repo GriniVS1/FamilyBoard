@@ -5,6 +5,7 @@
 import 'dart:async';
 
 import 'package:familyboard_mobile/state/foreground_poll_controller.dart';
+import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeTimer implements Timer {
@@ -101,6 +102,22 @@ void main() {
       createdTimers.single.callback();
 
       expect(tickCount, equals(2));
+    });
+  });
+
+  group('lifecycleKeepsPollAlive', () {
+    test('inactive keeps polling (iPhone Duo Split View parks apps there)', () {
+      expect(lifecycleKeepsPollAlive(AppLifecycleState.inactive), isTrue);
+    });
+
+    test('resumed keeps polling', () {
+      expect(lifecycleKeepsPollAlive(AppLifecycleState.resumed), isTrue);
+    });
+
+    test('paused, hidden and detached stop polling', () {
+      expect(lifecycleKeepsPollAlive(AppLifecycleState.paused), isFalse);
+      expect(lifecycleKeepsPollAlive(AppLifecycleState.hidden), isFalse);
+      expect(lifecycleKeepsPollAlive(AppLifecycleState.detached), isFalse);
     });
   });
 }

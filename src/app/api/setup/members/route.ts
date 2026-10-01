@@ -3,7 +3,7 @@ import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { assertMemberListReadable, assertSetupIncomplete } from "@/lib/setup-guard";
 import { db } from "@/lib/db";
 import { MEMBER_ROLE } from "@/lib/enums";
-import { listMembers } from "@/lib/queries";
+import { listMembers, toPublicMember } from "@/lib/queries";
 import { MEMBER_COLORS } from "@/lib/utils";
 
 export const runtime = "nodejs";
@@ -68,5 +68,5 @@ export const POST = withErrorHandling(async (req) => {
     ),
   );
 
-  return ok(created);
+  return ok(created.map(toPublicMember));
 });

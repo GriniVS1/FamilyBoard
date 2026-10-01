@@ -108,9 +108,26 @@ ScannedSetupPayload? _parseSetup(Uri uri) {
 }
 
 class QrScannerView extends StatefulWidget {
-  const QrScannerView({super.key, required this.onScanned});
+  const QrScannerView({
+    super.key,
+    required this.onScanned,
+    this.maxSide = maxViewfinderSide,
+  });
+
+  static const double maxViewfinderSide = 360;
+  static const double minViewfinderSide = 120;
+
+  /// Viewfinder edge for a screen with [availableHeight] to spare: what is
+  /// left after the title, caption and "enter manually" button (estimated),
+  /// clamped to 120..360. The estimate only tunes how large the square is;
+  /// the hosting screen scrolls, so a wrong guess can never overflow.
+  static double sideForHeight(double availableHeight) =>
+      (availableHeight - 220).clamp(minViewfinderSide, maxViewfinderSide);
 
   final void Function(ScannedQrPayload payload) onScanned;
+
+  /// Upper bound for the square viewfinder's edge.
+  final double maxSide;
 
   @override
   State<QrScannerView> createState() => _QrScannerViewState();
@@ -132,39 +149,52 @@ class _QrScannerViewState extends State<QrScannerView> {
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: <Widget>[
-        AspectRatio(
-          aspectRatio: 1,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: MobileScanner(
-              controller: _controller,
-              onDetect: _onDetect,
-              errorBuilder:
-                  (BuildContext context, MobileScannerException error) {
-                    return Container(
-                      color: Theme.of(context).colorScheme.errorContainer,
-                      padding: const EdgeInsets.all(16),
-                      child: Center(
-                        child: Text(
-                          error.errorDetails?.message ?? 'Scanner error',
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    );
-                  },
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        // Square, but never wider than the space given nor than [maxSide]
+        // (a full-width square would be taller than the screen at 890pt
+        // landscape). Height is handled by the host screen scrolling.
+        final double side = constraints.maxWidth < widget.maxSide
+            ? constraints.maxWidth
+            : widget.maxSide;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Center(
+              child: SizedBox.square(
+                dimension: side,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: MobileScanner(
+                    controller: _controller,
+                    onDetect: _onDetect,
+                    errorBuilder:
+                        (BuildContext context, MobileScannerException error) {
+                          return Container(
+                            color: Theme.of(context).colorScheme.errorContainer,
+                            padding: const EdgeInsets.all(16),
+                            child: Center(
+                              child: Text(
+                                error.errorDetails?.message ?? 'Scanner error',
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          );
+                        },
+                  ),
+                ),
+              ),
             ),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          l10n.pairScanInstruction,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ],
+            const SizedBox(height: 16),
+            Text(
+              l10n.pairScanInstruction,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
+        );
+      },
     );
   }
 

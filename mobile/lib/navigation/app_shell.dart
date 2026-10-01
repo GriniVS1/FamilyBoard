@@ -6,10 +6,18 @@ import 'package:go_router/go_router.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../state/events_provider.dart';
 import '../state/home_range_provider.dart';
+import '../widgets/adaptive_layout.dart';
 import 'tab_refresh.dart';
 
-/// Bottom-tab shell for the 5 signed-in-only branches: Heute, Kalender,
+/// Tab shell for the 5 signed-in-only branches: Heute, Kalender,
 /// Essensplan, Einkauf, Mehr.
+///
+/// Below [AdaptiveLayout.railBreakpoint] (600pt) the tabs are a bottom
+/// NavigationBar; at or above it (iPhone Duo inner display, phones in
+/// landscape, tablets) they become a left NavigationRail with visible
+/// labels. The width is read from MediaQuery in `build`, so folding or
+/// unfolding a Duo swaps the chrome live. The go_router branch navigators
+/// live in [navigationShell] and survive the swap.
 ///
 /// Each branch keeps its own Navigator and back-stack
 /// (`StatefulShellRoute.indexedStack` in `app.dart`), so switching tabs
@@ -46,39 +54,112 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppL10n l10n = AppL10n.of(context);
+    final List<_TabSpec> tabs = <_TabSpec>[
+      _TabSpec(
+        icon: Icons.space_dashboard_outlined,
+        selectedIcon: Icons.space_dashboard,
+        label: l10n.homeTodayCard,
+      ),
+      _TabSpec(
+        icon: Icons.calendar_month_outlined,
+        selectedIcon: Icons.calendar_month,
+        label: l10n.calendarTitle,
+      ),
+      _TabSpec(
+        icon: Icons.restaurant_outlined,
+        selectedIcon: Icons.restaurant,
+        label: l10n.mealPlanTitle,
+      ),
+      _TabSpec(
+        icon: Icons.shopping_cart_outlined,
+        selectedIcon: Icons.shopping_cart,
+        label: l10n.groceryTitle,
+      ),
+      _TabSpec(icon: Icons.more_horiz, label: l10n.moreTitle),
+    ];
+
+    if (!AdaptiveLayout.useRail(context)) {
+      return Scaffold(
+        body: navigationShell,
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: navigationShell.currentIndex,
+          onDestinationSelected: (int index) =>
+              _onDestinationSelected(ref, index),
+          destinations: <NavigationDestination>[
+            for (final _TabSpec tab in tabs)
+              NavigationDestination(
+                icon: Icon(tab.icon),
+                selectedIcon: tab.selectedIcon == null
+                    ? null
+                    : Icon(tab.selectedIcon),
+                label: tab.label,
+              ),
+          ],
+        ),
+      );
+    }
+
+    final ColorScheme scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: (int index) =>
-            _onDestinationSelected(ref, index),
-        destinations: <NavigationDestination>[
-          NavigationDestination(
-            icon: const Icon(Icons.space_dashboard_outlined),
-            selectedIcon: const Icon(Icons.space_dashboard),
-            label: l10n.homeTodayCard,
+      body: Row(
+        children: <Widget>[
+          // The rail owns the leading (notch / rounded-corner) inset, so the
+          // screens to its right must not inset for it a second time.
+          ColoredBox(
+            color: scheme.surface,
+            child: SafeArea(
+              right: false,
+              child: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints constraints) {
+                  // Rail + scroll recipe: a phone in landscape is ~390pt tall,
+                  // barely enough for five labelled destinations.
+                  return SingleChildScrollView(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
+                      ),
+                      child: IntrinsicHeight(
+                        child: NavigationRail(
+                          labelType: NavigationRailLabelType.all,
+                          selectedIndex: navigationShell.currentIndex,
+                          onDestinationSelected: (int index) =>
+                              _onDestinationSelected(ref, index),
+                          destinations: <NavigationRailDestination>[
+                            for (final _TabSpec tab in tabs)
+                              NavigationRailDestination(
+                                icon: Icon(tab.icon),
+                                selectedIcon: Icon(
+                                  tab.selectedIcon ?? tab.icon,
+                                ),
+                                label: Text(tab.label),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ),
-          NavigationDestination(
-            icon: const Icon(Icons.calendar_month_outlined),
-            selectedIcon: const Icon(Icons.calendar_month),
-            label: l10n.calendarTitle,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.restaurant_outlined),
-            selectedIcon: const Icon(Icons.restaurant),
-            label: l10n.mealPlanTitle,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.shopping_cart_outlined),
-            selectedIcon: const Icon(Icons.shopping_cart),
-            label: l10n.groceryTitle,
-          ),
-          NavigationDestination(
-            icon: const Icon(Icons.more_horiz),
-            label: l10n.moreTitle,
+          VerticalDivider(width: 1, thickness: 1, color: scheme.outline),
+          Expanded(
+            child: MediaQuery.removePadding(
+              context: context,
+              removeLeft: true,
+              child: navigationShell,
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _TabSpec {
+  const _TabSpec({required this.icon, this.selectedIcon, required this.label});
+
+  final IconData icon;
+  final IconData? selectedIcon;
+  final String label;
 }

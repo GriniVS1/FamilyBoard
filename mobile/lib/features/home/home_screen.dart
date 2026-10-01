@@ -30,6 +30,7 @@ import '../../state/today_provider.dart';
 import '../../state/todos_provider.dart';
 import '../../theme.dart';
 import '../../widgets/cached_at_pill.dart';
+import '../../widgets/adaptive_layout.dart';
 import '../../widgets/familyboard_logo.dart';
 import '../../widgets/member_chip.dart';
 import '../../widgets/queue_badge.dart';
@@ -162,36 +163,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         ],
       ),
       body: SafeArea(
-        child: RefreshIndicator(
-          onRefresh: _refreshAll,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                _Greeting(
-                  accent: accent,
-                  emoji: session.member.emoji,
-                  name: session.member.name,
-                  family: session.family.name,
-                  l10n: l10n,
-                ),
-                if (!_notificationsEnabled) ...<Widget>[
+        child: ConstrainedContent(
+          child: RefreshIndicator(
+            onRefresh: _refreshAll,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  _Greeting(
+                    accent: accent,
+                    emoji: session.member.emoji,
+                    name: session.member.name,
+                    family: session.family.name,
+                    l10n: l10n,
+                  ),
+                  if (!_notificationsEnabled) ...<Widget>[
+                    const SizedBox(height: 12),
+                    _NotificationsDeniedHint(l10n: l10n),
+                  ],
+                  const SizedBox(height: 24),
+                  _HeuteCard(range: range, l10n: l10n),
                   const SizedBox(height: 12),
-                  _NotificationsDeniedHint(l10n: l10n),
+                  _DemnaechstCard(range: range, l10n: l10n),
+                  const SizedBox(height: 12),
+                  _ChoresCard(session: session, l10n: l10n),
+                  const SizedBox(height: 12),
+                  _TodosCard(session: session, l10n: l10n),
+                  const SizedBox(height: 12),
+                  _NotesCard(l10n: l10n),
                 ],
-                const SizedBox(height: 24),
-                _HeuteCard(range: range, l10n: l10n),
-                const SizedBox(height: 12),
-                _DemnaechstCard(range: range, l10n: l10n),
-                const SizedBox(height: 12),
-                _ChoresCard(session: session, l10n: l10n),
-                const SizedBox(height: 12),
-                _TodosCard(session: session, l10n: l10n),
-                const SizedBox(height: 12),
-                _NotesCard(l10n: l10n),
-              ],
+              ),
             ),
           ),
         ),
