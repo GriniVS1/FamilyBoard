@@ -211,7 +211,8 @@
         "noChoresFor": "{name}: no chores",
         "noMembers": "No people added yet.",
         "unknownFor": "{name}: chores could not be loaded",
-        "anyoneFor": "For everyone: {count, plural, one {# chore} other {# chores}} open"
+        "anyoneFor": "For everyone: {count, plural, one {# chore} other {# chores}} open",
+        "stars": "{count, plural, one {# star} other {# stars}}"
       },
       "todos": {
         "title": "To-dos",
@@ -368,7 +369,7 @@
     "all": "All",
     "allA11y": "Show everyone",
     "focusOn": "Show only {name}",
-    "starsWeek": "{count, plural, one {# star} other {# stars}} this week",
+    "starsBalance": "{count, plural, one {# star} other {# stars}}",
     "timesThisWeek": "{count}× this week",
     "emptyTitle": "No chores yet",
     "emptyHint": "Tap “Edit” at the top to add chores.",
@@ -1070,12 +1071,39 @@
   "parentMode": {
     "edit": "Edit",
     "pinTitle": "Parent PIN",
-    "pinHint": "Enter the PIN to edit chores",
+    "pinHint": "Enter the PIN to edit chores and points",
     "wrongPin": "Wrong PIN. Please try again.",
     "tooMany": "Too many attempts. Please wait a moment.",
     "couldNotVerify": "The PIN could not be checked.",
     "banner": "Parent mode",
     "done": "Done",
     "remaining": "{time} left"
+  },
+  "points": {
+    "button": "Points",
+    "title": "Points",
+    "hint": "Who has collected how many stars?",
+    "empty": "No people added yet.",
+    "couldNotLoad": "The points could not be loaded.",
+    "stars": "{count, plural, one {# star} other {# stars}}",
+    "week": "this week +{count}",
+    "total": "{count} in total",
+    "sinceDate": "since {date}",
+    "sinceStart": "since the start",
+    "history": "History",
+    "historyReset": "reset",
+    "historyEntry": "{date}: {count, plural, one {# star} other {# stars}} reset",
+    "reset": "Reset",
+    "resetFor": "Reset: {name}",
+    "resetAll": "Reset all",
+    "confirmOne": "Set {name}’s stars to 0?",
+    "confirmAll": "Set everyone’s stars to 0?",
+    "confirmHint": "The finished chores are kept.",
+    "toast": {
+      "one": "{name}: {count, plural, one {# star} other {# stars}} reset",
+      "many": "{count, plural, one {# person} other {# people}} reset",
+      "undoOne": "Undo the reset for {name}",
+      "undoMany": "Undo the reset"
+    }
   }
 }

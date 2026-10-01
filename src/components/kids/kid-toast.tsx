@@ -88,7 +88,7 @@ export function ToastShell({ tone, children, centerOn, className }: ToastShellPr
 }
 
 export type KidToastAction =
-  | { kind: "undo"; onClick: () => void; color?: string | null }
+  | { kind: "undo"; onClick: () => void; color?: string | null; label?: string }
   | { kind: "retry"; onClick: () => void };
 
 type KidToastProps = {
@@ -133,6 +133,7 @@ export function KidToast({
             onDismiss();
           }}
           color={action.color}
+          label={action.label}
           countdownMs={durationMs}
           appearAfterMs={UNDO_ARM_MS}
         />

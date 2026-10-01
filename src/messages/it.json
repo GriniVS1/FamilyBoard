@@ -211,7 +211,8 @@
         "noChoresFor": "{name}: nessuna faccenda",
         "noMembers": "Nessuna persona aggiunta.",
         "unknownFor": "{name}: faccende non caricate",
-        "anyoneFor": "Per tutti: {count, plural, one {# faccenda} other {# faccende}} da fare"
+        "anyoneFor": "Per tutti: {count, plural, one {# faccenda} other {# faccende}} da fare",
+        "stars": "{count, plural, one {# stella} other {# stelle}}"
       },
       "todos": {
         "title": "Da fare",
@@ -368,7 +369,7 @@
     "all": "Tutti",
     "allA11y": "Mostra tutti",
     "focusOn": "Mostra solo {name}",
-    "starsWeek": "{count, plural, one {# stella} other {# stelle}} questa settimana",
+    "starsBalance": "{count, plural, one {# stella} other {# stelle}}",
     "timesThisWeek": "{count}× questa settimana",
     "emptyTitle": "Ancora nessuna faccenda",
     "emptyHint": "Tocca «Modifica» in alto per creare delle faccende.",
@@ -1070,12 +1071,39 @@
   "parentMode": {
     "edit": "Modifica",
     "pinTitle": "PIN genitori",
-    "pinHint": "Inserisci il PIN per modificare le faccende",
+    "pinHint": "Inserisci il PIN per modificare faccende e punti",
     "wrongPin": "PIN errato. Riprova.",
     "tooMany": "Troppi tentativi. Attendi un momento.",
     "couldNotVerify": "Impossibile verificare il PIN.",
     "banner": "Modalità genitori",
     "done": "Fatto",
     "remaining": "ancora {time}"
+  },
+  "points": {
+    "button": "Punti",
+    "title": "Punti",
+    "hint": "Chi ha raccolto quante stelle?",
+    "empty": "Nessuna persona aggiunta.",
+    "couldNotLoad": "Impossibile caricare i punti.",
+    "stars": "{count, plural, one {# stella} other {# stelle}}",
+    "week": "questa settimana +{count}",
+    "total": "{count} in totale",
+    "sinceDate": "dal {date}",
+    "sinceStart": "dall’inizio",
+    "history": "Cronologia",
+    "historyReset": "azzerate",
+    "historyEntry": "{date}: {count, plural, one {# stella azzerata} other {# stelle azzerate}}",
+    "reset": "Azzera",
+    "resetFor": "Azzera: {name}",
+    "resetAll": "Azzera tutti",
+    "confirmOne": "Azzerare le stelle di {name}?",
+    "confirmAll": "Azzerare le stelle di tutti?",
+    "confirmHint": "Le faccende completate restano salvate.",
+    "toast": {
+      "one": "{name}: {count, plural, one {# stella azzerata} other {# stelle azzerate}}",
+      "many": "{count, plural, one {# persona azzerata} other {# persone azzerate}}",
+      "undoOne": "Annulla l’azzeramento di {name}",
+      "undoMany": "Annulla l’azzeramento"
+    }
   }
 }

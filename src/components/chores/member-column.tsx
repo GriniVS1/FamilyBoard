@@ -42,7 +42,8 @@ type MemberColumnProps = {
   chores: readonly Chore[];
   completions: readonly ChoreCompletionToday[];
   now: Date;
-  weeklyPoints: number;
+  /** Stars collected since the last reset; what the pill counts. */
+  balance: number;
   weeklyByChore: Record<string, WeeklyTotals>;
   failed: Record<string, unknown>;
   pending: ReadonlySet<string>;
@@ -77,7 +78,7 @@ export function MemberColumn({
   chores,
   completions,
   now,
-  weeklyPoints,
+  balance,
   weeklyByChore,
   failed,
   pending,
@@ -200,7 +201,7 @@ export function MemberColumn({
         name={name}
         progress={progress}
         openCount={counts && counts.total > 0 ? counts.total - counts.done : undefined}
-        weeklyPoints={weeklyPoints}
+        balance={balance}
         pulseKey={pulseKey}
         parentActive={parentActive}
         onAdd={() => onAdd(member?.id ?? null)}
@@ -295,7 +296,7 @@ type ColumnHeadProps = {
   name: string;
   progress: { done: number; total: number } | undefined;
   openCount: number | undefined;
-  weeklyPoints: number;
+  balance: number;
   pulseKey: number;
   parentActive: boolean;
   onAdd: () => void;
@@ -308,7 +309,7 @@ function ColumnHead({
   name,
   progress,
   openCount,
-  weeklyPoints,
+  balance,
   pulseKey,
   parentActive,
   onAdd,
@@ -379,7 +380,7 @@ function ColumnHead({
             key={pulseKey}
             data-star-target={member.id}
             role="img"
-            aria-label={t("starsWeek", { count: weeklyPoints })}
+            aria-label={t("starsBalance", { count: balance })}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full bg-surface px-3",
               slim ? "h-8" : "h-10",
@@ -388,7 +389,7 @@ function ColumnHead({
             transition={{ duration: 0.42, ease: [0.34, 1.56, 0.64, 1] }}
           >
             <Picto name="star" size={slim ? 20 : 24} />
-            <span className="kid-number text-ink">{weeklyPoints}</span>
+            <span aria-hidden className="kid-number text-ink">{balance}</span>
           </motion.span>
         )}
       </div>

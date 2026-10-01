@@ -3,6 +3,7 @@ import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { CHORE_TIME_OF_DAY } from "@/lib/enums";
 import {
+  getBalanceByMemberForFamily,
   getChoreCompletionsTodayForFamily,
   getCurrentWeekRange,
   getTodayRange,
@@ -51,6 +52,7 @@ export const GET = withErrorHandling(async () => {
       weeklyByChore: {},
       completionsToday: [],
       today: todayIso,
+      balanceByMember: {},
     });
   }
 
@@ -60,9 +62,10 @@ export const GET = withErrorHandling(async () => {
     select: choreSelect,
   });
 
-  const [summary, completionsToday] = await Promise.all([
+  const [summary, completionsToday, balanceByMember] = await Promise.all([
     getWeeklyChoreSummaryForFamily(family.id),
     getChoreCompletionsTodayForFamily(family.id),
+    getBalanceByMemberForFamily(family.id),
   ]);
 
   return ok({
@@ -73,6 +76,7 @@ export const GET = withErrorHandling(async () => {
     weeklyByChore: summary.weeklyByChore,
     completionsToday,
     today: todayIso,
+    balanceByMember,
   });
 });
 

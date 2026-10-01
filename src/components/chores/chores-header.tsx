@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { ParentModeToggle, useParentMode } from "@/components/kids/parent-mode";
 import { toneOf } from "@/components/kids/tone";
 import { Picto } from "@/components/pictos";
+import { PointsButton } from "@/components/points/points-button";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import type { ColumnSummary } from "@/lib/chore-state";
 import type { DayPhase } from "@/lib/time-of-day";
@@ -42,6 +43,7 @@ type ChoresHeaderProps = {
   onRetry: () => void;
   onFocus: (memberId: string | null) => void;
   onNew: () => void;
+  onPoints: () => void;
 };
 
 export function ChoresHeader({
@@ -58,6 +60,7 @@ export function ChoresHeader({
   onRetry,
   onFocus,
   onNew,
+  onPoints,
 }: ChoresHeaderProps) {
   const t = useTranslations("chores");
   const tKids = useTranslations("kids");
@@ -215,17 +218,20 @@ export function ChoresHeader({
           </span>
         )}
         {active ? (
-          <button
-            type="button"
-            onClick={onNew}
-            className={cn(
-              "inline-flex h-12 items-center gap-2 rounded-full bg-accent-sky px-5 kid-label text-on-accent",
-              "shadow-pop focus-ring-kid transition-transform duration-100 ease-snappy active:translate-y-0.5 active:shadow-press",
-            )}
-          >
-            <Plus className="size-5" strokeWidth={2.75} aria-hidden />
-            <span>{t("addChore")}</span>
-          </button>
+          <>
+            <PointsButton onClick={onPoints} />
+            <button
+              type="button"
+              onClick={onNew}
+              className={cn(
+                "inline-flex h-12 items-center gap-2 rounded-full bg-accent-sky px-5 kid-label text-on-accent",
+                "shadow-pop focus-ring-kid transition-transform duration-100 ease-snappy active:translate-y-0.5 active:shadow-press",
+              )}
+            >
+              <Plus className="size-5" strokeWidth={2.75} aria-hidden />
+              <span>{t("addChore")}</span>
+            </button>
+          </>
         ) : (
           <ParentModeToggle />
         )}

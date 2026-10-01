@@ -40,6 +40,44 @@ export type ChoresPayload = {
   weeklyByChore: Record<string, WeeklyTotals>;
   completionsToday: ChoreCompletionToday[];
   today: { start: string; end: string };
+  /** Points collected since the member's last reset (or ever). Members without points are omitted. */
+  balanceByMember: Record<string, MemberBalance>;
+};
+
+export type MemberBalance = {
+  balance: number;
+  /** ISO time of the last reset, null if never reset. */
+  since: string | null;
+};
+
+export type PointResetRecord = {
+  id: string;
+  memberId: string;
+  /** Balance that was cleared by this reset. */
+  points: number;
+  resetAt: string;
+};
+
+export type MemberPoints = MemberBalance & {
+  memberId: string;
+  weekly: number;
+  allTime: number;
+  /** Newest first, at most 10. */
+  history: Omit<PointResetRecord, "memberId">[];
+};
+
+export type PointsOverview = {
+  members: MemberPoints[];
+};
+
+export type PointResetResponse = {
+  resets: PointResetRecord[];
+};
+
+export type PointResetUndoResponse = {
+  ok: true;
+  memberId: string;
+  balance: number;
 };
 
 export type ChoreCompletionResponse = {

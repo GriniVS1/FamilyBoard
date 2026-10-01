@@ -35,6 +35,9 @@ const EMPTY_CHORES: Chore[] = [];
 
 const AVATAR_PX: Record<AvatarSize, number> = { sm: 40, md: 56, lg: 72, xl: 96 };
 
+/** Height of the star line under a name; the "for everyone" tile reserves the same room. */
+const STARS_ROW = "h-8";
+
 /** What sits under the avatar: the next chore's picture, or the state's symbol. */
 function statusPicto(
   summary: ColumnSummary<Chore>,
@@ -117,7 +120,13 @@ export function WidgetChores({ className, members }: WidgetChoresProps) {
               {loading ? (
                 <Placeholder member={m} size={avatarSize} />
               ) : (
-                <MemberTile member={m} summary={summaries.get(m.id)} size={avatarSize} failed={fatal} />
+                <MemberTile
+                  member={m}
+                  summary={summaries.get(m.id)}
+                  balance={fatal ? null : (data?.balanceByMember[m.id]?.balance ?? 0)}
+                  size={avatarSize}
+                  failed={fatal}
+                />
               )}
             </li>
           ))}
@@ -137,6 +146,7 @@ function Placeholder({ member, size }: { member: WidgetMember; size: AvatarSize 
     <div className="flex flex-col items-center gap-2 p-2">
       <MemberAvatar size={size} name={member.name} color={member.color} emoji={member.emoji} />
       <span className="kid-label line-clamp-1 max-w-28 break-words text-ink">{member.name}</span>
+      <Skeleton className={cn(STARS_ROW, "w-16 rounded-full")} />
       <Skeleton className="size-12 rounded-full" />
     </div>
   );
@@ -145,12 +155,14 @@ function Placeholder({ member, size }: { member: WidgetMember; size: AvatarSize 
 type MemberTileProps = {
   member: WidgetMember;
   summary: ColumnSummary<Chore> | undefined;
+  /** Stars since the last reset; null while the count is unknown. */
+  balance: number | null;
   size: AvatarSize;
   /** Loading the chores failed: the avatar still leads to the person's list. */
   failed: boolean;
 };
 
-function MemberTile({ member, summary, size, failed }: MemberTileProps) {
+function MemberTile({ member, summary, balance, size, failed }: MemberTileProps) {
   const t = useTranslations("dashboard.widgets.chores");
   const tone = toneOf(member.color);
   const picto = summary ? statusPicto(summary) : null;
@@ -164,6 +176,7 @@ function MemberTile({ member, summary, size, failed }: MemberTileProps) {
     else if (summary.state === "pause") label = t("pauseFor", { name: member.name });
     else if (summary.state === "active") label = t("openFor", { name: member.name, count: summary.open });
   }
+  if (balance !== null) label = `${label}, ${t("stars", { count: balance })}`;
 
   return (
     <Link
@@ -184,6 +197,17 @@ function MemberTile({ member, summary, size, failed }: MemberTileProps) {
       />
       <span aria-hidden className={cn("kid-label line-clamp-1 max-w-28 break-words", tone.ink)}>
         {member.name}
+      </span>
+      <span
+        aria-hidden
+        className={cn("inline-flex items-center gap-1.5 rounded-full px-3", STARS_ROW, balance !== null && tone.tint)}
+      >
+        {balance !== null && (
+          <>
+            <Picto name="star" size={20} />
+            <span className={cn("kid-number text-xl", tone.ink)}>{balance}</span>
+          </>
+        )}
       </span>
       <span
         aria-hidden
@@ -244,6 +268,7 @@ function AnyoneTile({ open, size }: { open: readonly Chore[]; size: AvatarSize }
       <span aria-hidden className="kid-label line-clamp-1 max-w-28 break-words text-ink">
         {tChores("anyone")}
       </span>
+      <span aria-hidden className={STARS_ROW} />
       <span aria-hidden className="flex size-14 items-center justify-center rounded-2xl bg-accent-sand-tint">
         <Picto name={picto} size={48} />
       </span>

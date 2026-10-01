@@ -21,6 +21,7 @@ function at(dayOffset, h, m = 0) {
 }
 
 async function main() {
+  await db.pointReset.deleteMany();
   await db.choreCompletion.deleteMany();
   await db.chore.deleteMany();
   await db.todo.deleteMany();
@@ -92,6 +93,17 @@ async function main() {
   await db.choreCompletion.create({ data: { choreId: miaWater.id, memberId: mia.id } });
   await db.choreCompletion.create({ data: { choreId: miaDress.id, memberId: mia.id } });
   await db.choreCompletion.create({ data: { choreId: leoBed.id, memberId: leo.id } });
+
+  // History so the points overview has something to show: earlier days count
+  // toward "all time"; Leo already redeemed stars once (reset 2 days ago).
+  const past = (days, h) => at(-days, h);
+  for (const [days, h] of [[1, 8], [1, 19], [2, 8], [3, 18], [4, 8], [5, 19], [8, 8], [9, 18]]) {
+    await db.choreCompletion.create({ data: { choreId: miaWater.id, memberId: mia.id, completedAt: past(days, h) } });
+  }
+  for (const [days, h] of [[1, 7], [3, 7], [4, 7], [5, 7], [6, 7]]) {
+    await db.choreCompletion.create({ data: { choreId: leoBed.id, memberId: leo.id, completedAt: past(days, h) } });
+  }
+  await db.pointReset.create({ data: { memberId: leo.id, points: 6, resetAt: past(2, 12) } });
 
   const ev = (memberId, title, d, h, m, dur = 60, allDay = false) =>
     db.event.create({

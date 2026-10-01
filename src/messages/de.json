@@ -211,7 +211,8 @@
         "noChoresFor": "{name}: keine Aufgaben",
         "noMembers": "Noch keine Personen angelegt.",
         "unknownFor": "{name}: Aufgaben konnten nicht geladen werden",
-        "anyoneFor": "Für alle: {count, plural, one {# Aufgabe} other {# Aufgaben}} offen"
+        "anyoneFor": "Für alle: {count, plural, one {# Aufgabe} other {# Aufgaben}} offen",
+        "stars": "{count, plural, one {# Stern} other {# Sterne}}"
       },
       "todos": {
         "title": "To-dos",
@@ -368,7 +369,7 @@
     "all": "Alle",
     "allA11y": "Alle Personen anzeigen",
     "focusOn": "Nur {name} anzeigen",
-    "starsWeek": "{count, plural, one {# Stern} other {# Sterne}} diese Woche",
+    "starsBalance": "{count, plural, one {# Stern} other {# Sterne}}",
     "timesThisWeek": "{count}× diese Woche",
     "emptyTitle": "Noch keine Aufgaben",
     "emptyHint": "Tippe oben auf „Bearbeiten“, um Aufgaben anzulegen.",
@@ -1070,12 +1071,39 @@
   "parentMode": {
     "edit": "Bearbeiten",
     "pinTitle": "Eltern-PIN",
-    "pinHint": "PIN eingeben, um Aufgaben zu bearbeiten",
+    "pinHint": "PIN eingeben, um Aufgaben und Punkte zu bearbeiten",
     "wrongPin": "Falscher PIN. Bitte nochmal versuchen.",
     "tooMany": "Zu viele Versuche. Bitte kurz warten.",
     "couldNotVerify": "Der PIN konnte nicht geprüft werden.",
     "banner": "Eltern-Modus",
     "done": "Fertig",
     "remaining": "noch {time}"
+  },
+  "points": {
+    "button": "Punkte",
+    "title": "Punkte",
+    "hint": "Wer hat wie viele Sterne gesammelt?",
+    "empty": "Noch keine Personen angelegt.",
+    "couldNotLoad": "Die Punkte konnten nicht geladen werden.",
+    "stars": "{count, plural, one {# Stern} other {# Sterne}}",
+    "week": "diese Woche +{count}",
+    "total": "insgesamt {count}",
+    "sinceDate": "seit {date}",
+    "sinceStart": "seit Beginn",
+    "history": "Verlauf",
+    "historyReset": "zurückgesetzt",
+    "historyEntry": "{date}: {count, plural, one {# Stern} other {# Sterne}} zurückgesetzt",
+    "reset": "Zurücksetzen",
+    "resetFor": "Zurücksetzen: {name}",
+    "resetAll": "Alle zurücksetzen",
+    "confirmOne": "{name}: Sterne auf 0 setzen?",
+    "confirmAll": "Alle Sterne auf 0 setzen?",
+    "confirmHint": "Die erledigten Aufgaben bleiben erhalten.",
+    "toast": {
+      "one": "{name}: {count, plural, one {# Stern} other {# Sterne}} zurückgesetzt",
+      "many": "{count, plural, one {# Person} other {# Personen}} zurückgesetzt",
+      "undoOne": "Zurücksetzen von {name} rückgängig machen",
+      "undoMany": "Zurücksetzen rückgängig machen"
+    }
   }
 }

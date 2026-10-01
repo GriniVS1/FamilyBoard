@@ -93,6 +93,7 @@ model Member {
   events                Event[]
   chores                Chore[]
   choreCompletions      ChoreCompletion[]
+  pointResets           PointReset[]
   todos                 Todo[]
   notesAuthored         Note[]            @relation("NoteAuthor")
   mealPlans             MealPlan[]
@@ -184,6 +185,16 @@ model ChoreCompletion {
   completedAt DateTime @default(now())
 
   @@index([memberId, completedAt])
+}
+
+model PointReset {
+  id       String   @id @default(cuid())
+  memberId String
+  member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  points   Int
+  resetAt  DateTime @default(now())
+
+  @@index([memberId, resetAt])
 }
 
 model Todo {

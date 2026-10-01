@@ -20,6 +20,9 @@ import { useIdleTimeout } from "@/components/kids/use-idle-timeout";
 import { useIsWall } from "@/components/kids/use-is-wall";
 import { useNow } from "@/components/kids/use-now";
 import { Picto } from "@/components/pictos";
+import { PointsOverview } from "@/components/points/points-overview";
+import { PointsToast } from "@/components/points/points-toast";
+import { usePointsFlow } from "@/components/points/use-points";
 import { columnSummary, completionFor, isChoreDone, type ColumnSummary } from "@/lib/chore-state";
 import {
   columnTapAllowed,
@@ -115,6 +118,8 @@ function ChoresBoard({ initialMembers }: ChoresViewProps) {
   const [slots, setSlots] = useState<DoneSlots>([null, null]);
   const [who, setWho] = useState<Chore | null>(null);
   const [dialog, setDialog] = useState<DialogState>({ open: false, chore: null, memberId: null });
+  const [pointsOpen, setPointsOpen] = useState(false);
+  const points = usePointsFlow();
   const [pulse, setPulse] = useState<Record<string, number>>({});
   const lastScrollAt = useRef(new Map<string, number>());
   const lastShiftAt = useRef(new Map<string, number>());
@@ -400,7 +405,7 @@ function ChoresBoard({ initialMembers }: ChoresViewProps) {
         {...columnProps}
         chores={chores.filter((c) => c.memberId === member.id)}
         now={now}
-        weeklyPoints={data?.weeklyByMember[member.id]?.points ?? 0}
+        balance={data?.balanceByMember[member.id]?.balance ?? 0}
         pulseKey={pulse[member.id] ?? 0}
       />
     );
@@ -414,7 +419,7 @@ function ChoresBoard({ initialMembers }: ChoresViewProps) {
         {...columnProps}
         chores={unassigned}
         now={now}
-        weeklyPoints={0}
+        balance={0}
         pulseKey={0}
       />
     );
@@ -515,6 +520,7 @@ function ChoresBoard({ initialMembers }: ChoresViewProps) {
         onRetry={() => void refetch()}
         onFocus={setFocus}
         onNew={() => openCreate(focusId)}
+        onPoints={() => setPointsOpen(true)}
       />
 
       <ParentModeBanner />
@@ -529,6 +535,13 @@ function ChoresBoard({ initialMembers }: ChoresViewProps) {
         initial={{ memberId: dialog.memberId }}
         onSave={admin.save}
         onDelete={admin.remove}
+      />
+
+      <PointsOverview
+        open={pointsOpen}
+        onOpenChange={setPointsOpen}
+        members={initialMembers}
+        onReset={points.reset}
       />
 
       <WhoDialog
@@ -560,6 +573,15 @@ function ChoresBoard({ initialMembers }: ChoresViewProps) {
         >
           {errorToast.failure === "offline" ? tKids("offline") : tKids("errorGeneric")}
         </KidToast>
+      ) : points.toast ? (
+        <PointsToast
+          toast={points.toast}
+          members={initialMembers}
+          centerOn="main"
+          onUndo={(resets) => void points.undo(resets)}
+          onRetry={(retry) => void points.retry(retry)}
+          onDismiss={points.dismiss}
+        />
       ) : (
         <DoneToast
           slots={slots}

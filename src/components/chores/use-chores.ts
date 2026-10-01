@@ -9,6 +9,7 @@ import type {
   ChoreInput,
   ChoresPayload,
 } from "./types";
+import { adjustCounters } from "./counters";
 
 export const CHORES_QUERY_KEY = ["chores"] as const;
 
@@ -59,27 +60,14 @@ export function useChoresQuery() {
   });
 }
 
-type WeeklyDelta = { memberId: string; choreId: string; points: number; sign: 1 | -1 };
-
-function adjustWeekly(payload: ChoresPayload, { memberId, choreId, points, sign }: WeeklyDelta): ChoresPayload {
-  const bump = (entry: { points: number; completions: number } | undefined) => ({
-    points: Math.max(0, (entry?.points ?? 0) + sign * points),
-    completions: Math.max(0, (entry?.completions ?? 0) + sign),
-  });
-  return {
-    ...payload,
-    weeklyByMember: { ...payload.weeklyByMember, [memberId]: bump(payload.weeklyByMember[memberId]) },
-    weeklyByChore: { ...payload.weeklyByChore, [choreId]: bump(payload.weeklyByChore[choreId]) },
-  };
-}
-
 function addCompletion(client: QueryClient, completion: ChoreCompletionToday, points: number): void {
   client.setQueryData<ChoresPayload>(CHORES_QUERY_KEY, (prev) => {
     if (!prev) return prev;
-    const next = adjustWeekly(prev, {
+    const next = adjustCounters(prev, {
       memberId: completion.memberId,
       choreId: completion.choreId,
       points,
+      completedAt: completion.completedAt,
       sign: 1,
     });
     return { ...next, completionsToday: [...prev.completionsToday, completion] };
@@ -89,8 +77,9 @@ function addCompletion(client: QueryClient, completion: ChoreCompletionToday, po
 function dropCompletion(client: QueryClient, completionId: string, memberId: string, choreId: string, points: number): void {
   client.setQueryData<ChoresPayload>(CHORES_QUERY_KEY, (prev) => {
     if (!prev) return prev;
-    if (!prev.completionsToday.some((c) => c.id === completionId)) return prev;
-    const next = adjustWeekly(prev, { memberId, choreId, points, sign: -1 });
+    const target = prev.completionsToday.find((c) => c.id === completionId);
+    if (!target) return prev;
+    const next = adjustCounters(prev, { memberId, choreId, points, completedAt: target.completedAt, sign: -1 });
     return { ...next, completionsToday: prev.completionsToday.filter((c) => c.id !== completionId) };
   });
 }

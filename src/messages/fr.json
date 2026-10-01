@@ -211,7 +211,8 @@
         "noChoresFor": "{name} : aucune tâche",
         "noMembers": "Aucune personne ajoutée.",
         "unknownFor": "{name} : tâches non chargées",
-        "anyoneFor": "Pour tous : {count, plural, one {# tâche} other {# tâches}} à faire"
+        "anyoneFor": "Pour tous : {count, plural, one {# tâche} other {# tâches}} à faire",
+        "stars": "{count, plural, one {# étoile} other {# étoiles}}"
       },
       "todos": {
         "title": "À faire",
@@ -368,7 +369,7 @@
     "all": "Tous",
     "allA11y": "Afficher tout le monde",
     "focusOn": "Afficher seulement {name}",
-    "starsWeek": "{count, plural, one {# étoile} other {# étoiles}} cette semaine",
+    "starsBalance": "{count, plural, one {# étoile} other {# étoiles}}",
     "timesThisWeek": "{count}× cette semaine",
     "emptyTitle": "Pas encore de tâches",
     "emptyHint": "Touche « Modifier » en haut pour créer des tâches.",
@@ -1070,12 +1071,39 @@
   "parentMode": {
     "edit": "Modifier",
     "pinTitle": "Code parent",
-    "pinHint": "Saisis le code pour modifier les tâches",
+    "pinHint": "Saisis le code pour modifier les tâches et les points",
     "wrongPin": "Code incorrect. Réessaie.",
     "tooMany": "Trop d’essais. Attends un moment.",
     "couldNotVerify": "Le code n’a pas pu être vérifié.",
     "banner": "Mode parent",
     "done": "Terminé",
     "remaining": "encore {time}"
+  },
+  "points": {
+    "button": "Points",
+    "title": "Points",
+    "hint": "Qui a gagné combien d’étoiles ?",
+    "empty": "Aucune personne ajoutée.",
+    "couldNotLoad": "Impossible de charger les points.",
+    "stars": "{count, plural, one {# étoile} other {# étoiles}}",
+    "week": "cette semaine +{count}",
+    "total": "{count} au total",
+    "sinceDate": "depuis le {date}",
+    "sinceStart": "depuis le début",
+    "history": "Historique",
+    "historyReset": "remis à zéro",
+    "historyEntry": "{date} : {count, plural, one {# étoile remise} other {# étoiles remises}} à zéro",
+    "reset": "Remettre à zéro",
+    "resetFor": "Remettre à zéro : {name}",
+    "resetAll": "Tout remettre à zéro",
+    "confirmOne": "Remettre les étoiles de {name} à 0 ?",
+    "confirmAll": "Remettre toutes les étoiles à 0 ?",
+    "confirmHint": "Les tâches terminées sont conservées.",
+    "toast": {
+      "one": "{name} : {count, plural, one {# étoile remise} other {# étoiles remises}} à zéro",
+      "many": "{count, plural, one {# personne remise} other {# personnes remises}} à zéro",
+      "undoOne": "Annuler la remise à zéro de {name}",
+      "undoMany": "Annuler la remise à zéro"
+    }
   }
 }
