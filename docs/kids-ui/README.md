@@ -95,7 +95,7 @@ Zuletzt waren keine S1/S2 offen, beide Reviewer haben **heuristisch** abgenommen
   - Die Mindestlänge für Termintitel fehlt.
 - **Avatare bleiben Emoji** und sehen damit je Plattform etwas anders aus. Foto-Avatare wären der nächste Schritt.
 - **Ein Mal pro Tag = erledigt.** Mehrfach-Aufgaben wie "Wasser 3×" sind nicht modelliert.
-- **Zeitzone:** Die Tagesphase kommt aus der Uhr des Geräts, "heute" aus der Serverzeit. Das Docker-Image setzt kein `TZ`; auf dem Pi ist "heute" dann UTC. Für die Schweiz betrifft das nur 00:00–02:00 Uhr, sollte aber mit `TZ=Europe/Zurich` im Image behoben werden.
+- **Zeitzone, behoben nach dem Umbau:** Der Container übernimmt beim Start die Zeitzone des Hosts (`scripts/host-tz.sh`), mit `Europe/Zurich` als Rückfall. Damit beginnt "heute" um lokale Mitternacht. Der Wochenbeginn bleibt bewusst in UTC.
 - **Bereits vorher vorhanden, nicht Teil des Umbaus:**
   - Der Kalender zeigt erst ab 06:00.
   - `GET /api/members` gibt Token-Felder aus; das läuft als separate Aufgabe.

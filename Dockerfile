@@ -30,8 +30,12 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+# Fallback zone (same default as the Pi base image). At start the CMD replaces
+# it with the host's zone via scripts/host-tz.sh, so server-side "today" matches
+# the kiosk browser's local midnight instead of UTC.
+ENV TZ=Europe/Zurich
 
-RUN apk add --no-cache sudo util-linux
+RUN apk add --no-cache sudo util-linux tzdata
 
 RUN addgroup --system --gid 1001 nodejs \
  && adduser --system --uid 1001 nextjs
@@ -49,6 +53,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/prisma ./node_module
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin ./node_modules/.bin
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/docker-migrate.mjs ./scripts/docker-migrate.mjs
 COPY --from=builder --chown=nextjs:nodejs /app/scripts/host-sync.sh ./scripts/host-sync.sh
+COPY --from=builder --chown=nextjs:nodejs /app/scripts/host-tz.sh ./scripts/host-tz.sh
 ENV PATH="/app/node_modules/.bin:${PATH}"
 
 # Host payload: everything the Pi HOST needs (OTA updater, systemd units,
@@ -78,4 +83,4 @@ EXPOSE 3000
 # --accept-data-loss`, which could drop customer data on schema changes).
 # host-sync runs in the background so a slow/failed host apply never delays or
 # blocks the app; it self-skips on non-appliance deployments.
-CMD ["sh", "-c", "node scripts/docker-migrate.mjs && (sh scripts/host-sync.sh &) && exec node server.js"]
+CMD ["sh", "-c", "TZ=$(sh scripts/host-tz.sh); export TZ; node scripts/docker-migrate.mjs && (sh scripts/host-sync.sh &) && exec node server.js"]
