@@ -19,6 +19,7 @@ import { EmptyState, ErrorState } from "@/components/kids/state-views";
 import { useIdleTimeout } from "@/components/kids/use-idle-timeout";
 import { useIsWall } from "@/components/kids/use-is-wall";
 import { useNow } from "@/components/kids/use-now";
+import { useToastLift } from "@/components/kids/use-toast-lift";
 import { Picto } from "@/components/pictos";
 import { PointsOverview } from "@/components/points/points-overview";
 import { PointsToast } from "@/components/points/points-toast";
@@ -491,6 +492,11 @@ function ChoresBoard({ initialMembers }: ChoresViewProps) {
     );
   }
 
+  const lift = useToastLift(
+    !errorToast && (slots[0] !== null || slots[1] !== null),
+    !errorToast && points.toast !== null,
+  );
+
   const errorPicto = errorToast
     ? (taskPictoOf(errorToast.chore.icon, errorToast.chore.title) ?? "celebrate")
     : "celebrate";
@@ -573,23 +579,28 @@ function ChoresBoard({ initialMembers }: ChoresViewProps) {
         >
           {errorToast.failure === "offline" ? tKids("offline") : tKids("errorGeneric")}
         </KidToast>
-      ) : points.toast ? (
-        <PointsToast
-          toast={points.toast}
-          members={initialMembers}
-          centerOn="main"
-          onUndo={(resets) => void points.undo(resets)}
-          onRetry={(retry) => void points.retry(retry)}
-          onDismiss={points.dismiss}
-        />
       ) : (
-        <DoneToast
-          slots={slots}
-          members={initialMembers}
-          centerOn="main"
-          onUndo={(chore) => void actions.undo(chore)}
-          onExpire={expireSlot}
-        />
+        <>
+          <DoneToast
+            slots={slots}
+            members={initialMembers}
+            centerOn="main"
+            lift={lift.first}
+            onUndo={(chore) => void actions.undo(chore)}
+            onExpire={expireSlot}
+          />
+          {points.toast && (
+            <PointsToast
+              toast={points.toast}
+              members={initialMembers}
+              centerOn="main"
+              lift={lift.second}
+              onUndo={(resets) => void points.undo(resets)}
+              onRetry={(retry) => void points.retry(retry)}
+              onDismiss={points.dismiss}
+            />
+          )}
+        </>
       )}
     </div>
   );

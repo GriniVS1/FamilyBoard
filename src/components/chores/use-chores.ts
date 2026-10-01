@@ -9,6 +9,7 @@ import type {
   ChoreInput,
   ChoresPayload,
 } from "./types";
+import { POINTS_QUERY_KEY } from "@/components/points/query-key";
 import { adjustCounters } from "./counters";
 
 export const CHORES_QUERY_KEY = ["chores"] as const;
@@ -180,7 +181,10 @@ export function useChoreActions(onEvent: (event: ChoreActionEvent) => void) {
         }
         active.current -= 1;
         // A refetch while other requests are still out would overwrite their optimistic state.
-        if (active.current === 0) void client.invalidateQueries({ queryKey: CHORES_QUERY_KEY });
+        if (active.current === 0) {
+          void client.invalidateQueries({ queryKey: CHORES_QUERY_KEY });
+          void client.invalidateQueries({ queryKey: POINTS_QUERY_KEY });
+        }
       });
       chains.current.set(choreId, run);
       return run;

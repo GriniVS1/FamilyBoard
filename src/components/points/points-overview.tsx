@@ -28,6 +28,16 @@ type Row = { member: ChoreMember; points: MemberPoints };
 
 type Formats = { day: Intl.DateTimeFormat; stamp: Intl.DateTimeFormat };
 
+/**
+ * A touch tap on the confirmation is judged by Radix only on its `click`, after
+ * the confirmation has unmounted. By then the overview is the top layer again
+ * and would read the tap as one outside itself and close.
+ */
+function keepOpenForNestedDialog(event: { detail: { originalEvent: PointerEvent }; preventDefault: () => void }) {
+  const target = event.detail.originalEvent.target;
+  if (target instanceof Element && target.closest("[role=dialog]")) event.preventDefault();
+}
+
 const SECONDARY_BUTTON = cn(
   "inline-flex h-12 items-center justify-center gap-2 rounded-full border-2 border-border bg-surface px-5",
   "kid-label text-ink shadow-pop focus-ring-kid",
@@ -62,6 +72,7 @@ export function PointsOverview({ open, onOpenChange, members, onReset }: PointsO
       <Dialog open={open && active} onOpenChange={onOpenChange}>
         <DialogContent
           {...restoreFocus}
+          onPointerDownOutside={keepOpenForNestedDialog}
           className={cn(
             "flex w-[min(960px,calc(100vw-2rem))] flex-col gap-4 overflow-hidden",
             "data-[state=open]:animate-fade-in max-md:data-[state=open]:animate-slide-up",

@@ -12,6 +12,9 @@ import { UndoButton } from "./undo-button";
 export const PHONE_TOAST_BAR_PX = 76;
 export const PHONE_TOAST_BUFFER_PX = 16;
 
+/** One toast (76 px) plus a 4 px gap: where a second toast sits above the first. */
+export const TOAST_LIFT_PX = 80;
+
 type ToastTone = "success" | "error";
 
 const TONE: Record<ToastTone, string> = {
@@ -27,6 +30,8 @@ type ToastShellProps = {
    * not the whole screen, so the side rail does not skew it).
    */
   centerOn?: string;
+  /** Sits one toast higher because another one already holds the bottom place. */
+  lift?: boolean;
   className?: string;
 };
 
@@ -36,7 +41,7 @@ type ToastShellProps = {
  * of it, with a strip above it that swallows taps, so a finger aimed at a card
  * near the bar can never land on the ↶.
  */
-export function ToastShell({ tone, children, centerOn, className }: ToastShellProps) {
+export function ToastShell({ tone, children, centerOn, lift = false, className }: ToastShellProps) {
   const [centerX, setCenterX] = useState<number | null>(null);
   const [navOffset, setNavOffset] = useState(96);
 
@@ -59,6 +64,7 @@ export function ToastShell({ tone, children, centerOn, className }: ToastShellPr
 
   const vars = {
     "--toast-bottom": `${navOffset}px`,
+    "--toast-lift": `${lift ? TOAST_LIFT_PX : 0}px`,
     ...(centerX === null ? {} : { "--toast-left": `${centerX}px` }),
   } as CSSProperties;
 
@@ -69,9 +75,9 @@ export function ToastShell({ tone, children, centerOn, className }: ToastShellPr
       aria-live={tone === "error" ? "assertive" : "polite"}
       style={vars}
       className={cn(
-        "fixed inset-x-0 bottom-[var(--toast-bottom)] z-50 animate-toast-in",
+        "fixed inset-x-0 bottom-[calc(var(--toast-bottom)_+_var(--toast-lift))] z-50 animate-toast-in",
         "border-t-2 px-3 py-2 shadow-lift",
-        "md:inset-x-auto md:bottom-3 md:mx-0 md:w-[448px] md:rounded-3xl md:border-2",
+        "md:inset-x-auto md:bottom-[calc(0.75rem_+_var(--toast-lift))] md:mx-0 md:w-[448px] md:rounded-3xl md:border-2",
         centerX !== null && "md:left-[var(--toast-left)] md:-ml-[224px]",
         TONE[tone],
         className,
@@ -102,6 +108,7 @@ type KidToastProps = {
   /** Auto-dismiss after this long; omit to keep until acted on (errors). */
   durationMs?: number;
   centerOn?: string;
+  lift?: boolean;
   onDismiss: () => void;
 };
 
@@ -114,6 +121,7 @@ export function KidToast({
   action,
   durationMs,
   centerOn,
+  lift,
   onDismiss,
 }: KidToastProps) {
   const t = useTranslations("kids");
@@ -125,7 +133,7 @@ export function KidToast({
   }, [durationMs, onDismiss]);
 
   return (
-    <ToastShell tone={tone} centerOn={centerOn}>
+    <ToastShell tone={tone} centerOn={centerOn} lift={lift}>
       {action?.kind === "undo" ? (
         <UndoButton
           onClick={() => {

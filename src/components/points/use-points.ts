@@ -16,7 +16,7 @@ import {
   type FailureKind,
 } from "@/components/chores/use-chores";
 
-export const POINTS_QUERY_KEY = ["points"] as const;
+import { POINTS_QUERY_KEY } from "./query-key";
 
 async function send(url: string, init?: RequestInit): Promise<Response> {
   try {
@@ -36,6 +36,9 @@ export function usePointsQuery() {
     },
     retry: 1,
     retryDelay: 800,
+    // The provider's 30 s staleTime would show numbers from before the last tick.
+    staleTime: 0,
+    refetchOnMount: "always",
   });
 }
 

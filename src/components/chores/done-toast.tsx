@@ -24,6 +24,7 @@ type DoneToastProps = {
   slots: DoneSlots;
   members: readonly ChoreMember[];
   centerOn?: string;
+  lift?: boolean;
   onUndo: (chore: Chore) => void;
   onExpire: (slot: 0 | 1, key: number) => void;
 };
@@ -34,7 +35,7 @@ type DoneToastProps = {
  * entry that ends just leaves its place empty, so a finger aimed at a ↶ never
  * finds another task's ↶ under it.
  */
-export function DoneToast({ slots, members, centerOn, onUndo, onExpire }: DoneToastProps) {
+export function DoneToast({ slots, members, centerOn, lift, onUndo, onExpire }: DoneToastProps) {
   const [first, second] = slots;
   if (!first && !second) return null;
   const alone = first && !second ? first : !first && second ? second : null;
@@ -46,7 +47,7 @@ export function DoneToast({ slots, members, centerOn, onUndo, onExpire }: DoneTo
   );
 
   return (
-    <ToastShell tone="success" centerOn={centerOn}>
+    <ToastShell tone="success" centerOn={centerOn} lift={lift}>
       <div className="grid w-full grid-cols-2 items-center gap-4">
         {first ? (
           <Slot key={first.key} slot={0} entry={first} members={members} onUndo={onUndo} onExpire={onExpire} />
