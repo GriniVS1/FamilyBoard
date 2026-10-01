@@ -1,6 +1,6 @@
 import { ok, withErrorHandling } from "@/lib/api";
 import { createMember, createMemberSchema } from "@/lib/members";
-import { listMembers } from "@/lib/queries";
+import { listMembers, toPublicMember } from "@/lib/queries";
 import { requireAdminPin } from "@/lib/admin-pin";
 
 export const runtime = "nodejs";
@@ -15,5 +15,5 @@ export const POST = withErrorHandling(async (req) => {
   await requireAdminPin(req);
   const body = createMemberSchema.parse(await req.json());
   const created = await createMember(body);
-  return ok(created);
+  return ok(toPublicMember(created));
 });
