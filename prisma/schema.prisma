@@ -12,6 +12,7 @@ datasource db {
 /// MemberRole values:    "ADMIN" | "MEMBER"
 /// EventSource values:   "LOCAL" | "GOOGLE" | "CALDAV" | "MICROSOFT"
 /// MealSlot values:      "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK"
+/// ChoreTimeOfDay:       "MORNING" | "DAY" | "EVENING" (null = anytime)
 /// GroceryCategory:      "produce" | "dairy" | "pantry" | "frozen" | "bakery" | "meat" | "drinks" | "other"
 /// Enforced via TypeScript types in src/lib/enums.ts (SQLite has no native enums).
 
@@ -92,6 +93,7 @@ model Member {
   events                Event[]
   chores                Chore[]
   choreCompletions      ChoreCompletion[]
+  pointResets           PointReset[]
   todos                 Todo[]
   notesAuthored         Note[]            @relation("NoteAuthor")
   mealPlans             MealPlan[]
@@ -167,6 +169,7 @@ model Chore {
   icon        String?
   points      Int               @default(1)
   rrule       String?
+  timeOfDay   String?
   createdAt   DateTime          @default(now())
   completions ChoreCompletion[]
 
@@ -182,6 +185,16 @@ model ChoreCompletion {
   completedAt DateTime @default(now())
 
   @@index([memberId, completedAt])
+}
+
+model PointReset {
+  id       String   @id @default(cuid())
+  memberId String
+  member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  points   Int
+  resetAt  DateTime @default(now())
+
+  @@index([memberId, resetAt])
 }
 
 model Todo {

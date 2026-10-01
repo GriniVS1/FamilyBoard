@@ -8,9 +8,24 @@ export type PositionedEvent = {
   height: number;
   laneIndex: number;
   laneCount: number;
+  /** Set on the "+N" block that stands in for events that found no lane of their own. */
+  hidden?: CalendarEvent[];
 };
 
-const SLOT_HEIGHT_PX = 56;
+const SLOT_HEIGHT_PX = 64;
+
+/** A block never gets shorter than this, so picture, person, title and time always fit. */
+export const MIN_BLOCK_PX = 60;
+
+/** Below this lane width a block has room for picture and person only. */
+export const COMPACT_LANE_PX = 110;
+
+/** Narrowest block a finger can hit: lane width minus the 8 px gutter. */
+export const MIN_LANE_PX = 56;
+
+export function maxLanesFor(columnWidth: number): number {
+  return columnWidth > 0 ? Math.max(1, Math.floor(columnWidth / MIN_LANE_PX)) : Infinity;
+}
 const MINUTES_PER_HOUR = 60;
 
 export function pixelsPerMinute(): number {
@@ -29,6 +44,7 @@ export function slotHeightPx(): number {
 export function layoutDayEvents(
   events: CalendarEvent[],
   day: Date,
+  maxLanes = Infinity,
 ): { timed: PositionedEvent[]; allDay: CalendarEvent[] } {
   const dayStart = startOfDay(day);
   const dayEnd = endOfDay(day);
@@ -51,7 +67,12 @@ export function layoutDayEvents(
 
     // Convert to minutes from grid start (HOUR_START)
     const startMin = differenceInMinutes(clampedStart, dayStart) - HOUR_START * 60;
-    const endMin = differenceInMinutes(clampedEnd, dayStart) - HOUR_START * 60;
+    // Lanes are packed by the height a block really occupies, so a short event
+    // does not collide with the one that starts right after it.
+    const endMin = Math.max(
+      differenceInMinutes(clampedEnd, dayStart) - HOUR_START * 60,
+      startMin + MIN_BLOCK_PX / ppm,
+    );
     timed.push({ event: e, startMin, endMin });
   }
 
@@ -67,18 +88,36 @@ export function layoutDayEvents(
   function flushGroup() {
     if (!currentGroup) return;
     const laneCount = currentGroup.maxLane + 1;
-    const positioned: PositionedEvent[] = currentGroup.items.map((it) => {
+    const collapsed = laneCount > maxLanes;
+    const visibleLanes = collapsed ? Math.max(0, maxLanes - 1) : laneCount;
+    const positioned: PositionedEvent[] = [];
+    const overflow: PositionedEvent[] = [];
+    for (const it of currentGroup.items) {
       const ev = timed[it.idx]!;
-      const top = Math.max(0, it.startMin) * ppm;
-      const height = Math.max(20, (it.endMin - it.startMin) * ppm);
-      return {
+      const entry: PositionedEvent = {
         event: ev.event,
-        top,
-        height,
+        top: Math.max(0, it.startMin) * ppm,
+        height: Math.max(20, (it.endMin - it.startMin) * ppm),
         laneIndex: it.lane,
-        laneCount,
+        laneCount: collapsed ? maxLanes : laneCount,
       };
-    });
+      (it.lane < visibleLanes ? positioned : overflow).push(entry);
+    }
+    if (overflow.length > 0) {
+      const top = Math.min(...overflow.map((o) => o.top));
+      const bottom = Math.max(...overflow.map((o) => o.top + o.height));
+      const first = overflow.reduce((a, b) => (a.top <= b.top ? a : b));
+      positioned.push({
+        event: first.event,
+        top,
+        height: bottom - top,
+        laneIndex: visibleLanes,
+        laneCount: maxLanes,
+        hidden: overflow
+          .sort((a, b) => a.top - b.top)
+          .map((o) => o.event),
+      });
+    }
     groups.push(positioned);
     currentGroup = null;
   }

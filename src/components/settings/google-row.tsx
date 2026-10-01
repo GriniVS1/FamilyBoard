@@ -95,9 +95,9 @@ export function GoogleRow({ member, adminPin }: GoogleRowProps) {
           {isLoading ? (
             <div className="text-xs text-muted">{t("checking")}</div>
           ) : isError ? (
-            <div className="text-xs text-accent-rose">{t("statusFailed")}</div>
+            <div className="text-xs text-danger-ink">{t("statusFailed")}</div>
           ) : status?.connected && status.authExpired ? (
-            <div className="flex items-center gap-1.5 text-xs text-accent-rose">
+            <div className="flex items-center gap-1.5 text-xs text-danger-ink">
               <AlertTriangle className="size-4 shrink-0" aria-hidden />
               <span className="truncate">{t("authExpired")}</span>
             </div>
@@ -132,7 +132,7 @@ export function GoogleRow({ member, adminPin }: GoogleRowProps) {
               variant="ghost"
               onClick={() => disconnectMutation.mutate()}
               disabled={disconnectMutation.isPending}
-              className="text-accent-rose hover:bg-accent-rose/10"
+              className="text-danger-ink hover:bg-danger-tint"
               aria-label={t("disconnect")}
             >
               <Trash2 className="size-4" />
@@ -143,7 +143,7 @@ export function GoogleRow({ member, adminPin }: GoogleRowProps) {
       </div>
 
       {actionError && (
-        <p className="text-xs text-accent-rose sm:basis-full" role="alert">
+        <p className="text-xs text-danger-ink sm:basis-full" role="alert">
           {actionError}
         </p>
       )}

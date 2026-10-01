@@ -113,7 +113,7 @@ export function PinGate({
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="text-center text-sm text-accent-rose"
+            className="text-center text-sm text-danger-ink"
             role="alert"
           >
             {error}
@@ -131,6 +131,7 @@ type KeypadProps = {
 };
 
 function Keypad({ onPress, onBackspace, disabled }: KeypadProps) {
+  const tCommon = useTranslations("common");
   const keys: (string | "backspace" | null)[] = [
     "1",
     "2",
@@ -160,7 +161,7 @@ function Keypad({ onPress, onBackspace, disabled }: KeypadProps) {
               whileTap={{ scale: 0.94 }}
               onClick={onBackspace}
               disabled={disabled}
-              aria-label="Delete"
+              aria-label={tCommon("backspace")}
               className={cn(
                 "h-14 rounded-2xl bg-bg hover:bg-border/60 text-ink",
                 "flex items-center justify-center transition-colors",

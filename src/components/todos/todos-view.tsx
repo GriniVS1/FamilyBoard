@@ -6,11 +6,13 @@ import {
   useQueryClient,
   type QueryKey,
 } from "@tanstack/react-query";
-import { ChevronDown, ListChecks } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { GlassCard } from "@/components/shared/glass-card";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
+import { KidToast } from "@/components/kids/kid-toast";
+import { EmptyState, ErrorState, Skeleton } from "@/components/kids/state-views";
 import { cn } from "@/lib/utils";
 import { TodoInput } from "./todo-input";
 import { TodoRow } from "./todo-row";
@@ -20,19 +22,16 @@ type TodosViewProps = {
   initialMembers: TodoMember[];
 };
 
+type Toast =
+  | { kind: "error"; text: string }
+  | { kind: "undo"; todo: Todo };
+
 const QUERY_KEY: QueryKey = ["todos"];
 
 async function fetchTodos(): Promise<Todo[]> {
   const res = await fetch("/api/todos", { cache: "no-store" });
   if (!res.ok) {
-    let message = `Failed to load to-dos (${res.status})`;
-    try {
-      const data = (await res.json()) as { error?: { message?: string } };
-      if (data?.error?.message) message = data.error.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(message);
+    throw new Error(`todos ${res.status}`);
   }
   return (await res.json()) as Todo[];
 }
@@ -48,14 +47,7 @@ async function jsonRequest<T>(
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const data = (await res.json()) as { error?: { message?: string } };
-      if (data?.error?.message) message = data.error.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(message);
+    throw new Error(`${method} ${res.status}`);
   }
   return (await res.json()) as T;
 }
@@ -70,13 +62,14 @@ function compareTodos(a: Todo, b: Todo): number {
 export function TodosView({ initialMembers }: TodosViewProps) {
   const t = useTranslations("todos");
   const queryClient = useQueryClient();
-  const { data: todos = [], isLoading, error } = useQuery({
+  const { data: todos = [], isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchTodos,
     refetchInterval: 60_000, // kiosk never refocuses — poll for remote changes
   });
   const [showCompleted, setShowCompleted] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Todo | null>(null);
 
   const membersById = useMemo(() => {
     const map = new Map<string, TodoMember>();
@@ -100,9 +93,8 @@ export function TodosView({ initialMembers }: TodosViewProps) {
     return { pending: p, completed: c };
   }, [todos]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2800);
+  function showError(text: string) {
+    setToast({ kind: "error", text });
   }
 
   const createMutation = useMutation({
@@ -124,9 +116,9 @@ export function TodosView({ initialMembers }: TodosViewProps) {
       queryClient.setQueryData<Todo[]>(QUERY_KEY, [...previous, optimistic]);
       return { previous };
     },
-    onError: (err, _input, ctx) => {
+    onError: (_err, _input, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : t("couldNotAdd"));
+      showError(t("couldNotAdd"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -153,9 +145,9 @@ export function TodosView({ initialMembers }: TodosViewProps) {
       );
       return { previous };
     },
-    onError: (err, _args, ctx) => {
+    onError: (_err, _args, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : t("couldNotUpdate"));
+      showError(t("couldNotUpdate"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -174,10 +166,28 @@ export function TodosView({ initialMembers }: TodosViewProps) {
       );
       return { previous };
     },
-    onError: (err, _id, ctx) => {
+    onError: (_err, _id, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : t("couldNotDelete"));
+      showError(t("couldNotDelete"));
     },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+
+  // The API has no undelete, so "undo" recreates the row from the snapshot.
+  const restoreMutation = useMutation({
+    mutationFn: async (todo: Todo) => {
+      const created = await jsonRequest<Todo>("/api/todos", "POST", {
+        title: todo.title,
+        memberId: todo.memberId,
+        dueDate: todo.dueDate,
+      } satisfies TodoCreateInput);
+      if (todo.done) {
+        await jsonRequest<Todo>(`/api/todos/${created.id}`, "PATCH", { done: true });
+      }
+    },
+    onError: () => showError(t("couldNotRestore")),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
@@ -189,14 +199,15 @@ export function TodosView({ initialMembers }: TodosViewProps) {
   function handleToggle(todo: Todo) {
     patchMutation.mutate({ id: todo.id, patch: { done: !todo.done } });
   }
-  function handleDelete(todo: Todo) {
-    deleteMutation.mutate(todo.id);
+  async function confirmDelete(todo: Todo) {
+    await deleteMutation.mutateAsync(todo.id);
+    setToast({ kind: "undo", todo });
   }
   function handleDueDateChange(todo: Todo, dueDate: string | null) {
     patchMutation.mutate({ id: todo.id, patch: { dueDate } });
   }
 
-  const isEmpty = !isLoading && todos.length === 0 && !error;
+  const isEmpty = !isLoading && todos.length === 0 && !isError;
 
   const countLabel = completed.length > 0
     ? t("openAndDone", { open: pending.length, done: completed.length })
@@ -205,28 +216,33 @@ export function TodosView({ initialMembers }: TodosViewProps) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {t("title")}
         </h2>
-        <span className="tabular text-sm text-muted">
-          {countLabel}
-        </span>
+        {!isLoading && !isError && (
+          <span className="kid-label tabular text-muted">{countLabel}</span>
+        )}
       </div>
 
       <TodoInput members={initialMembers} onSubmit={handleCreate} />
 
-      {error && (
-        <div
-          role="alert"
-          className="rounded-2xl border border-accent-rose/40 bg-accent-rose/10 px-4 py-3 text-sm text-ink"
-        >
-          {error instanceof Error ? error.message : t("couldNotLoad")}
+      {isLoading && (
+        <div className="flex flex-col gap-2" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-[72px] rounded-2xl" />
+          ))}
         </div>
       )}
 
-      {isEmpty ? (
-        <EmptyState />
-      ) : (
+      {isError && !isLoading && (
+        <ErrorState onRetry={() => void refetch()} detail={t("couldNotLoad")} />
+      )}
+
+      {isEmpty && (
+        <EmptyState picto="relax" title={t("noActive")} description={t("noActiveDesc")} />
+      )}
+
+      {!isLoading && !isError && !isEmpty && (
         <div className="flex flex-col gap-3">
           <ul className="flex flex-col gap-2" aria-label={t("title")}>
             <AnimatePresence initial={false}>
@@ -243,7 +259,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                     todo={todo}
                     member={todo.memberId ? membersById.get(todo.memberId) ?? null : null}
                     onToggle={handleToggle}
-                    onDelete={handleDelete}
+                    onDelete={setDeleteTarget}
                     onDueDateChange={handleDueDateChange}
                   />
                 </motion.div>
@@ -258,8 +274,8 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                 onClick={() => setShowCompleted((v) => !v)}
                 aria-expanded={showCompleted}
                 className={cn(
-                  "tap-target inline-flex w-full items-center justify-between gap-2 rounded-2xl px-3 py-2 text-sm",
-                  "text-muted hover:bg-bg",
+                  "kid-label inline-flex min-h-12 w-full items-center justify-between gap-2 rounded-2xl px-3 py-2",
+                  "text-muted hover:bg-ink/5 focus-ring-kid",
                 )}
               >
                 <span className="tabular">
@@ -267,7 +283,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                 </span>
                 <ChevronDown
                   className={cn(
-                    "size-4 transition-transform",
+                    "size-5 transition-transform",
                     showCompleted && "rotate-180",
                   )}
                 />
@@ -280,7 +296,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.2 }}
                     className="flex flex-col gap-2 overflow-hidden"
-                    aria-label={t("noCompleted")}
+                    aria-label={t("completedSection", { count: completed.length })}
                   >
                     {completed.map((todo) => (
                       <TodoRow
@@ -290,7 +306,7 @@ export function TodosView({ initialMembers }: TodosViewProps) {
                           todo.memberId ? membersById.get(todo.memberId) ?? null : null
                         }
                         onToggle={handleToggle}
-                        onDelete={handleDelete}
+                        onDelete={setDeleteTarget}
                         onDueDateChange={handleDueDateChange}
                       />
                     ))}
@@ -302,36 +318,36 @@ export function TodosView({ initialMembers }: TodosViewProps) {
         </div>
       )}
 
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-2xl border border-accent-rose/40 bg-surface px-4 py-3 text-sm text-ink shadow-lift md:bottom-8"
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={deleteTarget ? t("deleteConfirm", { title: deleteTarget.title }) : ""}
+        picto="nav-todos"
+        onConfirm={() => (deleteTarget ? confirmDelete(deleteTarget) : undefined)}
+      />
+
+      {toast?.kind === "error" && (
+        <KidToast tone="error" picto="oops" durationMs={8000} onDismiss={() => setToast(null)}>
+          {toast.text}
+        </KidToast>
+      )}
+      {toast?.kind === "undo" && (
+        <KidToast
+          tone="success"
+          picto="nav-todos"
+          durationMs={8000}
+          action={{
+            kind: "undo",
+            color: membersById.get(toast.todo.memberId ?? "")?.color,
+            onClick: () => restoreMutation.mutate(toast.todo),
+          }}
+          onDismiss={() => setToast(null)}
         >
-          {toast}
-        </div>
+          <span className="line-clamp-2">{t("deleted", { title: toast.todo.title })}</span>
+        </KidToast>
       )}
     </div>
-  );
-}
-
-function EmptyState() {
-  const t = useTranslations("todos");
-
-  return (
-    <GlassCard className="mx-auto flex w-full max-w-md flex-col items-center gap-3 p-10 text-center">
-      <span
-        className="inline-flex size-16 items-center justify-center rounded-full bg-accent-mint/30 text-ink"
-        aria-hidden
-      >
-        <ListChecks className="size-8" />
-      </span>
-      <h3 className="font-display text-2xl tracking-tight text-ink">
-        {t("noActive")}
-      </h3>
-      <p className="text-sm text-muted">
-        {t("noActiveDesc")}
-      </p>
-    </GlassCard>
   );
 }

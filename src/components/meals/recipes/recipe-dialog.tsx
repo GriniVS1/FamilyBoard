@@ -8,6 +8,7 @@ import {
   DialogContent,
   DialogTitle,
 } from "@/components/shared/dialog";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
 import { Button } from "@/components/shared/button";
 import { Input } from "@/components/shared/input";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,7 @@ export function RecipeDialog({
   const [ingredients, setIngredients] = useState<IngredientDraft[]>([emptyIngredient()]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -138,8 +140,8 @@ export function RecipeDialog({
         await onCreate(buildInput());
       }
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon("error"));
+    } catch {
+      setError(tCommon("error"));
     } finally {
       setSaving(false);
     }
@@ -147,13 +149,12 @@ export function RecipeDialog({
 
   async function handleDelete() {
     if (!recipe) return;
-    if (!window.confirm(t("recipe.deleteConfirm"))) return;
     setSaving(true);
     try {
       await onDelete(recipe.id);
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon("error"));
+    } catch {
+      setError(tCommon("error"));
     } finally {
       setSaving(false);
     }
@@ -164,7 +165,7 @@ export function RecipeDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90dvh]">
-        <DialogTitle>
+        <DialogTitle className="pr-14">
           {isEditing ? t("recipe.edit") : t("recipe.new")}
         </DialogTitle>
 
@@ -265,7 +266,7 @@ export function RecipeDialog({
                 }}
                 placeholder={t("recipe.filterByTag")}
                 className={cn(
-                  "h-11 flex-1 rounded-2xl border border-border bg-surface px-4 text-sm text-ink placeholder:text-muted",
+                  "h-12 flex-1 rounded-2xl border border-border bg-surface px-4 text-base text-ink placeholder:text-muted",
                   "transition-shadow focus:ring-2 focus:ring-ink/20",
                 )}
               />
@@ -337,18 +338,17 @@ export function RecipeDialog({
           </div>
 
           {error && (
-            <p className="text-sm text-accent-rose">{error}</p>
+            <p role="alert" className="text-sm text-danger-ink">{error}</p>
           )}
 
           <div className="flex items-center justify-between gap-3 pt-1">
             {isEditing ? (
               <Button
-                variant="ghost"
-                onClick={handleDelete}
+                variant="danger"
+                onClick={() => setConfirmOpen(true)}
                 disabled={saving}
-                className="text-accent-rose hover:text-accent-rose"
               >
-                <Trash2 className="size-4" />
+                <Trash2 className="size-5" />
                 {t("recipe.delete")}
               </Button>
             ) : (
@@ -369,6 +369,13 @@ export function RecipeDialog({
           </div>
         </div>
       </DialogContent>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("recipe.deleteConfirm")}
+        picto="nav-meals"
+        onConfirm={handleDelete}
+      />
     </Dialog>
   );
 }

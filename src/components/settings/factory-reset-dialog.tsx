@@ -75,7 +75,7 @@ export function FactoryResetDialog({
           <div className="flex items-start gap-3 pr-10">
             <span
               aria-hidden
-              className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-accent-rose/30 text-accent-rose"
+              className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-danger-tint text-danger-ink"
             >
               <AlertTriangle className="size-6" />
             </span>
@@ -130,7 +130,7 @@ export function FactoryResetDialog({
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-accent-rose">
+            <p role="alert" className="text-sm text-danger-ink">
               {error}
             </p>
           )}
@@ -146,9 +146,9 @@ export function FactoryResetDialog({
             </Button>
             <Button
               type="button"
+              variant="danger"
               onClick={handleReset}
               disabled={submitting || confirm !== "RESET" || pin.length !== PIN_LENGTH}
-              className="bg-accent-rose text-bg hover:bg-accent-rose/90"
             >
               {submitting ? t("resetting") : t("confirm")}
             </Button>

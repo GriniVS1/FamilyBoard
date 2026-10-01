@@ -1,8 +1,12 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
+import { CHORE_TIME_OF_DAY } from "@/lib/enums";
 import {
+  getBalanceByMemberForFamily,
+  getChoreCompletionsTodayForFamily,
   getCurrentWeekRange,
+  getTodayRange,
   getWeeklyChoreSummaryForFamily,
 } from "@/lib/queries";
 
@@ -12,14 +16,32 @@ export const dynamic = "force-dynamic";
 const createSchema = z.object({
   memberId: z.string().min(1).optional().nullable(),
   title: z.string().trim().min(1).max(100),
-  icon: z.string().max(8).optional().nullable(),
+  icon: z.string().max(16).optional().nullable(),
   points: z.number().int().min(1).max(50).optional().default(1),
   rrule: z.string().max(200).optional().nullable(),
+  timeOfDay: z.enum(CHORE_TIME_OF_DAY).optional().nullable(),
 });
+
+const choreSelect = {
+  id: true,
+  familyId: true,
+  memberId: true,
+  title: true,
+  icon: true,
+  points: true,
+  rrule: true,
+  timeOfDay: true,
+  createdAt: true,
+} as const;
 
 export const GET = withErrorHandling(async () => {
   const family = await db.family.findFirst();
   const { start, end } = getCurrentWeekRange();
+  const today = getTodayRange();
+  const todayIso = {
+    start: today.start.toISOString(),
+    end: today.end.toISOString(),
+  };
 
   if (!family) {
     return ok({
@@ -28,25 +50,23 @@ export const GET = withErrorHandling(async () => {
       weekEnd: end.toISOString(),
       weeklyByMember: {},
       weeklyByChore: {},
+      completionsToday: [],
+      today: todayIso,
+      balanceByMember: {},
     });
   }
 
   const chores = await db.chore.findMany({
     where: { familyId: family.id },
     orderBy: { createdAt: "asc" },
-    select: {
-      id: true,
-      familyId: true,
-      memberId: true,
-      title: true,
-      icon: true,
-      points: true,
-      rrule: true,
-      createdAt: true,
-    },
+    select: choreSelect,
   });
 
-  const summary = await getWeeklyChoreSummaryForFamily(family.id);
+  const [summary, completionsToday, balanceByMember] = await Promise.all([
+    getWeeklyChoreSummaryForFamily(family.id),
+    getChoreCompletionsTodayForFamily(family.id),
+    getBalanceByMemberForFamily(family.id),
+  ]);
 
   return ok({
     chores,
@@ -54,6 +74,9 @@ export const GET = withErrorHandling(async () => {
     weekEnd: end.toISOString(),
     weeklyByMember: summary.weeklyByMember,
     weeklyByChore: summary.weeklyByChore,
+    completionsToday,
+    today: todayIso,
+    balanceByMember,
   });
 });
 
@@ -86,17 +109,9 @@ export const POST = withErrorHandling(async (req) => {
       icon: body.icon ?? null,
       points: body.points,
       rrule: body.rrule ?? null,
+      timeOfDay: body.timeOfDay ?? null,
     },
-    select: {
-      id: true,
-      familyId: true,
-      memberId: true,
-      title: true,
-      icon: true,
-      points: true,
-      rrule: true,
-      createdAt: true,
-    },
+    select: choreSelect,
   });
 
   return ok(chore);

@@ -33,17 +33,34 @@
     "noAuthor": "No author",
     "admin": "Admin",
     "member": "Member",
-    "theme": "Theme"
+    "theme": "Theme",
+    "all": "All",
+    "selectColor": "Choose colour {color}",
+    "colors": {
+      "peach": "Peach",
+      "mint": "Mint",
+      "sun": "Sun",
+      "sky": "Sky",
+      "lilac": "Lilac",
+      "rose": "Rose",
+      "teal": "Teal",
+      "sand": "Sand"
+    },
+    "backspace": "Delete last digit"
   },
   "nav": {
-    "dashboard": "Dashboard",
+    "dashboard": "Today",
     "calendar": "Calendar",
-    "meals": "Meals",
+    "meals": "Food",
     "chores": "Chores",
     "todos": "To-dos",
     "notes": "Notes",
     "photos": "Photos",
-    "settings": "Settings"
+    "settings": "Settings",
+    "more": "More",
+    "primary": "Main navigation",
+    "sidebar": "Sections",
+    "bottom": "Sections"
   },
   "shell": {
     "currentTime": "Current time"
@@ -179,19 +196,23 @@
       "today": {
         "title": "Today",
         "empty": "Nothing scheduled. Enjoy.",
-        "noEventsToday": "Nothing next",
-        "couldNotLoad": "Could not load events."
+        "couldNotLoad": "Could not load events.",
+        "now": "Now",
+        "morning": "Morning",
+        "day": "Daytime",
+        "evening": "Evening"
       },
       "chores": {
         "title": "Chores",
-        "completionsToday": "completions today",
-        "weeklyProgress": "Weekly progress",
-        "stars": "stars",
-        "noChores": "No chores yet — set them up in /chores.",
-        "markDone": "Mark done",
-        "noChoresInTab": "No chores to log yet. Add some in the Chores tab.",
-        "markDoneFor": "Mark a chore done for {name}",
-        "couldNotLoad": "Could not load chores."
+        "openFor": "{name}: {count, plural, one {# chore} other {# chores}} open",
+        "allDoneFor": "{name}: all done",
+        "nightFor": "{name}: bedtime",
+        "pauseFor": "{name}: later",
+        "noChoresFor": "{name}: no chores",
+        "noMembers": "No people added yet.",
+        "unknownFor": "{name}: chores could not be loaded",
+        "anyoneFor": "For everyone: {count, plural, one {# chore} other {# chores}} open",
+        "stars": "{count, plural, one {# star} other {# stars}}"
       },
       "todos": {
         "title": "To-dos",
@@ -202,7 +223,7 @@
       },
       "notes": {
         "title": "Pinned notes",
-        "empty": "No notes pinned. Pin one in /notes.",
+        "empty": "No notes pinned.",
         "openAll": "Open all",
         "couldNotLoad": "Could not load notes.",
         "pinned": "Pinned",
@@ -220,7 +241,18 @@
         "notConfigured": "Set your location to see the forecast.",
         "openSettings": "Open Settings",
         "setLocation": "Set a location in Settings",
-        "couldNotLoad": "Could not load weather."
+        "couldNotLoad": "Could not load weather.",
+        "conditions": {
+          "clear": "Sunny",
+          "clearNight": "Clear night",
+          "partly": "Partly cloudy",
+          "partlyNight": "Partly cloudy",
+          "cloudy": "Cloudy",
+          "fog": "Fog",
+          "rain": "Rain",
+          "snow": "Snow",
+          "thunder": "Thunderstorm"
+        }
       }
     },
     "updateSuccess": {
@@ -322,51 +354,85 @@
     "loading": "Loading…",
     "couldNotLoad": "Could not load events.",
     "nextHours": "Next hours",
-    "nextDays": "Next days"
+    "nextDays": "Next days",
+    "everyone": "Everyone",
+    "showOnly": "Show only {name}",
+    "viewSwitch": "View",
+    "eventDeleted": "Event deleted"
   },
   "chores": {
     "title": "Chores",
     "addChore": "New chore",
-    "weeklyProgress": "Weekly progress",
-    "completionsToday": "completions today",
-    "stars": "this week",
-    "noMember": "No member assigned",
-    "anyone": "Anyone can do",
-    "anyoneSub": "Tap to log — pick who gets the stars.",
-    "addChoreFor": "Add chore for {name}",
-    "addUnassigned": "Add unassigned chore",
-    "addFirst": "Add a chore",
-    "thisWeek": "this week",
+    "addChoreFor": "Add a chore for {name}",
+    "addUnassigned": "Add a chore for everyone",
+    "anyone": "For everyone",
+    "all": "All",
+    "allA11y": "Show everyone",
+    "focusOn": "Show only {name}",
+    "starsBalance": "{count, plural, one {# star} other {# stars}}",
     "timesThisWeek": "{count}× this week",
     "emptyTitle": "No chores yet",
-    "emptyDesc": "Set a few simple wins for the week. Stars earn smiles.",
-    "createFirst": "Create your first chore",
-    "whoDidIt": "Who did it?",
-    "whoDidItDesc": "{title} — pick the family member who earned the stars.",
-    "couldNotLog": "Could not log star.",
-    "couldNotLoad": "Could not load chores.",
+    "emptyHint": "Tap “Edit” at the top to add chores.",
+    "couldNotLoad": "Chores could not be loaded.",
+    "whoTitle": "Who did it?",
+    "whoPick": "{name} did it",
+    "close": "Close",
+    "celebrateSr": "{name} finished everything today!",
+    "card": {
+      "label": "{title}, {points, plural, one {# star} other {# stars}}",
+      "retry": "{title}: try again",
+      "edit": "Edit {title}",
+      "doneMini": "{title}: done. Tap to show undo"
+    },
+    "group": {
+      "collapse": "Collapse {name}",
+      "expand": "Expand {name}",
+      "progress": "{done} of {total} done"
+    },
+    "state": {
+      "allDone": "All done!",
+      "night": "Bedtime",
+      "pause": "Later"
+    },
+    "column": {
+      "empty": "No chores"
+    },
+    "toast": {
+      "stars": "{name} gets {count, plural, one {# star} other {# stars}}"
+    },
     "dialog": {
       "newTitle": "New chore",
       "editTitle": "Edit chore",
-      "name": "Title",
-      "points": "Stars",
-      "frequency": "Frequency",
-      "frequencyOptions": {
-        "daily": "Daily",
-        "weekly": "Weekly",
-        "once": "Once"
+      "previewTitle": "Chore",
+      "sectionPicture": "Picture",
+      "sectionWho": "Who?",
+      "sectionWhen": "When?",
+      "sectionStars": "Stars",
+      "sectionTitle": "Title",
+      "cat": {
+        "body": "Body & bath",
+        "dress": "Getting dressed",
+        "tidy": "Tidying up",
+        "food": "Food & drink",
+        "nature": "Pets & plants",
+        "school": "School & learning",
+        "help": "Helping out"
       },
-      "member": "Who",
+      "ownEmoji": "Own symbol",
+      "moreStars": "more",
+      "starsN": "{count, plural, one {# star} other {# stars}}",
+      "titlePlaceholder": "e.g. Empty the dishwasher",
       "delete": "Delete",
-      "titleRequired": "Give the chore a title.",
-      "deleteConfirm": "Delete this chore? Past stars stay.",
-      "iconLabel": "Icon",
-      "noIcon": "None",
+      "deleteTitle": "Delete this chore? The stars earned with it are removed as well.",
       "cancel": "Cancel",
       "save": "Save",
-      "couldNotSave": "Could not save.",
-      "couldNotDelete": "Could not delete."
-    }
+      "couldNotSave": "That didn’t work. Please try again.",
+      "couldNotDelete": "Deleting didn’t work."
+    },
+    "anyoneChip": "{title}: for everyone, tap to log it",
+    "anyoneMore": "Show all chores for everyone",
+    "anyoneGo": "Go to the chores for everyone",
+    "undoTask": "Undo: {title}"
   },
   "todos": {
     "title": "To-dos",
@@ -385,7 +451,10 @@
     "couldNotUpdate": "Could not update.",
     "couldNotDelete": "Could not delete.",
     "couldNotLoad": "Could not load to-dos.",
-    "markDone": "Mark {title} done"
+    "markDone": "Mark {title} done",
+    "deleteConfirm": "Delete “{title}”?",
+    "deleted": "“{title}” deleted",
+    "couldNotRestore": "Could not bring it back."
   },
   "notes": {
     "title": "Notes",
@@ -412,7 +481,9 @@
       "couldNotSave": "Could not save.",
       "couldNotDelete": "Could not delete.",
       "writeFirst": "Write something first."
-    }
+    },
+    "deleted": "Note deleted",
+    "couldNotRestore": "Could not bring it back."
   },
   "photos": {
     "title": "Photos",
@@ -466,7 +537,8 @@
       "maxReachedHint": "Maximum of {max} members reached.",
       "remove": "Remove member",
       "noMembers": "No members yet.",
-      "editMember": "Edit {name}"
+      "editMember": "Edit {name}",
+      "deleteConfirm": "Remove “{name}”?"
     },
     "calendarConnectViaApp": "Connect calendars (Google, Outlook, CalDAV) from the FamilyBoard app on your phone.",
     "google": {
@@ -595,12 +667,14 @@
     },
     "navConfig": {
       "title": "Navigation",
-      "description": "Choose which features show up in the menu, and in what order.",
-      "alwaysVisibleHint": "Dashboard and Settings are always visible.",
+      "description": "Choose which areas appear in the menu and in what order. Children's areas always come before adult areas.",
+      "alwaysVisibleHint": "“Today” is always first, “Chores” right after it and “Settings” last. “Today” and “Settings” are always visible.",
       "moveUp": "Move {name} up",
       "moveDown": "Move {name} down",
       "toggleAria": "Show {name} in navigation",
-      "saveError": "Could not save the navigation order. Please try again."
+      "saveError": "Could not save the navigation order. Please try again.",
+      "groupKids": "Children's areas",
+      "groupAdults": "Adult areas"
     },
     "caldav": {
       "title": "Apple / CalDAV",
@@ -659,7 +733,8 @@
         "expired": "Session expired. Please try again.",
         "generic": "An unexpected error occurred.",
         "denied": "Access was denied."
-      }
+      },
+      "disconnectConfirm": "Disconnect this Outlook calendar?"
     },
     "push": {
       "title": "Push notifications",
@@ -757,10 +832,13 @@
         "error": "Could not create a code. Please try again.",
         "unavailable": "Remote access is not connected right now."
       }
-    }
+    },
+    "appearance": "Appearance",
+    "appearanceDescription": "Light or dark, for this screen only.",
+    "familyNamePlaceholder": "e.g. The Smith Family"
   },
   "meals": {
-    "title": "Meals",
+    "title": "Food",
     "tabs": {
       "plan": "Plan",
       "recipes": "Recipes",
@@ -829,7 +907,14 @@
         "meat": "Meat & Fish",
         "drinks": "Drinks",
         "other": "Other"
-      }
+      },
+      "check": "Check off",
+      "uncheck": "Uncheck",
+      "editItem": "Edit {name}",
+      "deleteItem": "Delete {name}",
+      "removeIngredient": "Remove ingredient",
+      "deleted": "“{name}” removed",
+      "clearConfirm": "Remove checked items?"
     }
   },
   "screensaver": {
@@ -884,7 +969,9 @@
     "statusActive": "Active",
     "statusTrial": "Trial",
     "statusExpired": "Expired",
-    "statusUnlicensed": "Unlicensed"
+    "statusUnlicensed": "Unlicensed",
+    "graceBannerShort": "Trial: {days, plural, =1 {1 day} other {# days}} left",
+    "softBannerShort": "Write access blocked"
   },
   "errors": {
     "generic": "Something went wrong.",
@@ -910,5 +997,113 @@
     "reasonLabel": "Reason: {reason}",
     "google": "Google",
     "microsoft": "Microsoft"
+  },
+  "pictos": {
+    "water": "Drink water",
+    "teeth": "Brush teeth",
+    "tidy-toys": "Tidy up toys",
+    "get-dressed": "Get dressed",
+    "make-bed": "Make the bed",
+    "set-table": "Set the table",
+    "feed-dog": "Feed the dog",
+    "feed-cat": "Feed the cat",
+    "trash": "Take out the trash",
+    "water-plants": "Water the plants",
+    "homework": "Homework",
+    "read": "Read",
+    "laundry": "Fold the laundry",
+    "wash-clothes": "Do the washing",
+    "dishes": "Do the dishes",
+    "wash-hands": "Wash hands",
+    "bath": "Bath time",
+    "pajamas": "Put on pyjamas",
+    "backpack": "Pack school bag",
+    "sweep": "Sweep the floor",
+    "vacuum": "Vacuum",
+    "breakfast": "Eat",
+    "medicine": "Take medicine",
+    "music": "Practise music",
+    "tidy-room": "Tidy your room",
+    "shoes": "Put shoes away",
+    "shopping": "Shopping",
+    "nav-home": "Home",
+    "nav-calendar": "Calendar",
+    "nav-meals": "Meals",
+    "nav-tasks": "Chores",
+    "nav-todos": "To-dos",
+    "nav-notes": "Notes",
+    "nav-photos": "Photos",
+    "nav-settings": "Settings",
+    "nav-more": "More",
+    "tod-morning": "Morning",
+    "tod-day": "Daytime",
+    "tod-evening": "Evening",
+    "tod-night": "Night",
+    "tod-anytime": "Anytime",
+    "celebrate": "Well done!",
+    "oops": "Oops",
+    "relax": "All done",
+    "star": "Star",
+    "undo": "Undo",
+    "next": "Up next",
+    "pause": "Later",
+    "event-school": "School",
+    "event-kindergarten": "Kindergarten",
+    "event-soccer": "Football",
+    "event-swim": "Swimming",
+    "event-doctor": "Doctor",
+    "event-birthday": "Birthday",
+    "event-dinner": "Dinner",
+    "event-music": "Music lesson",
+    "event-play": "Playtime",
+    "event-trip": "Outing",
+    "event-bike": "Bike ride"
+  },
+  "kids": {
+    "undo": "Undo",
+    "retry": "Try again",
+    "dismiss": "Close",
+    "add": "Add",
+    "errorGeneric": "That didn’t work.",
+    "offline": "No connection",
+    "loading": "Loading…"
+  },
+  "parentMode": {
+    "edit": "Edit",
+    "pinTitle": "Parent PIN",
+    "pinHint": "Enter the PIN to edit chores and points",
+    "wrongPin": "Wrong PIN. Please try again.",
+    "tooMany": "Too many attempts. Please wait a moment.",
+    "couldNotVerify": "The PIN could not be checked.",
+    "banner": "Parent mode",
+    "done": "Done",
+    "remaining": "{time} left"
+  },
+  "points": {
+    "button": "Points",
+    "title": "Points",
+    "hint": "Who has collected how many stars?",
+    "empty": "No people added yet.",
+    "couldNotLoad": "The points could not be loaded.",
+    "stars": "{count, plural, one {# star} other {# stars}}",
+    "week": "this week +{count}",
+    "total": "{count} in total",
+    "sinceDate": "since {date}",
+    "sinceStart": "since the start",
+    "history": "History",
+    "historyReset": "reset",
+    "historyEntry": "{date}: {count, plural, one {# star} other {# stars}} reset",
+    "reset": "Reset",
+    "resetFor": "Reset: {name}",
+    "resetAll": "Reset all",
+    "confirmOne": "Set {name}’s stars to 0?",
+    "confirmAll": "Set everyone’s stars to 0?",
+    "confirmHint": "The finished chores are kept.",
+    "toast": {
+      "one": "{name}: {count, plural, one {# star} other {# stars}} reset",
+      "many": "{count, plural, one {# person} other {# people}} reset",
+      "undoOne": "Undo the reset for {name}",
+      "undoMany": "Undo the reset"
+    }
   }
 }

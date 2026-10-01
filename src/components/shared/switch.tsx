@@ -27,7 +27,7 @@ export function Switch({
       onClick={() => onCheckedChange(!checked)}
       className={cn(
         "tap-target inline-flex items-center justify-center rounded-full p-2",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
+        "focus-ring-kid",
         "disabled:opacity-50 disabled:pointer-events-none",
       )}
       {...props}

@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { MemberColor } from "@/lib/utils";
 
@@ -33,22 +34,23 @@ export function MemberColorSwatch({
   onClick,
   ariaLabel,
 }: MemberColorSwatchProps) {
+  const t = useTranslations("common");
   return (
     <motion.button
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.92 }}
-      aria-label={ariaLabel ?? `Select color ${color}`}
+      aria-label={ariaLabel ?? t("selectColor", { color: t(`colors.${color}`) })}
       aria-pressed={selected}
       className={cn(
         "relative size-12 rounded-full tap-target flex items-center justify-center",
-        "ring-offset-2 ring-offset-bg transition-shadow",
+        "ring-offset-2 ring-offset-bg transition-shadow focus-ring-kid",
         COLOR_BG[color],
         selected ? "ring-2 ring-ink shadow-lift" : "ring-1 ring-border",
       )}
     >
       {selected && (
-        <Check className="size-5 text-ink drop-shadow-sm" strokeWidth={3} />
+        <Check className="size-6 text-on-accent" strokeWidth={3.5} />
       )}
     </motion.button>
   );

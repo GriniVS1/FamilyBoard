@@ -31,7 +31,7 @@ export function IngredientInputRow({
       onChange={(e) => onChange(index, { ...value, [key]: e.target.value })}
       placeholder={placeholder}
       className={cn(
-        "h-11 rounded-xl border border-border bg-surface px-3 text-sm text-ink placeholder:text-muted",
+        "h-12 rounded-xl border border-border bg-surface px-3 text-base text-ink placeholder:text-muted",
         "transition-shadow focus:ring-2 focus:ring-ink/20",
         flex,
       )}
@@ -46,10 +46,10 @@ export function IngredientInputRow({
       <button
         type="button"
         onClick={() => onRemove(index)}
-        className="tap-target inline-flex items-center justify-center rounded-full text-muted hover:text-accent-rose transition-colors"
-        aria-label="Remove ingredient"
+        className="tap-target inline-flex items-center justify-center rounded-full bg-danger-tint text-danger-ink transition-colors focus-ring-kid"
+        aria-label={t("grocery.removeIngredient")}
       >
-        <Trash2 className="size-4" />
+        <Trash2 className="size-5" />
       </button>
     </div>
   );

@@ -1,0 +1,146 @@
+export const PICTO_CATEGORIES = ["task", "nav", "time", "feedback", "event"] as const;
+export type PictoCategory = (typeof PICTO_CATEGORIES)[number];
+
+export const PICTO_NAMES = [
+  "water",
+  "teeth",
+  "tidy-toys",
+  "get-dressed",
+  "make-bed",
+  "set-table",
+  "feed-dog",
+  "feed-cat",
+  "trash",
+  "water-plants",
+  "homework",
+  "read",
+  "laundry",
+  "wash-clothes",
+  "dishes",
+  "wash-hands",
+  "bath",
+  "pajamas",
+  "backpack",
+  "sweep",
+  "vacuum",
+  "breakfast",
+  "medicine",
+  "music",
+  "tidy-room",
+  "shoes",
+  "shopping",
+  "nav-home",
+  "nav-calendar",
+  "nav-meals",
+  "nav-tasks",
+  "nav-todos",
+  "nav-notes",
+  "nav-photos",
+  "nav-settings",
+  "nav-more",
+  "tod-morning",
+  "tod-day",
+  "tod-evening",
+  "tod-night",
+  "tod-anytime",
+  "celebrate",
+  "oops",
+  "relax",
+  "star",
+  "undo",
+  "next",
+  "pause",
+  "event-school",
+  "event-kindergarten",
+  "event-soccer",
+  "event-swim",
+  "event-doctor",
+  "event-birthday",
+  "event-dinner",
+  "event-music",
+  "event-play",
+  "event-trip",
+  "event-bike",
+] as const;
+
+export type PictoName = (typeof PICTO_NAMES)[number];
+
+export type PictoMeta = {
+  category: PictoCategory;
+  /** Canonical emoji: what gets stored in `icon` so the mobile app (emoji-only) still shows something sensible. */
+  emoji: string;
+};
+
+export const PICTO_META: Record<PictoName, PictoMeta> = {
+  water: { category: "task", emoji: "💧" },
+  teeth: { category: "task", emoji: "🪥" },
+  "tidy-toys": { category: "task", emoji: "🧸" },
+  "get-dressed": { category: "task", emoji: "👕" },
+  "make-bed": { category: "task", emoji: "🛏️" },
+  "set-table": { category: "task", emoji: "🍽️" },
+  "feed-dog": { category: "task", emoji: "🐶" },
+  "feed-cat": { category: "task", emoji: "🐱" },
+  trash: { category: "task", emoji: "🚮" },
+  "water-plants": { category: "task", emoji: "🌱" },
+  homework: { category: "task", emoji: "✏️" },
+  read: { category: "task", emoji: "📖" },
+  laundry: { category: "task", emoji: "🧺" },
+  "wash-clothes": { category: "task", emoji: "🫧" },
+  dishes: { category: "task", emoji: "🧽" },
+  "wash-hands": { category: "task", emoji: "🧼" },
+  bath: { category: "task", emoji: "🛁" },
+  pajamas: { category: "task", emoji: "🛌" },
+  backpack: { category: "task", emoji: "🎒" },
+  sweep: { category: "task", emoji: "🧹" },
+  vacuum: { category: "task", emoji: "🌪️" },
+  breakfast: { category: "task", emoji: "🥣" },
+  medicine: { category: "task", emoji: "💊" },
+  music: { category: "task", emoji: "🎹" },
+  "tidy-room": { category: "task", emoji: "🗄️" },
+  shoes: { category: "task", emoji: "👟" },
+  shopping: { category: "task", emoji: "🛒" },
+  "nav-home": { category: "nav", emoji: "🏠" },
+  "nav-calendar": { category: "nav", emoji: "📅" },
+  "nav-meals": { category: "nav", emoji: "🍴" },
+  "nav-tasks": { category: "nav", emoji: "✅" },
+  "nav-todos": { category: "nav", emoji: "📋" },
+  "nav-notes": { category: "nav", emoji: "🗒️" },
+  "nav-photos": { category: "nav", emoji: "🖼️" },
+  "nav-settings": { category: "nav", emoji: "⚙️" },
+  "nav-more": { category: "nav", emoji: "🔲" },
+  "tod-morning": { category: "time", emoji: "🌅" },
+  "tod-day": { category: "time", emoji: "☀️" },
+  "tod-evening": { category: "time", emoji: "🌙" },
+  "tod-night": { category: "time", emoji: "🌛" },
+  "tod-anytime": { category: "time", emoji: "🌗" },
+  celebrate: { category: "feedback", emoji: "🏆" },
+  oops: { category: "feedback", emoji: "🩹" },
+  relax: { category: "feedback", emoji: "🏖️" },
+  star: { category: "feedback", emoji: "⭐" },
+  undo: { category: "feedback", emoji: "↩️" },
+  next: { category: "feedback", emoji: "👉" },
+  pause: { category: "feedback", emoji: "⏳" },
+  "event-school": { category: "event", emoji: "🏫" },
+  "event-kindergarten": { category: "event", emoji: "🖍️" },
+  "event-soccer": { category: "event", emoji: "⚽" },
+  "event-swim": { category: "event", emoji: "🏊" },
+  "event-doctor": { category: "event", emoji: "🩺" },
+  "event-birthday": { category: "event", emoji: "🎂" },
+  "event-dinner": { category: "event", emoji: "🍲" },
+  "event-music": { category: "event", emoji: "🎸" },
+  "event-play": { category: "event", emoji: "🪣" },
+  "event-trip": { category: "event", emoji: "🚗" },
+  "event-bike": { category: "event", emoji: "🚲" },
+};
+
+export function isPictoName(value: string): value is PictoName {
+  return (PICTO_NAMES as readonly string[]).includes(value);
+}
+
+export function pictosInCategory(category: PictoCategory): PictoName[] {
+  return PICTO_NAMES.filter((name) => PICTO_META[name].category === category);
+}
+
+/** Motifs offered in the "pick a picture" grid when creating a chore. */
+export const TASK_PICTOS: readonly PictoName[] = pictosInCategory("task");
+export const EVENT_PICTOS: readonly PictoName[] = pictosInCategory("event");

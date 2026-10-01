@@ -30,6 +30,7 @@ function resolveErrorReason(
 
 export function MicrosoftCallbackBanner() {
   const t = useTranslations("settings.microsoft");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const searchParams = useSearchParams();
   const [banner, setBanner] = useState<BannerState>(null);
@@ -71,14 +72,14 @@ export function MicrosoftCallbackBanner() {
           role="status"
           className={
             banner.kind === "connected"
-              ? "rounded-2xl border border-accent-mint/40 bg-accent-mint/15 px-4 py-3 flex items-center gap-3"
-              : "rounded-2xl border border-accent-rose/40 bg-accent-rose/15 px-4 py-3 flex items-center gap-3"
+              ? "rounded-2xl border border-success/40 bg-success-tint px-4 py-3 flex items-center gap-3"
+              : "rounded-2xl border border-danger/40 bg-danger-tint px-4 py-3 flex items-center gap-3"
           }
         >
           {banner.kind === "connected" ? (
-            <CheckCircle2 className="size-5 shrink-0 text-accent-mint" />
+            <CheckCircle2 className="size-5 shrink-0 text-success-ink" />
           ) : (
-            <X className="size-5 shrink-0 text-accent-rose" />
+            <X className="size-5 shrink-0 text-danger-ink" />
           )}
           <div className="flex-1 text-sm text-ink">
             {banner.kind === "connected"
@@ -92,7 +93,7 @@ export function MicrosoftCallbackBanner() {
               onClick={() => {
                 setBanner(null);
               }}
-              className="text-sm text-accent-rose hover:bg-accent-rose/10 shrink-0"
+              className="text-sm text-danger-ink hover:bg-danger-tint shrink-0"
             >
               {t("callback.retry")}
             </Button>
@@ -100,8 +101,8 @@ export function MicrosoftCallbackBanner() {
           <button
             type="button"
             onClick={() => setBanner(null)}
-            className="size-9 rounded-full text-muted hover:bg-bg/60 hover:text-ink inline-flex items-center justify-center shrink-0"
-            aria-label="Dismiss"
+            className="inline-flex size-12 shrink-0 items-center justify-center rounded-full text-muted hover:bg-ink/5 hover:text-ink focus-ring-kid"
+            aria-label={tCommon("close")}
           >
             <X className="size-4" />
           </button>

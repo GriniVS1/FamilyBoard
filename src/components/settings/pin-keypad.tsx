@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Delete } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 type PinDotsProps = {
@@ -55,6 +56,7 @@ const KEYS: (string | "backspace" | null)[] = [
 // dedicated numeric pad — never a plain text input. Shared by every dialog
 // that asks for the admin PIN alone (no secondary text confirmation).
 export function PinKeypad({ onPress, onBackspace, disabled }: PinKeypadProps) {
+  const tCommon = useTranslations("common");
   return (
     <div className="grid grid-cols-3 gap-3">
       {KEYS.map((key, idx) => {
@@ -69,7 +71,7 @@ export function PinKeypad({ onPress, onBackspace, disabled }: PinKeypadProps) {
               whileTap={{ scale: 0.94 }}
               onClick={onBackspace}
               disabled={disabled}
-              aria-label="Delete"
+              aria-label={tCommon("backspace")}
               className={cn(
                 "h-14 rounded-2xl bg-bg hover:bg-border/60 text-ink",
                 "flex items-center justify-center transition-colors",

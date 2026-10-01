@@ -6,11 +6,19 @@ import { ChevronDown, ChevronUp, LayoutGrid } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { GlassCard } from "@/components/shared/glass-card";
-import { NAV_ICON } from "@/components/shared/nav-icons";
+import { Picto } from "@/components/pictos";
+import { NAV_PICTO } from "@/components/shared/nav-icons";
 import { Switch } from "@/components/shared/switch";
 import { cn } from "@/lib/utils";
 import type { NavConfigItem, NavKey } from "@/lib/nav-config";
 import { NAV_CONFIG_QUERY_KEY, fetchNavConfig } from "@/components/shell/use-nav-config";
+import {
+  PINNED_NAV_KEY,
+  flattenNavOrder,
+  resolveNavOrder,
+  type NavGroupItem,
+  type NavOrder,
+} from "@/components/shell/nav-order";
 
 async function patchNavConfig(
   items: NavConfigItem[],
@@ -34,6 +42,8 @@ async function patchNavConfig(
   const data = (await res.json()) as { items: NavConfigItem[] };
   return data.items;
 }
+
+type GroupId = keyof NavOrder;
 
 type NavConfigCardProps = {
   adminPin: string;
@@ -72,19 +82,31 @@ export function NavConfigCard({ adminPin }: NavConfigCardProps) {
     },
   });
 
-  function toggle(key: NavKey, enabled: boolean) {
-    mutation.mutate(data.map((item) => (item.key === key ? { ...item, enabled } : item)));
+  const order = resolveNavOrder(data);
+
+  function persist(next: NavOrder) {
+    mutation.mutate(flattenNavOrder(next));
   }
 
-  function move(index: number, direction: -1 | 1) {
-    const target = index + direction;
-    if (target < 0 || target >= data.length) return;
-    const next = [...data];
-    const tmp = next[index];
-    next[index] = next[target];
-    next[target] = tmp;
-    mutation.mutate(next);
+  function toggle(key: NavKey, enabled: boolean) {
+    const apply = (items: NavGroupItem[]) =>
+      items.map((item) => (item.key === key ? { ...item, enabled } : item));
+    persist({ kids: apply(order.kids), adults: apply(order.adults) });
   }
+
+  function move(group: GroupId, index: number, direction: -1 | 1) {
+    const items = [...order[group]];
+    const target = index + direction;
+    if (target < 0 || target >= items.length) return;
+    if (items[index]!.key === PINNED_NAV_KEY || items[target]!.key === PINNED_NAV_KEY) return;
+    [items[index], items[target]] = [items[target]!, items[index]!];
+    persist({ ...order, [group]: items });
+  }
+
+  const groups: { id: GroupId; title: string }[] = [
+    { id: "kids", title: t("groupKids") },
+    { id: "adults", title: t("groupAdults") },
+  ];
 
   return (
     <GlassCard className="flex flex-col gap-4 p-6">
@@ -101,57 +123,57 @@ export function NavConfigCard({ adminPin }: NavConfigCardProps) {
         </div>
       </div>
 
-      <ul className="flex flex-col gap-2">
-        {data.map((item, index) => {
-          const Icon = NAV_ICON[item.key];
-          const name = tNav(item.key as Parameters<typeof tNav>[0]);
-          return (
-            <li
-              key={item.key}
-              className={cn(
-                "flex items-center gap-3 rounded-2xl border border-border bg-surface p-3 transition-opacity",
-                !item.enabled && "opacity-60",
-              )}
-            >
-              <span
-                aria-hidden
-                className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-sky/30 text-ink"
-              >
-                <Icon className="size-4" />
-              </span>
-              <span className="flex-1 truncate text-sm font-medium text-ink">{name}</span>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={() => move(index, -1)}
-                  disabled={index === 0 || mutation.isPending}
-                  aria-label={t("moveUp", { name })}
-                  className="tap-target inline-flex items-center justify-center rounded-xl text-ink transition-colors hover:bg-bg disabled:pointer-events-none disabled:opacity-30"
+      {groups.map(({ id, title }) => (
+        <section key={id} aria-label={title} className="flex flex-col gap-2">
+          <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">{title}</h3>
+          <ul className="flex flex-col gap-2">
+            {order[id].map((item, index, list) => {
+              const name = tNav(item.key as Parameters<typeof tNav>[0]);
+              const pinned = item.key === PINNED_NAV_KEY;
+              return (
+                <li
+                  key={item.key}
+                  className={cn(
+                    "flex flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border border-border bg-surface p-3 transition-opacity",
+                    !item.enabled && "opacity-60",
+                  )}
                 >
-                  <ChevronUp className="size-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => move(index, 1)}
-                  disabled={index === data.length - 1 || mutation.isPending}
-                  aria-label={t("moveDown", { name })}
-                  className="tap-target inline-flex items-center justify-center rounded-xl text-ink transition-colors hover:bg-bg disabled:pointer-events-none disabled:opacity-30"
-                >
-                  <ChevronDown className="size-4" />
-                </button>
-              </div>
-              <Switch
-                checked={item.enabled}
-                onCheckedChange={(enabled) => toggle(item.key, enabled)}
-                disabled={mutation.isPending}
-                aria-label={t("toggleAria", { name })}
-              />
-            </li>
-          );
-        })}
-      </ul>
+                  <Picto name={NAV_PICTO[item.key]} size={40} />
+                  <span className="kid-body min-w-[7rem] flex-1 text-ink">{name}</span>
+                  <div className="ml-auto flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => move(id, index, -1)}
+                      disabled={index === 0 || pinned || list[index - 1]?.key === PINNED_NAV_KEY || mutation.isPending}
+                      aria-label={t("moveUp", { name })}
+                      className="tap-target inline-flex items-center justify-center rounded-xl text-ink transition-colors hover:bg-ink/5 focus-ring-kid disabled:pointer-events-none disabled:opacity-30"
+                    >
+                      <ChevronUp className="size-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => move(id, index, 1)}
+                      disabled={index === list.length - 1 || pinned || mutation.isPending}
+                      aria-label={t("moveDown", { name })}
+                      className="tap-target inline-flex items-center justify-center rounded-xl text-ink transition-colors hover:bg-ink/5 focus-ring-kid disabled:pointer-events-none disabled:opacity-30"
+                    >
+                      <ChevronDown className="size-5" />
+                    </button>
+                    <Switch
+                      checked={item.enabled}
+                      onCheckedChange={(enabled) => toggle(item.key, enabled)}
+                      disabled={mutation.isPending}
+                      aria-label={t("toggleAria", { name })}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ))}
 
-      <p className="text-xs text-muted">{t("alwaysVisibleHint")}</p>
+      <p className="text-sm text-muted">{t("alwaysVisibleHint")}</p>
 
       <AnimatePresence>
         {error && (
@@ -160,7 +182,7 @@ export function NavConfigCard({ adminPin }: NavConfigCardProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             role="alert"
-            className="text-xs text-accent-rose"
+            className="text-xs text-danger-ink"
           >
             {error}
           </motion.p>

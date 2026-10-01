@@ -69,10 +69,10 @@ export function UpdateSuccessToast() {
           aria-live="polite"
           className="fixed left-1/2 top-4 z-[90] w-[min(420px,calc(100vw-2rem))] -translate-x-1/2"
         >
-          <GlassCard className="flex items-start gap-3 border-accent-mint/40 p-4 shadow-lift">
+          <GlassCard className="flex items-start gap-3 border-success/40 p-4 shadow-lift">
             <span
               aria-hidden
-              className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-accent-mint/30 text-ink"
+              className="inline-flex size-10 shrink-0 items-center justify-center rounded-full bg-success-tint text-success-ink"
             >
               <CheckCircle2 className="size-5" />
             </span>

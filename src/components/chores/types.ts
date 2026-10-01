@@ -1,4 +1,4 @@
-import type { MemberColor } from "@/lib/utils";
+import type { ChoreTimeOfDay } from "@/lib/enums";
 
 export type ChoreMember = {
   id: string;
@@ -16,6 +16,7 @@ export type Chore = {
   icon: string | null;
   points: number;
   rrule: string | null;
+  timeOfDay: ChoreTimeOfDay | null;
   createdAt: string;
 };
 
@@ -24,12 +25,59 @@ export type WeeklyTotals = {
   completions: number;
 };
 
+export type ChoreCompletionToday = {
+  id: string;
+  choreId: string;
+  memberId: string;
+  completedAt: string;
+};
+
 export type ChoresPayload = {
   chores: Chore[];
   weekStart: string;
   weekEnd: string;
   weeklyByMember: Record<string, WeeklyTotals>;
   weeklyByChore: Record<string, WeeklyTotals>;
+  completionsToday: ChoreCompletionToday[];
+  today: { start: string; end: string };
+  /** Points collected since the member's last reset (or ever). Members without points are omitted. */
+  balanceByMember: Record<string, MemberBalance>;
+};
+
+export type MemberBalance = {
+  balance: number;
+  /** ISO time of the last reset, null if never reset. */
+  since: string | null;
+};
+
+export type PointResetRecord = {
+  id: string;
+  memberId: string;
+  /** Balance that was cleared by this reset. */
+  points: number;
+  resetAt: string;
+};
+
+export type MemberPoints = MemberBalance & {
+  memberId: string;
+  weekly: number;
+  allTime: number;
+  /** Newest first, at most 10. */
+  history: Omit<PointResetRecord, "memberId">[];
+};
+
+export type PointsOverview = {
+  members: MemberPoints[];
+};
+
+export type PointResetResponse = {
+  resets: PointResetRecord[];
+};
+
+export type PointResetUndoResponse = {
+  ok: true;
+  memberId: string;
+  balance: number;
 };
 
 export type ChoreCompletionResponse = {
@@ -49,6 +97,7 @@ export type ChoreInput = {
   icon: string | null;
   points: number;
   rrule: string | null;
+  timeOfDay?: ChoreTimeOfDay | null;
 };
 
 export const CHORE_ICONS = [
@@ -65,36 +114,3 @@ export const CHORE_ICONS = [
   "🧊",
   "🧽",
 ] as const;
-
-export const TINT_BG: Record<MemberColor, string> = {
-  peach: "bg-accent-peach/30",
-  mint: "bg-accent-mint/30",
-  sun: "bg-accent-sun/30",
-  sky: "bg-accent-sky/30",
-  lilac: "bg-accent-lilac/30",
-  rose: "bg-accent-rose/30",
-  teal: "bg-accent-teal/30",
-  sand: "bg-accent-sand/30",
-};
-
-export const TINT_BG_STRONG: Record<MemberColor, string> = {
-  peach: "bg-accent-peach/50",
-  mint: "bg-accent-mint/50",
-  sun: "bg-accent-sun/50",
-  sky: "bg-accent-sky/50",
-  lilac: "bg-accent-lilac/50",
-  rose: "bg-accent-rose/50",
-  teal: "bg-accent-teal/50",
-  sand: "bg-accent-sand/50",
-};
-
-export const TINT_BAR: Record<MemberColor, string> = {
-  peach: "bg-accent-peach",
-  mint: "bg-accent-mint",
-  sun: "bg-accent-sun",
-  sky: "bg-accent-sky",
-  lilac: "bg-accent-lilac",
-  rose: "bg-accent-rose",
-  teal: "bg-accent-teal",
-  sand: "bg-accent-sand",
-};

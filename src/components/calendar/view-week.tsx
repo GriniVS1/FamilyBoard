@@ -3,10 +3,12 @@
 import { format, isSameDay } from "date-fns";
 import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
-import { hoursInRange, isToday, weekDays } from "./date-utils";
+import { hourAt, hoursInRange, isToday, weekDays } from "./date-utils";
 import { EventBlock } from "./event-block";
 import { EventPill } from "./event-pill";
-import { layoutDayEvents, slotHeightPx } from "./layout-utils";
+import { COMPACT_LANE_PX, layoutDayEvents, maxLanesFor, slotHeightPx } from "./layout-utils";
+import { NowGutterLabel, NowLine } from "./now-line";
+import { useElementWidth } from "./use-element-width";
 import type { CalendarEvent, CalendarMember } from "./types";
 
 type ViewWeekProps = {
@@ -15,6 +17,8 @@ type ViewWeekProps = {
   membersById: Map<string, CalendarMember>;
   onSelectEvent: (event: CalendarEvent) => void;
   onSelectSlot: (day: Date, hour: number) => void;
+  /** Opens the day view at the given hour; used by the "+N" block. */
+  onOpenDay: (day: Date, hour: number) => void;
 };
 
 export function ViewWeek({
@@ -23,12 +27,16 @@ export function ViewWeek({
   membersById,
   onSelectEvent,
   onSelectSlot,
+  onOpenDay,
 }: ViewWeekProps) {
   const locale = useLocale();
   const t = useTranslations("calendar");
   const weekdayShortFmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
-  const fullDateFmt = new Intl.DateTimeFormat(locale, { dateStyle: "full" });
+  const monthShortFmt = new Intl.DateTimeFormat(locale, { month: "short" });
   const days = weekDays(anchor);
+  const nowMs = Date.now();
+  const [gridRef, gridWidth] = useElementWidth<HTMLDivElement>();
+  const columnWidth = gridWidth > 0 ? (gridWidth - 64) / 7 : 0;
   const hours = hoursInRange();
   const slotPx = slotHeightPx();
   const gridHeight = hours.length * slotPx;
@@ -39,28 +47,31 @@ export function ViewWeek({
       const en = new Date(e.endsAt);
       return isSameDay(s, day) || (s < day && en > day);
     });
-    return { day, layout: layoutDayEvents(dayEvents, day) };
+    return { day, layout: layoutDayEvents(dayEvents, day, maxLanesFor(columnWidth)) };
   });
 
   return (
-    <div className="rounded-3xl border border-border bg-surface overflow-hidden">
+    <div>
+      <div data-calendar-head className="sticky top-0 z-30 bg-surface">
       {/* Day headers */}
-      <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-border bg-bg/40">
-        <div />
+      <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] border-b border-border">
+        <div className="flex items-end justify-end px-1 pb-2 text-xs font-semibold uppercase tracking-wider text-muted">
+          {monthShortFmt.format(anchor)}
+        </div>
         {days.map((day) => (
           <div
             key={day.toISOString()}
             className={cn(
-              "px-2 py-3 text-center border-l border-border",
+              "border-l border-border px-2 py-1.5 text-center",
               isToday(day) && "bg-accent-sky/10",
             )}
           >
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted">
               {weekdayShortFmt.format(day)}
             </div>
             <div
               className={cn(
-                "mt-1 mx-auto inline-flex size-8 items-center justify-center rounded-full tabular text-sm font-medium",
+                "mx-auto mt-1 inline-flex size-9 items-center justify-center rounded-full tabular text-base font-semibold",
                 isToday(day) ? "bg-ink text-bg" : "text-ink",
               )}
             >
@@ -71,18 +82,19 @@ export function ViewWeek({
       </div>
 
       {/* All-day row */}
-      <div className="grid grid-cols-[64px_repeat(7,1fr)] border-b border-border bg-bg/20">
-        <div className="px-2 py-1 text-[10px] uppercase tracking-wider text-muted text-right">
+      <div className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] border-b border-border">
+        <div className="px-1 py-1 text-right text-xs text-muted">
           {t("allDay")}
         </div>
         {dayLayouts.map(({ day, layout }) => (
           <div
             key={day.toISOString()}
-            className="border-l border-border min-h-[32px] py-1 px-1 flex flex-col gap-0.5"
+            className="flex min-h-[32px] flex-col gap-1 border-l border-border px-1 py-1"
           >
             {layout.allDay.map((event) => (
               <EventPill
                 key={event.id}
+                narrow
                 event={event}
                 member={membersById.get(event.memberId)}
                 onSelect={onSelectEvent}
@@ -91,11 +103,14 @@ export function ViewWeek({
           </div>
         ))}
       </div>
+      </div>
 
       {/* Timed grid */}
-      <div className="overflow-x-auto">
+      <div>
         <div
-          className="grid grid-cols-[64px_repeat(7,1fr)] relative"
+          className="grid grid-cols-[64px_repeat(7,minmax(0,1fr))] relative"
+          ref={gridRef}
+          data-timed-grid
           style={{ height: `${gridHeight}px` }}
         >
           {/* Hour labels column */}
@@ -103,12 +118,16 @@ export function ViewWeek({
             {hours.map((h) => (
               <div
                 key={h}
-                className="absolute right-2 -translate-y-1/2 text-[10px] uppercase tracking-wider text-muted tabular"
+                className={cn(
+                  "absolute right-2 text-xs uppercase tracking-wider text-muted tabular",
+                  h === hours[0] ? "translate-y-1" : "-translate-y-1/2",
+                )}
                 style={{ top: `${(h - hours[0]!) * slotPx}px` }}
               >
                 {String(h).padStart(2, "0")}:00
               </div>
             ))}
+            <NowGutterLabel />
           </div>
 
           {/* 7 day columns */}
@@ -119,16 +138,18 @@ export function ViewWeek({
                 "relative border-l border-border",
                 isToday(day) && "bg-accent-sky/5",
               )}
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  onSelectSlot(day, hourAt(e.nativeEvent.offsetY, slotPx));
+                }
+              }}
             >
-              {/* hour rows */}
               {hours.map((h) => (
-                <button
+                <div
                   key={h}
-                  type="button"
-                  onClick={() => onSelectSlot(day, h)}
-                  className="absolute left-0 right-0 border-t border-border hover:bg-bg/30 transition-colors"
-                  style={{ top: `${(h - hours[0]!) * slotPx}px`, height: `${slotPx}px` }}
-                  aria-label={t("createEventAt", { time: `${String(h).padStart(2, "0")}:00` }) + " — " + fullDateFmt.format(day)}
+                  aria-hidden
+                  className="pointer-events-none absolute left-0 right-0 border-t border-border"
+                  style={{ top: `${(h - hours[0]!) * slotPx}px` }}
                 />
               ))}
               {/* events */}
@@ -142,9 +163,13 @@ export function ViewWeek({
                   height={p.height}
                   laneIndex={p.laneIndex}
                   laneCount={p.laneCount}
-                  compact={p.laneCount > 1}
+                  compact={columnWidth > 0 && columnWidth / p.laneCount < COMPACT_LANE_PX}
+                  past={new Date(p.event.endsAt).getTime() <= nowMs}
+                  hidden={p.hidden}
+                  onSelectHidden={(list) => onOpenDay(day, new Date(list[0]!.startsAt).getHours())}
                 />
               ))}
+              {isToday(day) && <NowLine />}
             </div>
           ))}
         </div>

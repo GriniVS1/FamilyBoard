@@ -2,6 +2,7 @@
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { forwardRef, type ComponentPropsWithoutRef, type ElementRef } from "react";
 import { cn } from "@/lib/utils";
 
@@ -31,37 +32,41 @@ const DialogContent = forwardRef<
   ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
     showClose?: boolean;
   }
->(({ className, children, showClose = true, ...props }, ref) => (
-  <DialogPortal>
-    <DialogOverlay />
-    <DialogPrimitive.Content
-      ref={ref}
-      className={cn(
-        "fixed left-1/2 top-1/2 z-50 w-[min(640px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2",
-        "max-h-[calc(100dvh-2rem)] overflow-y-auto",
-        "rounded-3xl border border-border bg-surface shadow-lift",
-        "p-6 focus:outline-none",
-        "data-[state=open]:animate-slide-up",
-        className,
-      )}
-      {...props}
-    >
-      {children}
-      {showClose && (
-        <DialogPrimitive.Close
-          className={cn(
-            "absolute right-4 top-4 size-10 inline-flex items-center justify-center rounded-full",
-            "text-muted hover:bg-bg hover:text-ink transition-colors",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
-          )}
-          aria-label="Close"
-        >
-          <X className="size-5" />
-        </DialogPrimitive.Close>
-      )}
-    </DialogPrimitive.Content>
-  </DialogPortal>
-));
+>(({ className, children, showClose = true, ...props }, ref) => {
+  const tCommon = useTranslations("common");
+  return (
+    <DialogPortal>
+      <DialogOverlay />
+      <DialogPrimitive.Content
+        ref={ref}
+        aria-describedby={undefined}
+        className={cn(
+          "fixed left-1/2 top-1/2 z-50 w-[min(640px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2",
+          "max-h-[calc(100dvh-2rem)] overflow-y-auto",
+          "rounded-3xl border border-border bg-surface shadow-lift",
+          "p-6 focus:outline-none",
+          "data-[state=open]:animate-slide-up",
+          className,
+        )}
+        {...props}
+      >
+        {children}
+        {showClose && (
+          <DialogPrimitive.Close
+            className={cn(
+              "absolute right-2 top-2 z-10 inline-flex size-14 items-center justify-center rounded-full",
+              "text-muted transition-colors hover:bg-ink/5 hover:text-ink",
+              "focus-ring-kid",
+            )}
+            aria-label={tCommon("close")}
+          >
+            <X className="size-6" />
+          </DialogPrimitive.Close>
+        )}
+      </DialogPrimitive.Content>
+    </DialogPortal>
+  );
+});
 DialogContent.displayName = "DialogContent";
 
 const DialogTitle = forwardRef<

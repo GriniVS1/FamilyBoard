@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
 import { useOskField } from "@/hooks/use-osk-field";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,8 @@ type GroceryRowProps = {
 };
 
 export function GroceryRow({ item, onToggle, onPatch, onDelete }: GroceryRowProps) {
+  const t = useTranslations("meals");
+  const tCommon = useTranslations("common");
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(item.name);
   const [editQty, setEditQty] = useState(item.quantity ?? "");
@@ -47,29 +50,30 @@ export function GroceryRow({ item, onToggle, onPatch, onDelete }: GroceryRowProp
               if (e.key === "Enter") commitEdit();
               if (e.key === "Escape") setEditing(false);
             }}
-            className="flex-1 bg-transparent text-sm text-ink focus:outline-none"
+            className="flex-1 bg-transparent text-base text-ink"
             {...bind("name")}
           />
           <input
             value={editQty}
             onChange={(e) => setEditQty(e.target.value)}
-            placeholder="qty"
-            className="w-14 bg-transparent text-sm text-muted focus:outline-none tabular text-right"
+            placeholder={t("recipe.quantity")}
+            className="w-20 bg-transparent text-base text-muted tabular text-right"
             {...bind("quantity")}
           />
           <input
             value={editUnit}
             onChange={(e) => setEditUnit(e.target.value)}
-            placeholder="unit"
-            className="w-14 bg-transparent text-sm text-muted focus:outline-none text-right"
+            placeholder={t("recipe.unit")}
+            className="w-20 bg-transparent text-base text-muted text-right"
             {...bind("unit")}
           />
           <button
             type="button"
             onClick={commitEdit}
-            className="tap-target inline-flex items-center justify-center rounded-full text-muted hover:text-ink transition-colors"
+            aria-label={tCommon("save")}
+            className="tap-target inline-flex items-center justify-center rounded-full text-ink transition-colors focus-ring-kid"
           >
-            <Check className="size-4" />
+            <Check className="size-5" />
           </button>
         </div>
         <InlineKeyboardPanel
@@ -104,25 +108,29 @@ export function GroceryRow({ item, onToggle, onPatch, onDelete }: GroceryRowProp
         item.checked ? "bg-bg opacity-60" : "bg-surface",
       )}
     >
-      <CheckButton checked={item.checked} onToggle={() => onToggle(item)} />
+      <CheckButton
+        checked={item.checked}
+        onToggle={() => onToggle(item)}
+        label={item.checked ? t("grocery.uncheck") : t("grocery.check")}
+      />
 
       <button
         type="button"
         onDoubleClick={() => setEditing(true)}
         onClick={() => setEditing(true)}
-        className="flex-1 flex items-center gap-2 text-left min-h-12"
-        aria-label={`Edit ${item.name}`}
+        className="flex min-h-12 flex-1 items-center gap-2 rounded-xl text-left focus-ring-kid"
+        aria-label={t("grocery.editItem", { name: item.name })}
       >
         <span
           className={cn(
-            "text-sm font-medium",
+            "kid-body",
             item.checked ? "line-through text-muted" : "text-ink",
           )}
         >
           {item.name}
         </span>
         {(item.quantity || item.unit) && (
-          <span className="tabular text-xs text-muted">
+          <span className="tabular text-sm text-muted">
             {item.quantity} {item.unit}
           </span>
         )}
@@ -131,10 +139,10 @@ export function GroceryRow({ item, onToggle, onPatch, onDelete }: GroceryRowProp
       <button
         type="button"
         onClick={() => onDelete(item.id)}
-        className="tap-target inline-flex items-center justify-center rounded-full text-muted hover:text-accent-rose transition-colors"
-        aria-label={`Delete ${item.name}`}
+        className="tap-target inline-flex items-center justify-center rounded-full bg-danger-tint text-danger-ink transition-colors focus-ring-kid"
+        aria-label={t("grocery.deleteItem", { name: item.name })}
       >
-        <Trash2 className="size-4" />
+        <Trash2 className="size-5" />
       </button>
     </motion.div>
   );
@@ -143,9 +151,11 @@ export function GroceryRow({ item, onToggle, onPatch, onDelete }: GroceryRowProp
 function CheckButton({
   checked,
   onToggle,
+  label,
 }: {
   checked: boolean;
   onToggle: () => void;
+  label: string;
 }) {
   return (
     <motion.button
@@ -153,14 +163,18 @@ function CheckButton({
       onClick={onToggle}
       whileTap={{ scale: 0.85 }}
       transition={{ type: "spring", stiffness: 500, damping: 25 }}
-      className={cn(
-        "size-6 shrink-0 rounded-full border-2 flex items-center justify-center transition-colors",
-        checked
-          ? "border-accent-mint bg-accent-mint/80 text-bg"
-          : "border-border bg-surface text-transparent hover:border-accent-mint/60",
-      )}
-      aria-label={checked ? "Uncheck" : "Check"}
+      className="tap-target inline-flex shrink-0 items-center justify-center rounded-full focus-ring-kid"
+      aria-label={label}
+      aria-pressed={checked}
     >
+      <span
+        className={cn(
+          "flex size-8 items-center justify-center rounded-full border-[3px] transition-colors duration-kid",
+          checked
+            ? "border-accent-mint bg-accent-mint text-on-accent"
+            : "border-muted bg-surface text-transparent",
+        )}
+      >
       <AnimatePresence>
         {checked && (
           <motion.span
@@ -170,10 +184,11 @@ function CheckButton({
             exit={{ scale: 0, opacity: 0 }}
             transition={{ type: "spring", stiffness: 600, damping: 20 }}
           >
-            <Check className="size-3.5" strokeWidth={3} />
+            <Check className="size-5" strokeWidth={3.5} />
           </motion.span>
         )}
       </AnimatePresence>
+      </span>
     </motion.button>
   );
 }

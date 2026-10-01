@@ -72,8 +72,8 @@ export function MealDialog({
         memberId: memberId || undefined,
       });
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon("error"));
+    } catch {
+      setError(tCommon("error"));
     } finally {
       setSaving(false);
     }
@@ -85,8 +85,8 @@ export function MealDialog({
     try {
       await onDelete();
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon("error"));
+    } catch {
+      setError(tCommon("error"));
     } finally {
       setSaving(false);
     }
@@ -97,7 +97,7 @@ export function MealDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>
+        <DialogTitle className="pr-14">
           {existing ? t("plan.edit") : t("plan.addMeal")} — {slotLabel}
         </DialogTitle>
 
@@ -177,18 +177,17 @@ export function MealDialog({
           </div>
 
           {error && (
-            <p className="text-sm text-accent-rose">{error}</p>
+            <p role="alert" className="text-sm text-danger-ink">{error}</p>
           )}
 
           <div className="flex items-center justify-between gap-3 pt-1">
             {onDelete ? (
               <Button
-                variant="ghost"
+                variant="danger"
                 onClick={handleDelete}
                 disabled={saving}
-                className="text-accent-rose hover:text-accent-rose"
               >
-                <Trash2 className="size-4" />
+                <Trash2 className="size-5" />
                 {tCommon("delete")}
               </Button>
             ) : (

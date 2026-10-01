@@ -279,7 +279,7 @@ export function PairDeviceDialog({
                 </div>
 
                 {error && (
-                  <p role="alert" className="text-sm text-accent-rose">
+                  <p role="alert" className="text-sm text-danger-ink">
                     {error}
                   </p>
                 )}
@@ -323,7 +323,7 @@ export function PairDeviceDialog({
 
                 {isExpired ? (
                   <div className="flex flex-col items-center gap-4 py-4">
-                    <p className="text-base font-medium text-accent-rose">
+                    <p className="text-base font-medium text-danger-ink">
                       {t("expired")}
                     </p>
                     <Button
@@ -364,7 +364,7 @@ export function PairDeviceDialog({
                           className="inline-flex size-12 items-center justify-center rounded-full border border-border bg-surface text-muted transition-colors hover:bg-bg hover:text-ink tap-target"
                         >
                           {copied ? (
-                            <Check className="size-4 text-accent-mint" />
+                            <Check className="size-4 text-success-ink" />
                           ) : (
                             <Copy className="size-4" />
                           )}
@@ -373,7 +373,7 @@ export function PairDeviceDialog({
                       {copied && (
                         <p
                           role="status"
-                          className="text-center text-xs text-accent-mint"
+                          className="text-center text-xs text-success-ink"
                         >
                           {t("copied")}
                         </p>

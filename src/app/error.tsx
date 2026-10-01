@@ -1,7 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
-import { Button } from "@/components/shared/button";
+import { useTranslations } from "next-intl";
+import { ErrorState } from "@/components/kids/state-views";
+import { Picto } from "@/components/pictos";
+import { buttonVariants } from "@/components/shared/button";
+import { cn } from "@/lib/utils";
 
 type ErrorProps = {
   error: Error & { digest?: string };
@@ -9,24 +14,22 @@ type ErrorProps = {
 };
 
 export default function GlobalError({ error, reset }: ErrorProps) {
+  const t = useTranslations("nav");
+
   useEffect(() => {
     console.error(error);
   }, [error]);
 
   return (
-    <main className="min-h-dvh flex items-center justify-center bg-bg p-6">
-      <div className="card-soft w-full max-w-md p-8">
-        <h1 className="font-display text-3xl tracking-tight text-ink">
-          Something went sideways
-        </h1>
-        <p className="mt-2 text-muted">
-          We hit a snag loading this page. Try again — and if it keeps
-          happening, check the logs.
-        </p>
-        <div className="mt-6 flex justify-end">
-          <Button onClick={() => reset()}>Try again</Button>
-        </div>
-      </div>
+    <main className="flex min-h-dvh flex-col items-center justify-center gap-5 bg-bg p-6">
+      <ErrorState onRetry={reset} className="w-full max-w-md" />
+      <Link
+        href="/"
+        className={cn(buttonVariants({ variant: "secondary", size: "kid" }), "gap-3 pl-5")}
+      >
+        <Picto name="nav-home" size={32} />
+        {t("dashboard")}
+      </Link>
     </main>
   );
 }

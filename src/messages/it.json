@@ -33,17 +33,34 @@
     "noAuthor": "Nessun autore",
     "admin": "Admin",
     "member": "Membro",
-    "theme": "Tema"
+    "theme": "Tema",
+    "all": "Tutti",
+    "selectColor": "Scegli il colore {color}",
+    "colors": {
+      "peach": "Pesca",
+      "mint": "Menta",
+      "sun": "Sole",
+      "sky": "Cielo",
+      "lilac": "Lilla",
+      "rose": "Rosa",
+      "teal": "Turchese",
+      "sand": "Sabbia"
+    },
+    "backspace": "Cancella l'ultima cifra"
   },
   "nav": {
-    "dashboard": "Dashboard",
+    "dashboard": "Oggi",
     "calendar": "Calendario",
     "meals": "Pasti",
     "chores": "Faccende",
     "todos": "Da fare",
     "notes": "Note",
     "photos": "Foto",
-    "settings": "Impostazioni"
+    "settings": "Impostazioni",
+    "more": "Altro",
+    "primary": "Navigazione principale",
+    "sidebar": "Sezioni",
+    "bottom": "Sezioni"
   },
   "shell": {
     "currentTime": "Ora attuale"
@@ -179,19 +196,23 @@
       "today": {
         "title": "Oggi",
         "empty": "Niente in programma. Goditi la giornata.",
-        "noEventsToday": "Niente in arrivo",
-        "couldNotLoad": "Impossibile caricare gli eventi."
+        "couldNotLoad": "Impossibile caricare gli eventi.",
+        "now": "Adesso",
+        "morning": "Mattina",
+        "day": "Giorno",
+        "evening": "Sera"
       },
       "chores": {
         "title": "Faccende",
-        "completionsToday": "completate oggi",
-        "weeklyProgress": "Progresso settimanale",
-        "stars": "stelle",
-        "noChores": "Nessuna faccenda — configurale in /faccende.",
-        "markDone": "Segna come fatto",
-        "noChoresInTab": "Nessuna faccenda da registrare. Aggiungine nella scheda Faccende.",
-        "markDoneFor": "Segna una faccenda come fatta per {name}",
-        "couldNotLoad": "Impossibile caricare le faccende."
+        "openFor": "{name}: {count, plural, one {# faccenda} other {# faccende}} da fare",
+        "allDoneFor": "{name}: tutto fatto",
+        "nightFor": "{name}: ora di dormire",
+        "pauseFor": "{name}: più tardi",
+        "noChoresFor": "{name}: nessuna faccenda",
+        "noMembers": "Nessuna persona aggiunta.",
+        "unknownFor": "{name}: faccende non caricate",
+        "anyoneFor": "Per tutti: {count, plural, one {# faccenda} other {# faccende}} da fare",
+        "stars": "{count, plural, one {# stella} other {# stelle}}"
       },
       "todos": {
         "title": "Da fare",
@@ -202,7 +223,7 @@
       },
       "notes": {
         "title": "Note appuntate",
-        "empty": "Nessuna nota appuntata. Appunta una nota in /note.",
+        "empty": "Nessuna nota appuntata.",
         "openAll": "Vedi tutto",
         "couldNotLoad": "Impossibile caricare le note.",
         "pinned": "Appuntato",
@@ -220,7 +241,18 @@
         "notConfigured": "Imposta la tua posizione per vedere le previsioni.",
         "openSettings": "Apri Impostazioni",
         "setLocation": "Imposta un luogo nelle Impostazioni",
-        "couldNotLoad": "Impossibile caricare il meteo."
+        "couldNotLoad": "Impossibile caricare il meteo.",
+        "conditions": {
+          "clear": "Sereno",
+          "clearNight": "Notte serena",
+          "partly": "Parzialmente nuvoloso",
+          "partlyNight": "Parzialmente nuvoloso",
+          "cloudy": "Nuvoloso",
+          "fog": "Nebbia",
+          "rain": "Pioggia",
+          "snow": "Neve",
+          "thunder": "Temporale"
+        }
       }
     },
     "updateSuccess": {
@@ -322,51 +354,85 @@
     "loading": "Caricamento…",
     "couldNotLoad": "Impossibile caricare gli eventi.",
     "nextHours": "Prossime ore",
-    "nextDays": "Prossimi giorni"
+    "nextDays": "Prossimi giorni",
+    "everyone": "Tutti",
+    "showOnly": "Mostra solo {name}",
+    "viewSwitch": "Vista",
+    "eventDeleted": "Evento eliminato"
   },
   "chores": {
     "title": "Faccende",
     "addChore": "Nuova faccenda",
-    "weeklyProgress": "Progresso settimanale",
-    "completionsToday": "completate oggi",
-    "stars": "questa settimana",
-    "noMember": "Nessun membro assegnato",
-    "anyone": "Chiunque può farlo",
-    "anyoneSub": "Tocca per registrare — chi guadagna le stelle?",
-    "addChoreFor": "Aggiungi faccenda per {name}",
-    "addUnassigned": "Aggiungi faccenda non assegnata",
-    "addFirst": "Aggiungi una faccenda",
-    "thisWeek": "questa settimana",
+    "addChoreFor": "Aggiungi una faccenda per {name}",
+    "addUnassigned": "Aggiungi una faccenda per tutti",
+    "anyone": "Per tutti",
+    "all": "Tutti",
+    "allA11y": "Mostra tutti",
+    "focusOn": "Mostra solo {name}",
+    "starsBalance": "{count, plural, one {# stella} other {# stelle}}",
     "timesThisWeek": "{count}× questa settimana",
-    "emptyTitle": "Nessuna faccenda",
-    "emptyDesc": "Imposta qualche piccolo obiettivo per la settimana. Le stelle portano sorrisi.",
-    "createFirst": "Crea la tua prima faccenda",
-    "whoDidIt": "Chi l'ha fatto?",
-    "whoDidItDesc": "{title} — scegli il membro della famiglia che ha guadagnato le stelle.",
-    "couldNotLog": "Impossibile registrare la stella.",
+    "emptyTitle": "Ancora nessuna faccenda",
+    "emptyHint": "Tocca «Modifica» in alto per creare delle faccende.",
     "couldNotLoad": "Impossibile caricare le faccende.",
+    "whoTitle": "Chi l’ha fatto?",
+    "whoPick": "{name} l’ha fatto",
+    "close": "Chiudi",
+    "celebrateSr": "{name} ha finito tutto oggi!",
+    "card": {
+      "label": "{title}, {points, plural, one {# stella} other {# stelle}}",
+      "retry": "{title}: riprova",
+      "edit": "Modifica {title}",
+      "doneMini": "{title}: completata. Tocca per annullare"
+    },
+    "group": {
+      "collapse": "Comprimi {name}",
+      "expand": "Espandi {name}",
+      "progress": "{done} su {total} completate"
+    },
+    "state": {
+      "allDone": "Tutto fatto!",
+      "night": "Ora di dormire",
+      "pause": "Più tardi"
+    },
+    "column": {
+      "empty": "Nessuna faccenda"
+    },
+    "toast": {
+      "stars": "{name} riceve {count, plural, one {# stella} other {# stelle}}"
+    },
     "dialog": {
       "newTitle": "Nuova faccenda",
       "editTitle": "Modifica faccenda",
-      "name": "Titolo",
-      "points": "Stelle",
-      "frequency": "Frequenza",
-      "frequencyOptions": {
-        "daily": "Giornaliero",
-        "weekly": "Settimanale",
-        "once": "Una volta"
+      "previewTitle": "Faccenda",
+      "sectionPicture": "Immagine",
+      "sectionWho": "Chi?",
+      "sectionWhen": "Quando?",
+      "sectionStars": "Stelle",
+      "sectionTitle": "Titolo",
+      "cat": {
+        "body": "Corpo e bagno",
+        "dress": "Vestirsi",
+        "tidy": "Riordinare",
+        "food": "Cibo e bevande",
+        "nature": "Animali e piante",
+        "school": "Scuola e studio",
+        "help": "Aiutare"
       },
-      "member": "Chi",
+      "ownEmoji": "Simbolo personale",
+      "moreStars": "altre",
+      "starsN": "{count, plural, one {# stella} other {# stelle}}",
+      "titlePlaceholder": "es. Svuotare la lavastoviglie",
       "delete": "Elimina",
-      "titleRequired": "Dai un titolo alla faccenda.",
-      "deleteConfirm": "Eliminare questa faccenda? Le stelle passate rimangono.",
-      "iconLabel": "Icona",
-      "noIcon": "Nessuna",
+      "deleteTitle": "Eliminare la faccenda? Anche le stelle guadagnate con essa vengono rimosse.",
       "cancel": "Annulla",
       "save": "Salva",
-      "couldNotSave": "Impossibile salvare.",
-      "couldNotDelete": "Impossibile eliminare."
-    }
+      "couldNotSave": "Non ha funzionato. Riprova.",
+      "couldNotDelete": "Eliminazione non riuscita."
+    },
+    "anyoneChip": "{title}: per tutti, tocca per registrare",
+    "anyoneMore": "Mostra tutte le faccende per tutti",
+    "anyoneGo": "Vai alle faccende per tutti",
+    "undoTask": "Annulla: {title}"
   },
   "todos": {
     "title": "Da fare",
@@ -385,7 +451,10 @@
     "couldNotUpdate": "Impossibile aggiornare.",
     "couldNotDelete": "Impossibile eliminare.",
     "couldNotLoad": "Impossibile caricare le attività.",
-    "markDone": "Segna {title} come completato"
+    "markDone": "Segna {title} come completato",
+    "deleteConfirm": "Eliminare «{title}»?",
+    "deleted": "«{title}» eliminato",
+    "couldNotRestore": "Impossibile ripristinarlo."
   },
   "notes": {
     "title": "Note",
@@ -412,7 +481,9 @@
       "couldNotSave": "Impossibile salvare.",
       "couldNotDelete": "Impossibile eliminare.",
       "writeFirst": "Scrivi qualcosa prima."
-    }
+    },
+    "deleted": "Nota eliminata",
+    "couldNotRestore": "Impossibile ripristinarla."
   },
   "photos": {
     "title": "Foto",
@@ -466,7 +537,8 @@
       "maxReachedHint": "Raggiunto il massimo di {max} membri.",
       "remove": "Rimuovi membro",
       "noMembers": "Nessun membro ancora.",
-      "editMember": "Modifica {name}"
+      "editMember": "Modifica {name}",
+      "deleteConfirm": "Rimuovere «{name}»?"
     },
     "calendarConnectViaApp": "Collega i calendari (Google, Outlook, CalDAV) dall'app FamilyBoard sul tuo telefono.",
     "google": {
@@ -595,12 +667,14 @@
     },
     "navConfig": {
       "title": "Navigazione",
-      "description": "Scegli quali funzioni compaiono nel menu e in quale ordine.",
-      "alwaysVisibleHint": "Dashboard e Impostazioni sono sempre visibili.",
+      "description": "Scegli quali sezioni compaiono nel menu e in quale ordine. Le sezioni dei bambini vengono sempre prima di quelle degli adulti.",
+      "alwaysVisibleHint": "«Oggi» è sempre per primo, «Faccende» subito dopo e «Impostazioni» per ultimo. «Oggi» e «Impostazioni» sono sempre visibili.",
       "moveUp": "Sposta {name} in alto",
       "moveDown": "Sposta {name} in basso",
       "toggleAria": "Mostra {name} nella navigazione",
-      "saveError": "Impossibile salvare l'ordine di navigazione. Riprova."
+      "saveError": "Impossibile salvare l'ordine di navigazione. Riprova.",
+      "groupKids": "Sezioni dei bambini",
+      "groupAdults": "Sezioni degli adulti"
     },
     "caldav": {
       "title": "Apple / CalDAV",
@@ -659,7 +733,8 @@
         "expired": "Sessione scaduta. Riprova.",
         "generic": "Si è verificato un errore inatteso.",
         "denied": "Accesso negato."
-      }
+      },
+      "disconnectConfirm": "Scollegare questo calendario Outlook?"
     },
     "push": {
       "title": "Notifiche push",
@@ -757,7 +832,10 @@
         "error": "Impossibile creare un codice. Riprova.",
         "unavailable": "L'accesso remoto non è connesso al momento."
       }
-    }
+    },
+    "appearance": "Aspetto",
+    "appearanceDescription": "Chiaro o scuro, solo per questo schermo.",
+    "familyNamePlaceholder": "es. Famiglia Rossi"
   },
   "meals": {
     "title": "Pasti",
@@ -829,7 +907,14 @@
         "meat": "Carne e pesce",
         "drinks": "Bevande",
         "other": "Altro"
-      }
+      },
+      "check": "Spunta",
+      "uncheck": "Togli la spunta",
+      "editItem": "Modifica {name}",
+      "deleteItem": "Elimina {name}",
+      "removeIngredient": "Rimuovi ingrediente",
+      "deleted": "«{name}» rimosso",
+      "clearConfirm": "Rimuovere gli articoli spuntati?"
     }
   },
   "screensaver": {
@@ -884,7 +969,9 @@
     "statusActive": "Attivo",
     "statusTrial": "Prova",
     "statusExpired": "Scaduto",
-    "statusUnlicensed": "Senza licenza"
+    "statusUnlicensed": "Senza licenza",
+    "graceBannerShort": "Prova: ancora {days, plural, =1 {1 giorno} other {# giorni}}",
+    "softBannerShort": "Scrittura bloccata"
   },
   "errors": {
     "generic": "Qualcosa è andato storto.",
@@ -910,5 +997,113 @@
     "reasonLabel": "Motivo: {reason}",
     "google": "Google",
     "microsoft": "Microsoft"
+  },
+  "pictos": {
+    "water": "Bere acqua",
+    "teeth": "Lavare i denti",
+    "tidy-toys": "Mettere via i giochi",
+    "get-dressed": "Vestirsi",
+    "make-bed": "Rifare il letto",
+    "set-table": "Apparecchiare",
+    "feed-dog": "Dare da mangiare al cane",
+    "feed-cat": "Dare da mangiare al gatto",
+    "trash": "Portare fuori la spazzatura",
+    "water-plants": "Annaffiare le piante",
+    "homework": "Compiti",
+    "read": "Leggere",
+    "laundry": "Piegare il bucato",
+    "wash-clothes": "Fare il bucato",
+    "dishes": "Lavare i piatti",
+    "wash-hands": "Lavarsi le mani",
+    "bath": "Bagnetto",
+    "pajamas": "Mettere il pigiama",
+    "backpack": "Preparare lo zaino",
+    "sweep": "Spazzare",
+    "vacuum": "Passare l'aspirapolvere",
+    "breakfast": "Mangiare",
+    "medicine": "Prendere la medicina",
+    "music": "Esercitarsi con lo strumento",
+    "tidy-room": "Riordinare la camera",
+    "shoes": "Mettere via le scarpe",
+    "shopping": "Fare la spesa",
+    "nav-home": "Home",
+    "nav-calendar": "Calendario",
+    "nav-meals": "Pasti",
+    "nav-tasks": "Faccende",
+    "nav-todos": "Da fare",
+    "nav-notes": "Note",
+    "nav-photos": "Foto",
+    "nav-settings": "Impostazioni",
+    "nav-more": "Altro",
+    "tod-morning": "Mattina",
+    "tod-day": "Giorno",
+    "tod-evening": "Sera",
+    "tod-night": "Notte",
+    "tod-anytime": "Quando vuoi",
+    "celebrate": "Bravo!",
+    "oops": "Ops",
+    "relax": "Tutto fatto",
+    "star": "Stella",
+    "undo": "Annulla",
+    "next": "Prossimo",
+    "pause": "Più tardi",
+    "event-school": "Scuola",
+    "event-kindergarten": "Scuola dell'infanzia",
+    "event-soccer": "Calcio",
+    "event-swim": "Nuoto",
+    "event-doctor": "Medico",
+    "event-birthday": "Compleanno",
+    "event-dinner": "Cena",
+    "event-music": "Lezione di musica",
+    "event-play": "Giocare",
+    "event-trip": "Gita",
+    "event-bike": "Bicicletta"
+  },
+  "kids": {
+    "undo": "Annulla",
+    "retry": "Riprova",
+    "dismiss": "Chiudi",
+    "add": "Aggiungi",
+    "errorGeneric": "Non ha funzionato.",
+    "offline": "Nessuna connessione",
+    "loading": "Caricamento…"
+  },
+  "parentMode": {
+    "edit": "Modifica",
+    "pinTitle": "PIN genitori",
+    "pinHint": "Inserisci il PIN per modificare faccende e punti",
+    "wrongPin": "PIN errato. Riprova.",
+    "tooMany": "Troppi tentativi. Attendi un momento.",
+    "couldNotVerify": "Impossibile verificare il PIN.",
+    "banner": "Modalità genitori",
+    "done": "Fatto",
+    "remaining": "ancora {time}"
+  },
+  "points": {
+    "button": "Punti",
+    "title": "Punti",
+    "hint": "Chi ha raccolto quante stelle?",
+    "empty": "Nessuna persona aggiunta.",
+    "couldNotLoad": "Impossibile caricare i punti.",
+    "stars": "{count, plural, one {# stella} other {# stelle}}",
+    "week": "questa settimana +{count}",
+    "total": "{count} in totale",
+    "sinceDate": "dal {date}",
+    "sinceStart": "dall’inizio",
+    "history": "Cronologia",
+    "historyReset": "azzerate",
+    "historyEntry": "{date}: {count, plural, one {# stella azzerata} other {# stelle azzerate}}",
+    "reset": "Azzera",
+    "resetFor": "Azzera: {name}",
+    "resetAll": "Azzera tutti",
+    "confirmOne": "Azzerare le stelle di {name}?",
+    "confirmAll": "Azzerare le stelle di tutti?",
+    "confirmHint": "Le faccende completate restano salvate.",
+    "toast": {
+      "one": "{name}: {count, plural, one {# stella azzerata} other {# stelle azzerate}}",
+      "many": "{count, plural, one {# persona azzerata} other {# persone azzerate}}",
+      "undoOne": "Annulla l’azzeramento di {name}",
+      "undoMany": "Annulla l’azzeramento"
+    }
   }
 }

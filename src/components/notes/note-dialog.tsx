@@ -3,6 +3,7 @@
 import { Pin, Trash2, Users } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
 import { Button } from "@/components/shared/button";
 import {
   Dialog,
@@ -67,6 +68,7 @@ export function NoteDialog({
   const [state, setState] = useState<FormState>(() => makeState(note));
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { activeField, bind, close: closeKeyboard } = useOskField<"body">();
 
   useEffect(() => {
@@ -107,8 +109,8 @@ export function NoteDialog({
         await onCreate(payload);
       }
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("couldNotSave"));
+    } catch {
+      setError(t("couldNotSave"));
     } finally {
       setSubmitting(false);
     }
@@ -116,14 +118,13 @@ export function NoteDialog({
 
   async function handleDelete() {
     if (!note) return;
-    if (!window.confirm(tNotes("deleteConfirm"))) return;
     setSubmitting(true);
     setError(null);
     try {
       await onDelete(note.id);
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("couldNotDelete"));
+    } catch {
+      setError(t("couldNotDelete"));
     } finally {
       setSubmitting(false);
     }
@@ -249,7 +250,7 @@ export function NoteDialog({
           </button>
 
           {error && (
-            <p role="alert" className="text-sm text-accent-rose">
+            <p role="alert" className="text-sm text-danger-ink">
               {error}
             </p>
           )}
@@ -259,12 +260,11 @@ export function NoteDialog({
               {isEdit && (
                 <Button
                   type="button"
-                  variant="ghost"
-                  onClick={handleDelete}
+                  variant="danger"
+                  onClick={() => setConfirmOpen(true)}
                   disabled={submitting}
-                  className="text-accent-rose hover:bg-accent-rose/10"
                 >
-                  <Trash2 className="size-4" />
+                  <Trash2 className="size-5" />
                   {t("delete")}
                 </Button>
               )}
@@ -285,6 +285,13 @@ export function NoteDialog({
           </div>
         </form>
       </DialogContent>
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={tNotes("deleteConfirm")}
+        picto="nav-notes"
+        onConfirm={handleDelete}
+      />
     </Dialog>
   );
 }

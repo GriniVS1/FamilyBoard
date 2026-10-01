@@ -1,7 +1,13 @@
-import type { Member } from "@prisma/client";
+import type { Member, Prisma, PrismaClient } from "@prisma/client";
+import type {
+  MemberBalance,
+  MemberPoints,
+  PointsOverview,
+} from "@/components/chores/types";
 import { db } from "./db";
 import { env, googleConfigured } from "./env";
 import { isAdminPinSet } from "./pin";
+import { computeBalance } from "./points.ts";
 
 export type WeeklyChoreTotals = { points: number; completions: number };
 export type WeeklyChoreSummary = {
@@ -33,6 +39,62 @@ export function getCurrentWeekRange(now: Date = new Date()): {
   );
   const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
   return { start, end };
+}
+
+/**
+ * Local-timezone day boundaries: midnight today -> midnight tomorrow (exclusive).
+ * Single source of truth so wall and mobile agree on what "today" means.
+ */
+export function getTodayRange(now: Date = new Date()): {
+  start: Date;
+  end: Date;
+} {
+  const start = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    0,
+    0,
+    0,
+    0,
+  );
+  const end = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0,
+    0,
+    0,
+    0,
+  );
+  return { start, end };
+}
+
+export type ChoreCompletionToday = {
+  id: string;
+  choreId: string;
+  memberId: string;
+  completedAt: string;
+};
+
+export async function getChoreCompletionsTodayForFamily(
+  familyId: string,
+): Promise<ChoreCompletionToday[]> {
+  const { start, end } = getTodayRange();
+  const rows = await db.choreCompletion.findMany({
+    where: {
+      completedAt: { gte: start, lt: end },
+      chore: { familyId },
+    },
+    orderBy: { completedAt: "asc" },
+    select: { id: true, choreId: true, memberId: true, completedAt: true },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    choreId: r.choreId,
+    memberId: r.memberId,
+    completedAt: r.completedAt.toISOString(),
+  }));
 }
 
 /**
@@ -96,6 +158,179 @@ export async function getWeeklyTotalsForMember(
   let points = 0;
   for (const c of completions) points += c.chore.points;
   return { points, completions: completions.length };
+}
+
+type DbClient = PrismaClient | Prisma.TransactionClient;
+
+export type PointsBalance = { balance: number; since: Date | null };
+
+const POINT_HISTORY_LIMIT = 10;
+
+/**
+ * Balance (points since the last reset) per member, two queries regardless of
+ * family size: the newest reset per member, then only the completions that
+ * count towards each member's current balance. With `memberIds`, every listed
+ * member is present in the result (0 / null when nothing is known); without it,
+ * only members that have a completion or a reset appear.
+ *
+ * `until` caps the counted completions (inclusive) so a reset stamped at that
+ * instant partitions the timeline exactly, even if a completion lands while the
+ * reset is being written.
+ */
+export async function getPointsBalances(
+  client: DbClient,
+  familyId: string,
+  options: { memberIds?: readonly string[]; until?: Date } = {},
+): Promise<Map<string, PointsBalance>> {
+  const { memberIds, until } = options;
+
+  const latestResets = await client.pointReset.groupBy({
+    by: ["memberId"],
+    where: {
+      member: {
+        familyId,
+        ...(memberIds ? { id: { in: [...memberIds] } } : {}),
+      },
+    },
+    _max: { resetAt: true },
+  });
+
+  const sinceByMember = new Map<string, Date>();
+  for (const row of latestResets) {
+    if (row._max.resetAt) sinceByMember.set(row.memberId, row._max.resetAt);
+  }
+  const resetMemberIds = [...sinceByMember.keys()];
+
+  const neverReset: Prisma.ChoreCompletionWhereInput = memberIds
+    ? { memberId: { in: memberIds.filter((id) => !sinceByMember.has(id)) } }
+    : { memberId: { notIn: resetMemberIds } };
+
+  const completions = await client.choreCompletion.findMany({
+    where: {
+      AND: [
+        { chore: { familyId } },
+        ...(until ? [{ completedAt: { lte: until } }] : []),
+        {
+          OR: [
+            neverReset,
+            ...resetMemberIds.map((memberId) => ({
+              memberId,
+              completedAt: { gt: sinceByMember.get(memberId) },
+            })),
+          ],
+        },
+      ],
+    },
+    select: {
+      memberId: true,
+      completedAt: true,
+      chore: { select: { points: true } },
+    },
+  });
+
+  const rowsByMember = new Map<string, { points: number; completedAt: Date }[]>();
+  for (const c of completions) {
+    const rows = rowsByMember.get(c.memberId) ?? [];
+    rows.push({ points: c.chore.points, completedAt: c.completedAt });
+    rowsByMember.set(c.memberId, rows);
+  }
+
+  const result = new Map<string, PointsBalance>();
+  const ids = new Set<string>([
+    ...(memberIds ?? []),
+    ...rowsByMember.keys(),
+    ...resetMemberIds,
+  ]);
+  for (const id of ids) {
+    const since = sinceByMember.get(id) ?? null;
+    result.set(id, {
+      balance: computeBalance(rowsByMember.get(id) ?? [], since),
+      since,
+    });
+  }
+  return result;
+}
+
+/**
+ * Balances for `GET /api/chores`. Members with nothing collected and no reset
+ * are omitted; a member that was reset stays (even at 0) so `since` is known.
+ */
+export async function getBalanceByMemberForFamily(
+  familyId: string,
+): Promise<Record<string, MemberBalance>> {
+  const balances = await getPointsBalances(db, familyId);
+  const result: Record<string, MemberBalance> = {};
+  for (const [memberId, { balance, since }] of balances) {
+    if (balance === 0 && since === null) continue;
+    result[memberId] = { balance, since: since?.toISOString() ?? null };
+  }
+  return result;
+}
+
+/**
+ * Parent overview: every member of the family (also at 0), oldest first.
+ * `weekly` reuses the weekly chore summary so it always matches `weeklyByMember`.
+ */
+export async function getPointsOverviewForFamily(
+  familyId: string,
+): Promise<PointsOverview> {
+  const members = await db.member.findMany({
+    where: { familyId },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  const memberIds = members.map((m) => m.id);
+
+  const [resets, completions, summary] = await Promise.all([
+    db.pointReset.findMany({
+      where: { memberId: { in: memberIds } },
+      orderBy: [{ resetAt: "desc" }, { id: "desc" }],
+      select: { id: true, memberId: true, points: true, resetAt: true },
+    }),
+    db.choreCompletion.findMany({
+      where: { memberId: { in: memberIds }, chore: { familyId } },
+      select: {
+        memberId: true,
+        completedAt: true,
+        chore: { select: { points: true } },
+      },
+    }),
+    getWeeklyChoreSummaryForFamily(familyId),
+  ]);
+
+  const resetsByMember = new Map<string, typeof resets>();
+  for (const reset of resets) {
+    const list = resetsByMember.get(reset.memberId) ?? [];
+    list.push(reset);
+    resetsByMember.set(reset.memberId, list);
+  }
+
+  const rowsByMember = new Map<string, { points: number; completedAt: Date }[]>();
+  for (const c of completions) {
+    const rows = rowsByMember.get(c.memberId) ?? [];
+    rows.push({ points: c.chore.points, completedAt: c.completedAt });
+    rowsByMember.set(c.memberId, rows);
+  }
+
+  const overview: MemberPoints[] = memberIds.map((memberId) => {
+    const memberResets = resetsByMember.get(memberId) ?? [];
+    const rows = rowsByMember.get(memberId) ?? [];
+    const since = memberResets[0]?.resetAt ?? null;
+    return {
+      memberId,
+      balance: computeBalance(rows, since),
+      since: since?.toISOString() ?? null,
+      weekly: summary.weeklyByMember[memberId]?.points ?? 0,
+      allTime: computeBalance(rows, null),
+      history: memberResets.slice(0, POINT_HISTORY_LIMIT).map((r) => ({
+        id: r.id,
+        points: r.points,
+        resetAt: r.resetAt.toISOString(),
+      })),
+    };
+  });
+
+  return { members: overview };
 }
 
 export async function getOrCreateInstallation() {
@@ -293,26 +528,7 @@ export async function getTodayForMember(
     };
   }
 
-  // Local-timezone day boundaries: midnight today → midnight tomorrow.
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    0,
-    0,
-    0,
-    0,
-  );
-  const endOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0,
-    0,
-    0,
-    0,
-  );
+  const { start: startOfToday, end: endOfToday } = getTodayRange();
 
   const [rawEvents, rawChores, rawTodos] = await Promise.all([
     db.event.findMany({
@@ -468,6 +684,7 @@ export type ChoreListItem = {
   icon: string | null;
   points: number;
   rrule: string | null;
+  timeOfDay: string | null;
   memberId: string | null;
   member: MemberSummary | null;
   completedToday: boolean;
@@ -482,25 +699,7 @@ export type ChoreListItem = {
 export async function getChoresForFamily(
   familyId: string,
 ): Promise<ChoreListItem[]> {
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    0,
-    0,
-    0,
-    0,
-  );
-  const endOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0,
-    0,
-    0,
-    0,
-  );
+  const { start: startOfToday, end: endOfToday } = getTodayRange();
 
   const rawChores = await db.chore.findMany({
     where: { familyId },
@@ -510,6 +709,7 @@ export async function getChoresForFamily(
       icon: true,
       points: true,
       rrule: true,
+      timeOfDay: true,
       memberId: true,
       member: { select: memberSummarySelect },
       completions: {
@@ -530,6 +730,7 @@ export async function getChoresForFamily(
       icon: ch.icon,
       points: ch.points,
       rrule: ch.rrule,
+      timeOfDay: ch.timeOfDay,
       memberId: ch.memberId,
       member: ch.member,
       completedToday: latestCompletion !== null,

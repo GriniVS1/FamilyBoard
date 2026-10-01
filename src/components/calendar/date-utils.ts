@@ -85,6 +85,12 @@ export function hoursInRange(): number[] {
   return Array.from({ length: HOUR_END - HOUR_START + 1 }, (_, i) => HOUR_START + i);
 }
 
+/** Hour of the slot under a vertical offset (px) inside the timed grid. */
+export function hourAt(offsetY: number, slotPx: number): number {
+  const hour = HOUR_START + Math.floor(offsetY / slotPx);
+  return Math.min(HOUR_END, Math.max(HOUR_START, hour));
+}
+
 export function isToday(d: Date): boolean {
   return isSameDay(d, new Date());
 }

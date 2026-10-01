@@ -53,23 +53,24 @@ function GraceBanner({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className="flex items-center gap-3 border-b border-accent-sun/40 bg-accent-sun/15 px-4 py-3"
+          className="flex items-center gap-2 border-b border-accent-sun/40 bg-accent-sun/15 px-3 py-1 sm:gap-3 sm:px-4"
         >
           <KeyRound className="size-4 shrink-0 text-ink" aria-hidden />
-          <span className="flex-1 text-sm text-ink">
-            {t("graceBanner", { days })}
+          <span className="min-w-0 flex-1 truncate text-sm text-ink">
+            <span className="sm:hidden">{t("graceBannerShort", { days })}</span>
+            <span className="hidden sm:inline">{t("graceBanner", { days })}</span>
           </span>
           <button
             type="button"
             onClick={onActivate}
-            className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-ink underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 min-h-[36px]"
+            className="inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-sm font-semibold text-ink underline underline-offset-2 hover:no-underline focus-ring-kid"
           >
-            {t("activateButton")} &rarr;
+            {t("activateButton")}<span className="hidden sm:inline"> &rarr;</span>
           </button>
           <button
             type="button"
             onClick={dismiss}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg/60 hover:text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20"
+            className="inline-flex size-12 shrink-0 items-center justify-center rounded-full text-muted hover:bg-bg/60 hover:text-ink focus-ring-kid"
             aria-label={t("dismissBanner")}
           >
             <X className="size-4" />
@@ -86,16 +87,19 @@ function SoftBanner({ onActivate }: { onActivate: () => void }) {
   return (
     <div
       role="alert"
-      className="flex items-center gap-3 border-b border-accent-rose/40 bg-accent-rose/15 px-4 py-3"
+      className="flex items-center gap-2 border-b border-accent-rose/40 bg-accent-rose/15 px-3 py-1 sm:gap-3 sm:px-4"
     >
       <AlertTriangle className="size-4 shrink-0 text-accent-rose" aria-hidden />
-      <span className="flex-1 text-sm text-ink">{t("softBanner")}</span>
+      <span className="min-w-0 flex-1 truncate text-sm text-ink">
+        <span className="sm:hidden">{t("softBannerShort")}</span>
+        <span className="hidden sm:inline">{t("softBanner")}</span>
+      </span>
       <button
         type="button"
         onClick={onActivate}
-        className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold text-accent-rose underline underline-offset-2 hover:no-underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-rose/30 min-h-[36px]"
+        className="inline-flex min-h-12 shrink-0 items-center rounded-full px-3 text-sm font-semibold text-accent-rose underline underline-offset-2 hover:no-underline focus-ring-kid"
       >
-        {t("activateButton")} &rarr;
+        {t("activateButton")}<span className="hidden sm:inline"> &rarr;</span>
       </button>
     </div>
   );

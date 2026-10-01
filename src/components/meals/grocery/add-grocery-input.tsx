@@ -43,7 +43,7 @@ export function AddGroceryInput({ onAdd }: AddGroceryInputProps) {
           placeholder={t("grocery.addPlaceholder")}
           className={cn(
             "h-14 flex-1 rounded-2xl border border-border bg-surface px-5 text-base text-ink placeholder:text-muted",
-            "transition-shadow focus:ring-2 focus:ring-ink/20",
+            "transition-colors focus:border-focus",
           )}
           {...bind("item")}
         />
@@ -51,12 +51,12 @@ export function AddGroceryInput({ onAdd }: AddGroceryInputProps) {
           type="button"
           onClick={handleSubmit}
           className={cn(
-            "tap-target size-14 flex-shrink-0 inline-flex items-center justify-center rounded-full bg-ink text-bg",
-            "hover:bg-ink/90 transition-colors",
+            "inline-flex size-14 shrink-0 items-center justify-center rounded-full",
+            "bg-accent-sky text-on-accent shadow-pop transition-colors focus-ring-kid active:shadow-press",
           )}
-          aria-label="Add item"
+          aria-label={t("grocery.addPlaceholder")}
         >
-          <Plus className="size-5" />
+          <Plus className="size-6" strokeWidth={2.75} />
         </button>
       </div>
       <InlineKeyboardPanel

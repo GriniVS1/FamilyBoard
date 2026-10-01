@@ -2,6 +2,7 @@
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Calendar as CalendarIcon, Check, Plus, Users } from "lucide-react";
+import { format } from "date-fns";
 import { useRef, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/shared/input";
@@ -17,7 +18,7 @@ type TodoInputProps = {
 };
 
 function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return format(new Date(), "yyyy-MM-dd");
 }
 
 export function TodoInput({ members, onSubmit }: TodoInputProps) {
@@ -74,7 +75,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t("addPlaceholder")}
           aria-label={t("addPlaceholder")}
-          className="flex-1 border-0 bg-transparent shadow-none focus:ring-0"
+          className="h-12 flex-1 border-0 bg-transparent px-3 text-base shadow-none sm:px-5 sm:text-lg"
           disabled={submitting}
           {...bind("title")}
         />
@@ -86,10 +87,10 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
               aria-label={t("dueDate")}
               className={cn(
                 "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
-                "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
+                "transition-colors focus-ring-kid",
                 dueDate
-                  ? "bg-accent-sky/30 text-ink"
-                  : "text-muted hover:bg-bg hover:text-ink",
+                  ? "bg-accent-sky-tint text-accent-sky-ink"
+                  : "text-muted hover:bg-ink/5 hover:text-ink",
               )}
             >
               <CalendarIcon className="size-5" />
@@ -124,7 +125,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
                       setDueDate(todayIso());
                       setDateOpen(false);
                     }}
-                    className="rounded-full px-3 py-1.5 text-xs text-ink hover:bg-bg"
+                    className="inline-flex h-12 items-center rounded-full px-4 text-sm font-medium text-ink hover:bg-ink/5 focus-ring-kid"
                   >
                     {tCommon("today")}
                   </button>
@@ -134,7 +135,7 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
                       setDueDate(null);
                       setDateOpen(false);
                     }}
-                    className="rounded-full px-3 py-1.5 text-xs text-muted hover:bg-bg"
+                    className="inline-flex h-12 items-center rounded-full px-4 text-sm font-medium text-muted hover:bg-ink/5 focus-ring-kid"
                   >
                     {t("clearDate")}
                   </button>
@@ -151,10 +152,10 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
               aria-label={t("assignMember")}
               className={cn(
                 "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
-                "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
+                "transition-colors focus-ring-kid",
                 selectedMember
                   ? ""
-                  : "text-muted hover:bg-bg hover:text-ink",
+                  : "text-muted hover:bg-ink/5 hover:text-ink",
               )}
             >
               {selectedMember ? (
@@ -187,9 +188,9 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
                       setMemberOpen(false);
                     }}
                     className={cn(
-                      "flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm",
-                      "hover:bg-bg",
-                      memberId === null && "bg-bg",
+                      "flex min-h-12 w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-base focus-ring-kid-inset",
+                      "hover:bg-ink/5",
+                      memberId === null && "bg-ink/5",
                     )}
                   >
                     <span className="inline-flex size-9 items-center justify-center rounded-full border border-border bg-bg text-ink">
@@ -208,9 +209,9 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
                         setMemberOpen(false);
                       }}
                       className={cn(
-                        "flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-sm",
-                        "hover:bg-bg",
-                        memberId === m.id && "bg-bg",
+                        "flex min-h-12 w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-base focus-ring-kid-inset",
+                        "hover:bg-ink/5",
+                        memberId === m.id && "bg-ink/5",
                       )}
                     >
                       <MemberAvatar
@@ -235,11 +236,11 @@ export function TodoInput({ members, onSubmit }: TodoInputProps) {
           aria-label={t("addPlaceholder")}
           className={cn(
             "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
-            "bg-ink text-bg transition-opacity hover:opacity-90 disabled:opacity-40",
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/30",
+            "bg-accent-sky text-on-accent shadow-pop transition-opacity disabled:opacity-40 disabled:shadow-none",
+            "focus-ring-kid active:shadow-press",
           )}
         >
-          <Plus className="size-5" />
+          <Plus className="size-6" strokeWidth={2.75} />
         </button>
       </form>
       <InlineKeyboardPanel

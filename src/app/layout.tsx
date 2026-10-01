@@ -3,6 +3,7 @@ import { Inter, Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
+import { MotionProvider } from "@/components/providers/motion-provider";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ServiceWorkerRegister } from "@/components/providers/sw-register";
 import { IdleScreensaver } from "@/components/shell/idle-screensaver";
@@ -74,10 +75,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
             <QueryProvider>
-              <ServiceWorkerRegister />
-              <IdleScreensaver minutes={idleMinutes} />
-              <LocaleGuard />
-              {children}
+              <MotionProvider>
+                <ServiceWorkerRegister />
+                <IdleScreensaver minutes={idleMinutes} />
+                <LocaleGuard />
+                {children}
+              </MotionProvider>
             </QueryProvider>
           </ThemeProvider>
         </NextIntlClientProvider>

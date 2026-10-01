@@ -46,6 +46,27 @@ function isWhitelisted(pathname: string): boolean {
 
 type Handler<C> = (req: Request, ctx: C) => Promise<Response>;
 
+// Only the incoming request's own json() is rewrapped, so a SyntaxError from any
+// other JSON.parse in a handler still surfaces as a real 500.
+function withJsonBodyErrors(req: Request): Request {
+  const parse = req.json.bind(req);
+  req.json = async () => {
+    try {
+      return await parse();
+    } catch (err) {
+      if (err instanceof SyntaxError) {
+        throw new AppError(
+          "Request body must be valid JSON",
+          "INVALID_JSON",
+          400,
+        );
+      }
+      throw err;
+    }
+  };
+  return req;
+}
+
 export function withErrorHandling<C>(handler: Handler<C>): Handler<C> {
   return async (req, ctx) => {
     try {
@@ -58,7 +79,7 @@ export function withErrorHandling<C>(handler: Handler<C>): Handler<C> {
           await requireActiveLicense();
         }
       }
-      return await handler(req, ctx);
+      return await handler(withJsonBodyErrors(req), ctx);
     } catch (err) {
       if (err instanceof AppError) {
         return fail(err.code, err.message, err.status);

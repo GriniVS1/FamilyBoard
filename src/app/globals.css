@@ -2,44 +2,162 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Token values are the source of truth for docs/kids-ui/02-design-direction.md;
+ * every text pair there was contrast-checked with the WCAG formula. Change a
+ * value here, then re-run the check and update the table.
+ *
+ * `.light` mirrors :root so a light island can be forced inside a dark page
+ * (dev preview, picto plates); next-themes also sets it on <html>.
+ */
 @layer base {
-  :root {
+  :root,
+  .light {
     --bg: 36 38% 96%;
     --surface: 0 0% 100%;
     --ink: 230 38% 17%;
-    --muted: 220 9% 46%;
+    --muted: 220 10% 42%;
     --border: 230 20% 90%;
+    --shadow: 230 40% 14%;
 
-    --accent-peach: 14 100% 72%;
-    --accent-mint: 156 47% 65%;
-    --accent-sun: 42 100% 70%;
-    --accent-sky: 204 81% 72%;
-    --accent-lilac: 256 53% 77%;
-    --accent-rose: 342 76% 78%;
-    --accent-teal: 178 50% 60%;
-    --accent-sand: 36 38% 75%;
+    /* Member colours: DEFAULT = accent (rings, checks, fills), -tint = large
+       soft surfaces, -ink = text/icons on tint or surface (≥ 4.5:1). */
+    --accent-peach: 16 96% 68%;
+    --accent-peach-tint: 18 100% 93%;
+    --accent-peach-ink: 14 72% 30%;
+    --accent-mint: 152 52% 56%;
+    --accent-mint-tint: 150 55% 91%;
+    --accent-mint-ink: 156 70% 22%;
+    --accent-sun: 44 100% 60%;
+    --accent-sun-tint: 46 100% 89%;
+    --accent-sun-ink: 32 85% 26%;
+    --accent-sky: 204 84% 64%;
+    --accent-sky-tint: 204 90% 93%;
+    --accent-sky-ink: 210 75% 30%;
+    --accent-lilac: 258 72% 74%;
+    --accent-lilac-tint: 258 80% 95%;
+    --accent-lilac-ink: 260 50% 36%;
+    --accent-rose: 342 82% 72%;
+    --accent-rose-tint: 342 90% 94%;
+    --accent-rose-ink: 340 62% 34%;
+    --accent-teal: 178 56% 48%;
+    --accent-teal-tint: 178 55% 90%;
+    --accent-teal-ink: 182 80% 20%;
+    --accent-sand: 34 48% 66%;
+    --accent-sand-tint: 36 55% 91%;
+    --accent-sand-ink: 28 45% 28%;
 
-    /* Brand */
+    /* Text/icons on a solid accent fill (done card, primary kid button). */
+    --on-accent: 230 40% 14%;
+
+    --success: 146 62% 38%;
+    --success-tint: 145 60% 91%;
+    --success-ink: 148 72% 21%;
+    --danger: 356 76% 52%;
+    --danger-tint: 356 100% 95%;
+    --danger-ink: 356 70% 34%;
+    --warning: 32 94% 40%;
+    --warning-tint: 44 100% 91%;
+    --warning-ink: 28 85% 26%;
+    --focus: 224 88% 52%;
+
     --brand-coral: 9 75% 62%;
+
+    /* Pictogram palette — illustrations use ONLY these. */
+    --picto-line: 230 38% 18%;
+    /* Strokes that stand free on the background (speed lines, steam,
+       whiskers): must flip in dark mode, the outline does not. */
+    --picto-motion: 230 38% 18%;
+    --picto-dark: 230 22% 26%;
+    --picto-shine: 0 0% 100%;
+    --picto-white: 0 0% 100%;
+    --picto-cream: 40 70% 94%;
+    --picto-red: 4 84% 62%;
+    --picto-orange: 24 96% 60%;
+    --picto-yellow: 45 100% 60%;
+    --picto-green: 128 50% 55%;
+    --picto-leaf: 146 50% 38%;
+    --picto-blue: 214 86% 62%;
+    --picto-water: 198 92% 74%;
+    --picto-purple: 262 64% 68%;
+    --picto-pink: 340 88% 78%;
+    --picto-brown: 24 46% 44%;
+    --picto-wood: 32 70% 68%;
+    --picto-skin: 24 80% 82%;
+    --picto-gray: 220 16% 82%;
+    --picto-steel: 220 12% 58%;
   }
 
   .dark {
     --bg: 230 32% 9%;
     --surface: 230 27% 13%;
     --ink: 36 25% 93%;
-    --muted: 220 9% 65%;
-    --border: 230 20% 20%;
+    --muted: 220 10% 68%;
+    --border: 230 20% 22%;
+    --shadow: 230 50% 3%;
 
-    --accent-peach: 14 75% 68%;
-    --accent-mint: 156 38% 60%;
-    --accent-sun: 42 80% 65%;
-    --accent-sky: 204 65% 68%;
-    --accent-lilac: 256 42% 72%;
-    --accent-rose: 342 60% 73%;
-    --accent-teal: 178 40% 55%;
-    --accent-sand: 36 30% 65%;
+    --accent-peach: 16 88% 68%;
+    --accent-peach-tint: 14 32% 21%;
+    --accent-peach-ink: 18 100% 86%;
+    --accent-mint: 152 46% 58%;
+    --accent-mint-tint: 154 26% 18%;
+    --accent-mint-ink: 150 60% 82%;
+    --accent-sun: 44 92% 62%;
+    --accent-sun-tint: 42 32% 18%;
+    --accent-sun-ink: 46 100% 82%;
+    --accent-sky: 204 78% 66%;
+    --accent-sky-tint: 206 34% 20%;
+    --accent-sky-ink: 204 95% 86%;
+    --accent-lilac: 258 64% 76%;
+    --accent-lilac-tint: 258 26% 23%;
+    --accent-lilac-ink: 258 90% 90%;
+    --accent-rose: 342 74% 74%;
+    --accent-rose-tint: 342 28% 22%;
+    --accent-rose-ink: 342 95% 90%;
+    --accent-teal: 178 48% 52%;
+    --accent-teal-tint: 180 30% 17%;
+    --accent-teal-ink: 176 60% 80%;
+    --accent-sand: 34 42% 64%;
+    --accent-sand-tint: 34 20% 20%;
+    --accent-sand-ink: 36 60% 85%;
+
+    --on-accent: 230 40% 10%;
+
+    --success: 146 50% 52%;
+    --success-tint: 148 30% 17%;
+    --success-ink: 146 60% 80%;
+    --danger: 356 82% 66%;
+    --danger-tint: 356 34% 20%;
+    --danger-ink: 356 100% 88%;
+    --warning: 40 94% 58%;
+    --warning-tint: 38 36% 17%;
+    --warning-ink: 42 100% 80%;
+    --focus: 205 100% 70%;
 
     --brand-coral: 9 75% 62%;
+
+    /* Fills are dimmed a notch so illustrations don't glare on the dark wall;
+       the outline stays dark so pictos keep their sticker look. */
+    --picto-line: 230 45% 6%;
+    --picto-motion: 36 25% 80%;
+    --picto-dark: 230 12% 40%;
+    --picto-shine: 0 0% 100%;
+    --picto-white: 36 30% 92%;
+    --picto-cream: 40 40% 86%;
+    --picto-red: 4 76% 60%;
+    --picto-orange: 24 88% 58%;
+    --picto-yellow: 45 92% 58%;
+    --picto-green: 128 42% 52%;
+    --picto-leaf: 146 42% 40%;
+    --picto-blue: 214 78% 62%;
+    --picto-water: 198 80% 70%;
+    --picto-purple: 262 56% 68%;
+    --picto-pink: 340 76% 76%;
+    --picto-brown: 24 40% 44%;
+    --picto-wood: 32 60% 64%;
+    --picto-skin: 24 66% 78%;
+    --picto-gray: 220 12% 74%;
+    --picto-steel: 220 10% 56%;
   }
 
   * {
@@ -68,6 +186,21 @@
   select {
     @apply outline-none;
   }
+
+  /* Baseline for anything that has no .focus-ring-kid of its own (Radix
+     parts, plain links, inputs): a real ring, not a 20 % ink halo. */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible,
+  [role="tab"]:focus-visible,
+  [role="switch"]:focus-visible,
+  [role="checkbox"]:focus-visible {
+    outline: 3px solid hsl(var(--focus));
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
@@ -84,10 +217,158 @@
     min-width: 48px;
     @apply active:scale-[0.97] active:opacity-90 transition-transform duration-100 ease-snappy;
   }
+
+  /* Kid primary actions (tick a task, big buttons, nav tiles on the wall). */
+  .tap-target-kid {
+    min-height: 64px;
+    min-width: 64px;
+    @apply active:scale-[0.96] transition-transform duration-100 ease-snappy;
+  }
+
+  /* Kid type scale. Deliberately not `text-*` names: tailwind-merge would
+     read those as text colours and drop a real colour class in cn(). */
+  .kid-label {
+    @apply font-sans text-sm font-semibold leading-5 tracking-[0.01em];
+  }
+  .kid-body {
+    @apply font-sans text-base font-medium leading-6;
+  }
+  .kid-title {
+    @apply font-display text-lg font-semibold leading-6 tracking-tight;
+  }
+  .kid-title-lg {
+    @apply font-display text-xl font-semibold leading-7 tracking-tight;
+  }
+  .kid-heading {
+    @apply font-display text-[1.75rem] font-semibold leading-9 tracking-tight;
+  }
+  .kid-number {
+    @apply font-display text-2xl font-bold leading-none tabular;
+  }
 }
 
 @layer utilities {
   .tabular {
     font-variant-numeric: tabular-nums;
   }
+
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Outline (not box-shadow) so it follows any radius and survives
+     overflow-hidden parents; offset keeps it off the member tint. */
+  .focus-ring-kid:focus-visible {
+    outline: 4px solid hsl(var(--focus));
+    outline-offset: 3px;
+  }
+  .focus-ring-kid-inset:focus-visible {
+    outline: 4px solid hsl(var(--focus));
+    outline-offset: -4px;
+  }
+
+  .strike-done {
+    text-decoration-line: line-through;
+    text-decoration-thickness: 2px;
+    text-decoration-color: hsl(var(--on-accent) / 0.55);
+  }
+}
+
+/* Pictogram demo motion: a motif's `.picto-motion` group plays once when an
+   ancestor carries data-picto-demo="true" (set on tap). Units are SVG user
+   units because transform-box is the 64×64 view box. */
+.picto-motion {
+  transform-box: view-box;
+}
+
+[data-picto-demo="true"] .picto-motion[data-motion="drop"] {
+  animation: picto-drop 620ms cubic-bezier(0.55, 0, 0.45, 1) 2;
+}
+[data-picto-demo="true"] .picto-motion[data-motion="pour"] {
+  animation: picto-pour 1300ms cubic-bezier(0.45, 0, 0.3, 1) 1;
+}
+[data-picto-demo="true"] .picto-motion[data-motion="scrub"] {
+  animation: picto-scrub 420ms ease-in-out 3;
+}
+[data-picto-demo="true"] .picto-motion[data-motion="wiggle"] {
+  animation: picto-wiggle 760ms ease-in-out 1;
+}
+[data-picto-demo="true"] .picto-motion[data-motion="bounce"] {
+  animation: picto-bounce 800ms cubic-bezier(0.3, 0, 0.3, 1) 1;
+}
+[data-picto-demo="true"] .picto-motion[data-motion="spin"] {
+  animation: picto-spin 1000ms cubic-bezier(0.45, 0, 0.25, 1) 1;
+}
+[data-picto-demo="true"] .picto-motion[data-motion="float"] {
+  animation: picto-float 1200ms ease-in-out 1;
+}
+
+@keyframes picto-drop {
+  0% { transform: translateY(-9px); opacity: 0; }
+  30% { opacity: 1; }
+  70% { transform: translateY(0); }
+  85% { transform: translateY(-1.5px); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes picto-pour {
+  0%, 100% { transform: rotate(0deg); }
+  30%, 70% { transform: rotate(-18deg); }
+}
+@keyframes picto-scrub {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(3px); }
+  75% { transform: translateX(-3px); }
+}
+@keyframes picto-wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(9deg); }
+  45% { transform: rotate(-8deg); }
+  70% { transform: rotate(5deg); }
+  88% { transform: rotate(-2deg); }
+}
+@keyframes picto-bounce {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  15% { transform: translateY(0) scale(1.06, 0.94); }
+  45% { transform: translateY(-7px) scale(0.97, 1.03); }
+  75% { transform: translateY(0) scale(1.04, 0.96); }
+  88% { transform: translateY(-1.5px) scale(1, 1); }
+}
+@keyframes picto-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes picto-float {
+  0%, 100% { transform: translateY(0); opacity: 1; }
+  50% { transform: translateY(-5px); opacity: 0.55; }
+}
+
+/* Decorative motion is dropped entirely; state-change animations collapse
+   to a short fade so the new state is still announced visually. */
+@media (prefers-reduced-motion: reduce) {
+  .picto-motion,
+  [data-picto-demo="true"] .picto-motion {
+    animation: none !important;
+  }
+  .animate-wiggle,
+  .animate-next-pulse,
+  .animate-confetti,
+  .animate-star-fly,
+  .animate-shake-soft,
+  .animate-shimmer {
+    animation: none !important;
+  }
+  .animate-pop-in,
+  .animate-check-pop,
+  .animate-reward-rise,
+  .animate-toast-in {
+    animation: kid-fade 120ms linear both !important;
+  }
+}
+
+@keyframes kid-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }

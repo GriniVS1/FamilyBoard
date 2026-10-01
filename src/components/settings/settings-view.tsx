@@ -24,6 +24,7 @@ import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { LocalePicker } from "@/components/shared/locale-picker";
 import { MemberAvatar } from "@/components/shared/member-avatar";
+import { AppearanceCard } from "./appearance-card";
 import { DisplaySleepCard } from "./display-sleep-card";
 import { FactoryResetDialog } from "./factory-reset-dialog";
 import { FamilyEditor } from "./family-editor";
@@ -214,14 +215,14 @@ export function SettingsView({
             role="status"
             className={
               banner.kind === "success"
-                ? "rounded-2xl border border-accent-mint/40 bg-accent-mint/15 px-4 py-3 flex items-center gap-3"
-                : "rounded-2xl border border-accent-rose/40 bg-accent-rose/15 px-4 py-3 flex items-center gap-3"
+                ? "rounded-2xl border border-success/40 bg-success-tint px-4 py-3 flex items-center gap-3"
+                : "rounded-2xl border border-danger/40 bg-danger-tint px-4 py-3 flex items-center gap-3"
             }
           >
             {banner.kind === "success" ? (
-              <CheckCircle2 className="size-5 text-accent-mint" />
+              <CheckCircle2 className="size-5 text-success-ink" />
             ) : (
-              <X className="size-5 text-accent-rose" />
+              <X className="size-5 text-danger-ink" />
             )}
             <div className="flex-1 text-sm text-ink">
               {bannerMessage()}
@@ -229,7 +230,7 @@ export function SettingsView({
             <button
               type="button"
               onClick={() => setBanner(null)}
-              className="size-9 rounded-full text-muted hover:bg-bg/60 hover:text-ink inline-flex items-center justify-center"
+              className="inline-flex size-12 items-center justify-center rounded-full text-muted hover:bg-ink/5 hover:text-ink focus-ring-kid"
               aria-label={t("dismiss")}
             >
               <X className="size-4" />
@@ -254,6 +255,8 @@ export function SettingsView({
           {t("unlocked")}
         </span>
       )}
+
+      <AppearanceCard />
 
       <GateOverlay locked={!unlocked}>
         <PushToggle />
@@ -470,11 +473,11 @@ export function SettingsView({
             </Button>
           </div>
 
-          <div className="flex flex-col gap-3 rounded-2xl border border-accent-rose/30 bg-accent-rose/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-2xl border border-danger/40 bg-danger-tint p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <span
                 aria-hidden
-                className="inline-flex size-10 items-center justify-center rounded-full bg-accent-rose/30 text-accent-rose"
+                className="inline-flex size-10 items-center justify-center rounded-full bg-danger-tint text-danger-ink"
               >
                 <RotateCcw className="size-4" />
               </span>
@@ -490,7 +493,7 @@ export function SettingsView({
               variant="ghost"
               onClick={() => setResetDialogOpen(true)}
               disabled={!unlocked}
-              className="text-accent-rose hover:bg-accent-rose/20"
+              className="text-danger-ink hover:bg-danger-tint"
             >
               {t("factoryReset.button")}
             </Button>

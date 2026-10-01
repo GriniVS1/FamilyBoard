@@ -41,10 +41,10 @@ export function LocalePicker({ className, adminPin }: { className?: string; admi
           disabled={saving}
           aria-pressed={loc === currentLocale}
           className={cn(
-            "rounded-full border px-4 py-2 text-sm font-medium tap-target transition-colors",
+            "kid-label min-h-12 rounded-full border-2 px-5 transition-colors focus-ring-kid",
             loc === currentLocale
               ? "border-ink bg-ink text-bg"
-              : "border-border bg-surface text-ink hover:bg-bg",
+              : "border-border bg-surface text-ink",
             saving && "opacity-50",
           )}
         >
@@ -78,8 +78,7 @@ export function LocaleSelect({ className }: { className?: string }) {
       disabled={saving}
       aria-label={t("language")}
       className={cn(
-        "h-10 rounded-2xl border border-border bg-surface px-3 text-sm text-ink tap-target",
-        "focus:outline-none focus:ring-2 focus:ring-ink/20",
+        "h-12 rounded-2xl border border-border bg-surface px-3 text-base text-ink tap-target",
         saving && "opacity-50",
         className,
       )}
