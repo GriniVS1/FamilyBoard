@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { AlertTriangle, Loader2, Mail, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
 import { Button } from "@/components/shared/button";
 import type { CalendarMember } from "@/components/calendar/types";
 
@@ -34,6 +35,7 @@ async function fetchMicrosoftStatus(memberId: string): Promise<MicrosoftStatus> 
 export function MicrosoftRow({ member, adminPin }: MicrosoftRowProps) {
   const t = useTranslations("settings.microsoft");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: status, isLoading, isError } = useQuery({
@@ -96,9 +98,9 @@ export function MicrosoftRow({ member, adminPin }: MicrosoftRowProps) {
           {isLoading ? (
             <div className="text-xs text-muted">{t("description")}</div>
           ) : isError ? (
-            <div className="text-xs text-accent-rose">{t("notConfigured")}</div>
+            <div className="text-xs text-danger-ink">{t("notConfigured")}</div>
           ) : status?.connected && status.authExpired ? (
-            <div className="flex items-center gap-1.5 text-xs text-accent-rose">
+            <div className="flex items-center gap-1.5 text-xs text-danger-ink">
               <AlertTriangle className="size-4 shrink-0" aria-hidden />
               <span className="truncate">{t("authExpired")}</span>
             </div>
@@ -130,14 +132,9 @@ export function MicrosoftRow({ member, adminPin }: MicrosoftRowProps) {
             </Button>
             <Button
               type="button"
-              variant="ghost"
-              onClick={() => {
-                if (window.confirm(t("disconnect") + "?")) {
-                  disconnectMutation.mutate();
-                }
-              }}
+              variant="danger"
+              onClick={() => setConfirmOpen(true)}
               disabled={disconnectMutation.isPending}
-              className="text-accent-rose hover:bg-accent-rose/10"
               aria-label={t("disconnect")}
             >
               {disconnectMutation.isPending ? (
@@ -152,10 +149,19 @@ export function MicrosoftRow({ member, adminPin }: MicrosoftRowProps) {
       </div>
 
       {actionError && (
-        <p className="text-xs text-accent-rose sm:basis-full" role="alert">
+        <p className="text-xs text-danger-ink sm:basis-full" role="alert">
           {actionError}
         </p>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("disconnectConfirm")}
+        picto="nav-calendar"
+        confirmLabel={t("disconnect")}
+        onConfirm={() => disconnectMutation.mutate()}
+      />
     </div>
   );
 }

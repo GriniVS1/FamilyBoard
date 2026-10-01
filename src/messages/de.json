@@ -4,7 +4,7 @@
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "confirm": "Bestätigen",
-    "close": "Schließen",
+    "close": "Schliessen",
     "back": "Zurück",
     "next": "Weiter",
     "finish": "Fertig",
@@ -33,17 +33,34 @@
     "noAuthor": "Kein Autor",
     "admin": "Admin",
     "member": "Mitglied",
-    "theme": "Erscheinungsbild"
+    "theme": "Erscheinungsbild",
+    "all": "Alle",
+    "selectColor": "Farbe {color} wählen",
+    "colors": {
+      "peach": "Pfirsich",
+      "mint": "Minze",
+      "sun": "Sonne",
+      "sky": "Himmel",
+      "lilac": "Flieder",
+      "rose": "Rosa",
+      "teal": "Türkis",
+      "sand": "Sand"
+    },
+    "backspace": "Letzte Ziffer löschen"
   },
   "nav": {
-    "dashboard": "Dashboard",
+    "dashboard": "Heute",
     "calendar": "Kalender",
-    "meals": "Mahlzeiten",
+    "meals": "Essen",
     "chores": "Aufgaben",
     "todos": "To-dos",
     "notes": "Notizen",
     "photos": "Fotos",
-    "settings": "Einstellungen"
+    "settings": "Einstellungen",
+    "more": "Mehr",
+    "primary": "Hauptnavigation",
+    "sidebar": "Bereiche",
+    "bottom": "Bereiche"
   },
   "shell": {
     "currentTime": "Aktuelle Uhrzeit"
@@ -81,7 +98,7 @@
       "title": "Gib deiner Familie einen Namen",
       "label": "Familienname",
       "placeholder": "Familie Müller",
-      "hint": "Wird in Begrüßungen auf dem Dashboard verwendet.",
+      "hint": "Wird in Begrüssungen auf dem Dashboard verwendet.",
       "next": "Weiter",
       "step": "Schritt 1"
     },
@@ -178,20 +195,23 @@
     "widgets": {
       "today": {
         "title": "Heute",
-        "empty": "Nichts geplant. Genieße den Tag.",
-        "noEventsToday": "Nichts als Nächstes",
-        "couldNotLoad": "Ereignisse konnten nicht geladen werden."
+        "empty": "Nichts geplant. Geniesse den Tag.",
+        "couldNotLoad": "Ereignisse konnten nicht geladen werden.",
+        "now": "Jetzt",
+        "morning": "Morgens",
+        "day": "Tagsüber",
+        "evening": "Abends"
       },
       "chores": {
         "title": "Aufgaben",
-        "completionsToday": "Erledigungen heute",
-        "weeklyProgress": "Wöchentlicher Fortschritt",
-        "stars": "Sterne",
-        "noChores": "Noch keine Aufgaben — richte sie unter /aufgaben ein.",
-        "markDone": "Als erledigt markieren",
-        "noChoresInTab": "Noch keine Aufgaben eingetragen. Füge welche im Aufgaben-Tab hinzu.",
-        "markDoneFor": "Aufgabe für {name} als erledigt markieren",
-        "couldNotLoad": "Aufgaben konnten nicht geladen werden."
+        "openFor": "{name}: {count, plural, one {# Aufgabe} other {# Aufgaben}} offen",
+        "allDoneFor": "{name}: alles geschafft",
+        "nightFor": "{name}: Schlafenszeit",
+        "pauseFor": "{name}: später wieder",
+        "noChoresFor": "{name}: keine Aufgaben",
+        "noMembers": "Noch keine Personen angelegt.",
+        "unknownFor": "{name}: Aufgaben konnten nicht geladen werden",
+        "anyoneFor": "Für alle: {count, plural, one {# Aufgabe} other {# Aufgaben}} offen"
       },
       "todos": {
         "title": "To-dos",
@@ -202,7 +222,7 @@
       },
       "notes": {
         "title": "Angepinnte Notizen",
-        "empty": "Keine Notizen angepinnt. Pinne eine unter /notizen.",
+        "empty": "Keine Notizen angepinnt.",
         "openAll": "Alle anzeigen",
         "couldNotLoad": "Notizen konnten nicht geladen werden.",
         "pinned": "Angepinnt",
@@ -220,7 +240,18 @@
         "notConfigured": "Lege deinen Standort fest, um die Vorhersage zu sehen.",
         "openSettings": "Einstellungen öffnen",
         "setLocation": "Einen Standort in den Einstellungen festlegen",
-        "couldNotLoad": "Wetter konnte nicht geladen werden."
+        "couldNotLoad": "Wetter konnte nicht geladen werden.",
+        "conditions": {
+          "clear": "Sonnig",
+          "clearNight": "Klare Nacht",
+          "partly": "Teilweise bewölkt",
+          "partlyNight": "Teilweise bewölkt",
+          "cloudy": "Bewölkt",
+          "fog": "Nebel",
+          "rain": "Regen",
+          "snow": "Schnee",
+          "thunder": "Gewitter"
+        }
       }
     },
     "updateSuccess": {
@@ -322,51 +353,85 @@
     "loading": "Wird geladen…",
     "couldNotLoad": "Ereignisse konnten nicht geladen werden.",
     "nextHours": "Nächste Stunden",
-    "nextDays": "Nächste Tage"
+    "nextDays": "Nächste Tage",
+    "everyone": "Alle",
+    "showOnly": "Nur {name} anzeigen",
+    "viewSwitch": "Ansicht",
+    "eventDeleted": "Termin gelöscht"
   },
   "chores": {
     "title": "Aufgaben",
     "addChore": "Neue Aufgabe",
-    "weeklyProgress": "Wöchentlicher Fortschritt",
-    "completionsToday": "Erledigungen heute",
-    "stars": "diese Woche",
-    "noMember": "Kein Mitglied zugewiesen",
-    "anyone": "Für alle",
-    "anyoneSub": "Antippen zum Eintragen — wer bekommt die Sterne?",
     "addChoreFor": "Aufgabe für {name} hinzufügen",
-    "addUnassigned": "Unzugewiesene Aufgabe hinzufügen",
-    "addFirst": "Aufgabe hinzufügen",
-    "thisWeek": "diese Woche",
+    "addUnassigned": "Aufgabe für alle hinzufügen",
+    "anyone": "Für alle",
+    "all": "Alle",
+    "allA11y": "Alle Personen anzeigen",
+    "focusOn": "Nur {name} anzeigen",
+    "starsWeek": "{count, plural, one {# Stern} other {# Sterne}} diese Woche",
     "timesThisWeek": "{count}× diese Woche",
     "emptyTitle": "Noch keine Aufgaben",
-    "emptyDesc": "Lege ein paar einfache Ziele für die Woche fest. Sterne bringen Freude.",
-    "createFirst": "Erste Aufgabe erstellen",
-    "whoDidIt": "Wer hat es gemacht?",
-    "whoDidItDesc": "{title} — wähle das Familienmitglied, das die Sterne verdient hat.",
-    "couldNotLog": "Stern konnte nicht eingetragen werden.",
+    "emptyHint": "Tippe oben auf „Bearbeiten“, um Aufgaben anzulegen.",
     "couldNotLoad": "Aufgaben konnten nicht geladen werden.",
+    "whoTitle": "Wer hat es gemacht?",
+    "whoPick": "{name} hat es gemacht",
+    "close": "Schliessen",
+    "celebrateSr": "{name} hat heute alles geschafft!",
+    "card": {
+      "label": "{title}, {points, plural, one {# Stern} other {# Sterne}}",
+      "retry": "{title}: nochmal versuchen",
+      "edit": "{title} bearbeiten",
+      "doneMini": "{title}: erledigt. Tippen zeigt Rückgängig"
+    },
+    "group": {
+      "collapse": "{name} zuklappen",
+      "expand": "{name} aufklappen",
+      "progress": "{done} von {total} erledigt"
+    },
+    "state": {
+      "allDone": "Alles geschafft!",
+      "night": "Schlafenszeit",
+      "pause": "Später wieder"
+    },
+    "column": {
+      "empty": "Keine Aufgaben"
+    },
+    "toast": {
+      "stars": "{name} bekommt {count, plural, one {# Stern} other {# Sterne}}"
+    },
     "dialog": {
       "newTitle": "Neue Aufgabe",
       "editTitle": "Aufgabe bearbeiten",
-      "name": "Titel",
-      "points": "Sterne",
-      "frequency": "Häufigkeit",
-      "frequencyOptions": {
-        "daily": "Täglich",
-        "weekly": "Wöchentlich",
-        "once": "Einmalig"
+      "previewTitle": "Aufgabe",
+      "sectionPicture": "Bild",
+      "sectionWho": "Wer?",
+      "sectionWhen": "Wann?",
+      "sectionStars": "Sterne",
+      "sectionTitle": "Titel",
+      "cat": {
+        "body": "Körper & Bad",
+        "dress": "Anziehen",
+        "tidy": "Aufräumen",
+        "food": "Essen & Trinken",
+        "nature": "Tiere & Pflanzen",
+        "school": "Schule & Lernen",
+        "help": "Helfen"
       },
-      "member": "Wer",
+      "ownEmoji": "Eigenes Symbol",
+      "moreStars": "mehr",
+      "starsN": "{count, plural, one {# Stern} other {# Sterne}}",
+      "titlePlaceholder": "z. B. Geschirrspüler ausräumen",
       "delete": "Löschen",
-      "titleRequired": "Gib der Aufgabe einen Titel.",
-      "deleteConfirm": "Diese Aufgabe löschen? Bisherige Sterne bleiben erhalten.",
-      "iconLabel": "Symbol",
-      "noIcon": "Keines",
+      "deleteTitle": "Aufgabe löschen? Die damit verdienten Sterne werden ebenfalls entfernt.",
       "cancel": "Abbrechen",
       "save": "Speichern",
-      "couldNotSave": "Konnte nicht gespeichert werden.",
-      "couldNotDelete": "Konnte nicht gelöscht werden."
-    }
+      "couldNotSave": "Das hat nicht geklappt. Bitte nochmal versuchen.",
+      "couldNotDelete": "Löschen hat nicht geklappt."
+    },
+    "anyoneChip": "{title}: für alle, antippen zum Eintragen",
+    "anyoneMore": "Alle Aufgaben für alle anzeigen",
+    "anyoneGo": "Zu den Aufgaben für alle",
+    "undoTask": "Rückgängig: {title}"
   },
   "todos": {
     "title": "To-dos",
@@ -385,7 +450,10 @@
     "couldNotUpdate": "Konnte nicht aktualisiert werden.",
     "couldNotDelete": "Konnte nicht gelöscht werden.",
     "couldNotLoad": "To-dos konnten nicht geladen werden.",
-    "markDone": "{title} als erledigt markieren"
+    "markDone": "{title} als erledigt markieren",
+    "deleteConfirm": "„{title}“ löschen?",
+    "deleted": "„{title}“ gelöscht",
+    "couldNotRestore": "Wiederherstellen hat nicht geklappt."
   },
   "notes": {
     "title": "Notizen",
@@ -412,7 +480,9 @@
       "couldNotSave": "Konnte nicht gespeichert werden.",
       "couldNotDelete": "Konnte nicht gelöscht werden.",
       "writeFirst": "Schreib zuerst etwas."
-    }
+    },
+    "deleted": "Notiz gelöscht",
+    "couldNotRestore": "Wiederherstellen hat nicht geklappt."
   },
   "photos": {
     "title": "Fotos",
@@ -466,7 +536,8 @@
       "maxReachedHint": "Maximum von {max} Mitgliedern erreicht.",
       "remove": "Mitglied entfernen",
       "noMembers": "Noch keine Mitglieder.",
-      "editMember": "{name} bearbeiten"
+      "editMember": "{name} bearbeiten",
+      "deleteConfirm": "„{name}“ entfernen?"
     },
     "calendarConnectViaApp": "Kalender (Google, Outlook, CalDAV) werden über die FamilyBoard-App auf deinem Handy verbunden.",
     "google": {
@@ -526,7 +597,7 @@
       "typeReset": "RESET eingeben zur Bestätigung",
       "adminPin": "Admin-PIN",
       "resetFailed": "Zurücksetzen fehlgeschlagen.",
-      "typeResetError": "Gib RESET in Großbuchstaben ein, um zu bestätigen.",
+      "typeResetError": "Gib RESET in Grossbuchstaben ein, um zu bestätigen.",
       "pinRequired": "Gib deinen Admin-PIN ein.",
       "resetting": "Wird zurückgesetzt…",
       "cancel": "Abbrechen"
@@ -595,12 +666,14 @@
     },
     "navConfig": {
       "title": "Navigation",
-      "description": "Wähle, welche Funktionen im Menü erscheinen und in welcher Reihenfolge.",
-      "alwaysVisibleHint": "Dashboard und Einstellungen sind immer sichtbar.",
+      "description": "Wähle, welche Bereiche im Menü erscheinen und in welcher Reihenfolge. Kinderbereiche stehen immer vor den Erwachsenenbereichen.",
+      "alwaysVisibleHint": "„Heute“ steht immer zuerst, „Aufgaben“ direkt danach und „Einstellungen“ zuletzt. „Heute“ und „Einstellungen“ sind immer sichtbar.",
       "moveUp": "{name} nach oben verschieben",
       "moveDown": "{name} nach unten verschieben",
       "toggleAria": "{name} in der Navigation anzeigen",
-      "saveError": "Die Navigationsreihenfolge konnte nicht gespeichert werden. Bitte erneut versuchen."
+      "saveError": "Die Navigationsreihenfolge konnte nicht gespeichert werden. Bitte erneut versuchen.",
+      "groupKids": "Kinderbereiche",
+      "groupAdults": "Erwachsenenbereiche"
     },
     "caldav": {
       "title": "Apple / CalDAV",
@@ -659,7 +732,8 @@
         "expired": "Sitzung abgelaufen. Bitte erneut versuchen.",
         "generic": "Ein unerwarteter Fehler ist aufgetreten.",
         "denied": "Zugriff verweigert."
-      }
+      },
+      "disconnectConfirm": "Dieses Outlook-Konto trennen?"
     },
     "push": {
       "title": "Push-Benachrichtigungen",
@@ -687,7 +761,7 @@
     "googleConnected": "Mit Google Kalender verbunden.",
     "googleFailed": "Verbindung mit Google fehlgeschlagen ({reason}).",
     "googleFailedNoReason": "Verbindung mit Google fehlgeschlagen.",
-    "dismiss": "Schließen",
+    "dismiss": "Schliessen",
     "saved": "Gespeichert.",
     "save": "Speichern",
     "updates": {
@@ -757,10 +831,13 @@
         "error": "Code konnte nicht erstellt werden. Bitte versuche es erneut.",
         "unavailable": "Der Fernzugriff ist momentan nicht verbunden."
       }
-    }
+    },
+    "appearance": "Erscheinungsbild",
+    "appearanceDescription": "Hell oder dunkel, nur für diesen Bildschirm.",
+    "familyNamePlaceholder": "z. B. Familie Müller"
   },
   "meals": {
-    "title": "Mahlzeiten",
+    "title": "Essen",
     "tabs": {
       "plan": "Wochenplan",
       "recipes": "Rezepte",
@@ -829,7 +906,14 @@
         "meat": "Fleisch & Fisch",
         "drinks": "Getränke",
         "other": "Sonstiges"
-      }
+      },
+      "check": "Abhaken",
+      "uncheck": "Wieder öffnen",
+      "editItem": "{name} bearbeiten",
+      "deleteItem": "{name} löschen",
+      "removeIngredient": "Zutat entfernen",
+      "deleted": "„{name}“ entfernt",
+      "clearConfirm": "Erledigte Artikel entfernen?"
     }
   },
   "screensaver": {
@@ -884,7 +968,9 @@
     "statusActive": "Aktiv",
     "statusTrial": "Testphase",
     "statusExpired": "Abgelaufen",
-    "statusUnlicensed": "Nicht lizenziert"
+    "statusUnlicensed": "Nicht lizenziert",
+    "graceBannerShort": "Testzeitraum: noch {days, plural, =1 {1 Tag} other {# Tage}}",
+    "softBannerShort": "Schreibzugriff gesperrt"
   },
   "errors": {
     "generic": "Etwas ist schiefgelaufen.",
@@ -910,5 +996,86 @@
     "reasonLabel": "Grund: {reason}",
     "google": "Google",
     "microsoft": "Microsoft"
+  },
+  "pictos": {
+    "water": "Wasser trinken",
+    "teeth": "Zähne putzen",
+    "tidy-toys": "Spielsachen aufräumen",
+    "get-dressed": "Anziehen",
+    "make-bed": "Bett machen",
+    "set-table": "Tisch decken",
+    "feed-dog": "Hund füttern",
+    "feed-cat": "Katze füttern",
+    "trash": "Müll rausbringen",
+    "water-plants": "Pflanzen giessen",
+    "homework": "Hausaufgaben",
+    "read": "Lesen",
+    "laundry": "Wäsche zusammenlegen",
+    "wash-clothes": "Wäsche waschen",
+    "dishes": "Abwaschen",
+    "wash-hands": "Hände waschen",
+    "bath": "Baden",
+    "pajamas": "Pyjama anziehen",
+    "backpack": "Schultasche packen",
+    "sweep": "Boden wischen",
+    "vacuum": "Staubsaugen",
+    "breakfast": "Essen",
+    "medicine": "Medizin nehmen",
+    "music": "Instrument üben",
+    "tidy-room": "Zimmer aufräumen",
+    "shoes": "Schuhe wegräumen",
+    "shopping": "Einkaufen",
+    "nav-home": "Startseite",
+    "nav-calendar": "Kalender",
+    "nav-meals": "Mahlzeiten",
+    "nav-tasks": "Aufgaben",
+    "nav-todos": "To-dos",
+    "nav-notes": "Notizen",
+    "nav-photos": "Fotos",
+    "nav-settings": "Einstellungen",
+    "nav-more": "Mehr",
+    "tod-morning": "Morgens",
+    "tod-day": "Tagsüber",
+    "tod-evening": "Abends",
+    "tod-night": "Nacht",
+    "tod-anytime": "Jederzeit",
+    "celebrate": "Geschafft!",
+    "oops": "Hoppla",
+    "relax": "Alles erledigt",
+    "star": "Stern",
+    "undo": "Rückgängig",
+    "next": "Als Nächstes",
+    "pause": "Später",
+    "event-school": "Schule",
+    "event-kindergarten": "Kindergarten",
+    "event-soccer": "Fussball",
+    "event-swim": "Schwimmen",
+    "event-doctor": "Arzt",
+    "event-birthday": "Geburtstag",
+    "event-dinner": "Abendessen",
+    "event-music": "Musikstunde",
+    "event-play": "Spielen",
+    "event-trip": "Ausflug",
+    "event-bike": "Velo fahren"
+  },
+  "kids": {
+    "undo": "Rückgängig",
+    "retry": "Nochmal versuchen",
+    "dismiss": "Schliessen",
+    "add": "Hinzufügen",
+    "errorGeneric": "Das hat nicht geklappt.",
+    "offline": "Keine Verbindung",
+    "loading": "Wird geladen…"
+  },
+  "parentMode": {
+    "edit": "Bearbeiten",
+    "pinTitle": "Eltern-PIN",
+    "pinHint": "PIN eingeben, um Aufgaben zu bearbeiten",
+    "wrongPin": "Falscher PIN. Bitte nochmal versuchen.",
+    "tooMany": "Zu viele Versuche. Bitte kurz warten.",
+    "couldNotVerify": "Der PIN konnte nicht geprüft werden.",
+    "banner": "Eltern-Modus",
+    "done": "Fertig",
+    "remaining": "noch {time}"
   }
 }

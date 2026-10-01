@@ -16,6 +16,9 @@ type CalendarHeaderProps = {
   onCreate: () => void;
 };
 
+const STEP_BUTTON =
+  "inline-flex size-12 items-center justify-center rounded-full border-2 border-border bg-surface text-ink shadow-pop transition-colors focus-ring-kid active:scale-[0.96] active:shadow-press";
+
 export function CalendarHeader({
   title,
   view,
@@ -34,41 +37,41 @@ export function CalendarHeader({
   ];
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={onPrev}
-          className="size-12 tap-target inline-flex items-center justify-center rounded-full border border-border bg-surface text-ink hover:bg-bg transition-colors"
-          aria-label={t("previous")}
-        >
-          <ChevronLeft className="size-5" />
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:justify-between">
+      <div className="order-1 flex min-w-0 items-center gap-2 sm:order-none">
+        <button type="button" onClick={onPrev} className={STEP_BUTTON} aria-label={t("previous")}>
+          <ChevronLeft className="size-6" strokeWidth={2.5} />
         </button>
         <button
           type="button"
           onClick={onToday}
-          className="h-12 tap-target inline-flex items-center justify-center rounded-full border border-border bg-surface px-4 text-sm font-medium text-ink hover:bg-bg transition-colors"
+          className="kid-label inline-flex h-12 items-center justify-center rounded-full border-2 border-border bg-surface px-5 text-ink shadow-pop transition-colors focus-ring-kid active:scale-[0.96] active:shadow-press"
         >
           {t("today")}
         </button>
-        <button
-          type="button"
-          onClick={onNext}
-          className="size-12 tap-target inline-flex items-center justify-center rounded-full border border-border bg-surface text-ink hover:bg-bg transition-colors"
-          aria-label={t("next")}
-        >
-          <ChevronRight className="size-5" />
+        <button type="button" onClick={onNext} className={STEP_BUTTON} aria-label={t("next")}>
+          <ChevronRight className="size-6" strokeWidth={2.5} />
         </button>
-        <h2 className="ml-2 font-display text-xl sm:text-2xl tracking-tight text-ink">
+        <h2 className="ml-2 hidden font-display text-xl font-semibold tracking-tight text-ink sm:block sm:text-2xl">
           {title}
         </h2>
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* On a phone the title only matters in the month grid, whose head has no date. */}
+      {view === "month" && (
+        <p
+          aria-hidden
+          className="order-2 basis-full font-display text-xl font-semibold tracking-tight text-ink sm:hidden"
+        >
+          {title}
+        </p>
+      )}
+
+      <div className="contents sm:flex sm:items-center sm:gap-2">
         <div
           role="tablist"
-          aria-label={t("views.week")}
-          className="inline-flex rounded-full border border-border bg-surface p-1"
+          aria-label={t("viewSwitch")}
+          className="order-3 flex w-full gap-2 rounded-full border-2 border-border bg-surface p-1 sm:order-none sm:inline-flex sm:w-auto"
         >
           {tabs.map((tab) => {
             const active = tab.value === view;
@@ -80,10 +83,8 @@ export function CalendarHeader({
                 aria-selected={active}
                 onClick={() => onViewChange(tab.value)}
                 className={cn(
-                  "h-10 min-w-[64px] tap-target rounded-full px-4 text-sm font-medium transition-colors",
-                  active
-                    ? "bg-ink text-bg shadow-soft"
-                    : "text-muted hover:text-ink",
+                  "kid-label h-12 min-w-16 flex-1 rounded-full px-4 transition-colors duration-kid focus-ring-kid sm:flex-none",
+                  active ? "bg-ink text-bg shadow-soft" : "text-ink",
                 )}
               >
                 {tab.label}
@@ -91,8 +92,14 @@ export function CalendarHeader({
             );
           })}
         </div>
-        <Button onClick={onCreate} variant="primary" size="default">
-          <Plus className="size-5" />
+        <Button
+          onClick={onCreate}
+          variant="primary"
+          size="default"
+          aria-label={t("newEvent")}
+          className="order-1 ml-auto sm:order-none sm:ml-0"
+        >
+          <Plus className="size-5" strokeWidth={2.75} />
           <span className="hidden sm:inline">{t("newEvent")}</span>
         </Button>
       </div>

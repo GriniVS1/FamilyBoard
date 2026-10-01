@@ -212,7 +212,7 @@ export function UpdatesSettingsCard({ adminPin }: UpdatesSettingsCardProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="text-sm text-accent-rose"
+            className="text-sm text-danger-ink"
           >
             {t(`progress.${progress.phase}` as Parameters<typeof t>[0])}
           </motion.p>
@@ -225,7 +225,7 @@ export function UpdatesSettingsCard({ adminPin }: UpdatesSettingsCardProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="text-sm text-accent-mint"
+            className="text-sm text-success-ink"
           >
             {t(`progress.${progress.phase}` as Parameters<typeof t>[0])}
           </motion.p>

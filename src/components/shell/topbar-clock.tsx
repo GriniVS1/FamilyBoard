@@ -1,31 +1,32 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { format } from "date-fns";
+import { Picto, type PictoName } from "@/components/pictos";
+import { phaseOf, type DayPhase } from "@/lib/time-of-day";
+import { useNow } from "./use-now";
 
-function formatTime(date: Date): string {
-  const hh = String(date.getHours()).padStart(2, "0");
-  const mm = String(date.getMinutes()).padStart(2, "0");
-  return `${hh}:${mm}`;
-}
+const PHASE_PICTO: Record<DayPhase, PictoName> = {
+  MORNING: "tod-morning",
+  DAY: "tod-day",
+  EVENING: "tod-evening",
+  NIGHT: "tod-night",
+};
 
 export function TopbarClock() {
   const t = useTranslations("shell");
-  const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setNow(new Date());
-    const id = setInterval(() => setNow(new Date()), 1000);
-    return () => clearInterval(id);
-  }, []);
+  const now = useNow(1000);
 
   return (
-    <span
-      className="tabular text-sm font-medium text-ink"
-      aria-label={t("currentTime")}
-      suppressHydrationWarning
-    >
-      {now ? formatTime(now) : "--:--"}
-    </span>
+    <div className="flex items-center gap-2">
+      {now ? <Picto name={PHASE_PICTO[phaseOf(now)]} size={40} /> : <span className="size-10" aria-hidden />}
+      <span
+        className="kid-title-lg tabular text-ink"
+        aria-label={t("currentTime")}
+        suppressHydrationWarning
+      >
+        {now ? format(now, "HH:mm") : "--:--"}
+      </span>
+    </div>
   );
 }

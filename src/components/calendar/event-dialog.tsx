@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { Link2, RotateCcw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
 import { Button } from "@/components/shared/button";
 import {
   Dialog,
@@ -16,6 +17,8 @@ import { MemberColorSwatch } from "@/components/shared/member-color-swatch";
 import { InlineKeyboardPanel } from "@/components/setup/inline-keyboard-panel";
 import { useOskField } from "@/hooks/use-osk-field";
 import { cn, MEMBER_COLORS, isMemberColor, type MemberColor } from "@/lib/utils";
+import { resolveEventColor } from "./event-color";
+import { EventGlyph } from "./event-glyph";
 import type { CalendarEvent, CalendarMember, EventCreateInput } from "./types";
 
 type EventTextField = "title" | "location" | "description";
@@ -181,22 +184,22 @@ function DeleteScopeDialog({ open, onClose, onDeleteThis, onDeleteSeries, submit
           <div className="flex flex-col gap-3">
             <Button
               type="button"
-              variant="ghost"
+              variant="danger"
               disabled={submitting}
               onClick={onDeleteThis}
-              className="justify-start min-h-[52px] text-accent-rose hover:bg-accent-rose/10"
+              className="min-h-14 justify-start"
             >
-              <Trash2 className="size-4 shrink-0" />
+              <Trash2 className="size-5 shrink-0" />
               {t("deleteThis")}
             </Button>
             <Button
               type="button"
-              variant="ghost"
+              variant="danger"
               disabled={submitting}
               onClick={onDeleteSeries}
-              className="justify-start min-h-[52px] text-accent-rose hover:bg-accent-rose/10"
+              className="min-h-14 justify-start"
             >
-              <Trash2 className="size-4 shrink-0" />
+              <Trash2 className="size-5 shrink-0" />
               {t("deleteSeries")}
             </Button>
           </div>
@@ -233,6 +236,7 @@ export function EventDialog({
   const [error, setError] = useState<string | null>(null);
   const [scope, setScope] = useState<EditScope>("instance");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const { activeField, bind } = useOskField<EventTextField>();
 
   const isGoogle = event?.source === "GOOGLE";
@@ -322,8 +326,8 @@ export function EventDialog({
       };
       await onSave(input, masterEventId, effectiveScope);
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("failedToSave"));
+    } catch {
+      setError(t("failedToSave"));
     } finally {
       setSubmitting(false);
     }
@@ -335,8 +339,7 @@ export function EventDialog({
       setDeleteDialogOpen(true);
       return;
     }
-    if (!window.confirm(t("deleteConfirm"))) return;
-    await executeDelete(null);
+    setConfirmOpen(true);
   }
 
   async function executeDelete(deleteScope: EditScope | null) {
@@ -347,8 +350,8 @@ export function EventDialog({
     try {
       await onDelete(masterEventId ?? event.id, deleteScope);
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : t("failedToDelete"));
+    } catch {
+      setError(t("failedToDelete"));
     } finally {
       setSubmitting(false);
     }
@@ -559,7 +562,7 @@ export function EventDialog({
                           type="button"
                           onClick={() => patch({ recurrence: freq })}
                           className={cn(
-                            "min-h-[44px] rounded-full border px-4 text-sm font-medium transition-colors",
+                            "min-h-12 rounded-full border px-4 text-sm font-medium transition-colors focus-ring-kid",
                             state.recurrence === freq
                               ? "border-ink bg-ink text-bg"
                               : "border-border bg-surface text-ink hover:bg-bg",
@@ -591,7 +594,7 @@ export function EventDialog({
                     )}
 
                     {showSeriesWipeWarning && (
-                      <p className="text-xs text-accent-rose">
+                      <p className="text-sm text-danger-ink">
                         {t("seriesEditsWipeOverrides")}
                       </p>
                     )}
@@ -677,7 +680,7 @@ export function EventDialog({
             </div>
 
             {error && (
-              <p role="alert" className="text-sm text-accent-rose">
+              <p role="alert" className="text-sm text-danger-ink">
                 {error}
               </p>
             )}
@@ -687,12 +690,11 @@ export function EventDialog({
                 {isEdit && !isGoogle && (
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="danger"
                     onClick={handleDelete}
                     disabled={submitting}
-                    className="text-accent-rose hover:bg-accent-rose/10"
                   >
-                    <Trash2 className="size-4" />
+                    <Trash2 className="size-5" />
                     {t("deleteEvent")}
                   </Button>
                 )}
@@ -709,7 +711,7 @@ export function EventDialog({
                 >
                   {t("cancel")}
                 </Button>
-                <Button type="submit" disabled={submitting}>
+                <Button type="submit" disabled={submitting || state.title.trim().length < 2}>
                   {t("save")}
                 </Button>
               </div>
@@ -717,6 +719,23 @@ export function EventDialog({
           </form>
         </DialogContent>
       </Dialog>
+
+      {event && (
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={t("deleteConfirm")}
+          preview={
+            <EventGlyph
+              title={event.title}
+              color={resolveEventColor(event, selectedMember)}
+              date={new Date(event.startsAt)}
+              size={88}
+            />
+          }
+          onConfirm={() => executeDelete(null)}
+        />
+      )}
 
       {deleteDialogOpen && (
         <DeleteScopeDialog

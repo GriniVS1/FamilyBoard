@@ -3,7 +3,9 @@
 import { Trash2 } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
 import { Button } from "@/components/shared/button";
+import { MemberAvatar } from "@/components/shared/member-avatar";
 import {
   Dialog,
   DialogContent,
@@ -79,6 +81,7 @@ export function MemberEditorDialog({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [nameFocused, setNameFocused] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -116,8 +119,8 @@ export function MemberEditorDialog({
         });
       }
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon("error"));
+    } catch {
+      setError(tCommon("error"));
     } finally {
       setSubmitting(false);
     }
@@ -125,19 +128,13 @@ export function MemberEditorDialog({
 
   async function handleDelete() {
     if (!member) return;
-    if (
-      !window.confirm(
-        `${tCommon("areYouSure")}`,
-      )
-    )
-      return;
     setSubmitting(true);
     setError(null);
     try {
       await onDelete(member.id);
       onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon("error"));
+    } catch {
+      setError(tCommon("error"));
     } finally {
       setSubmitting(false);
     }
@@ -239,7 +236,7 @@ export function MemberEditorDialog({
           </div>
 
           {error && (
-            <p role="alert" className="text-sm text-accent-rose">
+            <p role="alert" className="text-sm text-danger-ink">
               {error}
             </p>
           )}
@@ -250,12 +247,11 @@ export function MemberEditorDialog({
             ) : (
               <Button
                 type="button"
-                variant="ghost"
-                onClick={handleDelete}
+                variant="danger"
+                onClick={() => setConfirmOpen(true)}
                 disabled={submitting}
-                className="text-accent-rose hover:bg-accent-rose/10"
               >
-                <Trash2 className="size-4" />
+                <Trash2 className="size-5" />
                 {tCommon("delete")}
               </Button>
             )}
@@ -279,6 +275,22 @@ export function MemberEditorDialog({
           </div>
         </form>
       </DialogContent>
+      {member && (
+        <ConfirmDialog
+          open={confirmOpen}
+          onOpenChange={setConfirmOpen}
+          title={tSettings("members.deleteConfirm", { name: member.name })}
+          preview={
+            <MemberAvatar
+              name={member.name}
+              color={member.color}
+              emoji={member.emoji}
+              size="lg"
+            />
+          }
+          onConfirm={handleDelete}
+        />
+      )}
     </Dialog>
   );
 }

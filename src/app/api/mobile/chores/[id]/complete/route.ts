@@ -1,7 +1,7 @@
 import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { requireMobileAuth } from "@/lib/mobile-auth";
-import { getWeeklyTotalsForMember } from "@/lib/queries";
+import { getTodayRange, getWeeklyTotalsForMember } from "@/lib/queries";
 import { sendNotificationToFamily } from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -10,26 +10,8 @@ export const dynamic = "force-dynamic";
 type Ctx = { params: Promise<{ id: string }> };
 
 function todayBoundaries(): { startOfToday: Date; endOfToday: Date } {
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    0,
-    0,
-    0,
-    0,
-  );
-  const endOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0,
-    0,
-    0,
-    0,
-  );
-  return { startOfToday, endOfToday };
+  const { start, end } = getTodayRange();
+  return { startOfToday: start, endOfToday: end };
 }
 
 export const POST = withErrorHandling<Ctx>(async (req, { params }) => {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChefHat, Plus, Search } from "lucide-react";
+import { KidToast } from "@/components/kids/kid-toast";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { RecipeCard } from "./recipe-card";
@@ -26,16 +27,13 @@ export function RecipeGrid({
   onAddToGrocery,
 }: RecipeGridProps) {
   const t = useTranslations("meals");
+  const tKids = useTranslations("kids");
+  const tCommon = useTranslations("common");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Recipe | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-
-  function showToast(msg: string) {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2800);
-  }
+  const [toast, setToast] = useState<{ tone: "success" | "error"; text: string } | null>(null);
 
   const allTags = Array.from(
     new Set(recipes.flatMap((r) => r.tags)),
@@ -63,9 +61,9 @@ export function RecipeGrid({
   async function handleAddToGrocery(recipe: Recipe) {
     try {
       await onAddToGrocery(recipe.id);
-      showToast(t("recipe.addedToGrocery"));
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t("recipe.addToGrocery"));
+      setToast({ tone: "success", text: t("recipe.addedToGrocery") });
+    } catch {
+      setToast({ tone: "error", text: tKids("errorGeneric") });
     }
   }
 
@@ -73,12 +71,12 @@ export function RecipeGrid({
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted pointer-events-none" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-muted" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder={t("recipe.search")}
-            className="h-12 w-full rounded-2xl border border-border bg-surface pl-9 pr-4 text-sm text-ink placeholder:text-muted transition-shadow focus:ring-2 focus:ring-ink/20"
+            className="h-12 w-full rounded-2xl border border-border bg-surface pl-10 pr-4 text-base text-ink placeholder:text-muted transition-shadow focus:ring-2 focus:ring-ink/20"
           />
         </div>
         <Button onClick={openNew}>
@@ -92,23 +90,23 @@ export function RecipeGrid({
           <button
             type="button"
             onClick={() => setTagFilter(null)}
-            className={`rounded-full px-3 py-1 text-sm transition-colors ${
+            className={`kid-label min-h-12 rounded-full px-4 transition-colors focus-ring-kid ${
               tagFilter === null
                 ? "bg-ink text-bg"
-                : "bg-border text-muted hover:text-ink"
+                : "bg-border text-ink"
             }`}
           >
-            All
+            {tCommon("all")}
           </button>
           {allTags.map((tag) => (
             <button
               key={tag}
               type="button"
               onClick={() => setTagFilter(tag === tagFilter ? null : tag)}
-              className={`rounded-full px-3 py-1 text-sm transition-colors ${
+              className={`kid-label min-h-12 rounded-full px-4 transition-colors focus-ring-kid ${
                 tagFilter === tag
-                  ? "bg-accent-mint/60 text-ink"
-                  : "bg-accent-mint/20 text-ink hover:bg-accent-mint/40"
+                  ? "bg-accent-mint text-on-accent"
+                  : "bg-accent-mint-tint text-accent-mint-ink"
               }`}
             >
               {tag}
@@ -155,13 +153,14 @@ export function RecipeGrid({
       />
 
       {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-ink shadow-lift md:bottom-8"
+        <KidToast
+          tone={toast.tone}
+          picto={toast.tone === "success" ? "shopping" : "oops"}
+          durationMs={6000}
+          onDismiss={() => setToast(null)}
         >
-          {toast}
-        </div>
+          {toast.text}
+        </KidToast>
       )}
     </div>
   );

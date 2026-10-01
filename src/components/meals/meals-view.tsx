@@ -9,6 +9,8 @@ import {
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { format, startOfWeek, addWeeks } from "date-fns";
+import { KidToast } from "@/components/kids/kid-toast";
+import { ErrorState, Skeleton } from "@/components/kids/state-views";
 import { cn } from "@/lib/utils";
 import { WeekPlan } from "./plan/week-plan";
 import { RecipeGrid } from "./recipes/recipe-grid";
@@ -66,7 +68,10 @@ function buildMealsKey(from: string, to: string): QueryKey {
 export function MealsView({ initialMembers }: MealsViewProps) {
   const t = useTranslations("meals");
   const queryClient = useQueryClient();
+  const tKids = useTranslations("kids");
   const [tab, setTab] = useState<Tab>("plan");
+  const [groceryUndo, setGroceryUndo] = useState<GroceryItem | null>(null);
+  const [groceryError, setGroceryError] = useState(false);
   const [weekOffset, setWeekOffset] = useState(0);
 
   const weekStart = startOfWeek(addWeeks(new Date(), weekOffset), {
@@ -76,7 +81,12 @@ export function MealsView({ initialMembers }: MealsViewProps) {
   const to = format(addWeeks(weekStart, 1), "yyyy-MM-dd");
   const mealsKey = buildMealsKey(from, to);
 
-  const { data: meals = [] } = useQuery<MealPlan[]>({
+  const {
+    data: meals = [],
+    isLoading: mealsLoading,
+    isError: mealsError,
+    refetch: refetchMeals,
+  } = useQuery<MealPlan[]>({
     queryKey: mealsKey,
     queryFn: () =>
       jsonRequest<MealPlan[]>(`/api/meals?from=${from}&to=${to}`, "GET"),
@@ -202,6 +212,27 @@ export function MealsView({ initialMembers }: MealsViewProps) {
     },
   });
 
+  // The API has no undelete, so "undo" recreates the item from the snapshot.
+  const restoreGroceryMutation = useMutation({
+    mutationFn: async (item: GroceryItem) => {
+      const created = await jsonRequest<GroceryItem>("/api/grocery", "POST", {
+        name: item.name,
+        quantity: item.quantity ?? undefined,
+        unit: item.unit ?? undefined,
+        category: item.category ?? undefined,
+      } satisfies GroceryCreateInput);
+      if (item.checked) {
+        await jsonRequest<GroceryItem>(`/api/grocery/${created.id}`, "PATCH", {
+          checked: true,
+        } satisfies GroceryPatchInput);
+      }
+    },
+    onError: () => setGroceryError(true),
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: GROCERY_KEY });
+    },
+  });
+
   const clearCheckedMutation = useMutation({
     mutationFn: () =>
       jsonRequest<{ ok: true }>("/api/grocery/clear-checked", "POST"),
@@ -246,22 +277,24 @@ export function MealsView({ initialMembers }: MealsViewProps) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {t("title")}
         </h2>
       </div>
 
-      <div className="flex rounded-2xl border border-border bg-bg p-1 gap-1 w-fit">
+      <div role="tablist" aria-label={t("title")} className="flex w-full gap-2 rounded-2xl border border-border bg-surface p-1 sm:w-fit">
         {TABS.map(({ key, label }) => (
           <button
             key={key}
             type="button"
+            role="tab"
+            aria-selected={tab === key}
             onClick={() => setTab(key)}
             className={cn(
-              "tap-target px-5 rounded-xl text-sm font-medium transition-colors",
+              "kid-label min-h-12 flex-1 whitespace-nowrap rounded-xl px-1 transition-colors duration-kid focus-ring-kid sm:flex-none sm:px-5",
               tab === key
-                ? "bg-surface text-ink shadow-sm"
-                : "text-muted hover:text-ink",
+                ? "bg-accent-peach-tint text-accent-peach-ink shadow-pop"
+                : "text-ink",
             )}
           >
             {label}
@@ -269,7 +302,19 @@ export function MealsView({ initialMembers }: MealsViewProps) {
         ))}
       </div>
 
-      {tab === "plan" && (
+      {tab === "plan" && mealsLoading && (
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-4" aria-busy="true">
+          {Array.from({ length: 8 }, (_, i) => (
+            <Skeleton key={i} className="h-[72px] rounded-2xl" />
+          ))}
+        </div>
+      )}
+
+      {tab === "plan" && mealsError && !mealsLoading && (
+        <ErrorState onRetry={() => void refetchMeals()} />
+      )}
+
+      {tab === "plan" && !mealsLoading && !mealsError && (
         <WeekPlan
           meals={meals}
           recipes={recipes}
@@ -323,7 +368,9 @@ export function MealsView({ initialMembers }: MealsViewProps) {
             patchGroceryMutation.mutate({ id, patch });
           }}
           onDelete={(id) => {
+            const removed = groceryItems.find((item) => item.id === id);
             deleteGroceryMutation.mutate(id);
+            if (removed) setGroceryUndo(removed);
           }}
           onClearChecked={async () => {
             await clearCheckedMutation.mutateAsync();
@@ -335,6 +382,23 @@ export function MealsView({ initialMembers }: MealsViewProps) {
             await addFromWeekMutation.mutateAsync();
           }}
         />
+      )}
+
+      {groceryUndo && (
+        <KidToast
+          tone="success"
+          picto="shopping"
+          durationMs={8000}
+          action={{ kind: "undo", onClick: () => restoreGroceryMutation.mutate(groceryUndo) }}
+          onDismiss={() => setGroceryUndo(null)}
+        >
+          <span className="line-clamp-2">{t("grocery.deleted", { name: groceryUndo.name })}</span>
+        </KidToast>
+      )}
+      {groceryError && !groceryUndo && (
+        <KidToast tone="error" picto="oops" durationMs={8000} onDismiss={() => setGroceryError(false)}>
+          {tKids("errorGeneric")}
+        </KidToast>
       )}
     </div>
   );

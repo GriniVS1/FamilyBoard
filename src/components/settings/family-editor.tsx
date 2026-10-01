@@ -165,7 +165,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
             onBlur={() => setNameFocused(false)}
             disabled={disabled || savingName}
             maxLength={60}
-            placeholder="The Smith Family"
+            placeholder={t("familyNamePlaceholder")}
             className="flex-1"
           />
           <Button
@@ -178,7 +178,7 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
         </div>
         <InlineKeyboardPanel open={nameFocused} value={name} onChange={setName} />
         {nameOk && (
-          <p className="text-xs text-accent-mint">{t("saved")}</p>
+          <p className="text-xs text-success-ink">{t("saved")}</p>
         )}
       </form>
 
@@ -299,12 +299,12 @@ export function FamilyEditor({ family, disabled, onUpdate }: FamilyEditorProps) 
           </Button>
         </div>
         {weatherOk && (
-          <p className="text-xs text-accent-mint">{t("saved")}</p>
+          <p className="text-xs text-success-ink">{t("saved")}</p>
         )}
       </form>
 
       {error && (
-        <p role="alert" className="text-sm text-accent-rose">
+        <p role="alert" className="text-sm text-danger-ink">
           {error}
         </p>
       )}

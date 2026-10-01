@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { AnimatePresence } from "framer-motion";
 import { CalendarDays, ShoppingBasket, ShoppingCart } from "lucide-react";
 import { format, startOfWeek } from "date-fns";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
+import { KidToast } from "@/components/kids/kid-toast";
 import { Button } from "@/components/shared/button";
 import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
@@ -42,22 +44,20 @@ export function GroceryList({
   onAddFromWeek,
 }: GroceryListProps) {
   const t = useTranslations("meals");
+  const tKids = useTranslations("kids");
   const [pickRecipeOpen, setPickRecipeOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ tone: "success" | "error"; text: string } | null>(null);
   const [weekLoading, setWeekLoading] = useState(false);
+  const [clearOpen, setClearOpen] = useState(false);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2800);
-  }
 
   async function handleAddFromWeek() {
     setWeekLoading(true);
     try {
       await onAddFromWeek();
-      showToast(t("grocery.addedFromWeek"));
-    } catch (err) {
-      showToast(err instanceof Error ? err.message : t("grocery.addedFromWeek"));
+      setToast({ tone: "success", text: t("grocery.addedFromWeek") });
+    } catch {
+      setToast({ tone: "error", text: tKids("errorGeneric") });
     } finally {
       setWeekLoading(false);
     }
@@ -92,9 +92,7 @@ export function GroceryList({
         {checkedCount > 0 && (
           <Button
             variant="ghost"
-            onClick={async () => {
-              await onClearChecked();
-            }}
+            onClick={() => setClearOpen(true)}
             className="ml-auto text-sm text-muted"
           >
             {t("grocery.clearChecked")}
@@ -120,7 +118,7 @@ export function GroceryList({
       <div className="flex flex-col gap-4">
         {Object.entries(grouped).map(([category, categoryItems]) => (
           <section key={category}>
-            <h3 className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-[0.14em] text-muted">
               {category
                 ? t(`grocery.categories.${category}` as Parameters<typeof t>[0])
                 : t("grocery.categories.other")}
@@ -149,14 +147,23 @@ export function GroceryList({
         onPick={onAddFromRecipe}
       />
 
+      <ConfirmDialog
+        open={clearOpen}
+        onOpenChange={setClearOpen}
+        title={t("grocery.clearConfirm")}
+        picto="shopping"
+        onConfirm={onClearChecked}
+      />
+
       {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-2xl border border-border bg-surface px-4 py-3 text-sm text-ink shadow-lift md:bottom-8"
+        <KidToast
+          tone={toast.tone}
+          picto={toast.tone === "success" ? "shopping" : "oops"}
+          durationMs={6000}
+          onDismiss={() => setToast(null)}
         >
-          {toast}
-        </div>
+          {toast.text}
+        </KidToast>
       )}
     </div>
   );

@@ -7,11 +7,13 @@ import {
   type QueryKey,
 } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { ImagePlus, Loader2, Trash2, Upload } from "lucide-react";
+import { Loader2, Trash2, Upload } from "lucide-react";
 import { useRef, useState, type ChangeEvent } from "react";
 import { useTranslations } from "next-intl";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
+import { KidToast } from "@/components/kids/kid-toast";
+import { EmptyState, ErrorState, Skeleton } from "@/components/kids/state-views";
 import { Button } from "@/components/shared/button";
-import { GlassCard } from "@/components/shared/glass-card";
 import { cn } from "@/lib/utils";
 import type { Photo } from "./types";
 import { PHOTO_MAX_BYTES } from "./types";
@@ -23,14 +25,7 @@ const QUERY_KEY: QueryKey = ["photos"];
 async function fetchPhotos(): Promise<Photo[]> {
   const res = await fetch("/api/photos", { cache: "no-store" });
   if (!res.ok) {
-    let message = `Failed to load photos (${res.status})`;
-    try {
-      const data = (await res.json()) as { error?: { message?: string } };
-      if (data?.error?.message) message = data.error.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(message);
+    throw new Error(`photos ${res.status}`);
   }
   return (await res.json()) as Photo[];
 }
@@ -41,14 +36,7 @@ async function uploadPhoto(file: File, caption?: string): Promise<Photo> {
   if (caption) fd.append("caption", caption);
   const res = await fetch("/api/photos", { method: "POST", body: fd });
   if (!res.ok) {
-    let message = `Upload failed (${res.status})`;
-    try {
-      const data = (await res.json()) as { error?: { message?: string } };
-      if (data?.error?.message) message = data.error.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(message);
+    throw new Error(`upload ${res.status}`);
   }
   return (await res.json()) as Photo;
 }
@@ -56,14 +44,7 @@ async function uploadPhoto(file: File, caption?: string): Promise<Photo> {
 async function deletePhoto(id: string): Promise<{ ok: true }> {
   const res = await fetch(`/api/photos/${id}`, { method: "DELETE" });
   if (!res.ok) {
-    let message = `Delete failed (${res.status})`;
-    try {
-      const data = (await res.json()) as { error?: { message?: string } };
-      if (data?.error?.message) message = data.error.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(message);
+    throw new Error(`delete ${res.status}`);
   }
   return (await res.json()) as { ok: true };
 }
@@ -74,15 +55,15 @@ export function PhotosView(_: PhotosViewProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Photo | null>(null);
 
-  const { data: photos = [], isLoading, error } = useQuery({
+  const { data: photos = [], isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchPhotos,
   });
 
   function showToast(msg: string) {
     setToast(msg);
-    window.setTimeout(() => setToast(null), 2800);
   }
 
   const uploadMutation = useMutation({
@@ -90,8 +71,8 @@ export function PhotosView(_: PhotosViewProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
-    onError: (err) => {
-      showToast(err instanceof Error ? err.message : t("uploadFailed"));
+    onError: () => {
+      showToast(t("uploadFailed"));
     },
   });
 
@@ -106,9 +87,9 @@ export function PhotosView(_: PhotosViewProps) {
       );
       return { previous };
     },
-    onError: (err, _id, ctx) => {
+    onError: (_err, _id, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : t("couldNotDelete"));
+      showToast(t("couldNotDelete"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -142,32 +123,31 @@ export function PhotosView(_: PhotosViewProps) {
     }
   }
 
-  function handleDelete(photo: Photo) {
-    if (!window.confirm(t("deleteConfirm"))) return;
-    deleteMutation.mutate(photo.id);
+  async function confirmDelete(photo: Photo) {
+    await deleteMutation.mutateAsync(photo.id);
   }
 
   function pickFiles() {
     inputRef.current?.click();
   }
 
-  const isEmpty = !isLoading && photos.length === 0 && !error;
+  const isEmpty = !isLoading && photos.length === 0 && !isError;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {t("title")}
         </h2>
         <div className="flex items-center gap-2">
           {uploading && (
-            <span className="inline-flex items-center gap-2 text-sm text-muted">
-              <Loader2 className="size-4 animate-spin" />
+            <span className="kid-label inline-flex items-center gap-2 text-muted">
+              <Loader2 className="size-4 motion-safe:animate-spin" />
               {t("uploading")}
             </span>
           )}
           <Button onClick={pickFiles} disabled={uploading}>
-            <Upload className="size-5" />
+            <Upload className="size-5" strokeWidth={2.5} />
             {t("upload")}
           </Button>
         </div>
@@ -182,36 +162,61 @@ export function PhotosView(_: PhotosViewProps) {
         onChange={handleFileChange}
       />
 
-      {error && (
-        <div
-          role="alert"
-          className="rounded-2xl border border-accent-rose/40 bg-accent-rose/10 px-4 py-3 text-sm text-ink"
-        >
-          {error instanceof Error ? error.message : t("couldNotLoad")}
+      {isLoading && (
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4" aria-busy="true">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="aspect-square rounded-3xl" />
+          ))}
         </div>
       )}
 
-      {isEmpty ? (
-        <EmptyState onUpload={pickFiles} />
-      ) : (
+      {isError && !isLoading && (
+        <ErrorState onRetry={() => void refetch()} detail={t("couldNotLoad")} />
+      )}
+
+      {isEmpty && (
+        <EmptyState
+          picto="nav-photos"
+          title={t("empty")}
+          description={t("emptyDesc")}
+          onCreate={pickFiles}
+          createLabel={t("upload")}
+        />
+      )}
+
+      {!isLoading && !isError && !isEmpty && (
         <ul
           className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-4"
           aria-label={t("title")}
         >
           {photos.map((p) => (
-            <PhotoTile key={p.id} photo={p} onDelete={handleDelete} />
+            <PhotoTile key={p.id} photo={p} onDelete={setDeleteTarget} />
           ))}
         </ul>
       )}
 
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={t("deleteConfirm")}
+        preview={
+          deleteTarget ? (
+            <motion.img
+              src={deleteTarget.path}
+              alt=""
+              className="size-24 rounded-2xl border border-border object-cover"
+            />
+          ) : null
+        }
+        onConfirm={() => (deleteTarget ? confirmDelete(deleteTarget) : undefined)}
+      />
+
       {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-2xl border border-accent-rose/40 bg-surface px-4 py-3 text-sm text-ink shadow-lift md:bottom-8"
-        >
+        <KidToast tone="error" picto="oops" durationMs={8000} onDismiss={() => setToast(null)}>
           {toast}
-        </div>
+        </KidToast>
       )}
     </div>
   );
@@ -228,7 +233,7 @@ function PhotoTile({ photo, onDelete }: PhotoTileProps) {
   return (
     <li
       className={cn(
-        "group relative aspect-square overflow-hidden rounded-3xl border border-border bg-bg shadow-soft",
+        "relative aspect-square overflow-hidden rounded-3xl border border-border bg-bg shadow-soft",
       )}
     >
       <motion.img
@@ -244,12 +249,11 @@ function PhotoTile({ photo, onDelete }: PhotoTileProps) {
       {photo.caption && (
         <div
           className={cn(
-            "pointer-events-none absolute inset-x-0 bottom-0 px-3 py-2",
-            "bg-gradient-to-t from-ink/60 to-transparent",
-            "opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100",
+            "pointer-events-none absolute inset-x-0 bottom-0 px-3 pb-2 pt-6",
+            "bg-gradient-to-t from-[hsl(var(--shadow)/0.7)] to-transparent",
           )}
         >
-          <p className="line-clamp-2 text-xs text-bg">{photo.caption}</p>
+          <p className="kid-label line-clamp-2 text-[hsl(var(--picto-shine))]">{photo.caption}</p>
         </div>
       )}
 
@@ -258,39 +262,13 @@ function PhotoTile({ photo, onDelete }: PhotoTileProps) {
         onClick={() => onDelete(photo)}
         aria-label={t("deletePhoto")}
         className={cn(
-          "absolute right-2 top-2 size-12 tap-target inline-flex items-center justify-center rounded-full",
-          "bg-surface/90 text-accent-rose shadow-soft backdrop-blur-sm",
-          "opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
+          "absolute right-2 top-2 inline-flex size-12 items-center justify-center rounded-full",
+          "border border-danger/40 bg-surface/90 text-danger-ink shadow-soft backdrop-blur-sm",
+          "focus-ring-kid",
         )}
       >
-        <Trash2 className="size-4" />
+        <Trash2 className="size-5" />
       </button>
     </li>
-  );
-}
-
-function EmptyState({ onUpload }: { onUpload: () => void }) {
-  const t = useTranslations("photos");
-
-  return (
-    <GlassCard className="mx-auto flex w-full max-w-md flex-col items-center gap-4 p-10 text-center">
-      <span
-        className="inline-flex size-20 items-center justify-center rounded-full bg-accent-sky/30 text-ink"
-        aria-hidden
-      >
-        <ImagePlus className="size-9" />
-      </span>
-      <h3 className="font-display text-2xl tracking-tight text-ink">
-        {t("empty")}
-      </h3>
-      <p className="text-sm text-muted">
-        {t("emptyDesc")}
-      </p>
-      <Button onClick={onUpload}>
-        <Upload className="size-5" />
-        {t("upload")}
-      </Button>
-    </GlassCard>
   );
 }

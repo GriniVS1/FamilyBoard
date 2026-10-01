@@ -40,8 +40,8 @@ export function PickFromRecipeDialog({
       onOpenChange(false);
       setSelected("");
       setMultiplier("1");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : tCommon("error"));
+    } catch {
+      setError(tCommon("error"));
     } finally {
       setLoading(false);
     }
@@ -50,7 +50,7 @@ export function PickFromRecipeDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <DialogTitle>
+        <DialogTitle className="pr-14">
           <span className="inline-flex items-center gap-2">
             <ChefHat className="size-5" />
             {t("grocery.addFromRecipe")}
@@ -67,7 +67,7 @@ export function PickFromRecipeDialog({
                 className={cn(
                   "tap-target flex items-center gap-3 rounded-2xl border px-4 text-left transition-colors",
                   selected === r.id
-                    ? "border-accent-mint bg-accent-mint/20"
+                    ? "border-accent-mint bg-accent-mint-tint"
                     : "border-border bg-bg hover:bg-surface",
                 )}
               >
@@ -90,12 +90,12 @@ export function PickFromRecipeDialog({
                 step={0.5}
                 value={multiplier}
                 onChange={(e) => setMultiplier(e.target.value)}
-                className="h-11 w-24 rounded-2xl border border-border bg-surface px-4 text-sm tabular text-ink transition-shadow focus:ring-2 focus:ring-ink/20"
+                className="h-12 w-24 rounded-2xl border border-border bg-surface px-4 text-base tabular text-ink transition-colors focus:border-focus"
               />
             </div>
           )}
 
-          {error && <p className="text-sm text-accent-rose">{error}</p>}
+          {error && <p role="alert" className="text-sm text-danger-ink">{error}</p>}
 
           <div className="flex justify-end gap-2">
             <Button

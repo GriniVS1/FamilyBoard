@@ -77,6 +77,30 @@ async function fetchWeather(): Promise<WeatherPayload> {
   return (await res.json()) as WeatherPayload;
 }
 
+type ConditionKey =
+  | "clear"
+  | "clearNight"
+  | "partly"
+  | "partlyNight"
+  | "cloudy"
+  | "fog"
+  | "rain"
+  | "snow"
+  | "thunder";
+
+function conditionForCode(code: number, isDay: boolean): ConditionKey {
+  if (code === 0) return isDay ? "clear" : "clearNight";
+  if (code === 1 || code === 2) return isDay ? "partly" : "partlyNight";
+  if (code === 3) return "cloudy";
+  if (code >= 45 && code <= 48) return "fog";
+  if (code >= 51 && code <= 67) return "rain";
+  if (code >= 71 && code <= 77) return "snow";
+  if (code >= 80 && code <= 82) return "rain";
+  if (code === 85 || code === 86) return "snow";
+  if (code >= 95) return "thunder";
+  return "cloudy";
+}
+
 function iconForCode(code: number, isDay: boolean): LucideIcon {
   if (code === 0) return isDay ? Sun : Moon;
   if (code === 1 || code === 2) return isDay ? Sun : CloudMoon;
@@ -118,10 +142,10 @@ export function WidgetWeather({ className, location }: WidgetWeatherProps) {
         className,
       )}
     >
-      <WidgetHeader title={t("now")} />
+      <WidgetHeader title={t("now")} titleClassName="text-ink/80" />
       {isLoading ? (
         <div className="flex flex-1 items-center gap-3 text-muted">
-          <Loader2 className="size-5 animate-spin" />
+          <Loader2 className="size-5 motion-safe:animate-spin" aria-hidden />
           <span className="text-sm">{t("now")}</span>
         </div>
       ) : notConfigured ? (
@@ -131,23 +155,19 @@ export function WidgetWeather({ className, location }: WidgetWeatherProps) {
           </p>
           <Link
             href="/settings"
-            className="text-sm font-medium text-ink underline-offset-2 hover:underline"
+            className="kid-label inline-flex min-h-12 items-center text-ink underline underline-offset-4 focus-ring-kid"
           >
             {t("openSettings")}
           </Link>
         </div>
       ) : error ? (
         <div className="flex flex-1 flex-col gap-1">
-          <p className="text-sm text-accent-rose">
-            {error instanceof Error
-              ? error.message
-              : t("couldNotLoad")}
-          </p>
+          <p className="text-sm text-danger-ink">{t("couldNotLoad")}</p>
         </div>
       ) : data ? (
         <WeatherContent data={data} />
       ) : null}
-      <span className="text-xs text-muted">
+      <span className="text-sm text-ink/80">
         {data?.label ?? location ?? t("setLocation")}
       </span>
     </GlassCard>
@@ -158,6 +178,8 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
   const locale = useLocale();
   const t = useTranslations("dashboard.widgets.weather");
   const NowIcon = iconForCode(data.now.code, data.now.isDay);
+  const condition = (code: number, isDay: boolean) =>
+    t(`conditions.${conditionForCode(code, isDay)}` as Parameters<typeof t>[0]);
   const hourly = data.hourly.slice(0, 6);
   const daily = data.daily.slice(0, 3);
 
@@ -180,8 +202,9 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
         <div className="flex flex-col">
           <span className="font-display text-4xl tabular leading-none tracking-tight text-ink">
             {Math.round(data.now.tempC)}°
+            <span className="sr-only">, {condition(data.now.code, data.now.isDay)}</span>
           </span>
-          <span className="mt-1 tabular text-xs text-ink/70">
+          <span className="mt-1 tabular text-sm text-ink/70">
             {t("wind", { speed: Math.round(data.now.windKmh) })}
           </span>
         </div>
@@ -199,12 +222,13 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
                 key={h.ts}
                 className="flex min-w-0 flex-1 flex-col items-center gap-1 text-center"
               >
-                <span className="tabular text-[10px] text-ink/70">
+                <span className="tabular text-xs text-ink/70">
                   {shortTime(h.ts)}
                 </span>
-                <Icon className="size-4 text-ink/80" strokeWidth={1.75} />
-                <span className="tabular text-xs text-ink">
+                <Icon className="size-4 text-ink/80" strokeWidth={1.75} aria-hidden />
+                <span className="tabular text-sm text-ink">
                   {Math.round(h.tempC)}°
+                  <span className="sr-only">, {condition(h.code, h.isDay)}</span>
                 </span>
               </li>
             );
@@ -224,12 +248,13 @@ function WeatherContent({ data }: { data: WeatherPayload }) {
                 key={d.date}
                 className="flex min-w-0 flex-1 items-center justify-center gap-1.5"
               >
-                <span className="text-xs text-ink/70">{shortDay(d.date)}</span>
-                <Icon className="size-4 text-ink/80" strokeWidth={1.75} />
-                <span className="tabular text-xs text-ink">
+                <span className="text-sm text-ink/70">{shortDay(d.date)}</span>
+                <Icon className="size-4 text-ink/80" strokeWidth={1.75} aria-hidden />
+                <span className="tabular text-sm text-ink">
                   {Math.round(d.maxC)}°
+                  <span className="sr-only">, {condition(d.code, true)}</span>
                 </span>
-                <span className="tabular text-[10px] text-ink/50">
+                <span className="tabular text-xs text-ink/80">
                   {Math.round(d.minC)}°
                 </span>
               </li>

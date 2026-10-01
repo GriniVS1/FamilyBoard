@@ -1,15 +1,17 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
+import { CHORE_TIME_OF_DAY } from "@/lib/enums";
 
 export const runtime = "nodejs";
 
 const patchSchema = z.object({
   memberId: z.string().min(1).nullable().optional(),
   title: z.string().trim().min(1).max(100).optional(),
-  icon: z.string().max(8).nullable().optional(),
+  icon: z.string().max(16).nullable().optional(),
   points: z.number().int().min(1).max(50).optional(),
   rrule: z.string().max(200).nullable().optional(),
+  timeOfDay: z.enum(CHORE_TIME_OF_DAY).nullable().optional(),
 });
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -38,6 +40,7 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
       icon: body.icon,
       points: body.points,
       rrule: body.rrule,
+      timeOfDay: body.timeOfDay,
     },
     select: {
       id: true,
@@ -47,6 +50,7 @@ export const PATCH = withErrorHandling<Ctx>(async (req, { params }) => {
       icon: true,
       points: true,
       rrule: true,
+      timeOfDay: true,
       createdAt: true,
     },
   });

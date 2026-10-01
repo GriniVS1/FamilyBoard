@@ -137,7 +137,7 @@ export function NetworkSection({ adminPin, unlocked }: NetworkSectionProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             role="alert"
-            className="text-sm text-accent-rose"
+            className="text-sm text-danger-ink"
           >
             {error}
           </motion.p>
@@ -164,7 +164,7 @@ export function NetworkSection({ adminPin, unlocked }: NetworkSectionProps) {
             variant="ghost"
             onClick={() => void handleForget()}
             disabled={!unlocked || forgetting}
-            className={forgetConfirm ? "text-accent-rose hover:bg-accent-rose/20" : "text-muted"}
+            className={forgetConfirm ? "text-danger-ink hover:bg-danger-tint" : "text-muted"}
           >
             {forgetting ? (
               <Loader2 className="size-4 animate-spin" />

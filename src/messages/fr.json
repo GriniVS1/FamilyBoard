@@ -33,17 +33,34 @@
     "noAuthor": "Sans auteur",
     "admin": "Admin",
     "member": "Membre",
-    "theme": "Thème"
+    "theme": "Thème",
+    "all": "Tous",
+    "selectColor": "Choisir la couleur {color}",
+    "colors": {
+      "peach": "Pêche",
+      "mint": "Menthe",
+      "sun": "Soleil",
+      "sky": "Ciel",
+      "lilac": "Lilas",
+      "rose": "Rose",
+      "teal": "Turquoise",
+      "sand": "Sable"
+    },
+    "backspace": "Effacer le dernier chiffre"
   },
   "nav": {
-    "dashboard": "Tableau de bord",
+    "dashboard": "Aujourd'hui",
     "calendar": "Calendrier",
     "meals": "Repas",
     "chores": "Tâches",
     "todos": "À faire",
     "notes": "Notes",
     "photos": "Photos",
-    "settings": "Paramètres"
+    "settings": "Paramètres",
+    "more": "Plus",
+    "primary": "Navigation principale",
+    "sidebar": "Rubriques",
+    "bottom": "Rubriques"
   },
   "shell": {
     "currentTime": "Heure actuelle"
@@ -179,19 +196,22 @@
       "today": {
         "title": "Aujourd'hui",
         "empty": "Rien de prévu. Profite !",
-        "noEventsToday": "Rien de prévu",
-        "couldNotLoad": "Impossible de charger les événements."
+        "couldNotLoad": "Impossible de charger les événements.",
+        "now": "Maintenant",
+        "morning": "Matin",
+        "day": "Journée",
+        "evening": "Soir"
       },
       "chores": {
         "title": "Tâches",
-        "completionsToday": "réalisées aujourd'hui",
-        "weeklyProgress": "Progrès hebdomadaire",
-        "stars": "étoiles",
-        "noChores": "Aucune tâche — configure-les dans /tâches.",
-        "markDone": "Marquer comme fait",
-        "noChoresInTab": "Aucune tâche à noter. Ajoutes-en dans l'onglet Tâches.",
-        "markDoneFor": "Marquer une tâche comme faite pour {name}",
-        "couldNotLoad": "Impossible de charger les tâches."
+        "openFor": "{name} : {count, plural, one {# tâche} other {# tâches}} à faire",
+        "allDoneFor": "{name} : tout est fait",
+        "nightFor": "{name} : c’est l’heure de dormir",
+        "pauseFor": "{name} : plus tard",
+        "noChoresFor": "{name} : aucune tâche",
+        "noMembers": "Aucune personne ajoutée.",
+        "unknownFor": "{name} : tâches non chargées",
+        "anyoneFor": "Pour tous : {count, plural, one {# tâche} other {# tâches}} à faire"
       },
       "todos": {
         "title": "À faire",
@@ -202,7 +222,7 @@
       },
       "notes": {
         "title": "Notes épinglées",
-        "empty": "Aucune note épinglée. Épingle-en une dans /notes.",
+        "empty": "Aucune note épinglée.",
         "openAll": "Voir tout",
         "couldNotLoad": "Impossible de charger les notes.",
         "pinned": "Épinglé",
@@ -220,7 +240,18 @@
         "notConfigured": "Définis ta position pour voir les prévisions.",
         "openSettings": "Ouvrir les paramètres",
         "setLocation": "Définir un lieu dans les paramètres",
-        "couldNotLoad": "Impossible de charger la météo."
+        "couldNotLoad": "Impossible de charger la météo.",
+        "conditions": {
+          "clear": "Ensoleillé",
+          "clearNight": "Nuit claire",
+          "partly": "Partiellement nuageux",
+          "partlyNight": "Partiellement nuageux",
+          "cloudy": "Nuageux",
+          "fog": "Brouillard",
+          "rain": "Pluie",
+          "snow": "Neige",
+          "thunder": "Orage"
+        }
       }
     },
     "updateSuccess": {
@@ -322,51 +353,85 @@
     "loading": "Chargement…",
     "couldNotLoad": "Impossible de charger les événements.",
     "nextHours": "Prochaines heures",
-    "nextDays": "Prochains jours"
+    "nextDays": "Prochains jours",
+    "everyone": "Tous",
+    "showOnly": "Afficher seulement {name}",
+    "viewSwitch": "Vue",
+    "eventDeleted": "Événement supprimé"
   },
   "chores": {
     "title": "Tâches",
     "addChore": "Nouvelle tâche",
-    "weeklyProgress": "Progrès hebdomadaire",
-    "completionsToday": "réalisées aujourd'hui",
-    "stars": "cette semaine",
-    "noMember": "Aucun membre assigné",
-    "anyone": "Tout le monde peut faire",
-    "anyoneSub": "Appuie pour noter — qui obtient les étoiles ?",
     "addChoreFor": "Ajouter une tâche pour {name}",
-    "addUnassigned": "Ajouter une tâche non assignée",
-    "addFirst": "Ajouter une tâche",
-    "thisWeek": "cette semaine",
+    "addUnassigned": "Ajouter une tâche pour tous",
+    "anyone": "Pour tous",
+    "all": "Tous",
+    "allA11y": "Afficher tout le monde",
+    "focusOn": "Afficher seulement {name}",
+    "starsWeek": "{count, plural, one {# étoile} other {# étoiles}} cette semaine",
     "timesThisWeek": "{count}× cette semaine",
-    "emptyTitle": "Aucune tâche",
-    "emptyDesc": "Fixe quelques objectifs simples pour la semaine. Les étoiles font sourire.",
-    "createFirst": "Créer ta première tâche",
-    "whoDidIt": "Qui l'a fait ?",
-    "whoDidItDesc": "{title} — choisis le membre de la famille qui a gagné les étoiles.",
-    "couldNotLog": "Impossible d'enregistrer l'étoile.",
+    "emptyTitle": "Pas encore de tâches",
+    "emptyHint": "Touche « Modifier » en haut pour créer des tâches.",
     "couldNotLoad": "Impossible de charger les tâches.",
+    "whoTitle": "Qui l’a fait ?",
+    "whoPick": "{name} l’a fait",
+    "close": "Fermer",
+    "celebrateSr": "{name} a tout fini aujourd’hui !",
+    "card": {
+      "label": "{title}, {points, plural, one {# étoile} other {# étoiles}}",
+      "retry": "{title} : réessayer",
+      "edit": "Modifier {title}",
+      "doneMini": "{title} : terminée. Toucher pour annuler"
+    },
+    "group": {
+      "collapse": "Réduire {name}",
+      "expand": "Développer {name}",
+      "progress": "{done} sur {total} terminées"
+    },
+    "state": {
+      "allDone": "Tout est fait !",
+      "night": "Dodo",
+      "pause": "Plus tard"
+    },
+    "column": {
+      "empty": "Aucune tâche"
+    },
+    "toast": {
+      "stars": "{name} gagne {count, plural, one {# étoile} other {# étoiles}}"
+    },
     "dialog": {
       "newTitle": "Nouvelle tâche",
       "editTitle": "Modifier la tâche",
-      "name": "Titre",
-      "points": "Étoiles",
-      "frequency": "Fréquence",
-      "frequencyOptions": {
-        "daily": "Quotidien",
-        "weekly": "Hebdomadaire",
-        "once": "Une fois"
+      "previewTitle": "Tâche",
+      "sectionPicture": "Image",
+      "sectionWho": "Qui ?",
+      "sectionWhen": "Quand ?",
+      "sectionStars": "Étoiles",
+      "sectionTitle": "Titre",
+      "cat": {
+        "body": "Corps et bain",
+        "dress": "S’habiller",
+        "tidy": "Ranger",
+        "food": "Repas et boissons",
+        "nature": "Animaux et plantes",
+        "school": "École et apprentissage",
+        "help": "Aider"
       },
-      "member": "Qui",
+      "ownEmoji": "Propre symbole",
+      "moreStars": "plus",
+      "starsN": "{count, plural, one {# étoile} other {# étoiles}}",
+      "titlePlaceholder": "p. ex. Vider le lave-vaisselle",
       "delete": "Supprimer",
-      "titleRequired": "Donne un titre à la tâche.",
-      "deleteConfirm": "Supprimer cette tâche ? Les étoiles passées restent.",
-      "iconLabel": "Icône",
-      "noIcon": "Aucune",
+      "deleteTitle": "Supprimer la tâche ? Les étoiles gagnées avec elle sont aussi supprimées.",
       "cancel": "Annuler",
       "save": "Enregistrer",
-      "couldNotSave": "Impossible d'enregistrer.",
-      "couldNotDelete": "Impossible de supprimer."
-    }
+      "couldNotSave": "Ça n’a pas marché. Réessaie.",
+      "couldNotDelete": "La suppression n’a pas marché."
+    },
+    "anyoneChip": "{title} : pour tous, toucher pour enregistrer",
+    "anyoneMore": "Afficher toutes les tâches pour tous",
+    "anyoneGo": "Aller aux tâches pour tous",
+    "undoTask": "Annuler : {title}"
   },
   "todos": {
     "title": "À faire",
@@ -385,7 +450,10 @@
     "couldNotUpdate": "Impossible de mettre à jour.",
     "couldNotDelete": "Impossible de supprimer.",
     "couldNotLoad": "Impossible de charger les tâches à faire.",
-    "markDone": "Marquer {title} comme terminé"
+    "markDone": "Marquer {title} comme terminé",
+    "deleteConfirm": "Supprimer « {title} » ?",
+    "deleted": "« {title} » supprimé",
+    "couldNotRestore": "Impossible de le restaurer."
   },
   "notes": {
     "title": "Notes",
@@ -412,7 +480,9 @@
       "couldNotSave": "Impossible d'enregistrer.",
       "couldNotDelete": "Impossible de supprimer.",
       "writeFirst": "Écris quelque chose d'abord."
-    }
+    },
+    "deleted": "Note supprimée",
+    "couldNotRestore": "Impossible de la restaurer."
   },
   "photos": {
     "title": "Photos",
@@ -466,7 +536,8 @@
       "maxReachedHint": "Maximum de {max} membres atteint.",
       "remove": "Supprimer le membre",
       "noMembers": "Aucun membre pour l'instant.",
-      "editMember": "Modifier {name}"
+      "editMember": "Modifier {name}",
+      "deleteConfirm": "Retirer « {name} » ?"
     },
     "calendarConnectViaApp": "Connectez vos calendriers (Google, Outlook, CalDAV) depuis l'application FamilyBoard sur votre téléphone.",
     "google": {
@@ -595,12 +666,14 @@
     },
     "navConfig": {
       "title": "Navigation",
-      "description": "Choisissez les fonctionnalités qui apparaissent dans le menu, et dans quel ordre.",
-      "alwaysVisibleHint": "Le tableau de bord et les réglages sont toujours visibles.",
+      "description": "Choisissez quelles rubriques apparaissent dans le menu et dans quel ordre. Les rubriques des enfants passent toujours avant celles des adultes.",
+      "alwaysVisibleHint": "« Aujourd'hui » est toujours en premier, « Tâches » juste après et « Paramètres » en dernier. « Aujourd'hui » et « Paramètres » sont toujours visibles.",
       "moveUp": "Déplacer {name} vers le haut",
       "moveDown": "Déplacer {name} vers le bas",
       "toggleAria": "Afficher {name} dans la navigation",
-      "saveError": "Impossible d'enregistrer l'ordre de navigation. Veuillez réessayer."
+      "saveError": "Impossible d'enregistrer l'ordre de navigation. Veuillez réessayer.",
+      "groupKids": "Rubriques des enfants",
+      "groupAdults": "Rubriques des adultes"
     },
     "caldav": {
       "title": "Apple / CalDAV",
@@ -659,7 +732,8 @@
         "expired": "Session expirée. Réessaie.",
         "generic": "Une erreur inattendue s'est produite.",
         "denied": "Accès refusé."
-      }
+      },
+      "disconnectConfirm": "Déconnecter ce calendrier Outlook ?"
     },
     "push": {
       "title": "Notifications push",
@@ -757,7 +831,10 @@
         "error": "Impossible de créer un code. Veuillez réessayer.",
         "unavailable": "L'accès à distance n'est pas connecté pour le moment."
       }
-    }
+    },
+    "appearance": "Apparence",
+    "appearanceDescription": "Clair ou sombre, pour cet écran uniquement.",
+    "familyNamePlaceholder": "p. ex. La famille Martin"
   },
   "meals": {
     "title": "Repas",
@@ -829,7 +906,14 @@
         "meat": "Viande & poisson",
         "drinks": "Boissons",
         "other": "Autre"
-      }
+      },
+      "check": "Cocher",
+      "uncheck": "Décocher",
+      "editItem": "Modifier {name}",
+      "deleteItem": "Supprimer {name}",
+      "removeIngredient": "Retirer l’ingrédient",
+      "deleted": "« {name} » retiré",
+      "clearConfirm": "Retirer les articles cochés ?"
     }
   },
   "screensaver": {
@@ -884,7 +968,9 @@
     "statusActive": "Actif",
     "statusTrial": "Essai",
     "statusExpired": "Expiré",
-    "statusUnlicensed": "Sans licence"
+    "statusUnlicensed": "Sans licence",
+    "graceBannerShort": "Essai : encore {days, plural, =1 {1 jour} other {# jours}}",
+    "softBannerShort": "Écriture bloquée"
   },
   "errors": {
     "generic": "Une erreur s'est produite.",
@@ -910,5 +996,86 @@
     "reasonLabel": "Raison : {reason}",
     "google": "Google",
     "microsoft": "Microsoft"
+  },
+  "pictos": {
+    "water": "Boire de l'eau",
+    "teeth": "Se brosser les dents",
+    "tidy-toys": "Ranger les jouets",
+    "get-dressed": "S'habiller",
+    "make-bed": "Faire son lit",
+    "set-table": "Mettre la table",
+    "feed-dog": "Nourrir le chien",
+    "feed-cat": "Nourrir le chat",
+    "trash": "Sortir la poubelle",
+    "water-plants": "Arroser les plantes",
+    "homework": "Devoirs",
+    "read": "Lire",
+    "laundry": "Plier le linge",
+    "wash-clothes": "Faire la lessive",
+    "dishes": "Faire la vaisselle",
+    "wash-hands": "Se laver les mains",
+    "bath": "Le bain",
+    "pajamas": "Mettre son pyjama",
+    "backpack": "Préparer le cartable",
+    "sweep": "Balayer",
+    "vacuum": "Passer l'aspirateur",
+    "breakfast": "Manger",
+    "medicine": "Prendre le médicament",
+    "music": "Faire de la musique",
+    "tidy-room": "Ranger sa chambre",
+    "shoes": "Ranger les chaussures",
+    "shopping": "Faire les courses",
+    "nav-home": "Accueil",
+    "nav-calendar": "Calendrier",
+    "nav-meals": "Repas",
+    "nav-tasks": "Tâches",
+    "nav-todos": "À faire",
+    "nav-notes": "Notes",
+    "nav-photos": "Photos",
+    "nav-settings": "Paramètres",
+    "nav-more": "Plus",
+    "tod-morning": "Matin",
+    "tod-day": "Journée",
+    "tod-evening": "Soir",
+    "tod-night": "Nuit",
+    "tod-anytime": "Quand tu veux",
+    "celebrate": "Bravo !",
+    "oops": "Oups",
+    "relax": "Tout est fait",
+    "star": "Étoile",
+    "undo": "Annuler",
+    "next": "Ensuite",
+    "pause": "Plus tard",
+    "event-school": "École",
+    "event-kindergarten": "École enfantine",
+    "event-soccer": "Football",
+    "event-swim": "Natation",
+    "event-doctor": "Médecin",
+    "event-birthday": "Anniversaire",
+    "event-dinner": "Repas du soir",
+    "event-music": "Cours de musique",
+    "event-play": "Jouer",
+    "event-trip": "Excursion",
+    "event-bike": "Vélo"
+  },
+  "kids": {
+    "undo": "Annuler",
+    "retry": "Réessayer",
+    "dismiss": "Fermer",
+    "add": "Ajouter",
+    "errorGeneric": "Ça n’a pas marché.",
+    "offline": "Pas de connexion",
+    "loading": "Chargement…"
+  },
+  "parentMode": {
+    "edit": "Modifier",
+    "pinTitle": "Code parent",
+    "pinHint": "Saisis le code pour modifier les tâches",
+    "wrongPin": "Code incorrect. Réessaie.",
+    "tooMany": "Trop d’essais. Attends un moment.",
+    "couldNotVerify": "Le code n’a pas pu être vérifié.",
+    "banner": "Mode parent",
+    "done": "Terminé",
+    "remaining": "encore {time}"
   }
 }

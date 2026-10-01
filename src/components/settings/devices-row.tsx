@@ -154,6 +154,7 @@ export function DevicesRow({ members }: DevicesRowProps) {
             type="button"
             variant="secondary"
             onClick={() => setPairOpen(true)}
+            aria-label={t("pairNew")}
             className="shrink-0"
           >
             <Smartphone className="size-4" />
@@ -168,7 +169,7 @@ export function DevicesRow({ members }: DevicesRowProps) {
         )}
 
         {isError && (
-          <p className="text-sm text-accent-rose" role="alert">
+          <p className="text-sm text-danger-ink" role="alert">
             {t("empty")}
           </p>
         )}
@@ -256,9 +257,8 @@ function ConfirmStep({ device, onConfirm, onCancel }: ConfirmStepProps) {
         </Button>
         <Button
           type="button"
-          variant="primary"
+          variant="danger"
           onClick={onConfirm}
-          className="bg-accent-rose text-bg hover:bg-accent-rose/90"
         >
           {t("revoke")}
         </Button>
@@ -275,6 +275,7 @@ type PinStepProps = {
 
 function PinStep({ onSubmit, isPending, error }: PinStepProps) {
   const t = useTranslations("settings.devices");
+  const tCommon = useTranslations("common");
   const [pin, setPin] = useState("");
 
   const keys: (string | "backspace" | null)[] = [
@@ -344,7 +345,7 @@ function PinStep({ onSubmit, isPending, error }: PinStepProps) {
                 whileTap={{ scale: 0.94 }}
                 onClick={backspace}
                 disabled={isPending}
-                aria-label="Delete"
+                aria-label={tCommon("backspace")}
                 className={cn(
                   "tap-target h-14 rounded-2xl bg-bg hover:bg-border/60 text-ink",
                   "flex items-center justify-center transition-colors",
@@ -380,7 +381,7 @@ function PinStep({ onSubmit, isPending, error }: PinStepProps) {
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="text-center text-sm text-accent-rose"
+            className="text-center text-sm text-danger-ink"
             role="alert"
           >
             {error}
@@ -452,7 +453,7 @@ function DeviceCard({ device, revoking, onRevoke }: DeviceCardProps) {
         variant="ghost"
         onClick={onRevoke}
         disabled={revoking}
-        className="shrink-0 text-accent-rose hover:bg-accent-rose/10"
+        className="shrink-0 text-danger-ink hover:bg-danger-tint"
         aria-label={t("revoke")}
       >
         {revoking ? (

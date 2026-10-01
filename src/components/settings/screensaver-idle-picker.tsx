@@ -106,7 +106,7 @@ export function ScreensaverIdlePicker({ adminPin }: ScreensaverIdlePickerProps) 
               disabled={isPending}
               className={cn(
                 "tap-target rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
+                "focus-ring-kid",
                 current === opt.value
                   ? "border-ink bg-ink text-bg"
                   : "border-border bg-surface text-ink hover:bg-bg",
@@ -125,7 +125,7 @@ export function ScreensaverIdlePicker({ adminPin }: ScreensaverIdlePickerProps) 
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="text-xs text-accent-mint"
+            className="text-xs text-success-ink"
             role="status"
           >
             {tSettings("saved")}

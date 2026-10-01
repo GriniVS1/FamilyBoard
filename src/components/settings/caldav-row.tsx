@@ -5,6 +5,7 @@ import { formatDistanceToNow } from "date-fns";
 import { CalendarDays, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
 import { Button } from "@/components/shared/button";
 import type { CalendarMember } from "@/components/calendar/types";
 
@@ -32,6 +33,7 @@ async function fetchCaldavStatus(memberId: string): Promise<CaldavStatus> {
 export function CaldavRow({ member, adminPin }: CaldavRowProps) {
   const t = useTranslations("settings.caldav");
   const [actionError, setActionError] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: status, isLoading, isError } = useQuery({
@@ -86,14 +88,14 @@ export function CaldavRow({ member, adminPin }: CaldavRowProps) {
     <div className="rounded-2xl border border-border bg-bg/30 p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-3 min-w-0">
         <div className="size-10 inline-flex items-center justify-center rounded-full bg-surface border border-border shrink-0">
-          <CalendarDays className="size-4 text-accent-mint" />
+          <CalendarDays className="size-4 text-success-ink" />
         </div>
         <div className="min-w-0">
           <div className="text-sm font-medium text-ink">{t("title")}</div>
           {isLoading ? (
             <div className="text-xs text-muted">{t("description")}</div>
           ) : isError ? (
-            <div className="text-xs text-accent-rose">{t("networkError")}</div>
+            <div className="text-xs text-danger-ink">{t("networkError")}</div>
           ) : status?.connected ? (
             <div className="text-xs text-muted truncate">
               {status.calendarName ?? t("calendar")} ·{" "}
@@ -123,14 +125,9 @@ export function CaldavRow({ member, adminPin }: CaldavRowProps) {
             </Button>
             <Button
               type="button"
-              variant="ghost"
-              onClick={() => {
-                if (window.confirm(t("disconnectConfirm"))) {
-                  disconnectMutation.mutate();
-                }
-              }}
+              variant="danger"
+              onClick={() => setConfirmOpen(true)}
               disabled={disconnectMutation.isPending}
-              className="text-accent-rose hover:bg-accent-rose/10"
               aria-label={t("disconnect")}
             >
               {disconnectMutation.isPending ? (
@@ -145,10 +142,19 @@ export function CaldavRow({ member, adminPin }: CaldavRowProps) {
       </div>
 
       {actionError && (
-        <p className="text-xs text-accent-rose sm:basis-full" role="alert">
+        <p className="text-xs text-danger-ink sm:basis-full" role="alert">
           {actionError}
         </p>
       )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        onOpenChange={setConfirmOpen}
+        title={t("disconnectConfirm")}
+        picto="nav-calendar"
+        confirmLabel={t("disconnect")}
+        onConfirm={() => disconnectMutation.mutate()}
+      />
     </div>
   );
 }

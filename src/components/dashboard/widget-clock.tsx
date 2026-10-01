@@ -35,21 +35,17 @@ export function WidgetClock({ className }: WidgetClockProps) {
     : "";
 
   return (
-    <GlassCard className={cn("p-8 flex flex-col justify-between", className)}>
-      <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
-        {t("now")}
+    <GlassCard className={cn("flex flex-col justify-center gap-1 px-6 py-5", className)}>
+      <span className="sr-only">{t("now")}</span>
+      <span
+        className="font-display text-6xl tabular leading-none tracking-tight text-ink xl:text-7xl"
+        suppressHydrationWarning
+      >
+        {now ? formatTime(now) : "--:--"}
       </span>
-      <div className="flex flex-1 flex-col items-start justify-center py-4">
-        <span
-          className="font-display text-7xl xl:text-8xl 2xl:text-9xl tabular leading-none tracking-tight text-ink"
-          suppressHydrationWarning
-        >
-          {now ? formatTime(now) : "--:--"}
-        </span>
-        <span className="mt-3 text-base text-muted tabular" suppressHydrationWarning>
-          {dateLabel}
-        </span>
-      </div>
+      <span className="kid-body text-muted tabular" suppressHydrationWarning>
+        {dateLabel}
+      </span>
     </GlassCard>
   );
 }

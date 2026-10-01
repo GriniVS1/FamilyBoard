@@ -7,15 +7,24 @@ import {
   type QueryKey,
 } from "@tanstack/react-query";
 import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
-import { Check, ListChecks } from "lucide-react";
+import { EmptyState, ErrorState, Skeleton } from "@/components/kids/state-views";
 import { GlassCard } from "@/components/shared/glass-card";
+import { MemberAvatar } from "@/components/shared/member-avatar";
 import { cn } from "@/lib/utils";
+import { TodoCheck } from "@/components/todos/todo-check";
 import type { Todo, TodoPatchInput } from "@/components/todos/types";
 import { WidgetHeader } from "./widget-header";
 
+type WidgetMember = {
+  id: string;
+  name: string;
+  color: string;
+  emoji?: string | null;
+};
+
 type WidgetTodosProps = {
   className?: string;
+  members?: WidgetMember[];
 };
 
 const QUERY_KEY: QueryKey = ["todos"];
@@ -23,7 +32,7 @@ const QUERY_KEY: QueryKey = ["todos"];
 async function fetchTodos(): Promise<Todo[]> {
   const res = await fetch("/api/todos", { cache: "no-store" });
   if (!res.ok) {
-    throw new Error(`Failed to load to-dos (${res.status})`);
+    throw new Error(`todos ${res.status}`);
   }
   return (await res.json()) as Todo[];
 }
@@ -34,14 +43,15 @@ async function patchTodo(id: string, patch: TodoPatchInput): Promise<Todo> {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(patch),
   });
-  if (!res.ok) throw new Error(`Update failed (${res.status})`);
+  if (!res.ok) throw new Error(`todo ${res.status}`);
   return (await res.json()) as Todo;
 }
 
-export function WidgetTodos({ className }: WidgetTodosProps) {
+export function WidgetTodos({ className, members = [] }: WidgetTodosProps) {
   const t = useTranslations("dashboard.widgets.todos");
+  const tTodos = useTranslations("todos");
   const queryClient = useQueryClient();
-  const { data: todos = [], isLoading, error } = useQuery({
+  const { data: todos = [], isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchTodos,
     staleTime: 60_000,
@@ -58,10 +68,10 @@ export function WidgetTodos({ className }: WidgetTodosProps) {
       const previous = queryClient.getQueryData<Todo[]>(QUERY_KEY) ?? [];
       queryClient.setQueryData<Todo[]>(
         QUERY_KEY,
-        previous.map((t) =>
-          t.id === args.id
-            ? { ...t, done: args.done, updatedAt: new Date().toISOString() }
-            : t,
+        previous.map((item) =>
+          item.id === args.id
+            ? { ...item, done: args.done, updatedAt: new Date().toISOString() }
+            : item,
         ),
       );
       return { previous };
@@ -74,8 +84,10 @@ export function WidgetTodos({ className }: WidgetTodosProps) {
     },
   });
 
-  const open = todos
-    .filter((t) => !t.done)
+  const membersById = new Map(members.map((m) => [m.id, m]));
+
+  const openTodos = todos.filter((todo) => !todo.done);
+  const visible = [...openTodos]
     .sort((a, b) => {
       const aDue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
       const bDue = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
@@ -85,59 +97,62 @@ export function WidgetTodos({ className }: WidgetTodosProps) {
     .slice(0, 4);
 
   return (
-    <GlassCard className={cn("p-6 flex flex-col gap-4", className)}>
+    <GlassCard className={cn("flex flex-col gap-4 p-6", className)}>
       <WidgetHeader
         title={t("title")}
         action={
-          <span className="tabular text-xs text-muted">
-            {t("open", { count: todos.filter((t) => !t.done).length })}
-          </span>
+          isLoading || isError ? null : (
+            <span className="tabular text-sm text-muted">
+              {t("open", { count: openTodos.length })}
+            </span>
+          )
         }
       />
-      <ul className="flex flex-1 flex-col gap-2" aria-label={t("title")}>
-        {isLoading && (
-          <li className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted">
-            {t("empty")}
-          </li>
-        )}
-        {!isLoading && error && (
-          <li className="flex flex-1 items-center justify-center rounded-2xl border border-dashed border-accent-rose/40 px-4 py-10 text-center text-sm text-accent-rose">
-            {t("couldNotLoad")}
-          </li>
-        )}
-        {!isLoading && !error && open.length === 0 && (
-          <li className="flex flex-1 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border px-4 py-10 text-center text-sm text-muted">
-            <ListChecks className="size-5" />
-            {t("empty")}
-          </li>
-        )}
-        {open.map((todo) => (
-          <li
-            key={todo.id}
-            className="flex items-center gap-3 rounded-2xl border border-border bg-bg/30 px-3 py-2"
-          >
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.9 }}
-              onClick={() =>
-                toggleMutation.mutate({ id: todo.id, done: !todo.done })
-              }
-              aria-label={`Mark ${todo.title} done`}
-              aria-pressed={todo.done}
-              className={cn(
-                "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
-                "border-2 transition-colors",
-                todo.done
-                  ? "border-ink bg-ink text-bg"
-                  : "border-border bg-surface text-transparent hover:border-ink/40",
-              )}
-            >
-              <Check className="size-5" strokeWidth={3} />
-            </motion.button>
-            <span className="flex-1 truncate text-sm text-ink">{todo.title}</span>
-          </li>
-        ))}
-      </ul>
+      {isLoading && (
+        <div className="flex flex-col gap-2" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="flex items-center gap-3 p-2">
+              <Skeleton className="size-12 shrink-0 rounded-full" />
+              <Skeleton className="h-4 w-2/3" />
+            </div>
+          ))}
+        </div>
+      )}
+      {isError && !isLoading && (
+        <ErrorState size="md" onRetry={() => void refetch()} detail={t("couldNotLoad")} />
+      )}
+      {!isLoading && !isError && visible.length === 0 && (
+        <EmptyState size="md" picto="relax" title={t("empty")} />
+      )}
+      {visible.length > 0 && (
+        <ul className="flex flex-col gap-2" aria-label={t("title")}>
+          {visible.map((todo) => {
+            const member = todo.memberId ? membersById.get(todo.memberId) : undefined;
+            return (
+              <li
+                key={todo.id}
+                className="flex items-center gap-3 rounded-2xl border border-border bg-bg/50 px-2 py-1.5"
+              >
+                <TodoCheck
+                  done={todo.done}
+                  color={member?.color}
+                  label={tTodos("markDone", { title: todo.title })}
+                  onClick={() => toggleMutation.mutate({ id: todo.id, done: !todo.done })}
+                />
+                <span className="kid-body line-clamp-2 min-w-0 flex-1 text-ink">{todo.title}</span>
+                {member && (
+                  <MemberAvatar
+                    name={member.name}
+                    color={member.color}
+                    emoji={member.emoji}
+                    size="sm"
+                  />
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </GlassCard>
   );
 }

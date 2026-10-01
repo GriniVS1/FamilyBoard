@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
+import { recordChoreCompletion } from "@/lib/chores";
 import { db } from "@/lib/db";
 import { getWeeklyTotalsForMember } from "@/lib/queries";
 
@@ -29,12 +30,7 @@ export const POST = withErrorHandling<Ctx>(async (req, { params }) => {
     );
   }
 
-  const completion = await db.choreCompletion.create({
-    data: {
-      choreId: chore.id,
-      memberId: member.id,
-    },
-  });
+  const { completion } = await recordChoreCompletion(chore.id, member.id);
 
   const totals = await getWeeklyTotalsForMember(member.id);
 

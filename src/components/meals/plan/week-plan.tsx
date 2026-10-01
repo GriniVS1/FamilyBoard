@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { Fragment, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
   startOfWeek,
@@ -48,7 +48,10 @@ export function WeekPlan({
   onDelete,
 }: WeekPlanProps) {
   const t = useTranslations("meals");
+  const locale = useLocale();
   const [dialog, setDialog] = useState<DialogState>(null);
+  const weekdayFmt = new Intl.DateTimeFormat(locale, { weekday: "short" });
+  const rangeFmt = new Intl.DateTimeFormat(locale, { day: "numeric", month: "short" });
 
   const weekStart = startOfWeek(addWeeks(new Date(), weekOffset), {
     weekStartsOn: 1,
@@ -80,18 +83,18 @@ export function WeekPlan({
           <button
             type="button"
             onClick={() => onWeekOffsetChange(weekOffset - 1)}
-            className="tap-target inline-flex items-center justify-center rounded-full hover:bg-bg text-ink transition-colors"
+            className="tap-target inline-flex items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 focus-ring-kid"
             aria-label={t("plan.previousWeek")}
           >
             <ChevronLeft className="size-5" />
           </button>
-          <span className="tabular text-sm font-medium text-muted px-2">
-            {format(weekStart, "d MMM")} – {format(addDays(weekStart, 6), "d MMM")}
+          <span className="kid-label tabular px-2 text-muted">
+            {rangeFmt.format(weekStart)} – {rangeFmt.format(addDays(weekStart, 6))}
           </span>
           <button
             type="button"
             onClick={() => onWeekOffsetChange(weekOffset + 1)}
-            className="tap-target inline-flex items-center justify-center rounded-full hover:bg-bg text-ink transition-colors"
+            className="tap-target inline-flex items-center justify-center rounded-full text-ink transition-colors hover:bg-ink/5 focus-ring-kid"
             aria-label={t("plan.nextWeek")}
           >
             <ChevronRight className="size-5" />
@@ -100,10 +103,10 @@ export function WeekPlan({
       </div>
 
       <div className="overflow-x-auto -mx-4 md:-mx-0">
-        <div className="min-w-[700px] px-4 md:px-0">
+        <div className="min-w-[760px] px-4 md:px-0">
           <div
-            className="grid gap-1"
-            style={{ gridTemplateColumns: `80px repeat(7, 1fr)` }}
+            className="grid gap-2"
+            style={{ gridTemplateColumns: `104px repeat(7, 1fr)` }}
           >
             <div />
             {days.map((day) => (
@@ -111,15 +114,15 @@ export function WeekPlan({
                 key={day.toISOString()}
                 className={cn(
                   "py-2 text-center text-xs font-semibold uppercase tracking-wide",
-                  isSameDay(day, today) ? "text-accent-peach" : "text-muted",
+                  isSameDay(day, today) ? "text-accent-peach-ink" : "text-muted",
                 )}
               >
-                <div>{format(day, "EEE")}</div>
+                <div>{weekdayFmt.format(day)}</div>
                 <div
                   className={cn(
-                    "mx-auto mt-0.5 flex size-6 items-center justify-center rounded-full tabular text-sm font-bold",
+                    "mx-auto mt-0.5 flex size-8 items-center justify-center rounded-full tabular text-base font-bold",
                     isSameDay(day, today)
-                      ? "bg-accent-peach/20 text-accent-peach"
+                      ? "bg-accent-peach-tint text-accent-peach-ink ring-2 ring-accent-peach"
                       : "text-ink",
                   )}
                 >
@@ -129,11 +132,8 @@ export function WeekPlan({
             ))}
 
             {SLOTS.map((slot) => (
-              <>
-                <div
-                  key={`label-${slot}`}
-                  className="flex items-center pr-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted"
-                >
+              <Fragment key={slot}>
+                <div className="kid-label flex items-center py-1 pr-2 text-muted">
                   {t(`plan.slots.${slot.toLowerCase()}` as Parameters<typeof t>[0])}
                 </div>
                 {days.map((day) => (
@@ -144,7 +144,7 @@ export function WeekPlan({
                     />
                   </div>
                 ))}
-              </>
+              </Fragment>
             ))}
           </div>
         </div>

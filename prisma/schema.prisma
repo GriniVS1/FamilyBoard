@@ -12,6 +12,7 @@ datasource db {
 /// MemberRole values:    "ADMIN" | "MEMBER"
 /// EventSource values:   "LOCAL" | "GOOGLE" | "CALDAV" | "MICROSOFT"
 /// MealSlot values:      "BREAKFAST" | "LUNCH" | "DINNER" | "SNACK"
+/// ChoreTimeOfDay:       "MORNING" | "DAY" | "EVENING" (null = anytime)
 /// GroceryCategory:      "produce" | "dairy" | "pantry" | "frozen" | "bakery" | "meat" | "drinks" | "other"
 /// Enforced via TypeScript types in src/lib/enums.ts (SQLite has no native enums).
 
@@ -167,6 +168,7 @@ model Chore {
   icon        String?
   points      Int               @default(1)
   rrule       String?
+  timeOfDay   String?
   createdAt   DateTime          @default(now())
   completions ChoreCompletion[]
 

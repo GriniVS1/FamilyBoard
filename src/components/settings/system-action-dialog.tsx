@@ -138,7 +138,7 @@ export function SystemActionDialog({
           <PinKeypad onPress={press} onBackspace={backspace} disabled={submitting} />
 
           {error && (
-            <p role="alert" className="text-center text-sm text-accent-rose">
+            <p role="alert" className="text-center text-sm text-danger-ink">
               {error}
             </p>
           )}

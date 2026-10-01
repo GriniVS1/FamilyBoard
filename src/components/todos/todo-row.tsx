@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { CalendarDays, Check, Trash2 } from "lucide-react";
+import { AlertCircle, CalendarDays, Trash2 } from "lucide-react";
 import {
   addDays,
   format,
@@ -12,9 +12,10 @@ import {
   parseISO,
 } from "date-fns";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { cn } from "@/lib/utils";
+import { TodoCheck } from "./todo-check";
 import type { Todo, TodoMember } from "./types";
 
 type TodoRowProps = {
@@ -41,6 +42,9 @@ function tomorrowIso(): string {
   return format(addDays(new Date(), 1), "yyyy-MM-dd");
 }
 
+const POPOVER_ACTION =
+  "inline-flex h-12 items-center rounded-full px-4 text-sm font-medium hover:bg-ink/5 focus-ring-kid";
+
 export function TodoRow({
   todo,
   member,
@@ -49,6 +53,7 @@ export function TodoRow({
   onDelete,
   onDueDateChange,
 }: TodoRowProps) {
+  const locale = useLocale();
   const tCommon = useTranslations("common");
   const t = useTranslations("todos");
   const [dateOpen, setDateOpen] = useState(false);
@@ -58,7 +63,7 @@ export function TodoRow({
     if (isToday(d)) return tCommon("today");
     if (isTomorrow(d)) return tCommon("tomorrow");
     if (isYesterday(d)) return tCommon("yesterday");
-    return format(d, "MMM d");
+    return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric" }).format(d);
   }
 
   const due = todo.dueDate ? formatDuePill(todo.dueDate) : null;
@@ -72,38 +77,26 @@ export function TodoRow({
   return (
     <li
       className={cn(
-        "group flex items-center gap-3 rounded-2xl border border-border bg-surface px-3 py-2 sm:px-4 sm:py-2.5",
-        "transition-colors hover:bg-bg/40",
+        "flex items-center gap-3 rounded-2xl border border-border px-3 py-1 sm:px-4",
+        "transition-colors duration-kid",
+        todo.done ? "bg-bg/60" : "bg-surface",
         pending && "opacity-60",
       )}
     >
-      <motion.button
-        type="button"
-        whileTap={{ scale: 0.9 }}
-        transition={{ type: "spring", stiffness: 400, damping: 24 }}
+      <TodoCheck
+        done={todo.done}
+        color={member?.color}
+        label={t("markDone", { title: todo.title })}
         onClick={() => onToggle(todo)}
-        aria-label={t("markDone", { title: todo.title })}
-        aria-pressed={todo.done}
-        className={cn(
-          "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full",
-          "border-2 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
-          todo.done
-            ? "border-ink bg-ink text-bg"
-            : "border-border bg-surface text-transparent hover:border-ink/40",
-        )}
-      >
-        <Check className="size-5" strokeWidth={3} />
-      </motion.button>
+      />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex min-w-0 flex-1 flex-col">
         <motion.span
           initial={false}
-          animate={{
-            opacity: todo.done ? 0.55 : 1,
-          }}
+          animate={{ opacity: todo.done ? 0.6 : 1 }}
           transition={{ duration: 0.18 }}
           className={cn(
-            "truncate text-base text-ink",
+            "kid-body line-clamp-2 text-ink",
             todo.done && "line-through decoration-2",
           )}
         >
@@ -111,50 +104,38 @@ export function TodoRow({
         </motion.span>
         <PopoverPrimitive.Root open={dateOpen} onOpenChange={setDateOpen}>
           <PopoverPrimitive.Trigger asChild>
-            {due ? (
-              <button
-                type="button"
-                aria-label={t("dueDate")}
-                className={cn(
-                  "relative inline-flex w-fit items-center",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 rounded-full",
-                )}
-              >
-                <span aria-hidden className="absolute -inset-4 rounded-full" />
+            <button
+              type="button"
+              aria-label={t("dueDate")}
+              className="inline-flex min-h-12 min-w-12 w-fit items-center rounded-full focus-ring-kid"
+            >
+              {due ? (
                 <span
                   className={cn(
-                    "tabular inline-flex w-fit items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-                    "transition-colors",
+                    "kid-label tabular inline-flex h-8 w-fit items-center gap-1.5 rounded-full px-3",
                     todo.done
                       ? "bg-bg text-muted"
                       : overdue
-                        ? "bg-accent-rose/30 text-ink hover:bg-accent-rose/40"
-                        : "bg-accent-sky/30 text-ink hover:bg-accent-sky/40",
+                        ? "bg-danger-tint text-danger-ink"
+                        : "bg-accent-sky-tint text-accent-sky-ink",
                   )}
                 >
+                  {overdue && <AlertCircle className="size-4" aria-hidden />}
                   {due}
                 </span>
-              </button>
-            ) : (
-              <button
-                type="button"
-                aria-label={t("dueDate")}
-                className={cn(
-                  "relative inline-flex w-fit items-center text-muted transition-colors hover:text-ink",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20 rounded-full",
-                )}
-              >
-                <span aria-hidden className="absolute -inset-4 rounded-full" />
-                <CalendarDays className="size-4" />
-              </button>
-            )}
+              ) : (
+                <span className="inline-flex h-8 items-center px-1 text-muted">
+                  <CalendarDays className="size-5" aria-hidden />
+                </span>
+              )}
+            </button>
           </PopoverPrimitive.Trigger>
           <PopoverPrimitive.Portal>
             <PopoverPrimitive.Content
               sideOffset={6}
               align="start"
               className={cn(
-                "z-50 w-[260px] rounded-2xl border border-border bg-surface p-3 shadow-lift",
+                "z-50 w-[280px] rounded-2xl border border-border bg-surface p-3 shadow-lift",
                 "data-[state=open]:animate-fade-in",
               )}
             >
@@ -164,25 +145,25 @@ export function TodoRow({
                 </label>
                 <input
                   type="date"
-                  value={todo.dueDate ?? ""}
+                  value={todo.dueDate ? format(parseISO(todo.dueDate), "yyyy-MM-dd") : ""}
                   onChange={(e) => handlePick(e.target.value || null)}
                   className={cn(
                     "h-12 rounded-2xl border border-border bg-bg px-3 text-base text-ink",
                     "tabular focus:outline-none focus:ring-2 focus:ring-ink/20",
                   )}
                 />
-                <div className="flex items-center justify-between gap-1 pt-1">
+                <div className="flex flex-wrap items-center gap-1 pt-1">
                   <button
                     type="button"
                     onClick={() => handlePick(todayIso())}
-                    className="tap-target rounded-full px-3 py-1.5 text-xs text-ink hover:bg-bg"
+                    className={cn(POPOVER_ACTION, "text-ink")}
                   >
                     {tCommon("today")}
                   </button>
                   <button
                     type="button"
                     onClick={() => handlePick(tomorrowIso())}
-                    className="tap-target rounded-full px-3 py-1.5 text-xs text-ink hover:bg-bg"
+                    className={cn(POPOVER_ACTION, "text-ink")}
                   >
                     {tCommon("tomorrow")}
                   </button>
@@ -190,7 +171,7 @@ export function TodoRow({
                     <button
                       type="button"
                       onClick={() => handlePick(null)}
-                      className="tap-target rounded-full px-3 py-1.5 text-xs text-muted hover:bg-bg"
+                      className={cn(POPOVER_ACTION, "text-muted")}
                     >
                       {t("clearDate")}
                     </button>
@@ -214,15 +195,13 @@ export function TodoRow({
       <button
         type="button"
         onClick={() => onDelete(todo)}
-        aria-label={`${tCommon("delete")} ${todo.title}`}
+        aria-label={`${tCommon("delete")}: ${todo.title}`}
         className={cn(
-          "size-12 tap-target shrink-0 inline-flex items-center justify-center rounded-full text-muted",
-          "opacity-0 transition-opacity hover:bg-accent-rose/10 hover:text-accent-rose",
-          "group-hover:opacity-100 focus:opacity-100",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink/20",
+          "tap-target inline-flex size-12 shrink-0 items-center justify-center rounded-full",
+          "bg-danger-tint text-danger-ink transition-colors focus-ring-kid",
         )}
       >
-        <Trash2 className="size-4" />
+        <Trash2 className="size-5" />
       </button>
     </li>
   );

@@ -22,6 +22,13 @@ export const GROCERY_CATEGORIES = [
 ] as const;
 export type GroceryCategory = (typeof GROCERY_CATEGORIES)[number];
 
+export const CHORE_TIME_OF_DAY = ["MORNING", "DAY", "EVENING"] as const;
+export type ChoreTimeOfDay = (typeof CHORE_TIME_OF_DAY)[number];
+
 export function isLicenseStatus(v: string): v is LicenseStatus {
   return (LICENSE_STATUS as readonly string[]).includes(v);
+}
+
+export function isChoreTimeOfDay(v: string): v is ChoreTimeOfDay {
+  return (CHORE_TIME_OF_DAY as readonly string[]).includes(v);
 }

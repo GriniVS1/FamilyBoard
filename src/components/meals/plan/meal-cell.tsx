@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
+import { Picto } from "@/components/pictos";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { MealPlan } from "../types";
@@ -64,9 +64,8 @@ export function MealCell({ meal, onClick }: MealCellProps) {
           )}
         </>
       ) : (
-        <span className="inline-flex items-center gap-1 text-sm">
-          <Plus className="size-4" />
-          {t("plan.empty")}
+        <span className="mx-auto inline-flex items-center justify-center">
+          <Picto name="nav-meals" size={32} className="opacity-50 saturate-50" />
         </span>
       )}
     </motion.button>

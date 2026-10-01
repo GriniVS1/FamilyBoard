@@ -27,22 +27,15 @@ export default async function Home() {
 
   return (
     <AppShell>
-      <div className="grid grid-cols-1 md:grid-cols-6 xl:grid-cols-12 gap-4 md:gap-6 xl:auto-rows-[minmax(140px,auto)]">
-        <WidgetClock className="md:col-span-3 xl:col-span-4 xl:row-span-2" />
-        <WidgetToday
-          className="md:col-span-3 xl:col-span-4 xl:row-span-3"
-          members={memberSummaries}
-        />
-        <WidgetChores
-          className="md:col-span-6 xl:col-span-4 xl:row-span-3"
-          members={memberSummaries}
-        />
-        <WidgetWeather
-          className="md:col-span-3 xl:col-span-4 xl:row-start-3"
-          location={family?.weatherLabel}
-        />
-        <WidgetTodos className="md:col-span-3 xl:col-span-6 xl:row-span-2" />
-        <WidgetNotes className="md:col-span-6 xl:col-span-6 xl:row-span-2" />
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-12 md:gap-6">
+        <WidgetChores className="md:col-span-12" members={memberSummaries} />
+        <WidgetToday className="md:col-span-12 lg:col-span-8" members={memberSummaries} />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:col-span-12 md:gap-6 lg:col-span-4 lg:grid-cols-1 lg:content-start">
+          <WidgetClock className="max-md:hidden" />
+          <WidgetWeather location={family?.weatherLabel} />
+        </div>
+        <WidgetTodos className="md:col-span-6" members={memberSummaries} />
+        <WidgetNotes className="md:col-span-6" />
       </div>
     </AppShell>
   );

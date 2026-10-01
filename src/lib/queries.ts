@@ -35,6 +35,62 @@ export function getCurrentWeekRange(now: Date = new Date()): {
 }
 
 /**
+ * Local-timezone day boundaries: midnight today -> midnight tomorrow (exclusive).
+ * Single source of truth so wall and mobile agree on what "today" means.
+ */
+export function getTodayRange(now: Date = new Date()): {
+  start: Date;
+  end: Date;
+} {
+  const start = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    0,
+    0,
+    0,
+    0,
+  );
+  const end = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0,
+    0,
+    0,
+    0,
+  );
+  return { start, end };
+}
+
+export type ChoreCompletionToday = {
+  id: string;
+  choreId: string;
+  memberId: string;
+  completedAt: string;
+};
+
+export async function getChoreCompletionsTodayForFamily(
+  familyId: string,
+): Promise<ChoreCompletionToday[]> {
+  const { start, end } = getTodayRange();
+  const rows = await db.choreCompletion.findMany({
+    where: {
+      completedAt: { gte: start, lt: end },
+      chore: { familyId },
+    },
+    orderBy: { completedAt: "asc" },
+    select: { id: true, choreId: true, memberId: true, completedAt: true },
+  });
+  return rows.map((r) => ({
+    id: r.id,
+    choreId: r.choreId,
+    memberId: r.memberId,
+    completedAt: r.completedAt.toISOString(),
+  }));
+}
+
+/**
  * Aggregates ChoreCompletion rows for the current week (Mon-as-start, UTC),
  * scoped to a family. Returns totals grouped by member and by chore.
  */
@@ -242,26 +298,7 @@ export async function getTodayForMember(
     };
   }
 
-  // Local-timezone day boundaries: midnight today → midnight tomorrow.
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    0,
-    0,
-    0,
-    0,
-  );
-  const endOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0,
-    0,
-    0,
-    0,
-  );
+  const { start: startOfToday, end: endOfToday } = getTodayRange();
 
   const [rawEvents, rawChores, rawTodos] = await Promise.all([
     db.event.findMany({
@@ -417,6 +454,7 @@ export type ChoreListItem = {
   icon: string | null;
   points: number;
   rrule: string | null;
+  timeOfDay: string | null;
   memberId: string | null;
   member: MemberSummary | null;
   completedToday: boolean;
@@ -431,25 +469,7 @@ export type ChoreListItem = {
 export async function getChoresForFamily(
   familyId: string,
 ): Promise<ChoreListItem[]> {
-  const now = new Date();
-  const startOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate(),
-    0,
-    0,
-    0,
-    0,
-  );
-  const endOfToday = new Date(
-    now.getFullYear(),
-    now.getMonth(),
-    now.getDate() + 1,
-    0,
-    0,
-    0,
-    0,
-  );
+  const { start: startOfToday, end: endOfToday } = getTodayRange();
 
   const rawChores = await db.chore.findMany({
     where: { familyId },
@@ -459,6 +479,7 @@ export async function getChoresForFamily(
       icon: true,
       points: true,
       rrule: true,
+      timeOfDay: true,
       memberId: true,
       member: { select: memberSummarySelect },
       completions: {
@@ -479,6 +500,7 @@ export async function getChoresForFamily(
       icon: ch.icon,
       points: ch.points,
       rrule: ch.rrule,
+      timeOfDay: ch.timeOfDay,
       memberId: ch.memberId,
       member: ch.member,
       completedToday: latestCompletion !== null,

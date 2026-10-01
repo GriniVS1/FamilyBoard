@@ -47,12 +47,15 @@ export function ViewMonth({
   );
 
   return (
-    <div className="rounded-3xl border border-border bg-surface overflow-hidden">
-      <div className="grid grid-cols-7 border-b border-border bg-bg/40">
+    <div>
+      <div
+        data-calendar-head
+        className="sticky top-0 z-30 grid grid-cols-7 border-b border-border bg-surface"
+      >
         {weekdayLabels.map((d, i) => (
           <div
             key={i}
-            className="px-2 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted text-center"
+            className="px-2 py-2 text-center text-xs font-semibold uppercase tracking-wider text-muted"
           >
             {d}
           </div>
@@ -79,13 +82,13 @@ export function ViewMonth({
               <button
                 type="button"
                 onClick={() => onSelectDay(day)}
-                className="absolute inset-0 hover:bg-bg/30 transition-colors rounded-none"
+                className="absolute inset-0 rounded-none transition-colors hover:bg-ink/5 focus-ring-kid-inset"
                 aria-label={t("createEventOnDay", { day: fullDateFmt.format(day) })}
               />
               <div className="relative flex items-center justify-end pointer-events-none">
                 <span
                   className={cn(
-                    "tabular text-xs font-medium inline-flex size-7 items-center justify-center rounded-full",
+                    "tabular inline-flex size-8 items-center justify-center rounded-full text-sm font-semibold",
                     today ? "bg-ink text-bg" : "text-ink",
                   )}
                 >
@@ -96,6 +99,7 @@ export function ViewMonth({
                 {visible.map((event) => (
                   <EventPill
                     key={event.id}
+                    dense
                     event={event}
                     member={membersById.get(event.memberId)}
                     onSelect={(e) => {
@@ -104,7 +108,7 @@ export function ViewMonth({
                   />
                 ))}
                 {overflow > 0 && (
-                  <span className="text-[10px] text-muted px-1">
+                  <span className="px-1 text-xs text-muted">
                     {t("moreEvents", { count: overflow })}
                   </span>
                 )}

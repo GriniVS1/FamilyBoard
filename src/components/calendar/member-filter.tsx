@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { Users } from "lucide-react";
+import { toneOf } from "@/components/kids/tone";
 import { MemberAvatar } from "@/components/shared/member-avatar";
 import { cn } from "@/lib/utils";
 import type { CalendarMember } from "./types";
@@ -13,17 +14,16 @@ type MemberFilterProps = {
   onChange: (ids: string[]) => void;
 };
 
+// Solo semantics: tapping a person shows only that person; tapping them again
+// (or "All") brings everyone back. A child who taps their own face must see
+// their own appointments, not lose them.
 export function MemberFilter({ members, selectedIds, onChange }: MemberFilterProps) {
   const t = useTranslations("calendar");
   const allSelected = selectedIds.length === members.length;
 
   function toggle(id: string) {
-    if (selectedIds.includes(id)) {
-      const next = selectedIds.filter((x) => x !== id);
-      onChange(next.length === 0 ? members.map((m) => m.id) : next);
-    } else {
-      onChange([...selectedIds, id]);
-    }
+    const isSolo = selectedIds.length === 1 && selectedIds[0] === id;
+    onChange(isSolo ? members.map((m) => m.id) : [id]);
   }
 
   function selectAll() {
@@ -31,48 +31,50 @@ export function MemberFilter({ members, selectedIds, onChange }: MemberFilterPro
   }
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex flex-wrap items-center gap-2" role="group" aria-label={t("members")}>
       <motion.button
         type="button"
-        whileTap={{ scale: 0.97 }}
+        whileTap={{ scale: 0.96 }}
         onClick={selectAll}
         className={cn(
-          "inline-flex items-center gap-2 rounded-full px-4 py-2 tap-target",
-          "border transition-colors text-sm font-medium",
+          "inline-flex h-14 w-14 items-center justify-center gap-2 rounded-full border-2 sm:w-auto sm:px-5",
+          "kid-label transition-colors duration-kid focus-ring-kid",
           allSelected
-            ? "bg-ink text-bg border-ink"
-            : "bg-surface text-ink border-border hover:bg-bg",
+            ? "border-ink bg-ink text-bg shadow-pop"
+            : "border-border bg-surface text-ink",
         )}
         aria-pressed={allSelected}
+        aria-label={t("everyone")}
       >
-        <Users className="size-4" />
-        {t("members")}
+        <Users className="size-6 sm:size-5" strokeWidth={2.25} aria-hidden />
+        <span className="hidden sm:inline">{t("everyone")}</span>
       </motion.button>
       {members.map((m) => {
-        const selected = selectedIds.includes(m.id);
+        const solo = !allSelected && selectedIds.includes(m.id);
+        const tone = toneOf(m.color);
         return (
           <motion.button
             key={m.id}
             type="button"
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: 0.96 }}
             onClick={() => toggle(m.id)}
             className={cn(
-              "inline-flex items-center gap-2 rounded-full pl-1 pr-4 py-1 tap-target",
-              "border transition-colors text-sm font-medium",
-              selected
-                ? "border-ink shadow-soft bg-surface"
-                : "border-border bg-surface/50 opacity-60 hover:opacity-100",
+              "inline-flex h-14 items-center gap-2 rounded-full border-2 py-1 pl-1 pr-2 sm:pr-5",
+              "kid-label transition-[background-color,border-color,opacity] duration-kid focus-ring-kid",
+              solo
+                ? cn("border-[3px] shadow-pop", tone.border, tone.tint)
+                : cn("border-border bg-surface", !allSelected && "opacity-60"),
             )}
-            aria-pressed={selected}
-            aria-label={`Filter ${m.name}`}
+            aria-pressed={solo}
+            aria-label={t("showOnly", { name: m.name })}
           >
             <MemberAvatar
               name={m.name}
               color={m.color}
               emoji={m.emoji}
-              className="size-9 border-0"
+              className="size-11 border-0"
             />
-            <span className="text-ink">{m.name}</span>
+            <span className="hidden text-ink sm:inline">{m.name}</span>
           </motion.button>
         );
       })}

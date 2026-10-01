@@ -6,11 +6,14 @@ import {
   useQueryClient,
   type QueryKey,
 } from "@tanstack/react-query";
-import { Plus, StickyNote } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { isMemberColor } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/kids/confirm-dialog";
+import { KidToast } from "@/components/kids/kid-toast";
+import { EmptyState, ErrorState, Skeleton } from "@/components/kids/state-views";
 import { Button } from "@/components/shared/button";
-import { GlassCard } from "@/components/shared/glass-card";
 import { NoteCard } from "./note-card";
 import { NoteDialog } from "./note-dialog";
 import type {
@@ -29,14 +32,7 @@ const QUERY_KEY: QueryKey = ["notes"];
 async function fetchNotes(): Promise<Note[]> {
   const res = await fetch("/api/notes", { cache: "no-store" });
   if (!res.ok) {
-    let message = `Failed to load notes (${res.status})`;
-    try {
-      const data = (await res.json()) as { error?: { message?: string } };
-      if (data?.error?.message) message = data.error.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(message);
+    throw new Error(`notes ${res.status}`);
   }
   return (await res.json()) as Note[];
 }
@@ -52,29 +48,27 @@ async function jsonRequest<T>(
     body: body ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
-    let message = `Request failed (${res.status})`;
-    try {
-      const data = (await res.json()) as { error?: { message?: string } };
-      if (data?.error?.message) message = data.error.message;
-    } catch {
-      // ignore
-    }
-    throw new Error(message);
+    throw new Error(`${method} ${res.status}`);
   }
   return (await res.json()) as T;
 }
 
+type Toast =
+  | { kind: "error"; text: string }
+  | { kind: "undo"; note: Note };
+
 export function NotesView({ initialMembers }: NotesViewProps) {
   const t = useTranslations("notes");
   const queryClient = useQueryClient();
-  const { data: notes = [], isLoading, error } = useQuery({
+  const { data: notes = [], isLoading, isError, refetch } = useQuery({
     queryKey: QUERY_KEY,
     queryFn: fetchNotes,
     refetchInterval: 60_000, // kiosk never refocuses — poll for remote changes
   });
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Note | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<Toast | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
 
   const membersById = useMemo(() => {
     const map = new Map<string, NoteMember>();
@@ -97,9 +91,8 @@ export function NotesView({ initialMembers }: NotesViewProps) {
     return { pinned: p, others: o };
   }, [notes]);
 
-  function showToast(msg: string) {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2800);
+  function showError(text: string) {
+    setToast({ kind: "error", text });
   }
 
   const createMutation = useMutation({
@@ -108,8 +101,8 @@ export function NotesView({ initialMembers }: NotesViewProps) {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
-    onError: (err) => {
-      showToast(err instanceof Error ? err.message : t("dialog.couldNotSave"));
+    onError: () => {
+      showError(t("dialog.couldNotSave"));
     },
   });
 
@@ -129,9 +122,9 @@ export function NotesView({ initialMembers }: NotesViewProps) {
       );
       return { previous };
     },
-    onError: (err, _args, ctx) => {
+    onError: (_err, _args, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : t("dialog.couldNotSave"));
+      showError(t("dialog.couldNotSave"));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
@@ -150,10 +143,25 @@ export function NotesView({ initialMembers }: NotesViewProps) {
       );
       return { previous };
     },
-    onError: (err, _id, ctx) => {
+    onError: (_err, _id, ctx) => {
       if (ctx?.previous) queryClient.setQueryData(QUERY_KEY, ctx.previous);
-      showToast(err instanceof Error ? err.message : t("dialog.couldNotDelete"));
+      showError(t("dialog.couldNotDelete"));
     },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+    },
+  });
+
+  // The API has no undelete, so "undo" recreates the note from the snapshot.
+  const restoreMutation = useMutation({
+    mutationFn: (note: Note) =>
+      jsonRequest<Note>("/api/notes", "POST", {
+        body: note.body,
+        color: isMemberColor(note.color) ? note.color : "sun",
+        authorMemberId: note.authorMemberId,
+        pinned: note.pinned,
+      } satisfies NoteCreateInput),
+    onError: () => showError(t("couldNotRestore")),
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: QUERY_KEY });
     },
@@ -167,44 +175,55 @@ export function NotesView({ initialMembers }: NotesViewProps) {
     setEditing(note);
     setDialogOpen(true);
   }
-  function handleDelete(note: Note) {
-    if (!window.confirm(t("deleteConfirm"))) return;
-    deleteMutation.mutate(note.id);
+  async function confirmDelete(note: Note) {
+    await deleteMutation.mutateAsync(note.id);
+    setToast({ kind: "undo", note });
   }
   function handleTogglePin(note: Note) {
     patchMutation.mutate({ id: note.id, patch: { pinned: !note.pinned } });
   }
 
-  const isEmpty = !isLoading && notes.length === 0 && !error;
+  const isEmpty = !isLoading && notes.length === 0 && !isError;
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-2xl tracking-tight text-ink sm:text-3xl">
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
           {t("title")}
         </h2>
         <Button onClick={openNew}>
-          <Plus className="size-5" />
+          <Plus className="size-5" strokeWidth={2.75} />
           {t("addNote")}
         </Button>
       </div>
 
-      {error && (
-        <div
-          role="alert"
-          className="rounded-2xl border border-accent-rose/40 bg-accent-rose/10 px-4 py-3 text-sm text-ink"
-        >
-          {error instanceof Error ? error.message : t("couldNotLoad")}
+      {isLoading && (
+        <div className="columns-1 gap-4 md:columns-2 xl:columns-3" aria-busy="true">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="mb-4 h-36 break-inside-avoid rounded-3xl" />
+          ))}
         </div>
       )}
 
-      {isEmpty ? (
-        <EmptyState onCreate={openNew} />
-      ) : (
+      {isError && !isLoading && (
+        <ErrorState onRetry={() => void refetch()} detail={t("couldNotLoad")} />
+      )}
+
+      {isEmpty && (
+        <EmptyState
+          picto="nav-notes"
+          title={t("empty")}
+          description={t("emptyDesc")}
+          onCreate={openNew}
+          createLabel={t("writeFirst")}
+        />
+      )}
+
+      {!isLoading && !isError && !isEmpty && (
         <div className="flex flex-col gap-6">
           {pinned.length > 0 && (
             <section aria-label={t("pinned")} className="flex flex-col gap-2">
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+              <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
                 {t("pinned")}
               </h3>
               <div className="columns-1 gap-4 md:columns-2 xl:columns-3">
@@ -219,7 +238,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
                     }
                     onSelect={openEdit}
                     onTogglePin={handleTogglePin}
-                    onDelete={handleDelete}
+                    onDelete={setDeleteTarget}
                   />
                 ))}
               </div>
@@ -228,7 +247,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
           {others.length > 0 && (
             <section aria-label={t("title")} className="flex flex-col gap-2">
               {pinned.length > 0 && (
-                <h3 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.14em] text-muted">
                   {t("allNotes")}
                 </h3>
               )}
@@ -244,7 +263,7 @@ export function NotesView({ initialMembers }: NotesViewProps) {
                     }
                     onSelect={openEdit}
                     onTogglePin={handleTogglePin}
-                    onDelete={handleDelete}
+                    onDelete={setDeleteTarget}
                   />
                 ))}
               </div>
@@ -265,44 +284,42 @@ export function NotesView({ initialMembers }: NotesViewProps) {
           await patchMutation.mutateAsync({ id, patch });
         }}
         onDelete={async (id) => {
+          const removed = notes.find((n) => n.id === id);
           await deleteMutation.mutateAsync(id);
+          if (removed) setToast({ kind: "undo", note: removed });
         }}
       />
 
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="fixed inset-x-4 bottom-24 z-50 mx-auto max-w-sm rounded-2xl border border-accent-rose/40 bg-surface px-4 py-3 text-sm text-ink shadow-lift md:bottom-8"
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={t("deleteConfirm")}
+        picto="nav-notes"
+        onConfirm={() => (deleteTarget ? confirmDelete(deleteTarget) : undefined)}
+      />
+
+      {toast?.kind === "error" && (
+        <KidToast tone="error" picto="oops" durationMs={8000} onDismiss={() => setToast(null)}>
+          {toast.text}
+        </KidToast>
+      )}
+      {toast?.kind === "undo" && (
+        <KidToast
+          tone="success"
+          picto="nav-notes"
+          durationMs={8000}
+          action={{
+            kind: "undo",
+            color: toast.note.color,
+            onClick: () => restoreMutation.mutate(toast.note),
+          }}
+          onDismiss={() => setToast(null)}
         >
-          {toast}
-        </div>
+          <span className="line-clamp-2">{t("deleted")}</span>
+        </KidToast>
       )}
     </div>
-  );
-}
-
-function EmptyState({ onCreate }: { onCreate: () => void }) {
-  const t = useTranslations("notes");
-
-  return (
-    <GlassCard className="mx-auto flex w-full max-w-md flex-col items-center gap-4 p-10 text-center">
-      <span
-        className="inline-flex size-20 items-center justify-center rounded-full bg-accent-sun/30 text-ink"
-        aria-hidden
-      >
-        <StickyNote className="size-9" />
-      </span>
-      <h3 className="font-display text-2xl tracking-tight text-ink">
-        {t("empty")}
-      </h3>
-      <p className="text-sm text-muted">
-        {t("emptyDesc")}
-      </p>
-      <Button onClick={onCreate}>
-        <Plus className="size-5" />
-        {t("writeFirst")}
-      </Button>
-    </GlassCard>
   );
 }

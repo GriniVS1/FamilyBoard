@@ -12,7 +12,7 @@ type PermissionState = "granted" | "denied" | "default" | "unsupported";
 type TestResult = { sent: number; failed: number } | null;
 
 function permissionPillClass(state: PermissionState): string {
-  if (state === "granted") return "bg-accent-mint/30 text-ink";
+  if (state === "granted") return "bg-success-tint text-success-ink";
   if (state === "denied") return "bg-surface text-muted border border-border";
   return "bg-accent-sun/20 text-ink";
 }
@@ -142,8 +142,8 @@ export function PushToggle() {
       )}
 
       {permission === "denied" && (
-        <div className="flex items-start gap-2 rounded-2xl border border-accent-rose/30 bg-accent-rose/10 px-4 py-3 text-sm text-ink">
-          <BellOff className="mt-0.5 size-4 shrink-0 text-accent-rose" />
+        <div className="flex items-start gap-2 rounded-2xl border border-danger/40 bg-danger-tint px-4 py-3 text-sm text-ink">
+          <BellOff className="mt-0.5 size-4 shrink-0 text-danger-ink" />
           <span>{t("denyHelp")}</span>
         </div>
       )}
@@ -185,13 +185,13 @@ export function PushToggle() {
       )}
 
       {testResult && (
-        <div className="rounded-2xl border border-accent-mint/40 bg-accent-mint/15 px-4 py-2.5 text-sm text-ink">
+        <div className="rounded-2xl border border-success/40 bg-success-tint px-4 py-2.5 text-sm text-ink">
           {t("testSent", { sent: testResult.sent, failed: testResult.failed })}
         </div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-accent-rose/30 bg-accent-rose/10 px-4 py-2.5 text-sm text-accent-rose">
+        <div className="rounded-2xl border border-danger/40 bg-danger-tint px-4 py-2.5 text-sm text-danger-ink">
           {error}
         </div>
       )}

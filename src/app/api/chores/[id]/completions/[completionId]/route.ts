@@ -9,10 +9,21 @@ type Ctx = { params: Promise<{ id: string; completionId: string }> };
 export const DELETE = withErrorHandling<Ctx>(async (_req, { params }) => {
   const { id, completionId } = await params;
 
+  const chore = await db.chore.findUnique({
+    where: { id },
+    select: { id: true, familyId: true },
+  });
+  if (!chore) throw new AppError("Chore not found", "CHORE_NOT_FOUND", 404);
+
   const completion = await db.choreCompletion.findUnique({
     where: { id: completionId },
+    include: { member: { select: { familyId: true } } },
   });
-  if (!completion || completion.choreId !== id) {
+  if (
+    !completion ||
+    completion.choreId !== chore.id ||
+    completion.member.familyId !== chore.familyId
+  ) {
     throw new AppError(
       "Completion not found",
       "COMPLETION_NOT_FOUND",
