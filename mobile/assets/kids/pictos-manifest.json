@@ -1,0 +1,1652 @@
+{
+  "source": "src/components/pictos/registry.ts + src/messages/*.json (pictos)",
+  "pictos": [
+    {
+      "name": "water",
+      "category": "task",
+      "emoji": "💧",
+      "svg": {
+        "light": "pictos/light/water.svg",
+        "dark": "pictos/dark/water.svg"
+      },
+      "labels": {
+        "de": "Wasser trinken",
+        "en": "Drink water",
+        "fr": "Boire de l'eau",
+        "it": "Bere acqua"
+      }
+    },
+    {
+      "name": "teeth",
+      "category": "task",
+      "emoji": "🪥",
+      "svg": {
+        "light": "pictos/light/teeth.svg",
+        "dark": "pictos/dark/teeth.svg"
+      },
+      "labels": {
+        "de": "Zähne putzen",
+        "en": "Brush teeth",
+        "fr": "Se brosser les dents",
+        "it": "Lavare i denti"
+      }
+    },
+    {
+      "name": "tidy-toys",
+      "category": "task",
+      "emoji": "🧸",
+      "svg": {
+        "light": "pictos/light/tidy-toys.svg",
+        "dark": "pictos/dark/tidy-toys.svg"
+      },
+      "labels": {
+        "de": "Spielsachen aufräumen",
+        "en": "Tidy up toys",
+        "fr": "Ranger les jouets",
+        "it": "Mettere via i giochi"
+      }
+    },
+    {
+      "name": "get-dressed",
+      "category": "task",
+      "emoji": "👕",
+      "svg": {
+        "light": "pictos/light/get-dressed.svg",
+        "dark": "pictos/dark/get-dressed.svg"
+      },
+      "labels": {
+        "de": "Anziehen",
+        "en": "Get dressed",
+        "fr": "S'habiller",
+        "it": "Vestirsi"
+      }
+    },
+    {
+      "name": "make-bed",
+      "category": "task",
+      "emoji": "🛏️",
+      "svg": {
+        "light": "pictos/light/make-bed.svg",
+        "dark": "pictos/dark/make-bed.svg"
+      },
+      "labels": {
+        "de": "Bett machen",
+        "en": "Make the bed",
+        "fr": "Faire son lit",
+        "it": "Rifare il letto"
+      }
+    },
+    {
+      "name": "set-table",
+      "category": "task",
+      "emoji": "🍽️",
+      "svg": {
+        "light": "pictos/light/set-table.svg",
+        "dark": "pictos/dark/set-table.svg"
+      },
+      "labels": {
+        "de": "Tisch decken",
+        "en": "Set the table",
+        "fr": "Mettre la table",
+        "it": "Apparecchiare"
+      }
+    },
+    {
+      "name": "feed-dog",
+      "category": "task",
+      "emoji": "🐶",
+      "svg": {
+        "light": "pictos/light/feed-dog.svg",
+        "dark": "pictos/dark/feed-dog.svg"
+      },
+      "labels": {
+        "de": "Hund füttern",
+        "en": "Feed the dog",
+        "fr": "Nourrir le chien",
+        "it": "Dare da mangiare al cane"
+      }
+    },
+    {
+      "name": "feed-cat",
+      "category": "task",
+      "emoji": "🐱",
+      "svg": {
+        "light": "pictos/light/feed-cat.svg",
+        "dark": "pictos/dark/feed-cat.svg"
+      },
+      "labels": {
+        "de": "Katze füttern",
+        "en": "Feed the cat",
+        "fr": "Nourrir le chat",
+        "it": "Dare da mangiare al gatto"
+      }
+    },
+    {
+      "name": "trash",
+      "category": "task",
+      "emoji": "🚮",
+      "svg": {
+        "light": "pictos/light/trash.svg",
+        "dark": "pictos/dark/trash.svg"
+      },
+      "labels": {
+        "de": "Müll rausbringen",
+        "en": "Take out the trash",
+        "fr": "Sortir la poubelle",
+        "it": "Portare fuori la spazzatura"
+      }
+    },
+    {
+      "name": "water-plants",
+      "category": "task",
+      "emoji": "🌱",
+      "svg": {
+        "light": "pictos/light/water-plants.svg",
+        "dark": "pictos/dark/water-plants.svg"
+      },
+      "labels": {
+        "de": "Pflanzen giessen",
+        "en": "Water the plants",
+        "fr": "Arroser les plantes",
+        "it": "Annaffiare le piante"
+      }
+    },
+    {
+      "name": "homework",
+      "category": "task",
+      "emoji": "✏️",
+      "svg": {
+        "light": "pictos/light/homework.svg",
+        "dark": "pictos/dark/homework.svg"
+      },
+      "labels": {
+        "de": "Hausaufgaben",
+        "en": "Homework",
+        "fr": "Devoirs",
+        "it": "Compiti"
+      }
+    },
+    {
+      "name": "read",
+      "category": "task",
+      "emoji": "📖",
+      "svg": {
+        "light": "pictos/light/read.svg",
+        "dark": "pictos/dark/read.svg"
+      },
+      "labels": {
+        "de": "Lesen",
+        "en": "Read",
+        "fr": "Lire",
+        "it": "Leggere"
+      }
+    },
+    {
+      "name": "laundry",
+      "category": "task",
+      "emoji": "🧺",
+      "svg": {
+        "light": "pictos/light/laundry.svg",
+        "dark": "pictos/dark/laundry.svg"
+      },
+      "labels": {
+        "de": "Wäsche zusammenlegen",
+        "en": "Fold the laundry",
+        "fr": "Plier le linge",
+        "it": "Piegare il bucato"
+      }
+    },
+    {
+      "name": "wash-clothes",
+      "category": "task",
+      "emoji": "🫧",
+      "svg": {
+        "light": "pictos/light/wash-clothes.svg",
+        "dark": "pictos/dark/wash-clothes.svg"
+      },
+      "labels": {
+        "de": "Wäsche waschen",
+        "en": "Do the washing",
+        "fr": "Faire la lessive",
+        "it": "Fare il bucato"
+      }
+    },
+    {
+      "name": "dishes",
+      "category": "task",
+      "emoji": "🧽",
+      "svg": {
+        "light": "pictos/light/dishes.svg",
+        "dark": "pictos/dark/dishes.svg"
+      },
+      "labels": {
+        "de": "Abwaschen",
+        "en": "Do the dishes",
+        "fr": "Faire la vaisselle",
+        "it": "Lavare i piatti"
+      }
+    },
+    {
+      "name": "wash-hands",
+      "category": "task",
+      "emoji": "🧼",
+      "svg": {
+        "light": "pictos/light/wash-hands.svg",
+        "dark": "pictos/dark/wash-hands.svg"
+      },
+      "labels": {
+        "de": "Hände waschen",
+        "en": "Wash hands",
+        "fr": "Se laver les mains",
+        "it": "Lavarsi le mani"
+      }
+    },
+    {
+      "name": "bath",
+      "category": "task",
+      "emoji": "🛁",
+      "svg": {
+        "light": "pictos/light/bath.svg",
+        "dark": "pictos/dark/bath.svg"
+      },
+      "labels": {
+        "de": "Baden",
+        "en": "Bath time",
+        "fr": "Le bain",
+        "it": "Bagnetto"
+      }
+    },
+    {
+      "name": "pajamas",
+      "category": "task",
+      "emoji": "🛌",
+      "svg": {
+        "light": "pictos/light/pajamas.svg",
+        "dark": "pictos/dark/pajamas.svg"
+      },
+      "labels": {
+        "de": "Pyjama anziehen",
+        "en": "Put on pyjamas",
+        "fr": "Mettre son pyjama",
+        "it": "Mettere il pigiama"
+      }
+    },
+    {
+      "name": "backpack",
+      "category": "task",
+      "emoji": "🎒",
+      "svg": {
+        "light": "pictos/light/backpack.svg",
+        "dark": "pictos/dark/backpack.svg"
+      },
+      "labels": {
+        "de": "Schultasche packen",
+        "en": "Pack school bag",
+        "fr": "Préparer le cartable",
+        "it": "Preparare lo zaino"
+      }
+    },
+    {
+      "name": "sweep",
+      "category": "task",
+      "emoji": "🧹",
+      "svg": {
+        "light": "pictos/light/sweep.svg",
+        "dark": "pictos/dark/sweep.svg"
+      },
+      "labels": {
+        "de": "Boden wischen",
+        "en": "Sweep the floor",
+        "fr": "Balayer",
+        "it": "Spazzare"
+      }
+    },
+    {
+      "name": "vacuum",
+      "category": "task",
+      "emoji": "🌪️",
+      "svg": {
+        "light": "pictos/light/vacuum.svg",
+        "dark": "pictos/dark/vacuum.svg"
+      },
+      "labels": {
+        "de": "Staubsaugen",
+        "en": "Vacuum",
+        "fr": "Passer l'aspirateur",
+        "it": "Passare l'aspirapolvere"
+      }
+    },
+    {
+      "name": "breakfast",
+      "category": "task",
+      "emoji": "🥣",
+      "svg": {
+        "light": "pictos/light/breakfast.svg",
+        "dark": "pictos/dark/breakfast.svg"
+      },
+      "labels": {
+        "de": "Essen",
+        "en": "Eat",
+        "fr": "Manger",
+        "it": "Mangiare"
+      }
+    },
+    {
+      "name": "medicine",
+      "category": "task",
+      "emoji": "💊",
+      "svg": {
+        "light": "pictos/light/medicine.svg",
+        "dark": "pictos/dark/medicine.svg"
+      },
+      "labels": {
+        "de": "Medizin nehmen",
+        "en": "Take medicine",
+        "fr": "Prendre le médicament",
+        "it": "Prendere la medicina"
+      }
+    },
+    {
+      "name": "music",
+      "category": "task",
+      "emoji": "🎹",
+      "svg": {
+        "light": "pictos/light/music.svg",
+        "dark": "pictos/dark/music.svg"
+      },
+      "labels": {
+        "de": "Instrument üben",
+        "en": "Practise music",
+        "fr": "Faire de la musique",
+        "it": "Esercitarsi con lo strumento"
+      }
+    },
+    {
+      "name": "tidy-room",
+      "category": "task",
+      "emoji": "🗄️",
+      "svg": {
+        "light": "pictos/light/tidy-room.svg",
+        "dark": "pictos/dark/tidy-room.svg"
+      },
+      "labels": {
+        "de": "Zimmer aufräumen",
+        "en": "Tidy your room",
+        "fr": "Ranger sa chambre",
+        "it": "Riordinare la camera"
+      }
+    },
+    {
+      "name": "shoes",
+      "category": "task",
+      "emoji": "👟",
+      "svg": {
+        "light": "pictos/light/shoes.svg",
+        "dark": "pictos/dark/shoes.svg"
+      },
+      "labels": {
+        "de": "Schuhe wegräumen",
+        "en": "Put shoes away",
+        "fr": "Ranger les chaussures",
+        "it": "Mettere via le scarpe"
+      }
+    },
+    {
+      "name": "shopping",
+      "category": "task",
+      "emoji": "🛒",
+      "svg": {
+        "light": "pictos/light/shopping.svg",
+        "dark": "pictos/dark/shopping.svg"
+      },
+      "labels": {
+        "de": "Einkaufen",
+        "en": "Shopping",
+        "fr": "Faire les courses",
+        "it": "Fare la spesa"
+      }
+    },
+    {
+      "name": "nav-home",
+      "category": "nav",
+      "emoji": "🏠",
+      "svg": {
+        "light": "pictos/light/nav-home.svg",
+        "dark": "pictos/dark/nav-home.svg"
+      },
+      "labels": {
+        "de": "Startseite",
+        "en": "Home",
+        "fr": "Accueil",
+        "it": "Home"
+      }
+    },
+    {
+      "name": "nav-calendar",
+      "category": "nav",
+      "emoji": "📅",
+      "svg": {
+        "light": "pictos/light/nav-calendar.svg",
+        "dark": "pictos/dark/nav-calendar.svg"
+      },
+      "labels": {
+        "de": "Kalender",
+        "en": "Calendar",
+        "fr": "Calendrier",
+        "it": "Calendario"
+      }
+    },
+    {
+      "name": "nav-meals",
+      "category": "nav",
+      "emoji": "🍴",
+      "svg": {
+        "light": "pictos/light/nav-meals.svg",
+        "dark": "pictos/dark/nav-meals.svg"
+      },
+      "labels": {
+        "de": "Mahlzeiten",
+        "en": "Meals",
+        "fr": "Repas",
+        "it": "Pasti"
+      }
+    },
+    {
+      "name": "nav-tasks",
+      "category": "nav",
+      "emoji": "✅",
+      "svg": {
+        "light": "pictos/light/nav-tasks.svg",
+        "dark": "pictos/dark/nav-tasks.svg"
+      },
+      "labels": {
+        "de": "Aufgaben",
+        "en": "Chores",
+        "fr": "Tâches",
+        "it": "Faccende"
+      }
+    },
+    {
+      "name": "nav-todos",
+      "category": "nav",
+      "emoji": "📋",
+      "svg": {
+        "light": "pictos/light/nav-todos.svg",
+        "dark": "pictos/dark/nav-todos.svg"
+      },
+      "labels": {
+        "de": "To-dos",
+        "en": "To-dos",
+        "fr": "À faire",
+        "it": "Da fare"
+      }
+    },
+    {
+      "name": "nav-notes",
+      "category": "nav",
+      "emoji": "🗒️",
+      "svg": {
+        "light": "pictos/light/nav-notes.svg",
+        "dark": "pictos/dark/nav-notes.svg"
+      },
+      "labels": {
+        "de": "Notizen",
+        "en": "Notes",
+        "fr": "Notes",
+        "it": "Note"
+      }
+    },
+    {
+      "name": "nav-photos",
+      "category": "nav",
+      "emoji": "🖼️",
+      "svg": {
+        "light": "pictos/light/nav-photos.svg",
+        "dark": "pictos/dark/nav-photos.svg"
+      },
+      "labels": {
+        "de": "Fotos",
+        "en": "Photos",
+        "fr": "Photos",
+        "it": "Foto"
+      }
+    },
+    {
+      "name": "nav-settings",
+      "category": "nav",
+      "emoji": "⚙️",
+      "svg": {
+        "light": "pictos/light/nav-settings.svg",
+        "dark": "pictos/dark/nav-settings.svg"
+      },
+      "labels": {
+        "de": "Einstellungen",
+        "en": "Settings",
+        "fr": "Paramètres",
+        "it": "Impostazioni"
+      }
+    },
+    {
+      "name": "nav-more",
+      "category": "nav",
+      "emoji": "🔲",
+      "svg": {
+        "light": "pictos/light/nav-more.svg",
+        "dark": "pictos/dark/nav-more.svg"
+      },
+      "labels": {
+        "de": "Mehr",
+        "en": "More",
+        "fr": "Plus",
+        "it": "Altro"
+      }
+    },
+    {
+      "name": "tod-morning",
+      "category": "time",
+      "emoji": "🌅",
+      "svg": {
+        "light": "pictos/light/tod-morning.svg",
+        "dark": "pictos/dark/tod-morning.svg"
+      },
+      "labels": {
+        "de": "Morgens",
+        "en": "Morning",
+        "fr": "Matin",
+        "it": "Mattina"
+      }
+    },
+    {
+      "name": "tod-day",
+      "category": "time",
+      "emoji": "☀️",
+      "svg": {
+        "light": "pictos/light/tod-day.svg",
+        "dark": "pictos/dark/tod-day.svg"
+      },
+      "labels": {
+        "de": "Tagsüber",
+        "en": "Daytime",
+        "fr": "Journée",
+        "it": "Giorno"
+      }
+    },
+    {
+      "name": "tod-evening",
+      "category": "time",
+      "emoji": "🌙",
+      "svg": {
+        "light": "pictos/light/tod-evening.svg",
+        "dark": "pictos/dark/tod-evening.svg"
+      },
+      "labels": {
+        "de": "Abends",
+        "en": "Evening",
+        "fr": "Soir",
+        "it": "Sera"
+      }
+    },
+    {
+      "name": "tod-night",
+      "category": "time",
+      "emoji": "🌛",
+      "svg": {
+        "light": "pictos/light/tod-night.svg",
+        "dark": "pictos/dark/tod-night.svg"
+      },
+      "labels": {
+        "de": "Nacht",
+        "en": "Night",
+        "fr": "Nuit",
+        "it": "Notte"
+      }
+    },
+    {
+      "name": "tod-anytime",
+      "category": "time",
+      "emoji": "🌗",
+      "svg": {
+        "light": "pictos/light/tod-anytime.svg",
+        "dark": "pictos/dark/tod-anytime.svg"
+      },
+      "labels": {
+        "de": "Jederzeit",
+        "en": "Anytime",
+        "fr": "Quand tu veux",
+        "it": "Quando vuoi"
+      }
+    },
+    {
+      "name": "celebrate",
+      "category": "feedback",
+      "emoji": "🏆",
+      "svg": {
+        "light": "pictos/light/celebrate.svg",
+        "dark": "pictos/dark/celebrate.svg"
+      },
+      "labels": {
+        "de": "Geschafft!",
+        "en": "Well done!",
+        "fr": "Bravo !",
+        "it": "Bravo!"
+      }
+    },
+    {
+      "name": "oops",
+      "category": "feedback",
+      "emoji": "🩹",
+      "svg": {
+        "light": "pictos/light/oops.svg",
+        "dark": "pictos/dark/oops.svg"
+      },
+      "labels": {
+        "de": "Hoppla",
+        "en": "Oops",
+        "fr": "Oups",
+        "it": "Ops"
+      }
+    },
+    {
+      "name": "relax",
+      "category": "feedback",
+      "emoji": "🏖️",
+      "svg": {
+        "light": "pictos/light/relax.svg",
+        "dark": "pictos/dark/relax.svg"
+      },
+      "labels": {
+        "de": "Alles erledigt",
+        "en": "All done",
+        "fr": "Tout est fait",
+        "it": "Tutto fatto"
+      }
+    },
+    {
+      "name": "star",
+      "category": "feedback",
+      "emoji": "⭐",
+      "svg": {
+        "light": "pictos/light/star.svg",
+        "dark": "pictos/dark/star.svg"
+      },
+      "labels": {
+        "de": "Stern",
+        "en": "Star",
+        "fr": "Étoile",
+        "it": "Stella"
+      }
+    },
+    {
+      "name": "undo",
+      "category": "feedback",
+      "emoji": "↩️",
+      "svg": {
+        "light": "pictos/light/undo.svg",
+        "dark": "pictos/dark/undo.svg"
+      },
+      "labels": {
+        "de": "Rückgängig",
+        "en": "Undo",
+        "fr": "Annuler",
+        "it": "Annulla"
+      }
+    },
+    {
+      "name": "next",
+      "category": "feedback",
+      "emoji": "👉",
+      "svg": {
+        "light": "pictos/light/next.svg",
+        "dark": "pictos/dark/next.svg"
+      },
+      "labels": {
+        "de": "Als Nächstes",
+        "en": "Up next",
+        "fr": "Ensuite",
+        "it": "Prossimo"
+      }
+    },
+    {
+      "name": "pause",
+      "category": "feedback",
+      "emoji": "⏳",
+      "svg": {
+        "light": "pictos/light/pause.svg",
+        "dark": "pictos/dark/pause.svg"
+      },
+      "labels": {
+        "de": "Später",
+        "en": "Later",
+        "fr": "Plus tard",
+        "it": "Più tardi"
+      }
+    },
+    {
+      "name": "event-school",
+      "category": "event",
+      "emoji": "🏫",
+      "svg": {
+        "light": "pictos/light/event-school.svg",
+        "dark": "pictos/dark/event-school.svg"
+      },
+      "labels": {
+        "de": "Schule",
+        "en": "School",
+        "fr": "École",
+        "it": "Scuola"
+      }
+    },
+    {
+      "name": "event-kindergarten",
+      "category": "event",
+      "emoji": "🖍️",
+      "svg": {
+        "light": "pictos/light/event-kindergarten.svg",
+        "dark": "pictos/dark/event-kindergarten.svg"
+      },
+      "labels": {
+        "de": "Kindergarten",
+        "en": "Kindergarten",
+        "fr": "École enfantine",
+        "it": "Scuola dell'infanzia"
+      }
+    },
+    {
+      "name": "event-soccer",
+      "category": "event",
+      "emoji": "⚽",
+      "svg": {
+        "light": "pictos/light/event-soccer.svg",
+        "dark": "pictos/dark/event-soccer.svg"
+      },
+      "labels": {
+        "de": "Fussball",
+        "en": "Football",
+        "fr": "Football",
+        "it": "Calcio"
+      }
+    },
+    {
+      "name": "event-swim",
+      "category": "event",
+      "emoji": "🏊",
+      "svg": {
+        "light": "pictos/light/event-swim.svg",
+        "dark": "pictos/dark/event-swim.svg"
+      },
+      "labels": {
+        "de": "Schwimmen",
+        "en": "Swimming",
+        "fr": "Natation",
+        "it": "Nuoto"
+      }
+    },
+    {
+      "name": "event-doctor",
+      "category": "event",
+      "emoji": "🩺",
+      "svg": {
+        "light": "pictos/light/event-doctor.svg",
+        "dark": "pictos/dark/event-doctor.svg"
+      },
+      "labels": {
+        "de": "Arzt",
+        "en": "Doctor",
+        "fr": "Médecin",
+        "it": "Medico"
+      }
+    },
+    {
+      "name": "event-birthday",
+      "category": "event",
+      "emoji": "🎂",
+      "svg": {
+        "light": "pictos/light/event-birthday.svg",
+        "dark": "pictos/dark/event-birthday.svg"
+      },
+      "labels": {
+        "de": "Geburtstag",
+        "en": "Birthday",
+        "fr": "Anniversaire",
+        "it": "Compleanno"
+      }
+    },
+    {
+      "name": "event-dinner",
+      "category": "event",
+      "emoji": "🍲",
+      "svg": {
+        "light": "pictos/light/event-dinner.svg",
+        "dark": "pictos/dark/event-dinner.svg"
+      },
+      "labels": {
+        "de": "Abendessen",
+        "en": "Dinner",
+        "fr": "Repas du soir",
+        "it": "Cena"
+      }
+    },
+    {
+      "name": "event-music",
+      "category": "event",
+      "emoji": "🎸",
+      "svg": {
+        "light": "pictos/light/event-music.svg",
+        "dark": "pictos/dark/event-music.svg"
+      },
+      "labels": {
+        "de": "Musikstunde",
+        "en": "Music lesson",
+        "fr": "Cours de musique",
+        "it": "Lezione di musica"
+      }
+    },
+    {
+      "name": "event-play",
+      "category": "event",
+      "emoji": "🪣",
+      "svg": {
+        "light": "pictos/light/event-play.svg",
+        "dark": "pictos/dark/event-play.svg"
+      },
+      "labels": {
+        "de": "Spielen",
+        "en": "Playtime",
+        "fr": "Jouer",
+        "it": "Giocare"
+      }
+    },
+    {
+      "name": "event-trip",
+      "category": "event",
+      "emoji": "🚗",
+      "svg": {
+        "light": "pictos/light/event-trip.svg",
+        "dark": "pictos/dark/event-trip.svg"
+      },
+      "labels": {
+        "de": "Ausflug",
+        "en": "Outing",
+        "fr": "Excursion",
+        "it": "Gita"
+      }
+    },
+    {
+      "name": "event-bike",
+      "category": "event",
+      "emoji": "🚲",
+      "svg": {
+        "light": "pictos/light/event-bike.svg",
+        "dark": "pictos/dark/event-bike.svg"
+      },
+      "labels": {
+        "de": "Velo fahren",
+        "en": "Bike ride",
+        "fr": "Vélo",
+        "it": "Bicicletta"
+      }
+    }
+  ],
+  "emojiToPicto": {
+    "💧": [
+      "water"
+    ],
+    "🚰": [
+      "water"
+    ],
+    "🥤": [
+      "water"
+    ],
+    "🫗": [
+      "water"
+    ],
+    "🥛": [
+      "water"
+    ],
+    "🧊": [
+      "water"
+    ],
+    "🍶": [
+      "water"
+    ],
+    "🪥": [
+      "teeth"
+    ],
+    "🦷": [
+      "teeth",
+      "event-doctor"
+    ],
+    "🧸": [
+      "tidy-toys",
+      "event-play"
+    ],
+    "🪀": [
+      "tidy-toys"
+    ],
+    "🧩": [
+      "tidy-toys",
+      "event-play"
+    ],
+    "🪆": [
+      "tidy-toys"
+    ],
+    "🚂": [
+      "tidy-toys",
+      "event-trip"
+    ],
+    "🎲": [
+      "tidy-toys"
+    ],
+    "👕": [
+      "get-dressed"
+    ],
+    "👚": [
+      "get-dressed"
+    ],
+    "👗": [
+      "get-dressed"
+    ],
+    "👖": [
+      "get-dressed"
+    ],
+    "🧦": [
+      "get-dressed"
+    ],
+    "🧥": [
+      "get-dressed"
+    ],
+    "👔": [
+      "get-dressed"
+    ],
+    "🩳": [
+      "get-dressed"
+    ],
+    "🧤": [
+      "get-dressed"
+    ],
+    "🧣": [
+      "get-dressed"
+    ],
+    "🛏": [
+      "make-bed"
+    ],
+    "🍽": [
+      "set-table",
+      "event-dinner"
+    ],
+    "🥢": [
+      "set-table"
+    ],
+    "🐶": [
+      "feed-dog"
+    ],
+    "🐕": [
+      "feed-dog"
+    ],
+    "🦮": [
+      "feed-dog"
+    ],
+    "🐩": [
+      "feed-dog"
+    ],
+    "🦴": [
+      "feed-dog"
+    ],
+    "🐕‍🦺": [
+      "feed-dog"
+    ],
+    "🐱": [
+      "feed-cat"
+    ],
+    "🐈": [
+      "feed-cat"
+    ],
+    "🐈‍⬛": [
+      "feed-cat"
+    ],
+    "🐟": [
+      "feed-cat"
+    ],
+    "🐠": [
+      "feed-cat"
+    ],
+    "🐹": [
+      "feed-cat"
+    ],
+    "🐰": [
+      "feed-cat"
+    ],
+    "🐇": [
+      "feed-cat"
+    ],
+    "🚮": [
+      "trash"
+    ],
+    "🗑": [
+      "trash"
+    ],
+    "♻": [
+      "trash"
+    ],
+    "🚯": [
+      "trash"
+    ],
+    "🌱": [
+      "water-plants"
+    ],
+    "🪴": [
+      "water-plants"
+    ],
+    "🌻": [
+      "water-plants"
+    ],
+    "🌷": [
+      "water-plants"
+    ],
+    "🌿": [
+      "water-plants"
+    ],
+    "🌼": [
+      "water-plants"
+    ],
+    "🌸": [
+      "water-plants"
+    ],
+    "🌵": [
+      "water-plants"
+    ],
+    "✏": [
+      "homework",
+      "event-school"
+    ],
+    "📚": [
+      "homework",
+      "read",
+      "event-school"
+    ],
+    "📝": [
+      "homework"
+    ],
+    "✍": [
+      "homework"
+    ],
+    "🖊": [
+      "homework"
+    ],
+    "📐": [
+      "homework"
+    ],
+    "🖋": [
+      "homework"
+    ],
+    "📏": [
+      "homework"
+    ],
+    "🧮": [
+      "homework"
+    ],
+    "📖": [
+      "read"
+    ],
+    "📕": [
+      "read"
+    ],
+    "📗": [
+      "read"
+    ],
+    "📘": [
+      "read"
+    ],
+    "📙": [
+      "read"
+    ],
+    "🧺": [
+      "laundry",
+      "wash-clothes"
+    ],
+    "👙": [
+      "laundry"
+    ],
+    "🫧": [
+      "wash-clothes",
+      "wash-hands"
+    ],
+    "🧽": [
+      "dishes"
+    ],
+    "🫙": [
+      "dishes"
+    ],
+    "🧼": [
+      "wash-hands"
+    ],
+    "👐": [
+      "wash-hands"
+    ],
+    "🙌": [
+      "wash-hands"
+    ],
+    "🤲": [
+      "wash-hands"
+    ],
+    "🛁": [
+      "bath"
+    ],
+    "🚿": [
+      "bath"
+    ],
+    "🛀": [
+      "bath"
+    ],
+    "🦆": [
+      "bath"
+    ],
+    "🧴": [
+      "bath"
+    ],
+    "🛌": [
+      "pajamas"
+    ],
+    "😴": [
+      "pajamas"
+    ],
+    "💤": [
+      "pajamas",
+      "tod-night"
+    ],
+    "🥱": [
+      "pajamas"
+    ],
+    "🎒": [
+      "backpack"
+    ],
+    "🧹": [
+      "sweep"
+    ],
+    "🌪": [
+      "vacuum"
+    ],
+    "💨": [
+      "vacuum"
+    ],
+    "🥣": [
+      "breakfast"
+    ],
+    "🍳": [
+      "breakfast",
+      "event-dinner"
+    ],
+    "🥐": [
+      "breakfast",
+      "event-dinner"
+    ],
+    "🍞": [
+      "breakfast"
+    ],
+    "🥞": [
+      "breakfast",
+      "event-dinner"
+    ],
+    "🍎": [
+      "breakfast"
+    ],
+    "🍌": [
+      "breakfast"
+    ],
+    "🥪": [
+      "breakfast"
+    ],
+    "🥄": [
+      "breakfast"
+    ],
+    "🧇": [
+      "breakfast"
+    ],
+    "🍓": [
+      "breakfast"
+    ],
+    "🍏": [
+      "breakfast"
+    ],
+    "💊": [
+      "medicine",
+      "event-doctor"
+    ],
+    "💉": [
+      "medicine",
+      "event-doctor"
+    ],
+    "🌡": [
+      "medicine"
+    ],
+    "🤒": [
+      "medicine"
+    ],
+    "🧪": [
+      "medicine"
+    ],
+    "🎹": [
+      "music",
+      "event-music"
+    ],
+    "🎵": [
+      "music",
+      "event-music"
+    ],
+    "🎶": [
+      "music",
+      "event-music"
+    ],
+    "🎼": [
+      "music",
+      "event-music"
+    ],
+    "🪈": [
+      "music",
+      "event-music"
+    ],
+    "🎺": [
+      "music",
+      "event-music"
+    ],
+    "🥁": [
+      "music",
+      "event-music"
+    ],
+    "🎻": [
+      "music",
+      "event-music"
+    ],
+    "🪗": [
+      "music",
+      "event-music"
+    ],
+    "🪘": [
+      "music"
+    ],
+    "🗄": [
+      "tidy-room"
+    ],
+    "🚪": [
+      "tidy-room"
+    ],
+    "🛋": [
+      "tidy-room"
+    ],
+    "🪑": [
+      "tidy-room"
+    ],
+    "🏠": [
+      "tidy-room"
+    ],
+    "🏡": [
+      "tidy-room"
+    ],
+    "👟": [
+      "shoes"
+    ],
+    "👞": [
+      "shoes"
+    ],
+    "🥾": [
+      "shoes"
+    ],
+    "👢": [
+      "shoes"
+    ],
+    "🩴": [
+      "shoes"
+    ],
+    "👠": [
+      "shoes"
+    ],
+    "🥿": [
+      "shoes"
+    ],
+    "🛒": [
+      "shopping"
+    ],
+    "🛍": [
+      "shopping"
+    ],
+    "🧾": [
+      "shopping"
+    ],
+    "🏪": [
+      "shopping"
+    ],
+    "🌅": [
+      "tod-morning"
+    ],
+    "🌄": [
+      "tod-morning"
+    ],
+    "🐓": [
+      "tod-morning"
+    ],
+    "☀": [
+      "tod-day"
+    ],
+    "🌞": [
+      "tod-day"
+    ],
+    "🌤": [
+      "tod-day"
+    ],
+    "🌙": [
+      "tod-evening"
+    ],
+    "🌃": [
+      "tod-evening"
+    ],
+    "🌌": [
+      "tod-evening"
+    ],
+    "🌛": [
+      "tod-night"
+    ],
+    "🌜": [
+      "tod-night"
+    ],
+    "🌚": [
+      "tod-night"
+    ],
+    "🌗": [
+      "tod-anytime"
+    ],
+    "🌓": [
+      "tod-anytime"
+    ],
+    "🕒": [
+      "tod-anytime"
+    ],
+    "⏰": [
+      "tod-anytime"
+    ],
+    "🕐": [
+      "tod-anytime"
+    ],
+    "⌚": [
+      "tod-anytime"
+    ],
+    "⏱": [
+      "tod-anytime"
+    ],
+    "🕰": [
+      "tod-anytime"
+    ],
+    "🏆": [
+      "celebrate"
+    ],
+    "🎉": [
+      "celebrate"
+    ],
+    "🥳": [
+      "celebrate"
+    ],
+    "🎊": [
+      "celebrate"
+    ],
+    "🏅": [
+      "celebrate"
+    ],
+    "🥇": [
+      "celebrate"
+    ],
+    "🩹": [
+      "oops"
+    ],
+    "🏖": [
+      "relax"
+    ],
+    "⛱": [
+      "relax"
+    ],
+    "🧘": [
+      "relax"
+    ],
+    "😌": [
+      "relax"
+    ],
+    "⭐": [
+      "star"
+    ],
+    "🌟": [
+      "star"
+    ],
+    "✨": [
+      "star"
+    ],
+    "💫": [
+      "star"
+    ],
+    "↩": [
+      "undo"
+    ],
+    "↶": [
+      "undo"
+    ],
+    "🔙": [
+      "undo"
+    ],
+    "👉": [
+      "next"
+    ],
+    "➡": [
+      "next"
+    ],
+    "▶": [
+      "next"
+    ],
+    "⏳": [
+      "pause"
+    ],
+    "⌛": [
+      "pause"
+    ],
+    "⏸": [
+      "pause"
+    ],
+    "🏫": [
+      "event-school"
+    ],
+    "🧑‍🏫": [
+      "event-school"
+    ],
+    "👩‍🏫": [
+      "event-school"
+    ],
+    "👨‍🏫": [
+      "event-school"
+    ],
+    "🎓": [
+      "event-school"
+    ],
+    "🖍": [
+      "event-kindergarten"
+    ],
+    "🧱": [
+      "event-kindergarten"
+    ],
+    "🎨": [
+      "event-kindergarten"
+    ],
+    "🖌": [
+      "event-kindergarten"
+    ],
+    "✂": [
+      "event-kindergarten"
+    ],
+    "⚽": [
+      "event-soccer"
+    ],
+    "🥅": [
+      "event-soccer"
+    ],
+    "🏊": [
+      "event-swim"
+    ],
+    "🩱": [
+      "event-swim"
+    ],
+    "🤿": [
+      "event-swim"
+    ],
+    "🥽": [
+      "event-swim"
+    ],
+    "🩺": [
+      "event-doctor"
+    ],
+    "🏥": [
+      "event-doctor"
+    ],
+    "🧑‍⚕": [
+      "event-doctor"
+    ],
+    "👩‍⚕": [
+      "event-doctor"
+    ],
+    "👨‍⚕": [
+      "event-doctor"
+    ],
+    "🚑": [
+      "event-doctor"
+    ],
+    "🎂": [
+      "event-birthday"
+    ],
+    "🎁": [
+      "event-birthday"
+    ],
+    "🎈": [
+      "event-birthday"
+    ],
+    "🧁": [
+      "event-birthday"
+    ],
+    "🍰": [
+      "event-birthday"
+    ],
+    "🍲": [
+      "event-dinner"
+    ],
+    "🍝": [
+      "event-dinner"
+    ],
+    "🍕": [
+      "event-dinner"
+    ],
+    "🥘": [
+      "event-dinner"
+    ],
+    "🍛": [
+      "event-dinner"
+    ],
+    "🍜": [
+      "event-dinner"
+    ],
+    "🍴": [
+      "event-dinner"
+    ],
+    "🥗": [
+      "event-dinner"
+    ],
+    "🍖": [
+      "event-dinner"
+    ],
+    "🍗": [
+      "event-dinner"
+    ],
+    "🎸": [
+      "event-music"
+    ],
+    "🎤": [
+      "event-music"
+    ],
+    "🎷": [
+      "event-music"
+    ],
+    "🎙": [
+      "event-music"
+    ],
+    "🎧": [
+      "event-music"
+    ],
+    "🪣": [
+      "event-play"
+    ],
+    "🛝": [
+      "event-play"
+    ],
+    "🪁": [
+      "event-play"
+    ],
+    "🏐": [
+      "event-play"
+    ],
+    "🏀": [
+      "event-play"
+    ],
+    "🎠": [
+      "event-play"
+    ],
+    "🤸": [
+      "event-play"
+    ],
+    "🚗": [
+      "event-trip"
+    ],
+    "🚙": [
+      "event-trip"
+    ],
+    "🚌": [
+      "event-trip"
+    ],
+    "🚆": [
+      "event-trip"
+    ],
+    "✈": [
+      "event-trip"
+    ],
+    "🏔": [
+      "event-trip"
+    ],
+    "⛰": [
+      "event-trip"
+    ],
+    "🧳": [
+      "event-trip"
+    ],
+    "🏕": [
+      "event-trip"
+    ],
+    "🗺": [
+      "event-trip"
+    ],
+    "⛵": [
+      "event-trip"
+    ],
+    "🦁": [
+      "event-trip"
+    ],
+    "🐘": [
+      "event-trip"
+    ],
+    "🚲": [
+      "event-bike"
+    ],
+    "🚴": [
+      "event-bike"
+    ],
+    "🛴": [
+      "event-bike"
+    ],
+    "🛹": [
+      "event-bike"
+    ],
+    "🚵": [
+      "event-bike"
+    ]
+  }
+}

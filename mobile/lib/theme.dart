@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'kids/kid_tokens.g.dart';
+
 /// FamilyBoard accent palette (8 member colors).
 ///
 /// Hex values mirror the wall's design tokens — keep them in sync if
@@ -47,7 +49,12 @@ class FamilyBoardTheme {
       brightness: Brightness.light,
       surface: _surface,
     ).copyWith(onSurface: _ink, outline: const Color(0xFFE6E1D9));
-    return _base(scheme, background: _bg, mutedText: _muted);
+    return _base(
+      scheme,
+      background: _bg,
+      mutedText: _muted,
+      kid: KidTokens.light,
+    );
   }
 
   static ThemeData dark() {
@@ -60,6 +67,7 @@ class FamilyBoardTheme {
       scheme,
       background: _bgDark,
       mutedText: const Color(0xFF9CA3AF),
+      kid: KidTokens.dark,
     );
   }
 
@@ -67,11 +75,13 @@ class FamilyBoardTheme {
     ColorScheme scheme, {
     required Color background,
     required Color mutedText,
+    required KidTokens kid,
   }) {
     return ThemeData(
       useMaterial3: true,
       colorScheme: scheme,
       scaffoldBackgroundColor: background,
+      extensions: <ThemeExtension<KidTokens>>[kid],
       textTheme: const TextTheme(
         displaySmall: TextStyle(
           fontSize: 32,
