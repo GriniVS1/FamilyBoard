@@ -9,10 +9,9 @@
 import 'package:familyboard_mobile/navigation/tab_index.dart';
 import 'package:familyboard_mobile/navigation/tab_refresh.dart';
 import 'package:familyboard_mobile/state/events_provider.dart';
-import 'package:familyboard_mobile/state/grocery_provider.dart';
+import 'package:familyboard_mobile/state/chores_provider.dart';
 import 'package:familyboard_mobile/state/meal_plan_provider.dart';
 import 'package:familyboard_mobile/state/notes_provider.dart';
-import 'package:familyboard_mobile/state/today_provider.dart';
 import 'package:familyboard_mobile/state/todos_provider.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -33,7 +32,7 @@ void main() {
         providers,
         containsAll(<Object>[
           eventsProvider(range),
-          todayProvider,
+          choresProvider,
           todosProvider,
           notesProvider,
         ]),
@@ -58,13 +57,18 @@ void main() {
       expect(providers, equals(<Object>[mealPlanProvider]));
     });
 
-    test('Einkauf invalidates groceryProvider', () {
+    test('Aufgaben invalidates the chore list and the to-dos', () {
       final List<Object> providers = providersToInvalidateForTab(
-        groceryTabIndex,
+        tasksTabIndex,
         range,
       );
 
-      expect(providers, equals(<Object>[groceryProvider]));
+      expect(providers, equals(<Object>[choresProvider, todosProvider]));
+    });
+
+    test('Aufgaben is fixed on slot 2, right after Heute (R7.2)', () {
+      expect(homeTabIndex, 0);
+      expect(tasksTabIndex, 1);
     });
 
     test('Mehr has no primary data of its own to refresh', () {

@@ -4,16 +4,6 @@
   "@appTitle": {},
   "moreTitle": "Altro",
   "@moreTitle": {},
-  "tasksTitle": "Attività e faccende",
-  "@tasksTitle": {},
-  "tasksChoreCompletedBy": "Fatto da {name}",
-  "@tasksChoreCompletedBy": {
-    "placeholders": {
-      "name": { "type": "String", "example": "Mia" }
-    }
-  },
-  "tasksChoreUnassigned": "Tutti",
-  "@tasksChoreUnassigned": {},
   "splashLoading": "Caricamento…",
   "@splashLoading": {},
   "pairTitle": "Associa questo dispositivo",
@@ -57,8 +47,6 @@
   },
   "homeTodayCard": "Oggi",
   "@homeTodayCard": {},
-  "homeChoresCard": "Faccende",
-  "@homeChoresCard": {},
   "homeTodosCard": "Cose da fare",
   "@homeTodosCard": {},
   "homeComingSoon": "Disponibile in un futuro aggiornamento.",
@@ -87,15 +75,6 @@
   "@homeNoEvents": {},
   "homeAllDay": "Tutto il giorno",
   "@homeAllDay": {},
-  "homeChoresHeading": "Faccende ({done}/{total} fatte)",
-  "@homeChoresHeading": {
-    "placeholders": {
-      "done": { "type": "int", "example": "1" },
-      "total": { "type": "int", "example": "3" }
-    }
-  },
-  "homeNoChores": "Nessuna faccenda oggi.",
-  "@homeNoChores": {},
   "homePointsLabel": "{n, plural, =1 {1 punto} other {{n} punti}}",
   "@homePointsLabel": {
     "placeholders": {
@@ -174,14 +153,6 @@
   "@todosSectionLater": {},
   "todosSectionNoDate": "Senza data",
   "@todosSectionNoDate": {},
-  "choresUndoConfirm": "Annullare la stella di oggi?",
-  "@choresUndoConfirm": {},
-  "choresErrorGeneric": "Impossibile aggiornare la faccenda.",
-  "@choresErrorGeneric": {},
-  "mutationErrorRetry": "Riprova",
-  "@mutationErrorRetry": {},
-  "choresAddAria": "Aggiungi faccenda",
-  "@choresAddAria": {},
   "choresCreateTitle": "Nuova faccenda",
   "@choresCreateTitle": {},
   "choresMemberNone": "Nessuno",
@@ -726,5 +697,123 @@
   "setupPinMismatch": "I PIN non corrispondono",
   "@setupPinMismatch": {},
   "setupPinInvalid": "Inserisci esattamente 6 cifre",
-  "@setupPinInvalid": {}
+  "@setupPinInvalid": {},
+  "navToday": "Oggi",
+  "@navToday": {},
+  "navTasks": "Faccende",
+  "@navTasks": {},
+  "navCalendar": "Calendario",
+  "@navCalendar": {},
+  "navMeals": "Pasti",
+  "@navMeals": {},
+  "navMore": "Altro",
+  "@navMore": {},
+  "navTodos": "Da fare",
+  "@navTodos": {},
+  "kidUndoTask": "Annulla: {title}",
+  "@kidUndoTask": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidRetryTask": "{title}: riprova",
+  "@kidRetryTask": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidToastStars": "{name} riceve {count, plural, =1{1 stella} other{{count} stelle}}",
+  "@kidToastStars": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidToastDoneBy": "{name} l’ha fatto ({count, plural, =1{1 stella} other{{count} stelle}})",
+  "@kidToastDoneBy": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidErrorGeneric": "Non ha funzionato. Riprova.",
+  "@kidErrorGeneric": {},
+  "kidErrorQueueFull": "Troppe modifiche in attesa. Riprova più tardi.",
+  "@kidErrorQueueFull": {},
+  "kidErrorUndoFailed": "Annullamento non riuscito.",
+  "@kidErrorUndoFailed": {},
+  "kidStateOpen": "da fare",
+  "@kidStateOpen": {},
+  "kidStateDone": "completata",
+  "@kidStateDone": {},
+  "kidStateNext": "da fare ora",
+  "@kidStateNext": {},
+  "kidStateFailed": "non riuscita, tocca per riprovare",
+  "@kidStateFailed": {},
+  "kidStateSending": "invio in corso",
+  "@kidStateSending": {},
+  "kidStateQueued": "in attesa di connessione",
+  "@kidStateQueued": {},
+  "kidCardLabel": "{title}, {points, plural, =1{1 stella} other{{points} stelle}}",
+  "@kidCardLabel": {
+    "placeholders": { "title": { "type": "String" }, "points": { "type": "int" } }
+  },
+  "kidDoneMiniLabel": "{title}: completata. Tocca per annullare",
+  "@kidDoneMiniLabel": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidGroupCollapse": "Comprimi {name}",
+  "@kidGroupCollapse": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidGroupExpand": "Espandi {name}",
+  "@kidGroupExpand": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidGroupProgress": "{done} su {total} completate",
+  "@kidGroupProgress": {
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "kidStateAllDone": "Tutto fatto!",
+  "@kidStateAllDone": {},
+  "kidStateNight": "Ora di dormire",
+  "@kidStateNight": {},
+  "kidStatePause": "Più tardi",
+  "@kidStatePause": {},
+  "kidNoChores": "Nessuna faccenda",
+  "@kidNoChores": {},
+  "kidLoading": "Caricamento…",
+  "@kidLoading": {},
+  "kidRetry": "Riprova",
+  "@kidRetry": {},
+  "kidAddChore": "Aggiungi una faccenda",
+  "@kidAddChore": {},
+  "kidAddChoreFor": "Aggiungi una faccenda per {name}",
+  "@kidAddChoreFor": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidAddChoreForEveryone": "Aggiungi una faccenda per tutti",
+  "@kidAddChoreForEveryone": {},
+  "kidLoadError": "Caricamento non riuscito.",
+  "@kidLoadError": {},
+  "kidStarsToday": "{count, plural, =1{1 stella oggi} other{{count} stelle oggi}}",
+  "@kidStarsToday": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "kidStarsBalance": "{count, plural, =1{1 stella} other{{count} stelle}}",
+  "@kidStarsBalance": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "kidStarsTodayShort": "oggi",
+  "@kidStarsTodayShort": {},
+  "kidAvatarOpen": "{name}: {count, plural, =0{tutto fatto} =1{1 da fare} other{{count} da fare}}",
+  "@kidAvatarOpen": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidEveryone": "Per tutti",
+  "@kidEveryone": {},
+  "kidReadOnly": "Faccende di {name}: solo visualizzazione",
+  "@kidReadOnly": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidFilterAll": "Tutti",
+  "@kidFilterAll": {},
+  "kidNow": "Adesso",
+  "@kidNow": {},
+  "kidEventPast": "finito",
+  "@kidEventPast": {},
+  "kidPickPicture": "Immagine",
+  "@kidPickPicture": {},
+  "kidSeeAllTasks": "Mostra tutte le faccende",
+  "@kidSeeAllTasks": {}
 }

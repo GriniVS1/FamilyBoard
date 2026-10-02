@@ -1,6 +1,6 @@
 /// Shared "add a to-do" composer row — title field, an optional due-date
 /// affordance, and the submit button. Used by both the Home To-dos card and
-/// the Tasks screen's To-dos segment.
+/// the To-dos screen.
 ///
 /// Fully controlled: the parent's `State` owns [controller], [busy] and the
 /// picked [dueDate] (mirroring how `EventEditSheet` owns its own form

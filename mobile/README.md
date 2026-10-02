@@ -285,3 +285,21 @@ dart run tool/sync_kids_assets.dart --check                    # verify HASHES.s
 `assets/kids/HASHES.sha256` lists a SHA-256 per file, so a wall regeneration
 shows up as a small diff. Colours are read via `context.kid` (`KidTokens`),
 never as hex in widgets.
+
+## Kids-UI screens (Stufe 2, v0.3.0)
+
+Screens follow `docs/kids-ui/10-ruling-app.md` (R4-R9).
+
+- **Navigation (R7):** Heute - Aufgaben (fixed slot 2) - Kalender - Essen - Mehr,
+  with nav pictos and area colours. Einkauf, To-dos, Notizen, Fotos and
+  Einstellungen live behind Mehr as pushed routes (`/grocery`, `/todos`, ...).
+- **Chore board:** `lib/kids/kid_chore_section.dart` is shared by Aufgaben and
+  Heute. Completing is always for the session person (A3), so other people's
+  boards are read-only.
+- **Undo toast:** `lib/kids/undo_toast*.dart`, mounted by `AppShell` above the
+  bottom bar. Timing and tap rules are ported to `lib/kids/tap_guards.dart`.
+- **Stars (R6.2):** the counter shows *stars earned today* (labelled "heute")
+  until `/api/mobile/points` (A1) exists; the swap is one provider,
+  `state/stars_provider.dart`.
+- **Admin only (R6.3):** the "+" to create a chore. Edit / delete / reset have
+  no mobile endpoint yet.

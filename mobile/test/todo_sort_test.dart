@@ -1,5 +1,5 @@
 // Unit tests for the pure sorting/grouping helpers in `models/todo_sort.dart`
-// backing the due-date UI on Home and the Tasks screen.
+// backing the due-date UI on Home and the To-dos screen.
 
 import 'package:familyboard_mobile/models/todo_item.dart';
 import 'package:familyboard_mobile/models/todo_sort.dart';

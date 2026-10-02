@@ -3,14 +3,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderOrFamily;
 import 'package:go_router/go_router.dart';
 
+import '../kids/undo_toast.dart';
 import '../l10n/generated/app_localizations.dart';
 import '../state/events_provider.dart';
 import '../state/home_range_provider.dart';
 import '../widgets/adaptive_layout.dart';
+import 'kid_nav.dart';
 import 'tab_refresh.dart';
 
-/// Tab shell for the 5 signed-in-only branches: Heute, Kalender,
-/// Essensplan, Einkauf, Mehr.
+/// Tab shell for the 5 signed-in-only branches: Heute, Aufgaben, Kalender,
+/// Essen, Mehr (R7). Kid areas come first; Einkauf, To-dos, Notizen, Fotos and
+/// Einstellungen live behind Mehr.
+///
+/// The undo toast host sits on top of the content, directly above the bottom
+/// bar (or above the bottom edge of the content in the rail layout), so a
+/// toast survives tab switches (R5.2).
 ///
 /// Below [AdaptiveLayout.railBreakpoint] (600pt) the tabs are a bottom
 /// NavigationBar; at or above it (iPhone Duo inner display, phones in
@@ -54,44 +61,22 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppL10n l10n = AppL10n.of(context);
-    final List<_TabSpec> tabs = <_TabSpec>[
-      _TabSpec(
-        icon: Icons.space_dashboard_outlined,
-        selectedIcon: Icons.space_dashboard,
-        label: l10n.homeTodayCard,
-      ),
-      _TabSpec(
-        icon: Icons.calendar_month_outlined,
-        selectedIcon: Icons.calendar_month,
-        label: l10n.calendarTitle,
-      ),
-      _TabSpec(
-        icon: Icons.restaurant_outlined,
-        selectedIcon: Icons.restaurant,
-        label: l10n.mealPlanTitle,
-      ),
-      _TabSpec(
-        icon: Icons.shopping_cart_outlined,
-        selectedIcon: Icons.shopping_cart,
-        label: l10n.groceryTitle,
-      ),
-      _TabSpec(icon: Icons.more_horiz, label: l10n.moreTitle),
-    ];
+    final List<KidNavDestinationSpec> tabs = kidNavDestinations(l10n);
 
     if (!AdaptiveLayout.useRail(context)) {
       return Scaffold(
-        body: navigationShell,
+        body: _withToasts(navigationShell),
         bottomNavigationBar: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
+          labelBehavior: NavigationDestinationLabelBehavior.onlyShowSelected,
+          indicatorColor: Colors.transparent,
           onDestinationSelected: (int index) =>
               _onDestinationSelected(ref, index),
           destinations: <NavigationDestination>[
-            for (final _TabSpec tab in tabs)
+            for (final KidNavDestinationSpec tab in tabs)
               NavigationDestination(
-                icon: Icon(tab.icon),
-                selectedIcon: tab.selectedIcon == null
-                    ? null
-                    : Icon(tab.selectedIcon),
+                icon: KidNavIcon(spec: tab),
+                selectedIcon: KidNavPill(spec: tab),
                 label: tab.label,
               ),
           ],
@@ -120,17 +105,16 @@ class AppShell extends ConsumerWidget {
                       ),
                       child: IntrinsicHeight(
                         child: NavigationRail(
-                          labelType: NavigationRailLabelType.all,
+                          labelType: NavigationRailLabelType.selected,
+                          useIndicator: false,
                           selectedIndex: navigationShell.currentIndex,
                           onDestinationSelected: (int index) =>
                               _onDestinationSelected(ref, index),
                           destinations: <NavigationRailDestination>[
-                            for (final _TabSpec tab in tabs)
+                            for (final KidNavDestinationSpec tab in tabs)
                               NavigationRailDestination(
-                                icon: Icon(tab.icon),
-                                selectedIcon: Icon(
-                                  tab.selectedIcon ?? tab.icon,
-                                ),
+                                icon: KidNavIcon(spec: tab),
+                                selectedIcon: KidNavPill(spec: tab),
                                 label: Text(tab.label),
                               ),
                           ],
@@ -147,7 +131,7 @@ class AppShell extends ConsumerWidget {
             child: MediaQuery.removePadding(
               context: context,
               removeLeft: true,
-              child: navigationShell,
+              child: _withToasts(navigationShell),
             ),
           ),
         ],
@@ -156,10 +140,12 @@ class AppShell extends ConsumerWidget {
   }
 }
 
-class _TabSpec {
-  const _TabSpec({required this.icon, this.selectedIcon, required this.label});
-
-  final IconData icon;
-  final IconData? selectedIcon;
-  final String label;
+/// Content with the undo toasts stacked on its bottom edge.
+Widget _withToasts(Widget content) {
+  return Stack(
+    children: <Widget>[
+      Positioned.fill(child: content),
+      const Positioned(left: 0, right: 0, bottom: 0, child: UndoToastHost()),
+    ],
+  );
 }

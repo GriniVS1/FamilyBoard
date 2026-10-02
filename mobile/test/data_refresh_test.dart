@@ -13,7 +13,6 @@ import 'package:familyboard_mobile/state/grocery_provider.dart';
 import 'package:familyboard_mobile/state/meal_plan_provider.dart';
 import 'package:familyboard_mobile/state/notes_provider.dart';
 import 'package:familyboard_mobile/state/photos_provider.dart';
-import 'package:familyboard_mobile/state/today_provider.dart';
 import 'package:familyboard_mobile/state/todos_provider.dart';
 import 'package:flutter_riverpod/misc.dart' show ProviderOrFamily;
 import 'package:flutter_test/flutter_test.dart';
@@ -32,7 +31,7 @@ void main() {
         providers,
         equals(<Object>[
           eventsProvider(range),
-          todayProvider,
+          choresProvider,
           todosProvider,
           notesProvider,
         ]),
@@ -48,7 +47,6 @@ void main() {
         providers,
         equals(<Object>[
           eventsProvider,
-          todayProvider,
           todosProvider,
           notesProvider,
           choresProvider,

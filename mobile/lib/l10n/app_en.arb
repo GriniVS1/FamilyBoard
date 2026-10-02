@@ -8,21 +8,6 @@
   "@moreTitle": {
     "description": "Label of the fifth bottom-nav tab and title of the screen it opens, listing Notes/Photos/Settings."
   },
-  "tasksTitle": "Tasks & Chores",
-  "@tasksTitle": {
-    "description": "Label of the Tasks & Chores row in the More screen, and the app bar title of the screen it opens (/tasks)."
-  },
-  "tasksChoreCompletedBy": "Done by {name}",
-  "@tasksChoreCompletedBy": {
-    "description": "Shown under a completed chore on the Tasks screen, naming who completed it today.",
-    "placeholders": {
-      "name": { "type": "String", "example": "Mia" }
-    }
-  },
-  "tasksChoreUnassigned": "Everyone",
-  "@tasksChoreUnassigned": {
-    "description": "Neutral chip label shown on an unassigned chore (Home Ämtli card + Tasks screen)."
-  },
   "splashLoading": "Loading…",
   "@splashLoading": {},
   "pairTitle": "Pair this device",
@@ -66,8 +51,6 @@
   },
   "homeTodayCard": "Today",
   "@homeTodayCard": {},
-  "homeChoresCard": "Chores",
-  "@homeChoresCard": {},
   "homeTodosCard": "To-dos",
   "@homeTodosCard": {},
   "homeComingSoon": "Coming in a future update.",
@@ -96,15 +79,6 @@
   "@homeNoEvents": {},
   "homeAllDay": "All day",
   "@homeAllDay": {},
-  "homeChoresHeading": "Chores ({done}/{total} done)",
-  "@homeChoresHeading": {
-    "placeholders": {
-      "done": { "type": "int", "example": "1" },
-      "total": { "type": "int", "example": "3" }
-    }
-  },
-  "homeNoChores": "No chores assigned today.",
-  "@homeNoChores": {},
   "homePointsLabel": "{n, plural, =1 {1 point} other {{n} points}}",
   "@homePointsLabel": {
     "placeholders": {
@@ -209,14 +183,6 @@
   "@todosSectionNoDate": {
     "description": "Tasks screen to-do section header for items with no due date."
   },
-  "choresUndoConfirm": "Undo today's star?",
-  "@choresUndoConfirm": {},
-  "choresErrorGeneric": "Couldn't update the chore.",
-  "@choresErrorGeneric": {},
-  "mutationErrorRetry": "Retry",
-  "@mutationErrorRetry": {},
-  "choresAddAria": "Add chore",
-  "@choresAddAria": {},
   "choresCreateTitle": "New chore",
   "@choresCreateTitle": {},
   "choresMemberNone": "Nobody",
@@ -780,5 +746,123 @@
   "setupPinMismatch": "PINs don't match",
   "@setupPinMismatch": {},
   "setupPinInvalid": "Enter exactly 6 digits",
-  "@setupPinInvalid": {}
+  "@setupPinInvalid": {},
+  "navToday": "Today",
+  "@navToday": {},
+  "navTasks": "Chores",
+  "@navTasks": {},
+  "navCalendar": "Calendar",
+  "@navCalendar": {},
+  "navMeals": "Food",
+  "@navMeals": {},
+  "navMore": "More",
+  "@navMore": {},
+  "navTodos": "To-dos",
+  "@navTodos": {},
+  "kidUndoTask": "Undo: {title}",
+  "@kidUndoTask": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidRetryTask": "{title}: try again",
+  "@kidRetryTask": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidToastStars": "{name} gets {count, plural, =1{1 star} other{{count} stars}}",
+  "@kidToastStars": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidToastDoneBy": "{name} did it ({count, plural, =1{1 star} other{{count} stars}})",
+  "@kidToastDoneBy": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidErrorGeneric": "That didn’t work. Please try again.",
+  "@kidErrorGeneric": {},
+  "kidErrorQueueFull": "Too many changes are waiting. Try again later.",
+  "@kidErrorQueueFull": {},
+  "kidErrorUndoFailed": "Undo didn’t work.",
+  "@kidErrorUndoFailed": {},
+  "kidStateOpen": "open",
+  "@kidStateOpen": {},
+  "kidStateDone": "done",
+  "@kidStateDone": {},
+  "kidStateNext": "up next",
+  "@kidStateNext": {},
+  "kidStateFailed": "failed, tap to try again",
+  "@kidStateFailed": {},
+  "kidStateSending": "sending",
+  "@kidStateSending": {},
+  "kidStateQueued": "waiting for connection",
+  "@kidStateQueued": {},
+  "kidCardLabel": "{title}, {points, plural, =1{1 star} other{{points} stars}}",
+  "@kidCardLabel": {
+    "placeholders": { "title": { "type": "String" }, "points": { "type": "int" } }
+  },
+  "kidDoneMiniLabel": "{title}: done. Tap to show undo",
+  "@kidDoneMiniLabel": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidGroupCollapse": "Collapse {name}",
+  "@kidGroupCollapse": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidGroupExpand": "Expand {name}",
+  "@kidGroupExpand": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidGroupProgress": "{done} of {total} done",
+  "@kidGroupProgress": {
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "kidStateAllDone": "All done!",
+  "@kidStateAllDone": {},
+  "kidStateNight": "Bedtime",
+  "@kidStateNight": {},
+  "kidStatePause": "Later",
+  "@kidStatePause": {},
+  "kidNoChores": "No chores",
+  "@kidNoChores": {},
+  "kidLoading": "Loading…",
+  "@kidLoading": {},
+  "kidRetry": "Try again",
+  "@kidRetry": {},
+  "kidAddChore": "Add a chore",
+  "@kidAddChore": {},
+  "kidAddChoreFor": "Add a chore for {name}",
+  "@kidAddChoreFor": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidAddChoreForEveryone": "Add a chore for everyone",
+  "@kidAddChoreForEveryone": {},
+  "kidLoadError": "Couldn’t load that.",
+  "@kidLoadError": {},
+  "kidStarsToday": "{count, plural, =1{1 star today} other{{count} stars today}}",
+  "@kidStarsToday": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "kidStarsBalance": "{count, plural, =1{1 star} other{{count} stars}}",
+  "@kidStarsBalance": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "kidStarsTodayShort": "today",
+  "@kidStarsTodayShort": {},
+  "kidAvatarOpen": "{name}: {count, plural, =0{all done} =1{1 open} other{{count} open}}",
+  "@kidAvatarOpen": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidEveryone": "For everyone",
+  "@kidEveryone": {},
+  "kidReadOnly": "{name}’s chores: view only",
+  "@kidReadOnly": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidFilterAll": "All",
+  "@kidFilterAll": {},
+  "kidNow": "Now",
+  "@kidNow": {},
+  "kidEventPast": "over",
+  "@kidEventPast": {},
+  "kidPickPicture": "Picture",
+  "@kidPickPicture": {},
+  "kidSeeAllTasks": "Show all chores",
+  "@kidSeeAllTasks": {}
 }

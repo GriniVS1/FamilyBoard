@@ -2,6 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app.dart';
+import '../../kids/kid_theme.dart';
+import '../../kids/picto.dart';
+import '../../kids/picto_catalog.g.dart';
+import '../../kids/picto_resolver.dart';
+import '../../kids/picto_suggest.dart';
+import '../../kids/kid_group_widgets.dart';
+import '../../kids/kid_tap.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/family_member.dart';
 import '../../models/mutations.dart';
@@ -9,24 +16,6 @@ import '../../models/session.dart';
 import '../../state/chores_provider.dart';
 import '../../state/members_provider.dart';
 import '../../state/session_provider.dart';
-import '../../state/today_provider.dart';
-
-/// A small, chore-relevant emoji set. Kept separate from the member-emoji set
-/// in `member_edit_sheet.dart` — different purpose, different icons. Each is
-/// a single codepoint or a short VS16 sequence, well under the route's
-/// 8-character `icon` cap.
-const List<String> _kChoreEmojis = <String>[
-  '🧹',
-  '🧺',
-  '🍽️',
-  '🛏️',
-  '🗑️',
-  '🧽',
-  '📚',
-  '🌱',
-  '🐕',
-  '🚗',
-];
 
 enum _ChoreRecurrence { none, daily, weekly }
 
@@ -49,7 +38,7 @@ extension on _ChoreRecurrence {
 /// Opens [ChoreCreateSheet] as a modal bottom sheet. Admin-only — callers are
 /// expected to have already gated the entry point (the "+" button on the
 /// Ämtli card only renders for admins).
-Future<void> showChoreCreateSheet(BuildContext context) {
+Future<void> showChoreCreateSheet(BuildContext context, {String? memberId}) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -57,12 +46,15 @@ Future<void> showChoreCreateSheet(BuildContext context) {
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
-    builder: (BuildContext ctx) => const ChoreCreateSheet(),
+    builder: (BuildContext ctx) => ChoreCreateSheet(initialMemberId: memberId),
   );
 }
 
 class ChoreCreateSheet extends ConsumerStatefulWidget {
-  const ChoreCreateSheet({super.key});
+  const ChoreCreateSheet({this.initialMemberId, super.key});
+
+  /// Pre-selected assignee (the board the "+" was tapped on).
+  final String? initialMemberId;
 
   @override
   ConsumerState<ChoreCreateSheet> createState() => _ChoreCreateSheetState();
@@ -70,8 +62,10 @@ class ChoreCreateSheet extends ConsumerStatefulWidget {
 
 class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
   final TextEditingController _titleController = TextEditingController();
-  String? _memberId;
-  String? _emoji;
+  late String? _memberId = widget.initialMemberId;
+
+  /// Picto the admin picked by hand; null while the title suggests one.
+  String? _pickedPicto;
   int _points = 1;
   _ChoreRecurrence _recurrence = _ChoreRecurrence.none;
   bool _busy = false;
@@ -80,6 +74,16 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
   void dispose() {
     _titleController.dispose();
     super.dispose();
+  }
+
+  /// The picto shown as selected: the hand-picked one, else what the title
+  /// suggests.
+  String? get _picto {
+    final String? picked = _pickedPicto;
+    if (picked != null) {
+      return picked.isEmpty ? null : picked;
+    }
+    return suggestPicto(_titleController.text.trim());
   }
 
   void _showError(String message) {
@@ -109,14 +113,15 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
             session: session,
             title: title,
             memberId: _memberId,
-            icon: _emoji,
+            // R3.3: the canonical emoji of the motif, never its name, so the
+            // wall and older clients keep working.
+            icon: _picto == null ? null : canonicalEmojiFor(_picto!),
             points: _points,
             rrule: _recurrence.rrule,
           );
       if (!mounted) {
         return;
       }
-      ref.invalidate(todayProvider);
       ref.invalidate(choresProvider);
       Navigator.of(context).pop();
     } on MutationSessionRevokedException {
@@ -180,7 +185,12 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
             ),
             const SizedBox(height: 8),
             DropdownButtonFormField<String?>(
-              initialValue: _memberId,
+              // Rebuilt once the members have loaded, so a pre-selected
+              // assignee is found among the items.
+              key: ValueKey<int>(members.length),
+              initialValue: members.any((FamilyMember m) => m.id == _memberId)
+                  ? _memberId
+                  : null,
               isExpanded: true,
               items: <DropdownMenuItem<String?>>[
                 DropdownMenuItem<String?>(child: Text(l10n.choresMemberNone)),
@@ -197,16 +207,17 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
             ),
             const SizedBox(height: 16),
             Text(
-              l10n.membersEmojiLabel,
+              l10n.kidPickPicture,
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
-            _ChoreEmojiGrid(
-              selected: _emoji,
+            _ChorePictoGrid(
+              selected: _picto,
               onChanged: _busy
                   ? null
-                  : (String? e) =>
-                        setState(() => _emoji = e == _emoji ? null : e),
+                  : (String name) => setState(
+                      () => _pickedPicto = name == _picto ? '' : name,
+                    ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -300,43 +311,46 @@ class _ChoreCreateSheetState extends ConsumerState<ChoreCreateSheet> {
   }
 }
 
-class _ChoreEmojiGrid extends StatelessWidget {
-  const _ChoreEmojiGrid({required this.selected, required this.onChanged});
+/// Picture picker (R3.3): the task motifs of the wall instead of an emoji
+/// grid. Tapping the selected motif clears it.
+class _ChorePictoGrid extends StatelessWidget {
+  const _ChorePictoGrid({required this.selected, required this.onChanged});
 
   final String? selected;
-  final void Function(String)? onChanged;
+  final void Function(String name)? onChanged;
 
   @override
   Widget build(BuildContext context) {
+    final KidTokens tokens = context.kid;
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: _kChoreEmojis.map((String emoji) {
-        final bool isSelected = emoji == selected;
-        return GestureDetector(
-          onTap: onChanged != null ? () => onChanged!(emoji) : null,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 150),
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primaryContainer
-                  : Theme.of(context).colorScheme.surfaceContainerHighest,
-              border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.transparent,
-                width: 2,
-              ),
-            ),
-            child: Center(
-              child: Text(emoji, style: const TextStyle(fontSize: 20)),
-            ),
+      spacing: KidTouch.gap,
+      runSpacing: KidTouch.gap,
+      children: <Widget>[
+        for (final PictoMeta meta in pictosOfCategory(PictoCategory.task))
+          KidTap(
+            onTap: onChanged == null ? null : () => onChanged!(meta.name),
+            semanticLabel: pictoLabel(context, meta.name),
+            checked: meta.name == selected,
+            borderRadius: KidRadius.pictoTileBorder,
+            builder: (BuildContext context, KidTapState tap) {
+              final bool isSelected = meta.name == selected;
+              return Container(
+                width: 56,
+                height: 56,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected ? tokens.accentSunTint : tokens.surface,
+                  borderRadius: KidRadius.pictoTileBorder,
+                  border: Border.all(
+                    color: isSelected ? tokens.ink : tokens.border,
+                    width: isSelected ? 3 : 2,
+                  ),
+                ),
+                child: KidPicto(meta.name, size: 40),
+              );
+            },
           ),
-        );
-      }).toList(),
+      ],
     );
   }
 }

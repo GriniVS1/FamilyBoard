@@ -5,7 +5,7 @@ import '../l10n/generated/app_localizations.dart';
 
 /// Small pill indicating that the data was loaded from the local disk cache.
 ///
-/// Pass [staleAt] from the service result type (e.g. [TodayPayload.staleAt]).
+/// Pass [staleAt] from the service result type (e.g. [ChoresResult.staleAt]).
 /// Renders nothing when [staleAt] is null (live data).
 class CachedAtPill extends StatelessWidget {
   const CachedAtPill({super.key, required this.staleAt});
