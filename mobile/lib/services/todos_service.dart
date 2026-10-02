@@ -31,10 +31,9 @@ class TodosResult {
 
 /// Read-only client for `GET /api/mobile/todos` — the family-wide todo list.
 ///
-/// Unlike `TodayPayload.todos` (member-filtered), this endpoint returns every
-/// todo in the family with its assigned `member` (nullable). Writes still go
-/// through [MutationsService] — this service only backs the Home dashboard's
-/// read path.
+/// This endpoint returns every todo in the family with its assigned `member`
+/// (nullable). Writes still go through [MutationsService] — this service only
+/// backs the read path.
 class TodosService {
   TodosService({required this._clientFactory, required CacheDb cacheDb})
     : _cached = CachedGet(cacheDb);

@@ -4,8 +4,8 @@ import '../services/chores_service.dart';
 import 'session_provider.dart';
 
 /// Fetches the family-wide chore list (all members, includes `member` and
-/// `completedTodayBy` per chore). Distinct from [todayProvider]'s
-/// member-scoped `chores` — backs the Tasks screen's Ämtli segment.
+/// `completedTodayBy` per chore). Backs the Aufgaben board and the Heute
+/// Ämtli card.
 ///
 /// Callers can trigger a manual refresh via `ref.invalidate(choresProvider)`.
 final FutureProvider<ChoresResult> choresProvider =

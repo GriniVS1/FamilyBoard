@@ -4,7 +4,7 @@
 // and never re-fetch on the old "push → pop → dispose → refetch on next
 // push" cadence autoDispose used to give screens reached via `context.push`.
 // Riverpod providers don't know a tab switch happened, so without this,
-// Kalender/Essensplan/Einkauf could sit on data fetched minutes ago the next
+// Aufgaben/Kalender/Essensplan could sit on data fetched minutes ago the next
 // time their tab becomes visible.
 //
 // Fix: `AppShell` calls [providersToInvalidateForTab] on every
@@ -23,8 +23,9 @@ import 'package:flutter_riverpod/misc.dart' show ProviderOrFamily;
 
 import '../state/data_refresh.dart';
 import '../state/events_provider.dart';
-import '../state/grocery_provider.dart';
+import '../state/chores_provider.dart';
 import '../state/meal_plan_provider.dart';
+import '../state/todos_provider.dart';
 import 'tab_index.dart';
 
 /// The providers backing the primary data of the tab at [tabIndex].
@@ -40,9 +41,12 @@ import 'tab_index.dart';
 ///   `CalendarScreen` owns its own date-window state, so there is no single
 ///   `EventsRange` instance to target; invalidating the family invalidates
 ///   whichever range instance it currently has mounted.
-/// - Essensplan / Einkauf are plain (non-family, non-autoDispose)
-///   `FutureProvider`s, so a bare invalidate is enough.
-/// - Mehr has no data of its own — it's a navigation list.
+/// - Aufgaben invalidates the family chore list and the To-dos (the To-dos
+///   screen is reached from Mehr, but its list should be fresh on the way).
+/// - Essensplan is a plain (non-family, non-autoDispose) `FutureProvider`, so
+///   a bare invalidate is enough.
+/// - Mehr has no data of its own - it's a navigation list. Einkauf lives
+///   behind it as a pushed route and fetches when it opens.
 List<ProviderOrFamily> providersToInvalidateForTab(
   int tabIndex,
   EventsRange homeRange,
@@ -50,12 +54,12 @@ List<ProviderOrFamily> providersToInvalidateForTab(
   switch (tabIndex) {
     case homeTabIndex:
       return visibleHomeProviders(homeRange);
+    case tasksTabIndex:
+      return <ProviderOrFamily>[choresProvider, todosProvider];
     case calendarTabIndex:
       return <ProviderOrFamily>[eventsProvider];
     case mealPlanTabIndex:
       return <ProviderOrFamily>[mealPlanProvider];
-    case groceryTabIndex:
-      return <ProviderOrFamily>[groceryProvider];
     case moreTabIndex:
       return const <ProviderOrFamily>[];
     default:

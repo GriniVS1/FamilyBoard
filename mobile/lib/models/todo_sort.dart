@@ -62,7 +62,7 @@ List<TodoItem> sortTodosForDisplay(List<TodoItem> todos) {
   return <TodoItem>[...stableSortByDueDate(open), ...stableSortByDueDate(done)];
 }
 
-/// Due-date buckets for the Tasks screen's sectioned to-do list. Only applied
+/// Due-date buckets for the To-dos screen's sectioned to-do list. Only applied
 /// to open (not-done) todos — done todos are rendered after, ungrouped (see
 /// `groupOpenTodosIntoSections`'s doc).
 enum TodoDueBucket { overdue, today, thisWeek, later, noDate }

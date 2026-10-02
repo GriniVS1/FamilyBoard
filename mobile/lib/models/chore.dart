@@ -1,9 +1,8 @@
 /// POD models for the `GET /api/mobile/chores` response — the family-wide
-/// chore list backing the Tasks screen's Ämtli segment.
+/// chore list backing the Aufgaben board and the Heute Ämtli card.
 ///
-/// Distinct from [TodayChore] (`models/today.dart`), which is member-scoped
-/// and comes from `/api/mobile/today`. This model carries every chore
-/// defined for the family, its assignee (nullable), and who completed it
+/// This model carries every chore defined for the family, its assignee
+/// (nullable), the day phase (`timeOfDay`), and who completed it
 /// today (nullable, may differ from the assignee if the wall lets anyone
 /// mark a chore done).
 library;

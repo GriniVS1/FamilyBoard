@@ -6,6 +6,7 @@
 
 import 'package:familyboard_mobile/l10n/generated/app_localizations.dart';
 import 'package:familyboard_mobile/navigation/app_shell.dart';
+import 'package:familyboard_mobile/navigation/kid_nav.dart';
 import 'package:familyboard_mobile/theme.dart';
 import 'package:familyboard_mobile/widgets/adaptive_layout.dart';
 import 'package:flutter/material.dart';
@@ -36,9 +37,9 @@ GoRouter _router() {
             ) => AppShell(navigationShell: shell),
         branches: <StatefulShellBranch>[
           branch('/home'),
+          branch('/tasks'),
           branch('/calendar'),
           branch('/meal-plan'),
-          branch('/grocery'),
           branch('/more'),
         ],
       ),
@@ -73,6 +74,10 @@ Future<void> _pumpShell(
   );
   await tester.pumpAndSettle();
 }
+
+Finder _navIcon(String picto) => find.byWidgetPredicate(
+  (Widget w) => w is KidNavIcon && w.spec.picto == picto,
+);
 
 void main() {
   group('AppShell at iPhone Duo widths', () {
@@ -116,20 +121,53 @@ void main() {
       expect(find.byType(NavigationBar), findsOneWidget);
     });
 
-    testWidgets('rail shows all five labels and tab taps switch branches', (
+    testWidgets('rail shows five destinations, pill only on the active one', (
       WidgetTester tester,
     ) async {
       await _pumpShell(tester, logicalSize: const Size(890, 626));
 
       final NavigationRail rail = tester.widget(find.byType(NavigationRail));
       expect(rail.destinations, hasLength(5));
-      expect(rail.labelType, NavigationRailLabelType.all);
+      // R7.1: inactive = picto only, active = tint pill + label.
+      expect(rail.labelType, NavigationRailLabelType.selected);
+      expect(find.byType(KidNavPill), findsOneWidget);
       expect(find.text('page /home'), findsOneWidget);
 
-      await tester.tap(find.byIcon(Icons.calendar_month_outlined));
+      await tester.tap(_navIcon('nav-calendar'));
       await tester.pumpAndSettle();
 
       expect(find.text('page /calendar'), findsOneWidget);
+      expect(
+        tester.widget<KidNavPill>(find.byType(KidNavPill)).spec.picto,
+        'nav-calendar',
+      );
+    });
+
+    testWidgets('Aufgaben sits on slot 2 right after Heute (R7.2)', (
+      WidgetTester tester,
+    ) async {
+      await _pumpShell(tester, logicalSize: const Size(390, 844));
+
+      final List<String> order = <String>[
+        for (final Element e
+            in find
+                .byWidgetPredicate(
+                  (Widget w) => w is KidNavIcon || w is KidNavPill,
+                )
+                .evaluate())
+          switch (e.widget) {
+            final KidNavIcon w => w.spec.picto,
+            final KidNavPill w => w.spec.picto,
+            _ => '',
+          },
+      ];
+      expect(order, <String>[
+        'nav-home',
+        'nav-tasks',
+        'nav-calendar',
+        'nav-meals',
+        'nav-more',
+      ]);
     });
 
     testWidgets('rail destinations meet the 48pt touch target', (
@@ -159,7 +197,7 @@ void main() {
       WidgetTester tester,
     ) async {
       await _pumpShell(tester, logicalSize: const Size(466, 678));
-      await tester.tap(find.byIcon(Icons.restaurant_outlined));
+      await tester.tap(_navIcon('nav-meals'));
       await tester.pumpAndSettle();
       expect(find.text('page /meal-plan'), findsOneWidget);
 
@@ -173,7 +211,7 @@ void main() {
         tester
             .widget<NavigationRail>(find.byType(NavigationRail))
             .selectedIndex,
-        2,
+        3,
       );
 
       // Fold back.

@@ -1,8 +1,7 @@
 /// POD models for the GET /api/mobile/todos response.
 ///
-/// Distinct from [TodayTodo] (`models/today.dart`), which is member-scoped
-/// and comes from `/api/mobile/today`. This model backs the family-wide todo
-/// list shown on Home and carries the assigned [TodoMember] per item.
+/// This model backs the family-wide todo list (Heute card and the To-dos
+/// screen behind Mehr) and carries the assigned [TodoMember] per item.
 library;
 
 class TodoMember {

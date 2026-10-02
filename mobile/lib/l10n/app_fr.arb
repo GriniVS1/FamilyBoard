@@ -4,16 +4,6 @@
   "@appTitle": {},
   "moreTitle": "Plus",
   "@moreTitle": {},
-  "tasksTitle": "Tâches et corvées",
-  "@tasksTitle": {},
-  "tasksChoreCompletedBy": "Fait par {name}",
-  "@tasksChoreCompletedBy": {
-    "placeholders": {
-      "name": { "type": "String", "example": "Mia" }
-    }
-  },
-  "tasksChoreUnassigned": "Tous",
-  "@tasksChoreUnassigned": {},
   "splashLoading": "Chargement…",
   "@splashLoading": {},
   "pairTitle": "Associer cet appareil",
@@ -57,8 +47,6 @@
   },
   "homeTodayCard": "Aujourd'hui",
   "@homeTodayCard": {},
-  "homeChoresCard": "Tâches",
-  "@homeChoresCard": {},
   "homeTodosCard": "À faire",
   "@homeTodosCard": {},
   "homeComingSoon": "Disponible dans une prochaine mise à jour.",
@@ -87,15 +75,6 @@
   "@homeNoEvents": {},
   "homeAllDay": "Toute la journée",
   "@homeAllDay": {},
-  "homeChoresHeading": "Tâches ({done}/{total} faites)",
-  "@homeChoresHeading": {
-    "placeholders": {
-      "done": { "type": "int", "example": "1" },
-      "total": { "type": "int", "example": "3" }
-    }
-  },
-  "homeNoChores": "Aucune tâche aujourd'hui.",
-  "@homeNoChores": {},
   "homePointsLabel": "{n, plural, =1 {1 point} other {{n} points}}",
   "@homePointsLabel": {
     "placeholders": {
@@ -174,14 +153,6 @@
   "@todosSectionLater": {},
   "todosSectionNoDate": "Sans date",
   "@todosSectionNoDate": {},
-  "choresUndoConfirm": "Annuler l'étoile d'aujourd'hui ?",
-  "@choresUndoConfirm": {},
-  "choresErrorGeneric": "Impossible de mettre à jour la tâche.",
-  "@choresErrorGeneric": {},
-  "mutationErrorRetry": "Réessayer",
-  "@mutationErrorRetry": {},
-  "choresAddAria": "Ajouter une tâche",
-  "@choresAddAria": {},
   "choresCreateTitle": "Nouvelle tâche",
   "@choresCreateTitle": {},
   "choresMemberNone": "Personne",
@@ -726,5 +697,123 @@
   "setupPinMismatch": "Les codes PIN ne correspondent pas",
   "@setupPinMismatch": {},
   "setupPinInvalid": "Saisissez exactement 6 chiffres",
-  "@setupPinInvalid": {}
+  "@setupPinInvalid": {},
+  "navToday": "Aujourd’hui",
+  "@navToday": {},
+  "navTasks": "Tâches",
+  "@navTasks": {},
+  "navCalendar": "Calendrier",
+  "@navCalendar": {},
+  "navMeals": "Repas",
+  "@navMeals": {},
+  "navMore": "Plus",
+  "@navMore": {},
+  "navTodos": "À faire",
+  "@navTodos": {},
+  "kidUndoTask": "Annuler : {title}",
+  "@kidUndoTask": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidRetryTask": "{title} : réessayer",
+  "@kidRetryTask": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidToastStars": "{name} gagne {count, plural, =1{1 étoile} other{{count} étoiles}}",
+  "@kidToastStars": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidToastDoneBy": "{name} l’a fait ({count, plural, =1{1 étoile} other{{count} étoiles}})",
+  "@kidToastDoneBy": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidErrorGeneric": "Ça n’a pas marché. Réessaie.",
+  "@kidErrorGeneric": {},
+  "kidErrorQueueFull": "Trop de changements en attente. Réessaie plus tard.",
+  "@kidErrorQueueFull": {},
+  "kidErrorUndoFailed": "L’annulation n’a pas marché.",
+  "@kidErrorUndoFailed": {},
+  "kidStateOpen": "à faire",
+  "@kidStateOpen": {},
+  "kidStateDone": "terminée",
+  "@kidStateDone": {},
+  "kidStateNext": "à faire maintenant",
+  "@kidStateNext": {},
+  "kidStateFailed": "échec, toucher pour réessayer",
+  "@kidStateFailed": {},
+  "kidStateSending": "envoi en cours",
+  "@kidStateSending": {},
+  "kidStateQueued": "en attente de connexion",
+  "@kidStateQueued": {},
+  "kidCardLabel": "{title}, {points, plural, =1{1 étoile} other{{points} étoiles}}",
+  "@kidCardLabel": {
+    "placeholders": { "title": { "type": "String" }, "points": { "type": "int" } }
+  },
+  "kidDoneMiniLabel": "{title} : terminée. Toucher pour annuler",
+  "@kidDoneMiniLabel": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidGroupCollapse": "Réduire {name}",
+  "@kidGroupCollapse": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidGroupExpand": "Développer {name}",
+  "@kidGroupExpand": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidGroupProgress": "{done} sur {total} terminées",
+  "@kidGroupProgress": {
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "kidStateAllDone": "Tout est fait !",
+  "@kidStateAllDone": {},
+  "kidStateNight": "Dodo",
+  "@kidStateNight": {},
+  "kidStatePause": "Plus tard",
+  "@kidStatePause": {},
+  "kidNoChores": "Aucune tâche",
+  "@kidNoChores": {},
+  "kidLoading": "Chargement…",
+  "@kidLoading": {},
+  "kidRetry": "Réessayer",
+  "@kidRetry": {},
+  "kidAddChore": "Ajouter une tâche",
+  "@kidAddChore": {},
+  "kidAddChoreFor": "Ajouter une tâche pour {name}",
+  "@kidAddChoreFor": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidAddChoreForEveryone": "Ajouter une tâche pour tous",
+  "@kidAddChoreForEveryone": {},
+  "kidLoadError": "Chargement impossible.",
+  "@kidLoadError": {},
+  "kidStarsToday": "{count, plural, =1{1 étoile aujourd’hui} other{{count} étoiles aujourd’hui}}",
+  "@kidStarsToday": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "kidStarsBalance": "{count, plural, =1{1 étoile} other{{count} étoiles}}",
+  "@kidStarsBalance": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "kidStarsTodayShort": "aujourd’hui",
+  "@kidStarsTodayShort": {},
+  "kidAvatarOpen": "{name} : {count, plural, =0{tout est fait} =1{1 à faire} other{{count} à faire}}",
+  "@kidAvatarOpen": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidEveryone": "Pour tous",
+  "@kidEveryone": {},
+  "kidReadOnly": "Tâches de {name} : lecture seule",
+  "@kidReadOnly": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidFilterAll": "Tous",
+  "@kidFilterAll": {},
+  "kidNow": "En cours",
+  "@kidNow": {},
+  "kidEventPast": "terminé",
+  "@kidEventPast": {},
+  "kidPickPicture": "Image",
+  "@kidPickPicture": {},
+  "kidSeeAllTasks": "Afficher toutes les tâches",
+  "@kidSeeAllTasks": {}
 }

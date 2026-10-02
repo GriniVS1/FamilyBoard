@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../kids/kid_tap.dart';
+import '../../kids/kid_theme.dart';
+import '../../kids/picto.dart';
 import '../../l10n/generated/app_localizations.dart';
-import '../../widgets/familyboard_logo.dart';
 import '../../widgets/adaptive_layout.dart';
+import '../../widgets/familyboard_logo.dart';
 
-/// "Mehr" tab — a plain navigation list to the screens that don't get their
-/// own bottom-tab slot: Notes, Photos, Settings. Each row pushes its target
-/// on the root navigator (they're top-level routes in `app.dart`, outside
-/// the bottom-tab shell), so the pushed screen covers the tab bar.
+/// "Mehr" tab - the adult areas that do not get a bottom-tab slot (R7.2): To-dos,
+/// Notizen, Fotos, Einkauf and Einstellungen. Each row pushes its target on the
+/// root navigator (they are top-level routes in `app.dart`, outside the
+/// bottom-tab shell), so the pushed screen covers the tab bar.
 class MoreScreen extends StatelessWidget {
   const MoreScreen({super.key});
 
@@ -23,26 +26,38 @@ class MoreScreen extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             children: <Widget>[
               _MoreRow(
-                icon: Icons.checklist_outlined,
-                label: l10n.tasksTitle,
-                onTap: () => context.push('/tasks'),
+                picto: 'nav-todos',
+                accent: 'mint',
+                label: l10n.navTodos,
+                onTap: () => context.push('/todos'),
               ),
               const SizedBox(height: 12),
               _MoreRow(
-                icon: Icons.sticky_note_2_outlined,
+                picto: 'nav-notes',
+                accent: 'lilac',
                 label: l10n.notesTitle,
                 onTap: () => context.push('/notes'),
               ),
               const SizedBox(height: 12),
               _MoreRow(
-                icon: Icons.photo_library_outlined,
+                picto: 'nav-photos',
+                accent: 'teal',
                 label: l10n.photosTitle,
                 onTap: () => context.push('/photos'),
               ),
               const SizedBox(height: 12),
               _MoreRow(
-                icon: Icons.settings_outlined,
+                picto: 'shopping',
+                accent: 'peach',
+                label: l10n.groceryTitle,
+                onTap: () => context.push('/grocery'),
+              ),
+              const SizedBox(height: 12),
+              _MoreRow(
+                picto: 'nav-settings',
+                accent: 'sand',
                 label: l10n.settingsTitle,
+                locked: true,
                 onTap: () => context.push('/settings'),
               ),
             ],
@@ -55,46 +70,95 @@ class MoreScreen extends StatelessWidget {
 
 class _MoreRow extends StatelessWidget {
   const _MoreRow({
-    required this.icon,
+    required this.picto,
+    required this.accent,
     required this.label,
     required this.onTap,
+    this.locked = false,
   });
 
-  final IconData icon;
+  final String picto;
+  final String accent;
   final String label;
   final VoidCallback onTap;
 
+  /// Shows the 🔒 badge: an adult area (Einstellungen).
+  final bool locked;
+
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: InkWell(
-        borderRadius: BorderRadius.circular(24),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 52),
+    final KidTokens tokens = context.kid;
+    final KidAccent colors = tokens.accent(accent);
+    return KidTap(
+      onTap: onTap,
+      semanticLabel: label,
+      builder: (BuildContext context, KidTapState tap) {
+        return KidPressable(
+          color: tokens.surface,
+          pressed: tap.pressed,
+          border: Border.all(color: tokens.border, width: 2),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
             child: Row(
               children: <Widget>[
-                Icon(icon, color: Theme.of(context).colorScheme.onSurface),
+                SizedBox.square(
+                  dimension: 56,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: <Widget>[
+                      Positioned.fill(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: colors.tint,
+                            borderRadius: KidRadius.pictoTileBorder,
+                          ),
+                          child: Center(child: KidPicto(picto, size: 40)),
+                        ),
+                      ),
+                      if (locked)
+                        Positioned(
+                          right: -6,
+                          bottom: -6,
+                          child: Container(
+                            width: 26,
+                            height: 26,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: tokens.surface,
+                              border: Border.all(
+                                color: tokens.border,
+                                width: 2,
+                              ),
+                            ),
+                            child: Icon(
+                              Icons.lock_rounded,
+                              size: 16,
+                              color: tokens.ink,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     label,
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: KidText.title.copyWith(color: tokens.ink),
                   ),
                 ),
                 Icon(
-                  Icons.chevron_right,
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withValues(alpha: 0.4),
+                  Icons.chevron_right_rounded,
+                  size: 28,
+                  color: tokens.muted,
                 ),
+                const SizedBox(width: 4),
               ],
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

@@ -26,7 +26,6 @@ import 'grocery_provider.dart';
 import 'meal_plan_provider.dart';
 import 'notes_provider.dart';
 import 'photos_provider.dart';
-import 'today_provider.dart';
 import 'todos_provider.dart';
 
 // ---------------------------------------------------------------------------
@@ -34,8 +33,9 @@ import 'todos_provider.dart';
 // ---------------------------------------------------------------------------
 
 /// Providers backing the home screen's always-visible cards: Heute /
-/// Demnächst (the `eventsProvider` family member for [range]), Chores
-/// (`todayProvider`), Todos, and Notizen.
+/// Demnächst (the `eventsProvider` family member for [range]), Ämtli
+/// (`choresProvider`: it carries `timeOfDay`, which the kid cards group by),
+/// Todos, and Notizen.
 ///
 /// [range] must be the exact value the home screen is currently watching —
 /// pass `ref.read(currentHomeRangeProvider)` / `ref.watch(...)` (see
@@ -48,7 +48,7 @@ import 'todos_provider.dart';
 List<ProviderOrFamily> visibleHomeProviders(EventsRange range) {
   return <ProviderOrFamily>[
     eventsProvider(range),
-    todayProvider,
+    choresProvider,
     todosProvider,
     notesProvider,
   ];
@@ -84,7 +84,7 @@ Future<void> refreshVisibleData({
 
   final List<Future<void>> pending = <Future<void>>[
     read(eventsProvider(range).future).then((_) {}),
-    read(todayProvider.future).then((_) {}),
+    read(choresProvider.future).then((_) {}),
     read(todosProvider.future).then((_) {}),
     read(notesProvider.future).then((_) {}),
   ];
@@ -101,9 +101,8 @@ Future<void> refreshVisibleData({
 
 /// Every provider backing a screen the app can show: Heute/Demnächst
 /// (`eventsProvider`, invalidated as a whole family — see below), Ämtli
-/// (`todayProvider` for Home's member-scoped view, `choresProvider` for the
-/// Tasks screen's family-wide view), Todos, Notizen, Einkauf, Essensplan and
-/// Fotos.
+/// (`choresProvider`, shared by Heute and Aufgaben), Todos, Notizen, Einkauf,
+/// Essensplan and Fotos.
 ///
 /// `eventsProvider` is listed as the **family itself**, not a specific
 /// `eventsProvider(range)` member: `ProviderContainer.invalidate` on a
@@ -134,16 +133,18 @@ Future<void> refreshVisibleData({
 /// - Tab-shell providers stay active across every poll tick regardless of
 ///   which tab is on screen: `StatefulShellRoute.indexedStack` keeps every
 ///   branch mounted once visited (`tab_refresh.dart`'s header comment), so
-///   `todayProvider`, `todosProvider`, `notesProvider`, `groceryProvider`,
+///   `choresProvider`, `todosProvider`, `notesProvider`,
 ///   `mealPlanProvider`, and `eventsProvider`'s Home + Calendar range
-///   instances all keep a live listener and refetch on every tick — this is
-///   exactly the field-reported gap (a family member leaves the grocery tab
-///   open while someone else edits the list on the wall).
-/// - `choresProvider` (Tasks screen) and `photosProvider` (Photos screen)
-///   are reached via `context.push('/tasks')` / `context.push('/photos')` —
-///   plain pushed routes, not tabs — so they are only watched while that
-///   screen is on top of the navigator stack. Per the point above, polling
-///   them while the screen is closed is a no-op (not a wasted request), and
+///   instances keep a live listener and refetch on every tick (the field gap
+///   was a list left open while someone else edits it on the wall).
+/// - `groceryProvider` and `todosProvider` (via Mehr) sit behind pushed
+///   routes (`/grocery`, `/todos`), not tabs, so they are only watched while
+///   that screen is on top; reopening it fetches fresh data.
+/// - `photosProvider` (Photos screen) is reached via
+///   `context.push('/photos')` - a plain pushed route, not a tab - so it is
+///   only watched while that screen is on top of the navigator stack. Per the
+///   point above, polling them while the screen is closed is a no-op (not a
+///   wasted request), and
 ///   reopening the screen fetches fresh data immediately rather than
 ///   showing whatever was cached from before the poll.
 ///
@@ -154,7 +155,6 @@ Future<void> refreshVisibleData({
 List<ProviderOrFamily> allDataProviders() {
   return <ProviderOrFamily>[
     eventsProvider,
-    todayProvider,
     todosProvider,
     notesProvider,
     choresProvider,

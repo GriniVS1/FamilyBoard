@@ -15,7 +15,6 @@ import '../models/session.dart';
 import '../models/todo_item.dart';
 import '../models/todo_sort.dart';
 import '../state/session_provider.dart';
-import '../state/today_provider.dart';
 import '../state/todos_provider.dart';
 import 'member_chip.dart';
 import 'todo_due_date_sheet.dart';
@@ -79,7 +78,6 @@ class _TodoRowState extends ConsumerState<TodoRow> {
         return;
       }
       ref.invalidate(todosProvider);
-      ref.invalidate(todayProvider);
     } on MutationSessionRevokedException {
       if (!mounted) {
         return;
@@ -207,7 +205,6 @@ class _TodoRowState extends ConsumerState<TodoRow> {
         return;
       }
       ref.invalidate(todosProvider);
-      ref.invalidate(todayProvider);
     } on MutationSessionRevokedException {
       if (!mounted) {
         return;

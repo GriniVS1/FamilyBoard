@@ -18,6 +18,7 @@ import 'features/settings/settings_screen.dart';
 import 'features/setup_onboarding/setup_onboarding_screen.dart';
 import 'features/splash/splash_screen.dart';
 import 'features/tasks/tasks_screen.dart';
+import 'features/tasks/todos_screen.dart';
 import 'l10n/generated/app_localizations.dart';
 import 'models/notification_payload.dart';
 import 'navigation/app_shell.dart';
@@ -30,7 +31,8 @@ import 'theme.dart';
 import 'widgets/connectivity_banner.dart';
 
 /// Root navigator — hosts the bottom-tab shell itself plus every route that
-/// should push *over* it (Notes, Photos, Settings, pairing, splash). The
+/// should push *over* it (Notes, Photos, Settings, To-dos, Einkauf, pairing,
+/// splash). The
 /// shell's own branches get their own nested navigators (declared per
 /// `StatefulShellBranch` below) so in-branch pushes (event detail sheets,
 /// etc.) stay scoped to that branch.
@@ -113,6 +115,7 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
             location == '/photos' ||
             location == '/settings' ||
             location == '/tasks' ||
+            location == '/todos' ||
             location == '/more') {
           return '/pair';
         }
@@ -162,9 +165,14 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
               const SettingsScreen(),
         ),
         GoRoute(
-          path: '/tasks',
+          path: '/todos',
           builder: (BuildContext context, GoRouterState routerState) =>
-              const TasksScreen(),
+              const TodosScreen(),
+        ),
+        GoRoute(
+          path: '/grocery',
+          builder: (BuildContext context, GoRouterState routerState) =>
+              const GroceryScreen(),
         ),
         StatefulShellRoute.indexedStack(
           builder:
@@ -186,6 +194,15 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
             StatefulShellBranch(
               routes: <RouteBase>[
                 GoRoute(
+                  path: '/tasks',
+                  builder: (BuildContext context, GoRouterState routerState) =>
+                      const TasksScreen(),
+                ),
+              ],
+            ),
+            StatefulShellBranch(
+              routes: <RouteBase>[
+                GoRoute(
                   path: '/calendar',
                   builder: (BuildContext context, GoRouterState routerState) =>
                       const CalendarScreen(),
@@ -198,15 +215,6 @@ class _FamilyBoardAppState extends ConsumerState<FamilyBoardApp> {
                   path: '/meal-plan',
                   builder: (BuildContext context, GoRouterState routerState) =>
                       const MealPlanScreen(),
-                ),
-              ],
-            ),
-            StatefulShellBranch(
-              routes: <RouteBase>[
-                GoRoute(
-                  path: '/grocery',
-                  builder: (BuildContext context, GoRouterState routerState) =>
-                      const GroceryScreen(),
                 ),
               ],
             ),

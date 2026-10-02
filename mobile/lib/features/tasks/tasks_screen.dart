@@ -1,35 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../app.dart';
+import '../../kids/kid_avatar.dart';
+import '../../kids/kid_chore_card.dart';
+import '../../kids/kid_chore_section.dart';
+import '../../kids/kid_member_strip.dart';
+import '../../kids/kid_scroll_guard.dart';
+import '../../kids/kid_stars.dart';
+import '../../kids/kid_states.dart';
+import '../../kids/kid_tap.dart';
+import '../../kids/kid_theme.dart';
+import '../../kids/points.dart';
+import '../../kids/undo_toast.dart';
 import '../../l10n/generated/app_localizations.dart';
 import '../../models/chore.dart';
 import '../../models/family_member.dart';
-import '../../models/mutations.dart';
 import '../../models/session.dart';
-import '../../models/todo_item.dart';
-import '../../models/todo_sort.dart';
 import '../../services/chores_service.dart';
-import '../../services/todos_service.dart';
+import '../../state/chore_actions.dart';
 import '../../state/chores_provider.dart';
 import '../../state/members_provider.dart';
 import '../../state/session_provider.dart';
-import '../../state/today_provider.dart';
-import '../../state/todos_provider.dart';
-import '../../widgets/cached_at_pill.dart';
+import '../../state/stars_provider.dart';
 import '../../widgets/adaptive_layout.dart';
+import '../../widgets/cached_at_pill.dart';
 import '../../widgets/familyboard_logo.dart';
-import '../../widgets/member_chip.dart';
 import '../../widgets/queue_badge.dart';
-import '../../widgets/todo_composer.dart';
-import '../../widgets/todo_row.dart';
 import '../chores/chore_create_sheet.dart';
 
-enum _TasksTab { chores, todos }
+/// Tab key of the Aufgaben board for the tap guards (R5.5).
+const String kTasksListKey = 'tasks';
 
-/// Root-level screen (like `/notes`) showing the full family Ämtli and
-/// To-dos lists. Reached from the Mehr tab and the "Alle anzeigen" links on
-/// the Home Ämtli/To-dos cards, which are capped/filtered for the dashboard.
+/// "Aufgaben" tab (R4-R6): the chore board of one person at a time, the
+/// session person first. The phone is one person's device and the API only
+/// ever ticks for the session person (A3), so the other boards are read-only.
 class TasksScreen extends ConsumerStatefulWidget {
   const TasksScreen({super.key});
 
@@ -38,13 +42,70 @@ class TasksScreen extends ConsumerStatefulWidget {
 }
 
 class _TasksScreenState extends ConsumerState<TasksScreen> {
-  _TasksTab _tab = _TasksTab.chores;
+  String? _selectedId;
+  final GlobalKey _counterKey = GlobalKey(debugLabel: 'star-counter');
+
+  Future<void> _refresh() async {
+    ref.read(choreActionsProvider.notifier).clearFailed();
+    ref.invalidate(choresProvider);
+    ref.invalidate(membersProvider);
+    try {
+      await ref.read(choresProvider.future);
+    } catch (_) {
+      return;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final AppL10n l10n = AppL10n.of(context);
-    final AsyncValue<MembersResult> membersAsync = ref.watch(membersProvider);
-    final bool isAdmin = membersAsync.value?.isAdmin ?? false;
+    final Session? session = ref.watch(sessionProvider).session;
+    final AsyncValue<ChoresResult> choresAsync = ref.watch(choresProvider);
+    final MembersResult? members = ref.watch(membersProvider).value;
+    final ChoreActionsState actions = ref.watch(choreActionsProvider);
+    final double cardHeight = kidCardHeight(context);
+
+    final ChoresResult? data = choresAsync.value;
+    final bool isAdmin = members?.isAdmin ?? false;
+
+    Widget body;
+    if (session == null) {
+      body = const SizedBox.shrink();
+    } else if (data == null && choresAsync.hasError) {
+      final Object? err = choresAsync.error;
+      final bool expired = err is ChoresSessionRevokedException;
+      body = ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: <Widget>[
+          KidLoadError(
+            message: expired ? l10n.homeSessionExpired : l10n.kidLoadError,
+            onRetry: expired
+                ? () => ref.read(sessionProvider.notifier).clear()
+                : _refresh,
+          ),
+        ],
+      );
+    } else if (data == null) {
+      body = ListView(
+        physics: const NeverScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+        children: <Widget>[KidChoreSkeleton(cardHeight: cardHeight)],
+      );
+    } else {
+      body = _Board(
+        session: session,
+        data: data,
+        members: members?.members ?? const <FamilyMember>[],
+        actions: actions,
+        selectedId: _selectedId ?? session.member.id,
+        onSelect: (String id) => setState(() => _selectedId = id),
+        counterKey: _counterKey,
+        isAdmin: isAdmin,
+        loadFailed: choresAsync.hasError,
+        onRetry: _refresh,
+        onRefresh: _refresh,
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -53,656 +114,301 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       ),
       body: SafeArea(
         child: ConstrainedContent(
-          child: Column(
-            children: <Widget>[
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: SegmentedButton<_TasksTab>(
-                  segments: <ButtonSegment<_TasksTab>>[
-                    ButtonSegment<_TasksTab>(
-                      value: _TasksTab.chores,
-                      label: Text(l10n.homeChoresCard),
-                    ),
-                    ButtonSegment<_TasksTab>(
-                      value: _TasksTab.todos,
-                      label: Text(l10n.homeTodosCard),
-                    ),
-                  ],
-                  selected: <_TasksTab>{_tab},
-                  onSelectionChanged: (Set<_TasksTab> sel) =>
-                      setState(() => _tab = sel.first),
-                ),
-              ),
-              Expanded(
-                child: _tab == _TasksTab.chores
-                    ? const _ChoresSegment()
-                    : const _TodosSegment(),
-              ),
-            ],
+          child: KidScrollGuard(
+            listKey: kTasksListKey,
+            child: data == null
+                ? RefreshIndicator(onRefresh: _refresh, child: body)
+                : body,
           ),
         ),
       ),
-      floatingActionButton: _tab == _TasksTab.chores && isAdmin
-          ? FloatingActionButton(
-              onPressed: () => showChoreCreateSheet(context),
-              tooltip: l10n.choresAddAria,
-              child: const Icon(Icons.add),
-            )
-          : null,
     );
   }
 }
 
-// ---------------------------------------------------------------------------
-// Ämtli segment
-// ---------------------------------------------------------------------------
+/// The persons shown in the strip: the session person first, then the others
+/// in the order the wall lists them.
+List<KidStripPerson> _stripPeople({
+  required Session session,
+  required List<FamilyMember> members,
+  required List<Chore> chores,
+  required bool Function(Chore) isDone,
+}) {
+  final List<({String id, String name, String color, String emoji})> base =
+      <({String id, String name, String color, String emoji})>[
+        (
+          id: session.member.id,
+          name: session.member.name,
+          color: session.member.color,
+          emoji: session.member.emoji,
+        ),
+        for (final FamilyMember m in members)
+          if (m.id != session.member.id)
+            (id: m.id, name: m.name, color: m.color, emoji: m.emoji),
+      ];
+  return <KidStripPerson>[
+    for (final p in base)
+      () {
+        final List<Chore> own = chores
+            .where((Chore c) => c.memberId == p.id)
+            .toList();
+        final int done = own.where(isDone).length;
+        return KidStripPerson(
+          id: p.id,
+          name: p.name,
+          color: p.color,
+          emoji: p.emoji,
+          openCount: own.length - done,
+          progress: (done: done, total: own.length),
+        );
+      }(),
+  ];
+}
 
-class _ChoresSegment extends ConsumerWidget {
-  const _ChoresSegment();
+class _Board extends ConsumerWidget {
+  const _Board({
+    required this.session,
+    required this.data,
+    required this.members,
+    required this.actions,
+    required this.selectedId,
+    required this.onSelect,
+    required this.counterKey,
+    required this.isAdmin,
+    required this.loadFailed,
+    required this.onRetry,
+    required this.onRefresh,
+  });
+
+  final Session session;
+  final ChoresResult data;
+  final List<FamilyMember> members;
+  final ChoreActionsState actions;
+  final String selectedId;
+  final void Function(String id) onSelect;
+  final GlobalKey counterKey;
+  final bool isAdmin;
+  final bool loadFailed;
+  final VoidCallback onRetry;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final AppL10n l10n = AppL10n.of(context);
-    final AsyncValue<ChoresResult> choresAsync = ref.watch(choresProvider);
-
-    return choresAsync.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (Object err, StackTrace _) => _ErrorBody(
-        isSessionExpired: err is ChoresSessionRevokedException,
-        l10n: l10n,
-        onRetry: () => ref.invalidate(choresProvider),
-        onSessionExpired: () async {
-          await ref.read(sessionProvider.notifier).clear();
-        },
-      ),
-      data: (ChoresResult result) => _ChoresList(
-        chores: result.chores,
-        staleAt: result.staleAt,
-        l10n: l10n,
-        onRefresh: () async {
-          ref.invalidate(choresProvider);
-          try {
-            await ref.read(choresProvider.future);
-          } catch (_) {}
-        },
-      ),
+    final List<Chore> chores = data.chores;
+    final List<KidStripPerson> people = _stripPeople(
+      session: session,
+      members: members,
+      chores: chores,
+      isDone: actions.isDone,
     );
-  }
-}
-
-class _ChoresList extends StatelessWidget {
-  const _ChoresList({
-    required this.chores,
-    required this.staleAt,
-    required this.l10n,
-    required this.onRefresh,
-  });
-
-  final List<Chore> chores;
-  final DateTime? staleAt;
-  final AppL10n l10n;
-  final Future<void> Function() onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 96),
-        children: <Widget>[
-          if (staleAt != null) ...<Widget>[
-            CachedAtPill(staleAt: staleAt),
-            const SizedBox(height: 8),
-          ],
-          if (chores.isEmpty)
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.4,
-              child: Center(
-                child: Text(
-                  l10n.homeNoChores,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
-            )
-          else
-            ...chores.map((Chore c) => _ChoreListRow(chore: c, l10n: l10n)),
-        ],
-      ),
-    );
-  }
-}
-
-class _ChoreListRow extends ConsumerStatefulWidget {
-  const _ChoreListRow({required this.chore, required this.l10n});
-
-  final Chore chore;
-  final AppL10n l10n;
-
-  @override
-  ConsumerState<_ChoreListRow> createState() => _ChoreListRowState();
-}
-
-class _ChoreListRowState extends ConsumerState<_ChoreListRow> {
-  bool _busy = false;
-  bool _optimisticDone = false;
-  bool _optimisticOverride = false;
-
-  bool get _isDone =>
-      _optimisticOverride ? _optimisticDone : widget.chore.completedToday;
-
-  Future<void> _handleTap() async {
-    if (_busy) {
-      return;
-    }
-    final SessionState sessionState = ref.read(sessionProvider);
-    final Session? session = sessionState.session;
-    if (session == null) {
-      return;
-    }
-    if (_isDone) {
-      await _handleUndo(session);
-    } else {
-      await _handleComplete(session);
-    }
-  }
-
-  Future<void> _handleComplete(Session session) async {
-    setState(() {
-      _busy = true;
-      _optimisticDone = true;
-      _optimisticOverride = true;
-    });
-    try {
-      await ref
-          .read(mutationsServiceProvider)
-          .completeChore(session: session, id: widget.chore.id);
-      if (!mounted) {
-        return;
-      }
-      ref.invalidate(choresProvider);
-      ref.invalidate(todayProvider);
-    } on MutationSessionRevokedException {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _optimisticOverride = false;
-        _busy = false;
-      });
-      await ref.read(sessionProvider.notifier).clear();
-    } on MutationNotFoundException {
-      if (!mounted) {
-        return;
-      }
-      ref.invalidate(choresProvider);
-    } on MutationFetchException {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _optimisticOverride = false;
-        _busy = false;
-      });
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(widget.l10n.choresErrorGeneric),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  Future<void> _handleUndo(Session session) async {
-    final AppL10n l10n = widget.l10n;
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext ctx) => AlertDialog(
-        content: Text(l10n.choresUndoConfirm),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(MaterialLocalizations.of(ctx).cancelButtonLabel),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(l10n.mutationErrorRetry),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) {
-      return;
-    }
-
-    setState(() {
-      _busy = true;
-      _optimisticDone = false;
-      _optimisticOverride = true;
-    });
-    try {
-      await ref
-          .read(mutationsServiceProvider)
-          .undoChoreCompletion(session: session, id: widget.chore.id);
-      if (!mounted) {
-        return;
-      }
-      ref.invalidate(choresProvider);
-      ref.invalidate(todayProvider);
-    } on MutationSessionRevokedException {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _optimisticOverride = false;
-        _busy = false;
-      });
-      await ref.read(sessionProvider.notifier).clear();
-    } on MutationNotFoundException {
-      if (!mounted) {
-        return;
-      }
-      ref.invalidate(choresProvider);
-    } on MutationFetchException {
-      if (!mounted) {
-        return;
-      }
-      setState(() {
-        _optimisticOverride = false;
-        _busy = false;
-      });
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(widget.l10n.choresErrorGeneric),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final bool done = _isDone;
-    final Chore chore = widget.chore;
-    final Color mutedColor = Theme.of(
-      context,
-    ).colorScheme.onSurface.withValues(alpha: 0.4);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: InkWell(
-        onTap: _busy ? null : _handleTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 56),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Theme.of(context).colorScheme.outline),
-          ),
-          child: Row(
-            children: <Widget>[
-              if (chore.icon != null && chore.icon!.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.only(right: 10),
-                  child: Text(
-                    chore.icon!,
-                    style: const TextStyle(fontSize: 22),
-                  ),
-                ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      chore.title,
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: done ? mutedColor : null,
-                        decoration: done ? TextDecoration.lineThrough : null,
-                        decorationColor: mutedColor,
-                      ),
-                    ),
-                    if (done && chore.completedTodayBy != null)
-                      Text(
-                        widget.l10n.tasksChoreCompletedBy(
-                          chore.completedTodayBy!.name,
-                        ),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.5),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              if (chore.member != null)
-                MemberChip(
-                  name: chore.member!.name,
-                  color: chore.member!.color,
-                  emoji: chore.member!.emoji,
-                )
-              else
-                UnassignedChip(label: widget.l10n.tasksChoreUnassigned),
-              const SizedBox(width: 8),
-              if (_busy)
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              else
-                Text(
-                  done ? '★' : '☆',
-                  style: TextStyle(
-                    fontSize: 20,
-                    color: done
-                        ? const Color(0xFFFFD166)
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.3),
-                  ),
-                ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: done
-                      ? Theme.of(
-                          context,
-                        ).colorScheme.outline.withValues(alpha: 0.3)
-                      : Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  widget.l10n.homePointsLabel(chore.points),
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: done
-                        ? mutedColor
-                        : Theme.of(context).colorScheme.onPrimaryContainer,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// To-dos segment
-// ---------------------------------------------------------------------------
-
-class _TodosSegment extends ConsumerStatefulWidget {
-  const _TodosSegment();
-
-  @override
-  ConsumerState<_TodosSegment> createState() => _TodosSegmentState();
-}
-
-class _TodosSegmentState extends ConsumerState<_TodosSegment> {
-  final TextEditingController _addController = TextEditingController();
-  bool _addBusy = false;
-  DateTime? _addDueDate;
-
-  @override
-  void dispose() {
-    _addController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submitNew() async {
-    final String title = _addController.text.trim();
-    if (title.isEmpty || _addBusy) {
-      return;
-    }
-    final SessionState sessionState = ref.read(sessionProvider);
-    final Session? session = sessionState.session;
-    if (session == null) {
-      return;
-    }
-    setState(() => _addBusy = true);
-    final AppL10n l10n = AppL10n.of(context);
-    try {
-      await ref
-          .read(mutationsServiceProvider)
-          .createTodo(session: session, title: title, dueDate: _addDueDate);
-      if (!mounted) {
-        return;
-      }
-      _addController.clear();
-      setState(() => _addDueDate = null);
-      ref.invalidate(todosProvider);
-    } on MutationSessionRevokedException {
-      if (!mounted) {
-        return;
-      }
-      await ref.read(sessionProvider.notifier).clear();
-    } on MutationCapReachedException {
-      if (!mounted) {
-        return;
-      }
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(l10n.todosErrorTooMany),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } on MutationFetchException {
-      if (!mounted) {
-        return;
-      }
-      scaffoldMessengerKey.currentState?.showSnackBar(
-        SnackBar(
-          content: Text(l10n.todosErrorGeneric),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      if (mounted) {
-        setState(() => _addBusy = false);
-      }
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final AppL10n l10n = AppL10n.of(context);
-    final AsyncValue<TodosResult> todosAsync = ref.watch(todosProvider);
-    // /tasks is only reachable signed-in (see the router redirect in
-    // app.dart), so `session` is always non-null in practice here.
-    final Session? session = ref.watch(sessionProvider).session;
+    final List<Chore> everyone = chores
+        .where((Chore c) => c.memberId == null)
+        .toList();
+    final int everyoneOpen = everyone
+        .where((Chore c) => !actions.isDone(c))
+        .length;
+    final bool forEveryone = selectedId == kEveryoneId;
+    final KidStripPerson? person = people
+        .where((KidStripPerson p) => p.id == selectedId)
+        .firstOrNull;
+    final String? ownerId = forEveryone ? null : person?.id;
+    final bool mine = forEveryone || ownerId == session.member.id;
+    final List<Chore> shown = forEveryone
+        ? everyone
+        : chores.where((Chore c) => c.memberId == ownerId).toList();
+    final String accent = forEveryone
+        ? kEveryoneAccent
+        : (person?.color ?? kEveryoneAccent);
+    final String boardName = forEveryone
+        ? l10n.kidEveryone
+        : (person?.name ?? '');
 
     return Column(
       children: <Widget>[
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-          child: TodoComposerRow(
-            controller: _addController,
-            busy: _addBusy,
-            l10n: l10n,
-            dueDate: _addDueDate,
-            onDueDateChanged: (DateTime? d) => setState(() => _addDueDate = d),
-            onSubmit: _submitNew,
-          ),
+        const SizedBox(height: 8),
+        KidMemberStrip(
+          people: people,
+          selectedId: forEveryone ? kEveryoneId : person?.id,
+          onSelect: onSelect,
+          everyoneOpenCount: everyoneOpen,
         ),
         Expanded(
-          child: session == null
-              ? const SizedBox.shrink()
-              : todosAsync.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (Object err, StackTrace _) => _ErrorBody(
-                    isSessionExpired: err is TodosSessionRevokedException,
-                    l10n: l10n,
-                    onRetry: () => ref.invalidate(todosProvider),
-                    onSessionExpired: () async {
-                      await ref.read(sessionProvider.notifier).clear();
-                    },
+          child: RefreshIndicator(
+            onRefresh: onRefresh,
+            child: ListView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, kToastListPadding),
+              children: <Widget>[
+                if (data.staleAt != null) ...<Widget>[
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: CachedAtPill(staleAt: data.staleAt),
                   ),
-                  data: (TodosResult result) => _TodosList(
-                    todos: result.todos,
-                    staleAt: result.staleAt,
-                    session: session,
-                    l10n: l10n,
-                    onRefresh: () async {
-                      ref.invalidate(todosProvider);
-                      try {
-                        await ref.read(todosProvider.future);
-                      } catch (_) {}
-                    },
+                  const SizedBox(height: 8),
+                ],
+                if (loadFailed) ...<Widget>[
+                  KidLoadError(
+                    message: l10n.kidLoadError,
+                    onRetry: onRetry,
+                    compact: true,
                   ),
+                  const SizedBox(height: 12),
+                ],
+                _BoardHead(
+                  person: forEveryone ? null : person,
+                  name: boardName,
+                  counterKey: counterKey,
+                  showCounter: !forEveryone && ownerId != null,
+                  onAdd: isAdmin
+                      ? () => showChoreCreateSheet(
+                          context,
+                          memberId: forEveryone ? null : ownerId,
+                        )
+                      : null,
                 ),
+                if (!mine) ...<Widget>[
+                  const SizedBox(height: 8),
+                  _ReadOnlyHint(name: boardName),
+                ],
+                const SizedBox(height: 12),
+                KidChoreSection(
+                  key: ValueKey<String>('board-$selectedId'),
+                  chores: shown,
+                  listKey: kTasksListKey,
+                  ownerId: ownerId,
+                  accentName: accent,
+                  interactive: mine,
+                  starTarget: forEveryone ? null : counterKey,
+                  onAdd: isAdmin
+                      ? () => showChoreCreateSheet(
+                          context,
+                          memberId: forEveryone ? null : ownerId,
+                        )
+                      : null,
+                ),
+              ],
+            ),
+          ),
         ),
       ],
     );
   }
 }
 
-class _TodosList extends StatelessWidget {
-  const _TodosList({
-    required this.todos,
-    required this.staleAt,
-    required this.session,
-    required this.l10n,
-    required this.onRefresh,
+class _BoardHead extends ConsumerWidget {
+  const _BoardHead({
+    required this.person,
+    required this.name,
+    required this.counterKey,
+    required this.showCounter,
+    required this.onAdd,
   });
 
-  final List<TodoItem> todos;
-  final DateTime? staleAt;
-  final Session session;
-  final AppL10n l10n;
-  final Future<void> Function() onRefresh;
+  final KidStripPerson? person;
+  final String name;
+  final GlobalKey counterKey;
+  final bool showCounter;
+  final VoidCallback? onAdd;
 
   @override
-  Widget build(BuildContext context) {
-    // Open (not-done) todos are grouped into due-date sections; done todos
-    // are appended after, ungrouped — see `groupOpenTodosIntoSections`'s doc
-    // for why completed items are excluded from bucketing.
-    final List<TodoItem> sorted = sortTodosForDisplay(todos);
-    final List<TodoItem> open = sorted.where((TodoItem t) => !t.done).toList();
-    final List<TodoItem> done = sorted.where((TodoItem t) => t.done).toList();
-    final List<TodoSection> sections = groupOpenTodosIntoSections(open);
-
-    return RefreshIndicator(
-      onRefresh: onRefresh,
-      child: ListView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final KidTokens tokens = context.kid;
+    final AppL10n l10n = AppL10n.of(context);
+    final KidAccent accent = tokens.accent(person?.color ?? kEveryoneAccent);
+    final StarCount? stars = person == null
+        ? null
+        : ref.watch(starCountProvider(person!.id));
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: accent.tint,
+        borderRadius: KidRadius.groupBorder,
+      ),
+      child: Row(
         children: <Widget>[
-          if (staleAt != null) ...<Widget>[
-            CachedAtPill(staleAt: staleAt),
-            const SizedBox(height: 8),
-          ],
-          if (todos.isEmpty)
-            SizedBox(
-              height: MediaQuery.sizeOf(context).height * 0.4,
-              child: Center(
-                child: Text(
-                  l10n.homeNoTodos,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withValues(alpha: 0.5),
-                  ),
-                ),
-              ),
+          if (person != null)
+            KidAvatar(
+              name: person!.name,
+              color: person!.color,
+              emoji: person!.emoji,
+              size: KidAvatarSize.lg,
             )
-          else ...<Widget>[
-            for (final TodoSection section in sections) ...<Widget>[
-              _TodoSectionHeader(
-                label: todoDueBucketLabel(section.bucket, l10n),
+          else
+            Container(
+              width: 72,
+              height: 72,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: tokens.surface,
+                border: Border.all(color: tokens.muted, width: 2),
               ),
-              ...section.todos.map(
-                (TodoItem t) => TodoRow(todo: t, session: session, l10n: l10n),
-              ),
-            ],
-            ...done.map(
-              (TodoItem t) => TodoRow(todo: t, session: session, l10n: l10n),
+              child: Icon(Icons.groups_rounded, size: 36, color: tokens.ink),
             ),
-          ],
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: KidText.titleLg.copyWith(color: accent.ink),
+                ),
+                if (showCounter) ...<Widget>[
+                  const SizedBox(height: 6),
+                  KeyedSubtree(
+                    key: counterKey,
+                    child: KidStarCounter(count: stars, name: name),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          if (onAdd != null)
+            KidRoundButton(
+              size: KidTouch.primary,
+              semanticLabel: person == null
+                  ? l10n.kidAddChoreForEveryone
+                  : l10n.kidAddChoreFor(name),
+              onTap: onAdd,
+              child: Icon(Icons.add_rounded, size: 36, color: tokens.ink),
+            ),
         ],
       ),
     );
   }
 }
 
-class _TodoSectionHeader extends StatelessWidget {
-  const _TodoSectionHeader({required this.label});
+class _ReadOnlyHint extends StatelessWidget {
+  const _ReadOnlyHint({required this.name});
 
-  final String label;
+  final String name;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 6),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-          fontWeight: FontWeight.w600,
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-        ),
+    final KidTokens tokens = context.kid;
+    final AppL10n l10n = AppL10n.of(context);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: tokens.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: tokens.border, width: 2),
       ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Shared error state
-// ---------------------------------------------------------------------------
-
-class _ErrorBody extends StatelessWidget {
-  const _ErrorBody({
-    required this.isSessionExpired,
-    required this.l10n,
-    required this.onRetry,
-    required this.onSessionExpired,
-  });
-
-  final bool isSessionExpired;
-  final AppL10n l10n;
-  final VoidCallback onRetry;
-  final VoidCallback onSessionExpired;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                Text(
-                  isSessionExpired
-                      ? l10n.homeSessionExpired
-                      : l10n.homeLoadError,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                FilledButton(
-                  onPressed: isSessionExpired ? onSessionExpired : onRetry,
-                  child: Text(l10n.homeRetry),
-                ),
-              ],
+      child: Row(
+        children: <Widget>[
+          Icon(Icons.visibility_outlined, size: 24, color: tokens.muted),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              l10n.kidReadOnly(name),
+              style: KidText.label.copyWith(color: tokens.ink),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

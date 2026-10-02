@@ -21,7 +21,6 @@ import '../services/notes_service.dart';
 import '../services/pair_service.dart';
 import '../services/photos_service.dart';
 import '../services/secure_storage.dart';
-import '../services/today_service.dart';
 import '../services/todos_service.dart';
 import '../services/write_queue_service.dart';
 import 'connectivity_provider.dart';
@@ -100,13 +99,6 @@ final Provider<MutationsService> mutationsServiceProvider =
         clientFactory: ref.watch(apiClientFactoryProvider),
       ),
     );
-
-final Provider<TodayService> todayServiceProvider = Provider<TodayService>(
-  (Ref ref) => TodayService(
-    clientFactory: ref.watch(apiClientFactoryProvider),
-    cacheDb: ref.watch(cacheDbProvider),
-  ),
-);
 
 final Provider<EventsService> eventsServiceProvider = Provider<EventsService>(
   (Ref ref) => EventsService(

@@ -30,7 +30,7 @@ class ChoresResult {
 }
 
 /// Read-only client for `GET /api/mobile/chores` — the family-wide chore
-/// list backing the Tasks screen's Ämtli segment. Writes (complete/undo/
+/// list backing the Aufgaben board and the Heute Ämtli card. Writes (complete/undo/
 /// create) still go through [MutationsService] — this service only backs
 /// the read path.
 class ChoresService {

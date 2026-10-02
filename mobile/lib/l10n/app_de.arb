@@ -4,16 +4,6 @@
   "@appTitle": {},
   "moreTitle": "Mehr",
   "@moreTitle": {},
-  "tasksTitle": "Aufgaben & Ämtli",
-  "@tasksTitle": {},
-  "tasksChoreCompletedBy": "Erledigt von {name}",
-  "@tasksChoreCompletedBy": {
-    "placeholders": {
-      "name": { "type": "String", "example": "Mia" }
-    }
-  },
-  "tasksChoreUnassigned": "Alle",
-  "@tasksChoreUnassigned": {},
   "splashLoading": "Laden…",
   "@splashLoading": {},
   "pairTitle": "Gerät verbinden",
@@ -57,8 +47,6 @@
   },
   "homeTodayCard": "Heute",
   "@homeTodayCard": {},
-  "homeChoresCard": "Ämtli",
-  "@homeChoresCard": {},
   "homeTodosCard": "To-dos",
   "@homeTodosCard": {},
   "homeComingSoon": "Kommt in einem späteren Update.",
@@ -87,15 +75,6 @@
   "@homeNoEvents": {},
   "homeAllDay": "Ganztägig",
   "@homeAllDay": {},
-  "homeChoresHeading": "Ämtli ({done}/{total} erledigt)",
-  "@homeChoresHeading": {
-    "placeholders": {
-      "done": { "type": "int", "example": "1" },
-      "total": { "type": "int", "example": "3" }
-    }
-  },
-  "homeNoChores": "Heute keine Ämtli.",
-  "@homeNoChores": {},
   "homePointsLabel": "{n, plural, =1 {1 Punkt} other {{n} Punkte}}",
   "@homePointsLabel": {
     "placeholders": {
@@ -174,14 +153,6 @@
   "@todosSectionLater": {},
   "todosSectionNoDate": "Ohne Datum",
   "@todosSectionNoDate": {},
-  "choresUndoConfirm": "Den heutigen Stern rückgängig machen?",
-  "@choresUndoConfirm": {},
-  "choresErrorGeneric": "Ämtli konnte nicht aktualisiert werden.",
-  "@choresErrorGeneric": {},
-  "mutationErrorRetry": "Erneut versuchen",
-  "@mutationErrorRetry": {},
-  "choresAddAria": "Ämtli hinzufügen",
-  "@choresAddAria": {},
   "choresCreateTitle": "Neues Ämtli",
   "@choresCreateTitle": {},
   "choresMemberNone": "Niemand",
@@ -621,7 +592,7 @@
   "@photosDeleteErrorGeneric": {},
   "photosImageLoadError": "Bild konnte nicht geladen werden",
   "@photosImageLoadError": {},
-  "photosUploadTooLargeToast": "{count, plural, =1 {1 Foto ist größer als 8 MB und wurde nicht hochgeladen} other {{count} Fotos sind größer als 8 MB und wurden nicht hochgeladen}}",
+  "photosUploadTooLargeToast": "{count, plural, =1 {1 Foto ist grösser als 8 MB und wurde nicht hochgeladen} other {{count} Fotos sind grösser als 8 MB und wurden nicht hochgeladen}}",
   "@photosUploadTooLargeToast": {
     "placeholders": {
       "count": { "type": "int", "example": "2" }
@@ -661,7 +632,7 @@
   "@setupStepBack": {},
   "setupStepSkip": "Später",
   "@setupStepSkip": {},
-  "setupStepFinish": "Einrichtung abschließen",
+  "setupStepFinish": "Einrichtung abschliessen",
   "@setupStepFinish": {},
   "setupErrorNetwork": "FamilyBoard nicht erreichbar. Prüfe dein WLAN und versuche es erneut.",
   "@setupErrorNetwork": {},
@@ -726,5 +697,123 @@
   "setupPinMismatch": "PINs stimmen nicht überein",
   "@setupPinMismatch": {},
   "setupPinInvalid": "Gib genau 6 Ziffern ein",
-  "@setupPinInvalid": {}
+  "@setupPinInvalid": {},
+  "navToday": "Heute",
+  "@navToday": {},
+  "navTasks": "Aufgaben",
+  "@navTasks": {},
+  "navCalendar": "Kalender",
+  "@navCalendar": {},
+  "navMeals": "Essen",
+  "@navMeals": {},
+  "navMore": "Mehr",
+  "@navMore": {},
+  "navTodos": "To-dos",
+  "@navTodos": {},
+  "kidUndoTask": "Rückgängig: {title}",
+  "@kidUndoTask": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidRetryTask": "{title}: nochmal versuchen",
+  "@kidRetryTask": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidToastStars": "{name} bekommt {count, plural, =1{1 Stern} other{{count} Sterne}}",
+  "@kidToastStars": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidToastDoneBy": "{name} hat es gemacht ({count, plural, =1{1 Stern} other{{count} Sterne}})",
+  "@kidToastDoneBy": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidErrorGeneric": "Das hat nicht geklappt. Bitte nochmal versuchen.",
+  "@kidErrorGeneric": {},
+  "kidErrorQueueFull": "Zu viele Änderungen warten. Bitte später nochmal versuchen.",
+  "@kidErrorQueueFull": {},
+  "kidErrorUndoFailed": "Rückgängig hat nicht geklappt.",
+  "@kidErrorUndoFailed": {},
+  "kidStateOpen": "offen",
+  "@kidStateOpen": {},
+  "kidStateDone": "erledigt",
+  "@kidStateDone": {},
+  "kidStateNext": "als Nächstes",
+  "@kidStateNext": {},
+  "kidStateFailed": "fehlgeschlagen, tippen zum Wiederholen",
+  "@kidStateFailed": {},
+  "kidStateSending": "wird gesendet",
+  "@kidStateSending": {},
+  "kidStateQueued": "wartet auf Verbindung",
+  "@kidStateQueued": {},
+  "kidCardLabel": "{title}, {points, plural, =1{1 Stern} other{{points} Sterne}}",
+  "@kidCardLabel": {
+    "placeholders": { "title": { "type": "String" }, "points": { "type": "int" } }
+  },
+  "kidDoneMiniLabel": "{title}: erledigt. Tippen zeigt Rückgängig",
+  "@kidDoneMiniLabel": {
+    "placeholders": { "title": { "type": "String" } }
+  },
+  "kidGroupCollapse": "{name} zuklappen",
+  "@kidGroupCollapse": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidGroupExpand": "{name} aufklappen",
+  "@kidGroupExpand": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidGroupProgress": "{done} von {total} erledigt",
+  "@kidGroupProgress": {
+    "placeholders": { "done": { "type": "int" }, "total": { "type": "int" } }
+  },
+  "kidStateAllDone": "Alles geschafft!",
+  "@kidStateAllDone": {},
+  "kidStateNight": "Schlafenszeit",
+  "@kidStateNight": {},
+  "kidStatePause": "Später wieder",
+  "@kidStatePause": {},
+  "kidNoChores": "Keine Aufgaben",
+  "@kidNoChores": {},
+  "kidLoading": "Wird geladen…",
+  "@kidLoading": {},
+  "kidRetry": "Nochmal versuchen",
+  "@kidRetry": {},
+  "kidAddChore": "Aufgabe hinzufügen",
+  "@kidAddChore": {},
+  "kidAddChoreFor": "Aufgabe für {name} hinzufügen",
+  "@kidAddChoreFor": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidAddChoreForEveryone": "Aufgabe für alle hinzufügen",
+  "@kidAddChoreForEveryone": {},
+  "kidLoadError": "Laden hat nicht geklappt.",
+  "@kidLoadError": {},
+  "kidStarsToday": "{count, plural, =1{1 Stern heute} other{{count} Sterne heute}}",
+  "@kidStarsToday": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "kidStarsBalance": "{count, plural, =1{1 Stern} other{{count} Sterne}}",
+  "@kidStarsBalance": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "kidStarsTodayShort": "heute",
+  "@kidStarsTodayShort": {},
+  "kidAvatarOpen": "{name}: {count, plural, =0{alles erledigt} =1{1 offen} other{{count} offen}}",
+  "@kidAvatarOpen": {
+    "placeholders": { "name": { "type": "String" }, "count": { "type": "int" } }
+  },
+  "kidEveryone": "Für alle",
+  "@kidEveryone": {},
+  "kidReadOnly": "Aufgaben von {name}: nur ansehen",
+  "@kidReadOnly": {
+    "placeholders": { "name": { "type": "String" } }
+  },
+  "kidFilterAll": "Alle",
+  "@kidFilterAll": {},
+  "kidNow": "Jetzt",
+  "@kidNow": {},
+  "kidEventPast": "vorbei",
+  "@kidEventPast": {},
+  "kidPickPicture": "Bild",
+  "@kidPickPicture": {},
+  "kidSeeAllTasks": "Alle Aufgaben anzeigen",
+  "@kidSeeAllTasks": {}
 }

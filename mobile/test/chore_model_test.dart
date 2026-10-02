@@ -1,5 +1,5 @@
 // Regression test for Chore.fromJson — the family-wide GET /api/mobile/chores
-// contract backing the Tasks screen's Ämtli segment. Covers the assigned +
+// contract backing the Aufgaben board. Covers the assigned +
 // completed-by-someone-else shape and the fully-unassigned/never-completed
 // shape.
 

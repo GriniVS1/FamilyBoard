@@ -154,14 +154,13 @@ class FamilyBoardTheme {
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
+        // Kid text is never smaller than 14 (R2.1); the active label is ink.
         labelTextStyle: WidgetStateProperty.resolveWith(
           (Set<WidgetState> states) => TextStyle(
-            fontSize: 12,
-            fontWeight: states.contains(WidgetState.selected)
-                ? FontWeight.w600
-                : FontWeight.w500,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
             color: states.contains(WidgetState.selected)
-                ? scheme.primary
+                ? scheme.onSurface
                 : mutedText,
           ),
         ),
@@ -182,15 +181,15 @@ class FamilyBoardTheme {
         indicatorShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
         ),
-        labelType: NavigationRailLabelType.all,
+        labelType: NavigationRailLabelType.selected,
         selectedLabelTextStyle: TextStyle(
-          fontSize: 12,
+          fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: scheme.primary,
+          color: scheme.onSurface,
         ),
         unselectedLabelTextStyle: TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
           color: mutedText,
         ),
         selectedIconTheme: IconThemeData(size: 24, color: scheme.primary),

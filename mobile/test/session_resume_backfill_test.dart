@@ -8,7 +8,7 @@
 // `_onResumed` specifically so this doesn't require standing up a full
 // `ProviderContainer` + `WidgetsBinding` + platform-channel plugins
 // (`connectivity_plus`, `flutter_secure_storage`) the way exercising the
-// real `SessionNotifier` would — see `test/tasks_screen_widget_test.dart`,
+// real `SessionNotifier` would — see `test/kids_screens_test.dart`,
 // which fakes `SessionNotifier` outright rather than running the real one.
 // The wiring itself (calling `_backfillFromIdentity` exactly when this
 // returns true, fire-and-forget, no retry timer) is documented in

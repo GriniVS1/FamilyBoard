@@ -4,7 +4,7 @@ import '../services/todos_service.dart';
 import 'session_provider.dart';
 
 /// Fetches the family-wide todo list (all members, includes `member` per
-/// item). Distinct from [todayProvider]'s member-scoped `todos`.
+/// item).
 ///
 /// Callers can trigger a manual refresh via `ref.invalidate(todosProvider)`.
 final FutureProvider<TodosResult> todosProvider = FutureProvider<TodosResult>((

@@ -4,7 +4,7 @@ import '../theme.dart';
 
 /// Small circular chip showing a member's emoji (or initial) in their accent
 /// color. Used wherever a chore/todo row needs to show who it's assigned to
-/// (Home cards, Tasks screen).
+/// (Heute cards, To-dos screen).
 class MemberChip extends StatelessWidget {
   const MemberChip({
     super.key,
