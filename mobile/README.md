@@ -270,3 +270,18 @@ Change the value to `production` before submitting to the App Store.
 - `app_links` for handling `familyboard://pair?…` cold-starts
 - `/calendar` route — notification taps with `url: "/calendar"` currently
   fall back to `/home` until the calendar screen lands
+
+## Kids-UI assets (generated from the wall)
+
+Tokens, pictograms and resolver fixtures come from the wall's handoff
+(`docs/kids-ui/handoff/`). Do not edit `assets/kids/**`,
+`lib/kids/kid_tokens.g.dart` or `lib/kids/picto_catalog.g.dart` by hand:
+
+```bash
+dart run tool/sync_kids_assets.dart [--source=<handoff dir>]   # sync + regenerate
+dart run tool/sync_kids_assets.dart --check                    # verify HASHES.sha256
+```
+
+`assets/kids/HASHES.sha256` lists a SHA-256 per file, so a wall regeneration
+shows up as a small diff. Colours are read via `context.kid` (`KidTokens`),
+never as hex in widgets.

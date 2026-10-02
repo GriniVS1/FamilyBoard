@@ -3,6 +3,7 @@
 // completed-by-someone-else shape and the fully-unassigned/never-completed
 // shape.
 
+import 'package:familyboard_mobile/kids/time_of_day.dart';
 import 'package:familyboard_mobile/models/chore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -56,5 +57,25 @@ void main() {
     expect(chore.member, isNull);
     expect(chore.completedToday, isFalse);
     expect(chore.completedTodayBy, isNull);
+  });
+
+  test('Chore.fromJson reads timeOfDay and tolerates absent or unknown', () {
+    Chore parse(Object? timeOfDay, {bool include = true}) =>
+        Chore.fromJson(<String, Object?>{
+          'id': 'c',
+          'title': 't',
+          'memberId': null,
+          'member': null,
+          'completedToday': false,
+          'completedTodayBy': null,
+          if (include) 'timeOfDay': timeOfDay,
+        });
+
+    expect(parse('MORNING').timeOfDay, ChoreTimeOfDay.morning);
+    expect(parse('DAY').timeOfDay, ChoreTimeOfDay.day);
+    expect(parse('EVENING').timeOfDay, ChoreTimeOfDay.evening);
+    expect(parse(null).timeOfDay, isNull);
+    expect(parse('LATE_NIGHT').timeOfDay, isNull);
+    expect(parse(null, include: false).timeOfDay, isNull);
   });
 }

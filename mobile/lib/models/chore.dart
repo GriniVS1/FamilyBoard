@@ -8,6 +8,9 @@
 /// mark a chore done).
 library;
 
+import '../kids/chore_state.dart';
+import '../kids/time_of_day.dart';
+
 class ChoreMember {
   const ChoreMember({
     required this.id,
@@ -33,7 +36,7 @@ class ChoreMember {
   final String emoji;
 }
 
-class Chore {
+class Chore implements ChoreLike {
   const Chore({
     required this.id,
     required this.title,
@@ -44,6 +47,7 @@ class Chore {
     required this.member,
     required this.completedToday,
     required this.completedTodayBy,
+    this.timeOfDay,
   });
 
   factory Chore.fromJson(Map<String, Object?> json) {
@@ -56,6 +60,7 @@ class Chore {
       icon: json['icon'] is String ? json['icon']! as String : null,
       points: json['points'] is int ? json['points']! as int : 0,
       rrule: json['rrule'] is String ? json['rrule']! as String : null,
+      timeOfDay: ChoreTimeOfDay.tryParse(json['timeOfDay']),
       memberId: memberIdRaw is String ? memberIdRaw : null,
       member: memberRaw is Map
           ? ChoreMember.fromJson(
@@ -71,15 +76,23 @@ class Chore {
     );
   }
 
+  @override
   final String id;
   final String title;
 
   /// Raw emoji string or null.
   final String? icon;
+  @override
   final int points;
   final String? rrule;
 
+  /// Phase of the day this chore belongs to; null means "anytime". Also null
+  /// on walls that predate the field.
+  @override
+  final ChoreTimeOfDay? timeOfDay;
+
   /// Null when the chore is unassigned (open to the whole family).
+  @override
   final String? memberId;
   final ChoreMember? member;
   final bool completedToday;
