@@ -1,0 +1,317 @@
+{
+  "note": "Generated from the wall's resolvers (src/components/pictos/resolve.ts). A port must reproduce every expected value.",
+  "task": [
+    {
+      "icon": "💧",
+      "title": "Wasser trinken",
+      "expected": "water"
+    },
+    {
+      "icon": "🪥",
+      "title": "Zähne putzen",
+      "expected": "teeth"
+    },
+    {
+      "icon": "👕",
+      "title": "Anziehen",
+      "expected": "get-dressed"
+    },
+    {
+      "icon": "🛏️",
+      "title": "Bett machen",
+      "expected": "make-bed"
+    },
+    {
+      "icon": "🧼",
+      "title": "Hände waschen",
+      "expected": "wash-hands"
+    },
+    {
+      "icon": "🍽️",
+      "title": "Tisch decken",
+      "expected": "set-table"
+    },
+    {
+      "icon": "🌱",
+      "title": "Blumen giessen",
+      "expected": "water-plants"
+    },
+    {
+      "icon": "👟",
+      "title": "Schuhe versorgen",
+      "expected": "shoes"
+    },
+    {
+      "icon": "🧸",
+      "title": "Spielzeug aufräumen",
+      "expected": "tidy-toys"
+    },
+    {
+      "icon": "🌙",
+      "title": "Pyjama anziehen",
+      "expected": "pajamas"
+    },
+    {
+      "icon": "📖",
+      "title": "Buch anschauen",
+      "expected": "read"
+    },
+    {
+      "icon": "🎒",
+      "title": "Schultasche packen",
+      "expected": "backpack"
+    },
+    {
+      "icon": "🐶",
+      "title": "Hund füttern",
+      "expected": "feed-dog"
+    },
+    {
+      "icon": "📚",
+      "title": "Hausaufgaben",
+      "expected": "homework"
+    },
+    {
+      "icon": "🚮",
+      "title": "Müll rausbringen",
+      "expected": "trash"
+    },
+    {
+      "icon": "🧺",
+      "title": "Wäsche zusammenlegen",
+      "expected": "laundry"
+    },
+    {
+      "icon": null,
+      "title": "Wäsche waschen",
+      "expected": "wash-clothes"
+    },
+    {
+      "icon": null,
+      "title": "Ämtli: Ghüder rausbringen",
+      "expected": "trash"
+    },
+    {
+      "icon": null,
+      "title": "Zmorge essen",
+      "expected": "breakfast"
+    },
+    {
+      "icon": null,
+      "title": "Katze füttern",
+      "expected": "feed-cat"
+    },
+    {
+      "icon": null,
+      "title": "Büsi füttere",
+      "expected": "feed-cat"
+    },
+    {
+      "icon": null,
+      "title": "Ufzgi mache",
+      "expected": "homework"
+    },
+    {
+      "icon": null,
+      "title": "Staubsaugen",
+      "expected": "vacuum"
+    },
+    {
+      "icon": null,
+      "title": "Boden wischen",
+      "expected": "sweep"
+    },
+    {
+      "icon": null,
+      "title": "Medizin nehmen",
+      "expected": "medicine"
+    },
+    {
+      "icon": null,
+      "title": "Klavier üben",
+      "expected": "music"
+    },
+    {
+      "icon": null,
+      "title": "Zimmer aufräumen",
+      "expected": "tidy-room"
+    },
+    {
+      "icon": null,
+      "title": "Poschte",
+      "expected": "shopping"
+    },
+    {
+      "icon": null,
+      "title": "Brush teeth",
+      "expected": "teeth"
+    },
+    {
+      "icon": null,
+      "title": "Make the bed",
+      "expected": "make-bed"
+    },
+    {
+      "icon": null,
+      "title": "Feed the dog",
+      "expected": "feed-dog"
+    },
+    {
+      "icon": null,
+      "title": "Se brosser les dents",
+      "expected": "teeth"
+    },
+    {
+      "icon": null,
+      "title": "Ranger les jouets",
+      "expected": "tidy-toys"
+    },
+    {
+      "icon": null,
+      "title": "Lavarsi i denti",
+      "expected": "teeth"
+    },
+    {
+      "icon": null,
+      "title": "Apparecchiare la tavola",
+      "expected": "set-table"
+    },
+    {
+      "icon": null,
+      "title": "Irgendwas Unbekanntes",
+      "expected": null
+    },
+    {
+      "icon": "picto:water",
+      "title": "egal",
+      "expected": "water"
+    },
+    {
+      "icon": "water",
+      "title": "egal",
+      "expected": "water"
+    },
+    {
+      "icon": "🦄",
+      "title": "Einhorn streicheln",
+      "expected": null
+    },
+    {
+      "icon": "☀️",
+      "title": "Sonne",
+      "expected": null
+    },
+    {
+      "icon": "🌅",
+      "title": "Morgens",
+      "expected": null
+    },
+    {
+      "icon": null,
+      "title": "",
+      "expected": null
+    }
+  ],
+  "event": [
+    {
+      "icon": null,
+      "title": "Kindergarten",
+      "expected": "event-kindergarten"
+    },
+    {
+      "icon": null,
+      "title": "Chindsgi",
+      "expected": "event-kindergarten"
+    },
+    {
+      "icon": null,
+      "title": "Schule",
+      "expected": "event-school"
+    },
+    {
+      "icon": null,
+      "title": "Fussballtraining",
+      "expected": "event-soccer"
+    },
+    {
+      "icon": null,
+      "title": "Schwimmen",
+      "expected": "event-swim"
+    },
+    {
+      "icon": null,
+      "title": "Badi",
+      "expected": "event-swim"
+    },
+    {
+      "icon": null,
+      "title": "Zahnarzt",
+      "expected": "event-doctor"
+    },
+    {
+      "icon": null,
+      "title": "Kinderarzt",
+      "expected": "event-doctor"
+    },
+    {
+      "icon": null,
+      "title": "Geburtstag Oma",
+      "expected": "event-birthday"
+    },
+    {
+      "icon": null,
+      "title": "Znacht zusammen",
+      "expected": "event-dinner"
+    },
+    {
+      "icon": null,
+      "title": "Klavierstunde",
+      "expected": "event-music"
+    },
+    {
+      "icon": null,
+      "title": "Spielen bei Lea",
+      "expected": "event-play"
+    },
+    {
+      "icon": null,
+      "title": "Ausflug Zoo",
+      "expected": "event-trip"
+    },
+    {
+      "icon": null,
+      "title": "Velo flicken",
+      "expected": "event-bike"
+    },
+    {
+      "icon": null,
+      "title": "Elternabend",
+      "expected": null
+    },
+    {
+      "icon": null,
+      "title": "Football practice",
+      "expected": "event-soccer"
+    },
+    {
+      "icon": null,
+      "title": "Anniversaire de Léa",
+      "expected": "event-birthday"
+    },
+    {
+      "icon": null,
+      "title": "Compleanno",
+      "expected": "event-birthday"
+    },
+    {
+      "icon": "🦷",
+      "title": "Kontrolle",
+      "expected": "event-doctor"
+    },
+    {
+      "icon": "🍽️",
+      "title": "Essen",
+      "expected": "event-dinner"
+    }
+  ]
+}
