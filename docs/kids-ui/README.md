@@ -12,6 +12,9 @@ Branch `feat/kid-friendly-ui`, Stand 01.10.2026, nicht committet. Betrifft die W
 | [03-plan.md](03-plan.md) | Koordinator-Entscheidungen E1–E13 und Zuständigkeiten |
 | [04](04-review-round-1.md) / [05](05-review-round-2.md) / [07](07-review-round-3.md) / [08](08-review-round-4.md) | Unabhängiges Review A, Runden 1–4 + Schlussprüfung |
 | [06-review-second-reviewer.md](06-review-second-reviewer.md) | Unabhängiges Review B, Runden 2–4 |
+| [09-punkte-spec.md](09-punkte-spec.md) | Punktestand und Eltern-Übersicht: Modell, API, UI |
+| [10-ruling-app.md](10-ruling-app.md) | Ruling R1–R9 für die Flutter-App: verbindliche Übernahme von Bildsprache und Interaktionsregeln |
+| `handoff/` | Aus der Wall generierte Assets für die App: `tokens.json`, `pictos/{light,dark}/*.svg`, `pictos-manifest.json`, `resolve-fixtures.json` |
 | `before/`, `after/`, `compare/` | Screenshots vorher/nachher; `compare/` zeigt jeweils beide nebeneinander |
 
 ## Umgesetzte Verbesserungen
