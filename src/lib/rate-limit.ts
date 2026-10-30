@@ -22,6 +22,16 @@ export function hitRateLimit(
   return { allowed: true, remaining: limit - existing.count };
 }
 
+// Gives back one hit taken by hitRateLimit in the current window. Lets callers
+// charge an attempt up front (so concurrent requests cannot all slip past the
+// limit) and refund it once the attempt turns out to be legitimate.
+export function refundRateLimit(key: string, now: number = Date.now()): void {
+  const existing = buckets.get(key);
+  if (existing && existing.resetAt > now && existing.count > 0) {
+    existing.count -= 1;
+  }
+}
+
 import { env } from "./env";
 
 // X-Forwarded-For / X-Real-IP are client-supplied and only meaningful behind a

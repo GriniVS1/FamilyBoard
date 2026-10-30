@@ -138,6 +138,11 @@ log "update available: $CURRENT -> $VERSION"
 write_status downloading "$VERSION" 0
 TOTAL_BYTES="$(curl -fsSI --max-time 30 "$BUNDLE_URL" 2>/dev/null | tr -d '\r' \
   | awk 'tolower($1)=="content-length:"{print $2}' | tail -1)"
+# The header is unsigned server input, and bash evaluates `[[ -gt ]]` and
+# `$(( ))` operands as arithmetic expressions, where `a[$(cmd)]` runs cmd as
+# root. Accept plain decimal digits only (no leading zero, which would be read
+# as octal); anything else just drops the progress percentage.
+[[ "$TOTAL_BYTES" =~ ^[1-9][0-9]{0,14}$ ]] || TOTAL_BYTES=""
 curl -fsS --max-time 900 "$BUNDLE_URL" -o "$WORK/app.tar.gz" &
 CURL_PID=$!
 while kill -0 "$CURL_PID" 2>/dev/null; do

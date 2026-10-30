@@ -29,15 +29,10 @@ export const POST = withErrorHandling(async (req) => {
   const json = await req.json();
   const { pin, device } = bodySchema.parse(json);
 
-  // Setting the PIN flips setupComplete → true, so anything relying on the
-  // setup-incomplete trust window (minting this device token) must happen in
-  // the same request, after the PIN write.
-  await setAdminPin(pin);
-
-  if (!device) {
-    return ok({ ok: true });
-  }
-
+  // The PIN is the last step and must not land before the family and its admin
+  // exist: a PIN set earlier leaves setupComplete false, so the owner walks the
+  // remaining steps and then finds their own PIN rejected while the earlier
+  // caller's PIN quietly becomes the admin PIN.
   const family = await db.family.findFirst({ select: { id: true, name: true } });
   if (!family) {
     throw new AppError("Family not found", "FAMILY_NOT_FOUND", 400);
@@ -52,6 +47,15 @@ export const POST = withErrorHandling(async (req) => {
   });
   if (!admin) {
     throw new AppError("Admin member not found", "ADMIN_NOT_FOUND", 400);
+  }
+
+  // Setting the PIN flips setupComplete → true, so anything relying on the
+  // setup-incomplete trust window (minting this device token) must happen in
+  // the same request, after the PIN write.
+  await setAdminPin(pin);
+
+  if (!device) {
+    return ok({ ok: true });
   }
 
   const token = generateDeviceToken();

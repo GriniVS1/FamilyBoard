@@ -37,6 +37,19 @@ const schema = z.object({
     .enum(["true", "false"])
     .default("false")
     .transform((v) => v === "true"),
+  // Extra hostnames (comma-separated) the wall answers to, for setups reached
+  // through a custom domain other than NEXTAUTH_URL's. IP literals, localhost,
+  // single-label and local-only names (.local, .lan, .home, .internal) are
+  // always accepted; any other Host is refused to block DNS rebinding.
+  ALLOWED_HOSTS: z
+    .string()
+    .default("")
+    .transform((v) =>
+      v
+        .split(",")
+        .map((h) => h.trim().toLowerCase())
+        .filter(Boolean),
+    ),
   // Optional VAPID key overrides — if set, DB-generated keys are ignored.
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),

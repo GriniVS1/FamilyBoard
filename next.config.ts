@@ -20,6 +20,9 @@ const nextConfig: NextConfig = {
     "ws",
   ],
   images: {
+    // Nothing renders through next/image. Left on, /_next/image would decode
+    // any stored upload server-side (sharp/libvips), reachable by any LAN host.
+    unoptimized: true,
     remotePatterns: [],
   },
   async headers() {

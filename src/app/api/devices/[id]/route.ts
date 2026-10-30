@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
+import { checkAdminPin } from "@/lib/admin-pin";
 import { db } from "@/lib/db";
-import { verifyAdminPin } from "@/lib/pin";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ export const DELETE = withErrorHandling(async (req, ctx: RouteContext) => {
   const { id } = await ctx.params;
 
   const pin = await getPinFromRequest(req);
-  const valid = await verifyAdminPin(pin);
+  const valid = await checkAdminPin(req, pin);
   if (!valid) {
     throw new AppError("PIN is incorrect", "INVALID_PIN", 401);
   }

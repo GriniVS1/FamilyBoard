@@ -3,15 +3,17 @@ import { ok, withErrorHandling } from "@/lib/api";
 import { db } from "@/lib/db";
 import { env } from "@/lib/env";
 import { getOrCreateInstallation } from "@/lib/queries";
-import { requireInternalOrAdmin } from "@/lib/internal-auth";
+import { requireInternal } from "@/lib/internal-auth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 // Read by the in-process relay client (instrumentation.ts) — internal-secret
 // gated. Lazily mints the per-device secret the relay pins on first connect.
+// The secret is the board's relay identity, so no PIN or setup-window path
+// may read it.
 export const GET = withErrorHandling(async (req) => {
-  await requireInternalOrAdmin(req);
+  requireInternal(req);
 
   const installation = await getOrCreateInstallation();
 
