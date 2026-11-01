@@ -67,6 +67,28 @@ export async function listPhotosForFamily(
   });
 }
 
+// The declared multipart type is client-chosen, so the stored format comes from
+// the bytes: an AVIF/TIFF/SVG upload declared as image/jpeg must not be stored
+// (and later served or decoded) as a photo.
+function sniffPhotoExt(buf: Buffer): string | null {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return "jpg";
+  if (
+    buf.length >= 8 &&
+    buf.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+  ) {
+    return "png";
+  }
+  if (buf.length >= 6 && /^GIF8[79]a$/.test(buf.toString("latin1", 0, 6))) return "gif";
+  if (
+    buf.length >= 12 &&
+    buf.toString("latin1", 0, 4) === "RIFF" &&
+    buf.toString("latin1", 8, 12) === "WEBP"
+  ) {
+    return "webp";
+  }
+  return null;
+}
+
 export async function saveUploadedPhoto(params: {
   familyId: string;
   file: File;
@@ -92,10 +114,19 @@ export async function saveUploadedPhoto(params: {
   }
 
   const buffer = Buffer.from(await file.arrayBuffer());
+  const sniffedExt = sniffPhotoExt(buffer);
+  if (!sniffedExt) {
+    throw new AppError(
+      "Unsupported image type. Allowed: jpeg, png, webp, gif",
+      "UNSUPPORTED_TYPE",
+      400,
+    );
+  }
+
   const photosDir = getPhotosDir();
   await mkdir(photosDir, { recursive: true });
 
-  const filename = `${randomBytes(16).toString("hex")}.${ext}`;
+  const filename = `${randomBytes(16).toString("hex")}.${sniffedExt}`;
   await writeFile(path.join(photosDir, filename), buffer);
 
   return db.photo.create({

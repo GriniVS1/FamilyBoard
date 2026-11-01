@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
+import { checkAdminPin } from "@/lib/admin-pin";
 import { db } from "@/lib/db";
-import { verifyAdminPin } from "@/lib/pin";
-import { getClientIp, hitRateLimit } from "@/lib/rate-limit";
+import { hitRateLimit } from "@/lib/rate-limit";
 import { generatePairingCode } from "@/lib/mobile-tokens";
 import { getLanBaseUrl, getMdnsBaseUrl } from "@/lib/network";
 import { getOrCreateInstallation } from "@/lib/queries";
@@ -33,8 +33,7 @@ const bodySchema = z.object({
 export const POST = withErrorHandling(async (req) => {
   const body = bodySchema.parse(await req.json());
 
-  const ip = getClientIp(req.headers);
-  const valid = await verifyAdminPin(body.pin);
+  const valid = await checkAdminPin(req, body.pin);
   if (!valid) {
     throw new AppError("PIN is incorrect", "INVALID_PIN", 401);
   }

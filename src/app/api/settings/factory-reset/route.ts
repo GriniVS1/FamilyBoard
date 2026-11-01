@@ -2,10 +2,9 @@ import { readdir, unlink } from "node:fs/promises";
 import path from "node:path";
 import { z } from "zod";
 import { AppError, ok, withErrorHandling } from "@/lib/api";
+import { checkAdminPin } from "@/lib/admin-pin";
 import { db } from "@/lib/db";
 import { getPhotosDir } from "@/lib/photos";
-import { verifyAdminPin } from "@/lib/pin";
-import { getClientIp, hitRateLimit } from "@/lib/rate-limit";
 import { invalidateVapidCache } from "@/lib/notifications";
 import { forgetWifi } from "@/lib/network";
 
@@ -66,18 +65,8 @@ async function clearPhotosDir(): Promise<void> {
 }
 
 export const POST = withErrorHandling(async (req) => {
-  const ip = getClientIp(req.headers);
-  const limit = hitRateLimit(`factory-reset:${ip}`, 5, 60_000);
-  if (!limit.allowed) {
-    throw new AppError(
-      "Too many attempts. Please wait a minute.",
-      "TOO_MANY_ATTEMPTS",
-      429,
-    );
-  }
-
   const { pin } = bodySchema.parse(await req.json());
-  const valid = await verifyAdminPin(pin);
+  const valid = await checkAdminPin(req, pin);
   if (!valid) {
     throw new AppError("PIN is incorrect", "INVALID_PIN", 401);
   }
