@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "wall-demo",
+      "runtimeExecutable": "bash",
+      "runtimeArgs": [
+        "-c",
+        "PORT=3100 DATABASE_URL='file:../data/kids-ui.db?connection_limit=1' LICENSE_SERVER_URL='http://127.0.0.1:9' NEXT_TELEMETRY_DISABLED=1 node node_modules/next/dist/bin/next dev -p 3100"
+      ],
+      "port": 3100
+    }
+  ]
+}

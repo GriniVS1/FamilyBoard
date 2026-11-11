@@ -14,6 +14,9 @@ analyzer:
     - "lib/l10n/generated/**"
     - android/**
     - ios/**
+    - windows/**
+    - macos/**
+    - linux/**
 
 linter:
   rules:
