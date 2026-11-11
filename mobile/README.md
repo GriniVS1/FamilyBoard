@@ -9,7 +9,7 @@ family member a phone-sized view of today's events, chores, and to-dos.
 
 The Dart code in `lib/` was hand-authored. The native iOS and Android project
 shells ARE checked in (including the hand-wired `Runner.xcodeproj`: bundle ID
-`com.familyboard.familyboardMobile`, entitlements, deployment target 15.5,
+`com.familyboard.familyboardMobile`, entitlements, deployment target 18.0,
 `GoogleService-Info.plist` reference) — do NOT re-run `flutter create`, it
 overwrites the wiring. After you clone:
 

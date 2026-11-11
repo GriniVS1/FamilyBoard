@@ -12,7 +12,7 @@ already done — see "What is already prepared" below.
 - `GoogleService-Info.plist` is referenced in the Xcode project and copied into the app bundle (the manual "Add Files to Runner…" step from `mobile/README.md` is no longer needed).
 - `Runner.entitlements` linked via `CODE_SIGN_ENTITLEMENTS` (aps-environment = development; Xcode/export rewrites it to production automatically when signing with an App Store profile).
 - `Info.plist`: `familyboard://` URL scheme + `NSCameraUsageDescription` added (QR pairing would crash without it), duplicate `UIBackgroundModes` block removed.
-- iOS deployment target 15.5 (required by `mobile_scanner` 7.x).
+- iOS deployment target 18.0 (minimum supported iOS; `mobile_scanner` 7.x needs ≥ 15.5).
 - Release build compiles (`flutter build ios --release --no-codesign` passes).
 
 ## One-time Apple-side setup (needs your Apple ID)
