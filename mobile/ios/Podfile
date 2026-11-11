@@ -1,5 +1,5 @@
 # Uncomment this line to define a global platform for your project
-platform :ios, '15.5'
+platform :ios, '18.0'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -42,7 +42,7 @@ post_install do |installer|
     # Some pods pin ancient deployment targets (9.0/13.0); newer Xcode SDKs
     # refuse anything below 15.0. Force every pod onto the app's target.
     target.build_configurations.each do |config|
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.5'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '18.0'
     end
   end
 end
