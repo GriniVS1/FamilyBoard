@@ -6,7 +6,6 @@
 .pub-cache/
 .pub/
 build/
-pubspec.lock
 
 # Generated localization
 lib/l10n/generated/
